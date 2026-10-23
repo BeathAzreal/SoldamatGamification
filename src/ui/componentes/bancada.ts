@@ -18,7 +18,7 @@ import {
 } from '../../missoes/catalogo'
 import { analisarFusao, DESCRICAO_ESTADO, type EstadoFusao } from '../../modelo/fusao'
 import { GASES, MATERIAIS } from '../../modelo/material'
-import { AJUSTES, EQUILIBRIO, PECA } from '../../modelo/parametros'
+import { AJUSTES, DBCP, EQUILIBRIO, PECA } from '../../modelo/parametros'
 import {
   correnteRelativa,
   equilibrioArco,
@@ -99,6 +99,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   let preparo: Preparo = {
     ...padrao,
     tecnica: anterior?.tecnica ?? padrao.tecnica,
+    dbcpMm: anterior?.dbcpMm ?? padrao.dbcpMm,
     diametroArameMm: anterior && m.consumiveis.diametrosMm.includes(anterior.diametroArameMm) ? anterior.diametroArameMm : padrao.diametroArameMm,
     gas: anterior && m.consumiveis.gases.includes(anterior.gas) ? anterior.gas : padrao.gas,
     oxidoRemovido: anterior && material.exigeLimpeza ? anterior.oxidoRemovido : padrao.oxidoRemovido,
@@ -166,7 +167,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       }, travas.preparo?.gas !== undefined),
     ),
   )
-  const resumoTecnica = h('p', { class: 'dica' }, INFO_TECNICA[preparo.tecnica ?? 'neutra'].resumo)
+  const resumoTecnica = h('p', { class: 'dica dica-tecnica' }, INFO_TECNICA[preparo.tecnica ?? 'neutra'].resumo)
   const tecnica = grupo(
     'Técnica (inclinação da tocha)',
     ...TECNICAS.map((t: Tecnica) => {
@@ -179,6 +180,16 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       b.classList.add('chip-icone')
       return b
     }),
+  )
+  // H48: distância bico de contato–peça. Muda a corrente (e o calor), não a quantidade de metal.
+  const dbcp = grupo(
+    'Distância bico–peça (DBCP)',
+    ...DBCP.opcoesMm.map((mm) =>
+      chip('dbcp', mm, `${mm} mm`, (preparo.dbcpMm ?? DBCP.referenciaMm) === mm, (v) => {
+        preparo = { ...preparo, dbcpMm: v }
+        trocaContexto()
+      }, travas.preparo?.dbcpMm !== undefined, mm < DBCP.referenciaMm ? 'Mais perto: mais corrente e mais calor com o mesmo arame' : mm > DBCP.referenciaMm ? 'Mais longe: menos corrente e menos calor com o mesmo arame' : 'Referência do jogo'),
+    ),
   )
   const dicaAluminio = m.material === 'aluminio' ? h('p', { class: 'dica' }, 'Dica: no alumínio costuma-se empurrar a tocha (proteção gasosa). É só dica.') : null
 
@@ -249,7 +260,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       'div',
       { class: 'maquina-grade' },
       h('div', { class: 'maquina-coluna' }, arame, gas, limpeza),
-      h('div', { class: 'maquina-coluna' }, tecnica, resumoTecnica, dicaAluminio),
+      h('div', { class: 'maquina-coluna' }, tecnica, resumoTecnica, dbcp, dicaAluminio),
     ),
     h('div', { class: 'mostradores' }, tensao, alimentacao),
     h(
@@ -442,6 +453,10 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   }
   window.addEventListener('gamepadconnected', aoConectar)
   window.addEventListener('gamepaddisconnected', aoConectar)
+  // H49: sem foco, o arco da peça de teste fecha sem somar o tempo parado.
+  const semFoco = () => sim.interromperArco()
+  document.addEventListener('visibilitychange', semFoco)
+  window.addEventListener('blur', semFoco)
 
   const textoFormato = h('p', { class: 'dica' }, descreverJunta(m))
   const escolhaFormato = op.escolherJunta
@@ -578,6 +593,8 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     fonte?.desligar()
     window.removeEventListener('gamepadconnected', aoConectar)
     window.removeEventListener('gamepaddisconnected', aoConectar)
+    document.removeEventListener('visibilitychange', semFoco)
+    window.removeEventListener('blur', semFoco)
   }
   return bancada
 }

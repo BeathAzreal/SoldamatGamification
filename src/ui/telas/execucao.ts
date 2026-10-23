@@ -9,7 +9,7 @@ import { NOME_DISPOSITIVO, type Dispositivo } from '../../entrada/tipos'
 import { requisitosEfetivos, type Dificuldade, type Missao } from '../../missoes/catalogo'
 import { MATERIAIS } from '../../modelo/material'
 import { EQUILIBRIO, PECA } from '../../modelo/parametros'
-import { equilibrioArco, razaoEfetiva, taxaDeposicao, type Ajustes, type ContextoProcesso } from '../../modelo/processo'
+import { dbcpDe, equilibrioArco, INFO_TECNICA, razaoEfetiva, taxaDeposicao, tecnicaDe, type Ajustes, type ContextoProcesso } from '../../modelo/processo'
 import { Simulacao } from '../../modelo/simulacao'
 import { desenharCena } from '../../render/cena'
 import { Escamas, Particulas } from '../../render/efeitos'
@@ -125,7 +125,21 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         h('div', { class: 'barra barra-calor', role: 'meter', 'aria-label': 'Aquecimento acumulado relativo' }, aquecimento),
         h('p', { class: 'nota' }, MATERIAIS[op.contexto.material].exigeLimpeza ? 'O alumínio esquenta muito ao longo do passe: a fusão aumenta com o calor acumulado.' : 'Calor acumulado da peça (relativo, sintético).'),
       ),
-      h('section', { class: 'bloco' }, h('dl', { class: 'medidas' }, h('dt', {}, 'Largura sob a tocha'), largura, h('dt', {}, 'Tempo de arco'), tempo)),
+      h(
+        'section',
+        { class: 'bloco' },
+        h(
+          'dl',
+          { class: 'medidas' },
+          h('dt', {}, 'Largura sob a tocha'),
+          largura,
+          h('dt', {}, 'Tempo de arco'),
+          tempo,
+          // H38 + H48: o que a tocha faz nesta tentativa (fixo; escolhido na bancada).
+          h('dt', { title: 'Ângulo de avanço da técnica e distância bico de contato–peça (DBCP)' }, 'Tocha'),
+          h('dd', {}, `${INFO_TECNICA[tecnicaDe(op.contexto)].nome} ${Math.abs(INFO_TECNICA[tecnicaDe(op.contexto)].anguloAvancoGraus)}° · DBCP ${dbcpDe(op.contexto)} mm`),
+        ),
+      ),
       h('p', { class: 'nota nota-instrucao' }, INSTRUCOES[op.dispositivo], ' Dispositivo: ', NOME_DISPOSITIVO[op.dispositivo], '.'),
       h('div', { class: 'botoes' }, botaoEncerrar, botaoPausa, botaoSair),
     )
@@ -148,11 +162,8 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
     let motivoPausa = ''
     const pausar = (motivo: string) => {
       if (pausado) return
-      const agora = performance.now()
-      if (sim.arcoAberto) {
-        const p = sim.estado(agora).posicao ?? inicio
-        sim.encerrarArco({ t: agora, x: p.x, y: p.y })
-      }
+      // H49: fecha o arco sem contar o tempo da pausa como solda parada.
+      sim.interromperArco()
       fonte.desligar()
       pausado = true
       motivoPausa = motivo
@@ -210,6 +221,12 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
       else if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') pausado ? retomar() : pausar('Pausa pedida.')
     }
     window.addEventListener('keydown', teclas)
+    // H49: janela escondida ou sem foco pausa a tentativa (o tempo parado não vira solda).
+    const semFoco = () => {
+      if (document.hidden || sim.arcoAberto) pausar('A janela do jogo perdeu o foco.')
+    }
+    document.addEventListener('visibilitychange', semFoco)
+    window.addEventListener('blur', semFoco)
 
     // Câmera livre e giro da peça por gestos (gestos.ts): nunca com o arco aberto nem na pausa.
     const gestos = new Gestos({
@@ -302,6 +319,8 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
       observador.disconnect()
       fonte.desligar()
       window.removeEventListener('keydown', teclas)
+      document.removeEventListener('visibilitychange', semFoco)
+      window.removeEventListener('blur', semFoco)
       gestos.destruir()
       giro.destruir()
       somArco.calar()
