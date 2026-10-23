@@ -70,3 +70,32 @@ mudaram.
 - `src/ui/telas/historia.ts`: recorde buscado na versão atual da pontuação.
 - Testes: `tests/torneio.test.ts` (média ponderada na escala nova),
   `tests/dados.test.ts` (nota inválida agora é 5000).
+
+## Alpha v1.4 — defeitos visíveis (Claude, `claude/v1.4`)
+
+O modelo agora prevê defeitos visíveis (H50–H57 em HIPOTESES.md): gravidade
+(escorrimento, gotas, caimento), mordedura, sobreposição, respingos,
+cratera, porosidade e empeno. Tudo em `src/modelo/defeitos.ts`, função pura
+`analisarDefeitos(...)`.
+
+**O que a didática pode usar:**
+- `NOME_DEFEITO` e `CONSELHO_DEFEITO` (textos curtos de base, pode
+  reescrever na didática) e `OcorrenciaDefeito` (tipo, trecho, valor,
+  limiar, unidade).
+- Relatório técnico `relatorio-tecnico-v2`: campo `defeitos` com as
+  ocorrências, contagem de respingos, poros, gotas e o empeno.
+- Ideias de missões/roteiros (área do GPT): sobrecabeça com poça pequena,
+  vertical subindo × descendo, horizontal apontando para a chapa de cima,
+  "encher a cratera" no fim, alumínio com e sem limpeza do óxido.
+- `reforcoMaxMm: 3` em algumas missões continua folgado demais para ser
+  realista (comentado na v1.3).
+
+**Pontuação:** `pontuacao-v6` (superfície na geometria; poros e sobreposição
+na fusão). Recordes e torneios com versões antigas ficam separados, como
+antes. Textos que citem "4 itens da geometria" precisam virar 5.
+
+**Telas comuns que o Claude mexeu (mínimo):**
+- `src/ui/componentes/inspecao.ts`: aba "Defeitos", defeitos no 3D e no corte.
+- `src/ui/componentes/bancada.ts`: linha "Defeitos visíveis" no resumo do passe.
+- `src/ui/telas/execucao.ts` e `bancada.ts`: passam `eventos` para o 3D.
+
