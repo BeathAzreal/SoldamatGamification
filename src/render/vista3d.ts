@@ -40,6 +40,12 @@ export class Vista3D {
   azimute = 0
   /** Fator da distância (1 = mesmo enquadramento do 2D). */
   zoom = 1
+  /** Inclinação física da peça, independente da câmera. */
+  rolagem = 0
+  private matrizPeca: THREE.Matrix4 | null = null
+  definirMatrizPeca(m: THREE.Matrix4): void { this.matrizPeca = m.clone() }
+
+  definirRolagem(graus: number): void { this.rolagem = THREE.MathUtils.degToRad(graus) }
   // Reaproveitados a cada leitura: nada é alocado por evento de ponteiro.
   private readonly raio = new THREE.Raycaster()
   private readonly ndc = new THREE.Vector2()
@@ -89,14 +95,13 @@ export class Vista3D {
   }
 
   definirInclinacao(radianos: number): void {
-    this.definirCamera(0, radianos)
+    this.definirCamera(0, Math.min(THREE.MathUtils.degToRad(INCLINACAO_MAX_GRAUS), Math.max(0, radianos)))
   }
 
-  /** Posição da câmera em volta da peça (radianos). O azimute dá a volta; a elevação fica entre 0 e o máximo. */
+  /** Posição da câmera em volta da peça (radianos). O azimute dá a volta; azimute limitado a ±90° e elevação de 0° a 180°. */
   definirCamera(azimute: number, elevacao: number, zoom = this.zoom): void {
-    const volta = 2 * Math.PI
-    this.azimute = ((((azimute + Math.PI) % volta) + volta) % volta) - Math.PI
-    this.elevacao = Math.min(THREE.MathUtils.degToRad(ELEVACAO_MAX_GRAUS), Math.max(0, elevacao))
+    this.azimute = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, azimute))
+    this.elevacao = Math.max(0, Math.min(Math.PI, elevacao))
     this.zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom))
     this.atualizarCamera()
   }
@@ -136,7 +141,7 @@ export class Vista3D {
     const a = this.azimute
     c.position.set(d * Math.sin(p) * Math.sin(a), d * Math.cos(p), d * Math.sin(p) * Math.cos(a))
     // Para cima na tela = −z do mundo (o y da vista de cima cresce para baixo), girando com o azimute.
-    c.up.set(-Math.sin(a), 0, -Math.cos(a))
+    c.up.set(-Math.sin(a) * Math.cos(p), Math.sin(p), -Math.cos(a) * Math.cos(p))
     c.lookAt(0, 0, 0)
     c.updateProjectionMatrix()
     c.updateMatrixWorld()
@@ -154,9 +159,18 @@ export class Vista3D {
     const { larguraCss: w, alturaCss: h } = this.plano
     this.ndc.set((px / w) * 2 - 1, 1 - (py / h) * 2)
     this.raio.setFromCamera(this.ndc, this.camera)
+    const pv = this.pivoMundo()
+    const normal = new THREE.Vector3(0, Math.cos(this.rolagem), Math.sin(this.rolagem))
+    this.topo.setFromNormalAndCoplanarPoint(normal, new THREE.Vector3(pv.x, 0, pv.z))
+    if (this.matrizPeca) {
+      this.topo.set(new THREE.Vector3(0, 1, 0), 0).applyMatrix4(this.matrizPeca)
+      if (!this.raio.ray.intersectPlane(this.topo, this.alvo)) return this.plano.paraChapa(px, py)
+      this.alvo.applyMatrix4(this.matrizPeca.clone().invert())
+      return { x: this.alvo.x + PECA.comprimentoMm / 2, y: this.alvo.z }
+    }
     // Raio que não desce até o plano da chapa (câmera rasante, olhando acima do horizonte): cai no 2D.
     if (!this.raio.ray.intersectPlane(this.topo, this.alvo)) return this.plano.paraChapa(px, py)
-    const pv = this.pivoMundo()
+    this.alvo.sub(new THREE.Vector3(pv.x, 0, pv.z)).applyAxisAngle(new THREE.Vector3(1, 0, 0), -this.rolagem).add(new THREE.Vector3(pv.x, 0, pv.z))
     const dx = this.alvo.x - pv.x
     const dz = this.alvo.z - pv.z
     // Desfaz o giro da peça (horário na tela, como Vista.angulo).
@@ -167,12 +181,18 @@ export class Vista3D {
 
   /** Chapa (X, Y) a uma altura Z (mm, já com exagero) → tela. */
   daChapa(X: number, Y: number, Z = 0): { x: number; y: number } {
+    if (this.matrizPeca) {
+      this.alvo.set(X - PECA.comprimentoMm / 2, Z, Y).applyMatrix4(this.matrizPeca).project(this.camera)
+      return { x: (this.alvo.x + 1) / 2 * this.plano.larguraCss, y: (1 - this.alvo.y) / 2 * this.plano.alturaCss }
+    }
     const pv = this.pivoMundo()
     const dx = X - PECA.comprimentoMm / 2 - pv.x
     const dz = Y - pv.z
     const c = Math.cos(this.angulo)
     const s = Math.sin(this.angulo)
-    this.alvo.set(pv.x + dx * c - dz * s, Z, pv.z + dx * s + dz * c).project(this.camera)
+    this.alvo.set(dx * c - dz * s, Z, dx * s + dz * c)
+      .applyAxisAngle(new THREE.Vector3(1, 0, 0), this.rolagem)
+      .add(new THREE.Vector3(pv.x, 0, pv.z)).project(this.camera)
     return { x: ((this.alvo.x + 1) / 2) * this.plano.larguraCss, y: ((1 - this.alvo.y) / 2) * this.plano.alturaCss }
   }
 

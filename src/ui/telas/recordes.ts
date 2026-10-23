@@ -1,12 +1,12 @@
-import { chaveRanking, exportarRecordes, importarRecordes, ranking, type Recorde } from '../../dados/recordes'
-import { chaveRankingArcade, exportarRecordesArcade, rankingArcade } from '../../dados/recordesArcade'
+import { chaveRanking, ranking, type Recorde } from '../../dados/recordes'
+import { chaveRankingArcade, rankingArcade } from '../../dados/recordesArcade'
 import { NOME_DISPOSITIVO } from '../../entrada/tipos'
 import { buscarMissao, NOME_DIFICULDADE } from '../../missoes/catalogo'
 import { MATERIAIS } from '../../modelo/material'
 import { CATEGORIAS, NOME_CATEGORIA } from '../../pontuacao/regras'
 import type { App } from '../app'
-import { avisar, confirmar } from '../dialogo'
-import { baixarArquivo, dataHora, h, n1, titulo, anexar } from '../dom'
+import { confirmar } from '../dialogo'
+import { dataHora, h, n1, titulo, anexar } from '../dom'
 
 /*
  * Melhores pontuações. Um ranking por missão (e versão), dificuldade,
@@ -15,8 +15,8 @@ import { baixarArquivo, dataHora, h, n1, titulo, anexar } from '../dom'
 
 function abasRecordes(app: App, atual: 'historia' | 'arcade'): HTMLElement {
   const aba = (id: 'historia' | 'arcade', rotulo: string) =>
-    h('button', { type: 'button', role: 'tab', 'aria-selected': String(atual === id), on: { click: () => (id === 'arcade' ? telaRecordesArcade(app) : telaRecordes(app)) } }, rotulo)
-  return h('div', { class: 'abas abas-grandes', role: 'tablist', 'aria-label': 'Tipo de recorde' }, aba('historia', 'História (por missão)'), aba('arcade', 'Arcade (partidas)'))
+    h('button', { type: 'button', role: 'tab', 'aria-selected': String(atual === id), on: { click: () => (id === 'arcade' ? telaRecordesArcade(app) : telaRecordesHistoria(app)) } }, rotulo)
+  return h('div', { class: 'abas abas-grandes', role: 'tablist', 'aria-label': 'Tipo de recorde' }, aba('arcade', 'Arcade (partidas)'), aba('historia', 'História (por missão)'))
 }
 
 /** Recordes das partidas de Arcade, por dispositivo. */
@@ -93,13 +93,12 @@ export function telaRecordesArcade(app: App): void {
       chaves.length ? h('div', { class: 'campo' }, h('label', { for: 'ranking-arcade' }, 'Dispositivo e versão das regras'), seletor) : null,
       tabela,
       h('p', { class: 'dica' }, 'Cada partida sorteia desafios diferentes: este ranking é de diversão, não uma comparação técnica entre jogadores.'),
-      h('div', { class: 'acoes' }, h('button', { type: 'button', class: 'botao-secundario', disabled: app.recordesArcade.length === 0, on: { click: () => baixarArquivo(`arcade-soldagem-${new Date().toISOString().slice(0, 10)}.json`, exportarRecordesArcade(app.recordesArcade, new Date())) } }, 'Exportar JSON')),
     )
     desenhar()
   }, 'Recordes · Arcade')
 }
 
-export function telaRecordes(app: App, chaveInicial?: string): void {
+function telaRecordesHistoria(app: App, chaveInicial?: string): void {
   app.ir((app) => {
     const chaves = [...new Set(app.recordes.map(chaveRanking))].sort()
     let chave = chaveInicial && chaves.includes(chaveInicial) ? chaveInicial : chaves[0]
@@ -161,34 +160,7 @@ export function telaRecordes(app: App, chaveInicial?: string): void {
       if (!(await confirmar('Excluir recorde?', `${r.nome}, ${n1(r.total)} pontos, de ${dataHora(r.data)}. Esta ação não pode ser desfeita.`, { sim: 'Excluir', perigo: true }))) return
       app.recordes = app.recordes.filter((x) => x.id !== r.id)
       app.salvar('recordes')
-      telaRecordes(app, chave)
-    }
-
-    const exportar = () => baixarArquivo(`recordes-soldagem-${new Date().toISOString().slice(0, 10)}.json`, exportarRecordes(app.recordes, new Date()))
-    const arquivo = h('input', { type: 'file', accept: 'application/json,.json', id: 'importar-recordes', class: 'sr-only', tabindex: '-1', 'aria-hidden': 'true' })
-    arquivo.addEventListener('change', async () => {
-      const f = arquivo.files?.[0]
-      if (!f) return
-      const r = importarRecordes(await f.text(), app.recordes)
-      arquivo.value = ''
-      if (r.erro) return avisar('Importação recusada', `${r.erro} Nenhum recorde foi alterado.`)
-      const detalhes = h(
-        'div',
-        {},
-        h('p', {}, `${r.novos.length} recorde(s) novo(s), ${r.repetidos} já existente(s), ${r.recusados.length} recusado(s).`),
-        r.recusados.length ? h('ul', {}, r.recusados.slice(0, 8).map((x) => h('li', {}, `Registro ${x.indice + 1}: ${x.motivo}`))) : null,
-      )
-      if (r.novos.length === 0) return avisar('Nada a importar', detalhes)
-      if (!(await confirmar('Importar recordes?', detalhes, { sim: `Importar ${r.novos.length}` }))) return
-      app.recordes = [...app.recordes, ...r.novos]
-      app.salvar('recordes')
-      telaRecordes(app, chave)
-    })
-    const apagarTodos = async () => {
-      if (!(await confirmar('Apagar todos os recordes?', `${app.recordes.length} registro(s) serão apagados deste navegador. Exporte antes se quiser guardar uma cópia.`, { sim: 'Apagar todos', perigo: true }))) return
-      app.recordes = []
-      app.salvar('recordes')
-      telaRecordes(app)
+      telaRecordesHistoria(app, chave)
     }
 
     anexar(app.raiz, 
@@ -196,16 +168,14 @@ export function telaRecordes(app: App, chaveInicial?: string): void {
       abasRecordes(app, 'historia'),
       chaves.length ? h('div', { class: 'campo' }, h('label', { for: 'ranking-escolha' }, 'Desafio (missão, dificuldade, dispositivo e versão das regras)'), seletor) : null,
       tabela,
-      h(
-        'div',
-        { class: 'acoes' },
-        h('button', { type: 'button', disabled: app.recordes.length === 0, on: { click: exportar } }, 'Exportar JSON'),
-        h('button', { type: 'button', on: { click: () => arquivo.click() } }, 'Importar JSON'),
-        arquivo,
-        h('button', { type: 'button', class: 'perigo', disabled: app.recordes.length === 0, on: { click: apagarTodos } }, 'Apagar todos'),
-      ),
-      h('p', { class: 'nota' }, 'Os recordes ficam guardados só neste navegador e podem ser perdidos ao limpar os dados do site. A exportação gera um arquivo JSON que pode ser importado depois (o conteúdo é conferido antes).'),
+
     )
     desenhar()
   }, 'Recordes')
+}
+
+/** Entrada padrão: partidas de Arcade; links com chave abrem a missão correspondente. */
+export function telaRecordes(app: App, chaveInicial?: string): void {
+  if (chaveInicial !== undefined) telaRecordesHistoria(app, chaveInicial)
+  else telaRecordesArcade(app)
 }

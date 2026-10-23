@@ -271,7 +271,8 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         atualizarPausa()
       } else {
         fonte.atualizar(agora)
-        giro.atualizar(agora, vista, fonte, sim.arcoAberto)
+        giro.limitar((g, r) => visual.permitePosicao(g, r))
+    giro.atualizar(agora, vista, fonte, sim.arcoAberto)
         // H47: a posição da peça entra no modelo (gravada ao abrir o arco).
         sim.definirPosicao(giro.posicao)
         sim.avancarTempo(agora)

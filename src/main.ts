@@ -1,6 +1,7 @@
 import './estilo.css'
 import './estilo-app.css'
 import './estilo-v14.css'
+import './estilo-oficina.css'
 import { App } from './ui/app'
 import { icone } from './ui/componentes/icones'
 import { telaHistoria } from './ui/telas/historia'

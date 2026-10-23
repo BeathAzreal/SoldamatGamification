@@ -1,3 +1,4 @@
+import { OBB } from 'three/addons/math/OBB.js'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import type { Cordao } from '../modelo/cordao'
@@ -225,6 +226,8 @@ export class Palco3D {
   private readonly orelha = new THREE.Vector3()
   private readonly temp = new THREE.Vector3()
   private rolagemGraus = 0
+  private suportePronto = false
+  private chapasColisao: THREE.Mesh[] = []
   private anguloGiro = 0
   private readonly cordao3d: THREE.Mesh
   private readonly cores: THREE.Color[]
@@ -302,6 +305,7 @@ export class Palco3D {
     const matChapa = new THREE.MeshStandardMaterial({ color: material.aparencia.chapaClara, map: textura, ...ACABAMENTO[material.id] })
     for (const g of geometriaChapas(op.contexto)) {
       const m = new THREE.Mesh(g, matChapa)
+      this.chapasColisao.push(m)
       m.receiveShadow = true
       m.castShadow = true
       this.relevo.add(m)
@@ -336,6 +340,12 @@ export class Palco3D {
     this.relevo.add(this.cordao3d)
 
     // Escala real: com 3× o cordão do topo reto parecia três vezes mais alto do que o modelo calcula.
+    const inicial = op.contexto.posicaoInicial
+    if (inicial) {
+      this.anguloGiro = THREE.MathUtils.degToRad(inicial.giroGraus)
+      this.rolagemGraus = inicial.rolagemGraus
+      this.giro.rotation.y = -this.anguloGiro
+    }
     this.definirExagero(EXAGERO_PADRAO)
   }
 
@@ -447,9 +457,7 @@ export class Palco3D {
   }
 
   /**
-   * Peça tombada (H47). A câmera continua de frente para a junta; quem gira
-   * é o mundo (sala, suporte, sol, gravidade): tombar φ é girar o ambiente −φ em
-   * torno do eixo horizontal da tela.
+   * Peça tombada (H47): gira no próprio pivô; ambiente e câmera permanecem independentes.
    */
   definirRolagem(graus: number): void {
     if (graus === this.rolagemGraus) return
@@ -457,11 +465,14 @@ export class Palco3D {
     this.posicionarAmbiente()
   }
 
-  /** Gira o mundo em volta da peça e leva o suporte (coluna vertical do piso) até a orelha dela. */
+  /** Monta o suporte uma vez e mantém a articulação na orelha lateral. */
   private posicionarAmbiente(): void {
     const f = (this.rolagemGraus * Math.PI) / 180
-    this.ambienteGrupo.rotation.x = -f
+    this.ambienteGrupo.rotation.x = 0
+    this.giro.rotation.x = f
     this.cena.updateMatrixWorld(true)
+    if (this.suportePronto) return
+    this.suportePronto = true
     // Orelha nas coordenadas do mundo que tombou (y = para cima de verdade).
     const o = this.ambienteGrupo.worldToLocal(this.peca.localToWorld(this.temp.copy(this.orelha)))
     const base = SALA.piso
@@ -469,7 +480,28 @@ export class Palco3D {
     this.coluna.scale.y = topo - base
     this.coluna.position.set(o.x, (base + topo) / 2, o.z)
     this.garra.position.copy(o)
+    // Pivô na fixação: a orelha permanece na garra em qualquer rotação.
+    this.giro.position.copy(o)
+    this.peca.position.copy(this.orelha).negate()
+    this.cena.updateMatrixWorld(true)
     this.sapata.position.set(o.x, base + 6, o.z)
+  }
+
+  /** Teste conservador das chapas contra a coluna, a base e a garra fixas. */
+  permitePosicao(giroGraus: number, rolagemGraus: number): boolean {
+    const anterior = this.giro.rotation.clone()
+    this.giro.rotation.set(THREE.MathUtils.degToRad(rolagemGraus), -THREE.MathUtils.degToRad(giroGraus), 0)
+    this.cena.updateMatrixWorld(true)
+    const obstaculos = [this.coluna, this.sapata, this.garra].map(m => new THREE.Box3().setFromObject(m).expandByScalar(-.3))
+    let livre = true
+    for (const m of this.chapasColisao) {
+      m.geometry.computeBoundingBox()
+      const caixa = new OBB().fromBox3(m.geometry.boundingBox!).applyMatrix4(m.matrixWorld)
+      if (obstaculos.some(b => caixa.intersectsBox3(b))) { livre = false; break }
+    }
+    this.giro.rotation.copy(anterior)
+    this.cena.updateMatrixWorld(true)
+    return livre
   }
 
   /**
