@@ -35,6 +35,8 @@ writeFileSync(join(saida, 'LEIA-ME.txt'), [
   '',
   'ESTA VERSÃO',
   'Menu ilustrado e identidade gráfica comum aos demais menus.',
+  'Roteiros de missões, progresso, plano da próxima tentativa e Arcade v2 gradual.',
+  'Torneios: pendências por rodada e correção dos empates.',
   'MIG/MAG é o processo disponível. Eletrodo revestido está apenas planejado.',
   'Versão de teste: conferência visual e dos dispositivos ainda pendente.',
   'Solda mais realista: a gravidade escorre o metal na vertical, pinga na sobrecabeça e derruba o cordão na horizontal;',

@@ -98,3 +98,10 @@ Não é permitido iniciar uma nova tentativa em um torneio que já usa
 outras regras: é necessário duplicar sua configuração. Isso evita misturar
 v3/v4 ou notas de escalas diferentes na mesma disputa. Torneios antigos
 ainda sem resultados podem começar com as regras atuais.
+
+
+## Organização e comparabilidade — revisão didática Alpha v1.4
+
+O painel oferece um resumo de entregas pendentes, avaliações finais faltantes e publicação por rodada, sem revelar notas antes da publicação. Uma competição com dispositivos separados mantém os grupos existentes. Versões distintas de pontuação nas rodadas visíveis geram aviso: normalizar a escala não torna modelos tecnicamente equivalentes.
+
+A ordenação e a atribuição de posições agora usam o mesmo comparador. Em modo professor, a nota automática desempata notas iguais do professor antes dos demais critérios. Empates reais conservam a mesma posição. Aprovação continua tendo precedência no modo automático. Critérios físicos e cálculo da pontuação permanecem intactos.

@@ -107,3 +107,10 @@ A escolha de outro exercício inicia uma sessão sem tentativa anterior.
 São orientações para explorar o modelo atual, sem mudar física,
 pontuação, consumíveis ou armazenamento. A futura revisão do modelo
 deve ser acompanhada de revisão desses roteiros.
+
+
+## Roteiros de aprendizado — Alpha v1.4
+
+As seis encomendas agora têm habilidade principal, preparação, execução, inspeção e um experimento de treino em `src/missoes/aprendizagem.ts`. O roteiro aparece na ficha comum e pode ser consultado antes do desbloqueio. Não muda limites, tentativas ou requisitos físicos.
+
+O resumo de progressão deriva as contagens das aprovações existentes e recomenda a próxima missão Aprendiz liberada. Depois recomenda os níveis Profissional pendentes. Missões inexistentes não são liberadas; dados antigos e chaves desconhecidas são preservados e não contam como capítulo concluído. Completar todas as etapas permite repetir o catálogo. Aprovação não equivale a certificação.

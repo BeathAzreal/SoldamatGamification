@@ -1,3 +1,4 @@
+import { devolverTentativa } from '../../didatica/devolutiva'
 import { ESCALA_PONTUACAO, escalaDaPontuacao, FICHA_CATEGORIA, type ResultadoPontuacao } from '../../pontuacao/regras'
 import { abrirPainel } from '../dialogo'
 import { contarAte, h, n0, n1 } from '../dom'
@@ -37,6 +38,7 @@ function dicaReprovada(r: ResultadoPontuacao): string {
  */
 export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolean; rotulo?: string } = {}): HTMLElement {
   // pontuacao-v3: escala de 1000, nota inteira; versões antigas (0–100) mantêm uma casa.
+  const devolutiva = devolverTentativa(r)
   const casas = r.versao === 'pontuacao-v1' || r.versao === 'pontuacao-v2' ? 1 : 0
   const nota = (v: number) => (casas === 0 ? n0(v) : n1(v))
   const total = h('span', { class: 'placar-numero' }, opcoes.animar ? nota(0) : nota(r.total))
@@ -110,6 +112,7 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
       ? h('p', { class: 'selo selo-ok' }, '✔ Aprovada — condições essenciais cumpridas')
       : h('p', { class: 'selo selo-falha' }, '✖ Não aprovada — condição essencial descumprida'),
     r.aprovada ? null : h('p', { class: 'dica dica-reprovada' }, dicaReprovada(r)),
+    h('button', { type: 'button', class: 'botao-secundario', on: { click: () => abrirPainel('Plano para a próxima tentativa', h('section', {}, h('h3', {}, devolutiva.prioridade), h('h4', {}, 'O que foi registrado'), h('p', {}, devolutiva.evidencia), h('h4', {}, 'O que tentar'), h('p', {}, devolutiva.proximaAcao), h('h4', {}, 'Como conferir'), h('p', {}, devolutiva.verificar), h('p', { class: 'nota' }, 'Mude uma variável por vez, mantendo missão, dificuldade e dispositivo. Previsão didática; não diagnostica defeitos reais.'))) } }, 'Próxima tentativa: ', devolutiva.prioridade),
     categorias,
     h('ul', { class: 'essenciais-curtos', 'aria-label': 'Condições essenciais' }, r.essenciais.map((e) => h('li', { class: e.cumprida ? 'ok' : 'falha', title: e.justificativa }, `${e.cumprida ? '✔' : '✖'} ${e.descricao}`))),
     h(

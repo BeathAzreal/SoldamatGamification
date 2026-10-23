@@ -12,7 +12,7 @@ import type { ResultadoPontuacao } from '../pontuacao/regras'
  * aberturas de arco, tempo de arco). Funções puras: testáveis sem tela.
  */
 
-export const VERSAO_ARCADE = 'arcade-v1'
+export const VERSAO_ARCADE = 'arcade-v2'
 export const VIDAS_INICIAIS = 3
 
 export type Condicao =
@@ -84,13 +84,18 @@ export function ajustePreDefinido(m: Missao, d: Dificuldade): { ajustes: Ajustes
 export function gerarDesafio(numero: number, aleatorio: () => number, anterior?: Desafio): Desafio {
   const sortear = <T>(lista: readonly T[]): T => lista[Math.min(lista.length - 1, Math.floor(aleatorio() * lista.length))]
   const materialAnterior = anterior ? buscarMissao(anterior.missaoId)?.material : undefined
-  const candidatas = MISSOES.filter((m) => m.material !== materialAnterior)
-  const missao = sortear(candidatas.length ? candidatas : MISSOES)
-  const chanceProfissional = Math.min(0.75, Math.max(0, (numero - 2) * 0.15))
+  const introdutorias = MISSOES.slice(0, numero === 1 ? 1 : numero === 2 ? 2 : numero <= 4 ? 4 : MISSOES.length)
+  const candidatas = introdutorias.filter((m) => m.material !== materialAnterior)
+  const missao = sortear(candidatas.length ? candidatas : introdutorias)
+  const chanceProfissional = Math.min(0.75, Math.max(0, (numero - 4) * 0.15))
   const dificuldade: Dificuldade = aleatorio() < chanceProfissional ? 'profissional' : 'aprendiz'
   let condicao: Condicao = { tipo: 'livre' }
   if (numero > 2) {
-    const tipo = sortear(['livre', 'maquina-ajustada', 'arco-unico', 'tecnica', 'tempo-arco'] as const)
+    const tipos: Condicao['tipo'][] = ['livre', 'maquina-ajustada', 'arco-unico']
+    if (numero >= 5) tipos.push('tecnica')
+    if (numero >= 7) tipos.push('tempo-arco')
+    const semRepetir = tipos.filter(t => t !== anterior?.condicao.tipo)
+    const tipo = sortear(semRepetir.length ? semRepetir : tipos)
     if (tipo === 'maquina-ajustada') condicao = { tipo, ...ajustePreDefinido(missao, dificuldade) }
     else if (tipo === 'arco-unico') condicao = { tipo }
     else if (tipo === 'tecnica') condicao = { tipo, tecnica: sortear(['empurrando', 'puxando'] as const) }
@@ -142,4 +147,9 @@ export function avaliarDesafio(d: Desafio, r: ResultadoPontuacao, e: DadosExecuc
 /** Missão do desafio (sempre existe: só sorteamos do catálogo). */
 export function missaoDoDesafio(d: Desafio): Missao {
   return buscarMissao(d.missaoId)!
+}
+
+/** Ritmo anunciado antes de começar, sem alterar vidas, combo ou nota física. */
+export function etapaArcade(numero: number): string {
+  return numero <= 2 ? 'Aquecimento: missão livre, nível Aprendiz' : numero <= 4 ? 'Controle: arco único ou máquina ajustada' : numero <= 6 ? 'Adaptação: técnica e dificuldade progressiva' : 'Desafio completo: tempo de arco e todas as condições'
 }
