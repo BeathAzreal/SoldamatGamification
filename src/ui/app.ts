@@ -142,8 +142,17 @@ export class App {
     this.limpeza?.()
     this.limpeza = null
     this.raiz.replaceChildren()
-    this.raiz.classList.remove('app-cheia', 'tela-bancada', 'tela-resultado', 'tela-julgamento')
+    this.raiz.classList.remove('app-cheia', 'tela-bancada', 'tela-resultado', 'tela-julgamento', 'tela-inicio')
     document.getElementById('topo-contexto')!.textContent = contexto
+    const nome = contexto.toLocaleLowerCase('pt-BR')
+    const rota = /torneio|julgamento|professor/.test(nome) ? 'torneio'
+      : /treino/.test(nome) ? 'treino' : /arcade/.test(nome) ? 'arcade'
+      : /história|historia|missão|capítulo/.test(nome) ? 'historia'
+      : /recordes/.test(nome) ? 'recordes' : /configura/.test(nome) ? 'config' : 'inicio'
+    document.querySelectorAll<HTMLElement>('[data-rota]').forEach(botao => {
+      if (botao.dataset.rota === rota) botao.setAttribute('aria-current', 'page')
+      else botao.removeAttribute('aria-current')
+    })
     const r = tela(this)
     if (typeof r === 'function') this.limpeza = r
     this.raiz.querySelector<HTMLElement>('.tela-titulo')?.focus()

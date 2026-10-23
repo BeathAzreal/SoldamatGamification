@@ -1,6 +1,14 @@
 import './estilo.css'
 import './estilo-app.css'
+import './estilo-v14.css'
 import { App } from './ui/app'
+import { icone } from './ui/componentes/icones'
+import { telaHistoria } from './ui/telas/historia'
+import { telaArcade } from './ui/telas/arcade'
+import { telaTreino } from './ui/telas/treino'
+import { telaTorneios } from './ui/telas/torneio'
+import { telaRecordes } from './ui/telas/recordes'
+import { telaConfiguracoes } from './ui/telas/configuracoes'
 import { telaMenu } from './ui/telas/menu'
 import { abrirPainel } from './ui/dialogo'
 import { h } from './ui/dom'
@@ -11,6 +19,15 @@ import { somArco } from './ui/som'
  * O treino livre usa a mesma bancada e execução das missões, com a peça padrão.
  */
 const app = new App()
+const rotas: Record<string, (app: App) => void> = {
+  inicio: telaMenu, historia: telaHistoria, arcade: telaArcade, treino: telaTreino,
+  torneio: telaTorneios, recordes: (app) => telaRecordes(app), config: telaConfiguracoes,
+}
+document.querySelectorAll<HTMLButtonElement>('[data-rota]').forEach(botao => {
+  const rota = botao.dataset.rota!
+  botao.querySelector('.nav-icone')?.append(icone(rota === 'inicio' ? 'maquina' : rota))
+  botao.addEventListener('click', () => rotas[rota]?.(app))
+})
 document.getElementById('botao-menu')!.addEventListener('click', () => telaMenu(app))
 document.getElementById('botao-inicio')!.addEventListener('click', () => telaMenu(app))
 document.getElementById('botao-info')!.addEventListener('click', () =>

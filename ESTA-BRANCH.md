@@ -1,12 +1,8 @@
-# Qual é esta branch?
+# Branches da Alpha v1.4
 
-Confira antes de qualquer commit: `git branch --show-current`.
+- `gpt/v1.4`: interface e trabalho do GPT.
+- `alpha-v1.4`: integração por pull request aprovado pelo dono.
+- `claude/v1.4`: reservada ao trabalho futuro do Claude, quando criada.
 
-| Branch | Dono | Quem faz commit e push |
-| --- | --- | --- |
-| `alpha-v1.3` | dono do projeto (versão entregue) | ninguém; só por pull request aprovado pelo dono |
-| `claude/v1.3` | Claude (Anthropic Claude Code) | só o Claude |
-| `gpt/v1.3` | GPT (OpenAI Codex / ChatGPT) | só o GPT |
-
-Este arquivo é igual nas três branches, para não gerar conflito nos merges.
-Trabalhe só na sua branch. As regras estão no [`AGENTS.md`](AGENTS.md).
+A Alpha v1.3 aprovada permanece preservada em `alpha-v1.3`.
+Leia `AGENTS.md` antes de alterar arquivos.

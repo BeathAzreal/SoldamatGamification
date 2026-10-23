@@ -255,7 +255,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     'section',
     { class: 'painel-maquina', 'aria-label': 'Máquina de solda' },
     // Processo: só MIG/MAG tem modelo próprio nesta versão (eletrodo revestido e TIG ainda não).
-    h('header', { class: 'maquina-topo' }, icone('maquina'), h('div', {}, h('strong', {}, 'Máquina MIG/MAG'), h('small', {}, 'Tensão constante · CC+ fixa · eletrodo e TIG: em breve'))),
+    h('header', { class: 'maquina-topo' }, icone('maquina'), h('div', {}, h('strong', {}, 'Máquina MIG/MAG'), h('small', {}, 'Tensão constante · CC+ fixa · preparo MIG/MAG'))),
     h(
       'div',
       { class: 'maquina-grade' },

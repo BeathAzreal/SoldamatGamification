@@ -1,3 +1,9 @@
+# Alpha v1.4 — interface em desenvolvimento
+
+Redesenho em estilo laboratório industrial, na branch `gpt/v1.4`, a partir da v1.3 aprovada. Veja [docs/UI-v1.4.md](docs/UI-v1.4.md). MIG/MAG permanece jogável; eletrodo revestido é somente planejado. O portátil existente ainda corresponde à v1.3.
+
+---
+
 # Oficina de Soldagem MIG/MAG — jogo didático
 
 Jogo de navegador para estudar como os ajustes da máquina, a técnica, o tipo
