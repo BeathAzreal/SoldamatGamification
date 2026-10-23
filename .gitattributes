@@ -1,0 +1,4 @@
+# Manter os arquivos byte a byte (CRLF do Windows; o HTML e um build com finais de linha mistos)
+*.bat -text
+*.txt -text
+*.html -text

@@ -1,0 +1,30 @@
+OFICINA DE SOLDAGEM MIG/MAG — jogo didático
+
+COMO JOGAR EM OUTRO PC
+1. Copie esta pasta inteira (pendrive, rede, e-mail compactado).
+2. Dê dois cliques em "Abrir o jogo.bat" (ou no arquivo "Oficina de Soldagem.html").
+3. Use Google Chrome ou Microsoft Edge atualizados. Não precisa de internet nem instalar nada.
+
+CONTROLE (PS4/PS5/Xbox) E MESA DIGITALIZADORA
+- Controle: conecte e APERTE QUALQUER BOTÃO com o jogo aberto (o navegador só mostra o controle depois disso).
+- Mesa/caneta: escolha "Caneta" na bancada; se não soldar, abra "Calibrar" e veja a linha "Último evento".
+
+ONDE FICAM OS DADOS
+- Recordes, torneios e preferências ficam guardados NO NAVEGADOR deste PC, ligados a este arquivo.
+- Se mover ou renomear a pasta, o navegador trata como outro jogo e os dados não aparecem.
+- Para levar os recordes, use Recordes → "Exportar JSON" e depois importe o arquivo no outro PC.
+
+SOM
+- O som do arco liga/desliga no botão "Som" do topo.
+
+Modelo qualitativo simplificado: números do jogo, não valores de processo.
+A aparência do cordão não indica qualidade interna.
+
+VERSÃO 3D ALPHA v1.1 (2026-10-22)
+- O visual 3D já vem LIGADO: na peça de teste da bancada (preparação e Configurações) e durante a soldagem.
+- No canto da peça: botões 2D / 3D e "Inclinação" (0° = de cima, igual ao 2D). A escolha fica lembrada.
+- A mira, o cordão e a pontuação são os mesmos do 2D: o 3D só muda o desenho.
+- Configurações → "Visual 3D, calibração padrão e dados salvos": ligar/desligar o 3D e escolher a qualidade (baixa, média, alta).
+- Se o 3D ficar lento, o jogo baixa a qualidade sozinho e, se preciso, volta para o 2D (aparece um aviso).
+- Sem WebGL no navegador, tudo funciona em 2D como antes.
+- Os recordes desta pasta ficam separados dos das outras versões.
