@@ -61,6 +61,21 @@ describe('seção do cordão em cada junta (H46)', () => {
     expect(p.alturaMm).toBeCloseTo(-1.5, 2)
   })
 
+  it('topo reto com abertura: cordão fora da fresta fica sobre a chapa, não dentro dela', () => {
+    const d = { espessuraMm: 3, aberturaMm: 1 }
+    const base = new Cordao()
+    const fora = new Cordao(undefined, undefined, undefined, { junta: 'topo', dimensoes: d })
+    // Pouco metal, 6 mm ao lado da fresta: antes ia para "dentro da chapa" (altura negativa).
+    for (const c of [base, fora]) for (let x = 20; x <= 130; x += 0.25) c.depositar(x, 6, 0.25, x)
+    const b = base.secao(150)
+    const f = fora.secao(150)
+    expect(f.alturaMm).toBeGreaterThan(0)
+    expect(f.alturaMm).toBeCloseTo(b.alturaMm, 9)
+    expect(f.larguraMm).toBeCloseTo(b.larguraMm, 9)
+    expect(f.yCentroMm).toBeCloseTo(6, 6)
+    expect(f.enchimento).toBe(1)
+  })
+
   it('V: o metal enche o chanfro primeiro; só o que sobra vira reforço', () => {
     const Ach = areaChanfroMm2(D)
     const meio = cordaoCom('v', 0.5 * Ach)
