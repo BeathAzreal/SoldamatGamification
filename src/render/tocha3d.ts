@@ -52,6 +52,13 @@ export interface QuadroTocha {
   rumo: number
   /** 0,5 no alumínio, que quase não brilha (aparencia.brilhoFraco). */
   intensidadePoca: number
+  /** Índice de fusão sob a tocha (H33): poça mais longa e mais alta com mais calor (H56). */
+  calorPoca: number
+  /** Sentido do avanço ao longo da junta (+1 / −1): a poça fica para trás. */
+  sentido: number
+  /** Gravidade no plano da chapa (mundo x e z, H47): a poça pende para o lado de baixo. */
+  gravidadeX: number
+  gravidadeZ: number
   /** Giro da peça (Vista.angulo): o pescoço compensa para ficar fixo na tela. */
   angulo: number
   /**
@@ -77,6 +84,9 @@ export class Tocha3D {
   private readonly luz: THREE.PointLight
   private readonly poca: THREE.Mesh
   private readonly matPoca: THREE.MeshBasicMaterial
+  /** Metal líquido em relevo sob o arco (H56). */
+  private readonly pocaVolume: THREE.Mesh
+  private readonly matPocaVolume: THREE.MeshBasicMaterial
   private readonly matBocal: THREE.MeshStandardMaterial
   private readonly corBocal = new THREE.Color('#b9915a')
   private readonly corFora = new THREE.Color('#d0473a')
@@ -131,6 +141,10 @@ export class Tocha3D {
     this.poca.rotation.order = 'YXZ'
     this.poca.renderOrder = 5
     this.grupo.add(this.poca)
+    this.matPocaVolume = new THREE.MeshBasicMaterial({ color: '#ffd08c', blending: THREE.AdditiveBlending, transparent: true, opacity: 0.55, depthWrite: false, toneMapped: false })
+    this.pocaVolume = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), this.matPocaVolume)
+    this.pocaVolume.renderOrder = 6
+    this.grupo.add(this.pocaVolume)
     this.texturas.push(tClarao, tPoca)
     this.grupo.visible = false
   }
@@ -163,7 +177,7 @@ export class Tocha3D {
     this.matBocal.color.copy(q.fora ? this.corFora : this.corBocal)
 
     this.clarao.visible = q.soldando
-    this.poca.visible = q.soldando
+    this.poca.visible = this.pocaVolume.visible = q.soldando
     if (!q.soldando) {
       this.luz.intensity = 0
       return
@@ -176,11 +190,20 @@ export class Tocha3D {
     this.luz.position.set(e.dxMm, q.topoMm + 3, e.dyMm)
     this.luz.intensity = LUZ_ARCO * e.tamanho * e.alfa
 
-    // Poça (2D: elipse 1,6 × meia-largura, recuada 0,4 no sentido da junta).
+    // Poça viva (H56): mais longa com mais calor, para trás do avanço e pendendo para o lado da gravidade.
     const meia = Math.max(1.5, q.larguraMm / 2)
+    const calor = Math.min(2, Math.max(0, q.calorPoca))
+    const comprimento = meia * (1.3 + 0.45 * calor)
+    const atras = -(q.sentido || 1) * 0.35 * comprimento
+    const dx = atras * Math.cos(q.rumo) + 0.35 * meia * q.gravidadeX
+    const dz = atras * Math.sin(q.rumo) + 0.35 * meia * q.gravidadeZ
     this.poca.rotation.set(-Math.PI / 2, -q.rumo, 0)
-    this.poca.scale.set(2 * 1.6 * meia, 2 * meia, 1)
-    this.poca.position.set(-0.4 * meia * Math.cos(q.rumo), q.topoMm + 0.15, -0.4 * meia * Math.sin(q.rumo))
+    this.poca.scale.set(2 * comprimento, 2 * meia, 1)
+    this.poca.position.set(dx, q.topoMm + 0.15, dz)
     this.matPoca.opacity = q.intensidadePoca
+    this.pocaVolume.rotation.set(0, -q.rumo, 0)
+    this.pocaVolume.scale.set(0.8 * comprimento, 0.25 + 0.2 * calor, 0.8 * meia)
+    this.pocaVolume.position.set(dx, q.topoMm - 0.05, dz)
+    this.matPocaVolume.opacity = 0.5 * q.intensidadePoca
   }
 }

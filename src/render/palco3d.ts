@@ -2,11 +2,13 @@ import { OBB } from 'three/addons/math/OBB.js'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import type { Cordao } from '../modelo/cordao'
+import type { AnaliseDefeitos } from '../modelo/defeitos'
 import type { GeometriaJunta } from '../modelo/junta'
 import { MATERIAIS, type MaterialId } from '../modelo/material'
-import { PECA } from '../modelo/parametros'
+import { MODELO, PECA } from '../modelo/parametros'
 import type { ContextoProcesso } from '../modelo/processo'
 import { MalhaCordaoViva } from './cordaoVivo'
+import { Defeitos3D } from './defeitos3d'
 import { chapasNaJunta, cristaMm, juntaDe, pontoNaSuperficie } from '../modelo/juntas'
 import { paraMundo } from './malha3d'
 
@@ -239,6 +241,10 @@ export class Palco3D {
   /** Buffers fixos do cordão (cordaoVivo.ts); refeitos só quando o cordão é outro. */
   private viva: MalhaCordaoViva | null = null
   private exagero = EXAGERO_PADRAO
+  /** Gotas, respingos, faixas de borda e oxidação (H50–H57). */
+  private readonly defeitos3d: Defeitos3D
+  /** Chapas que dobram no empeno (topo e V): pivô na borda da junta e sentido do giro. */
+  private readonly pivosEmpeno: { pivo: THREE.Group; sinal: number }[] = []
   largura = 0
   altura = 0
 
@@ -303,13 +309,24 @@ export class Palco3D {
     textura.anisotropy = renderer.capabilities.getMaxAnisotropy()
     this.texturas.push(textura)
     const matChapa = new THREE.MeshStandardMaterial({ color: material.aparencia.chapaClara, map: textura, ...ACABAMENTO[material.id] })
-    for (const g of geometriaChapas(op.contexto)) {
+    const juntaPeca = juntaDe(op.contexto)
+    const dobra = juntaPeca === 'topo' || juntaPeca === 'v'
+    geometriaChapas(op.contexto).forEach((g, k) => {
       const m = new THREE.Mesh(g, matChapa)
       this.chapasColisao.push(m)
       m.receiveShadow = true
       m.castShadow = true
-      this.relevo.add(m)
-    }
+      if (dobra && k < 2) {
+        // H57: cada chapa gira em torno da sua borda na junta (z = ∓ abertura/2), a ponta de fora sobe.
+        const z0 = (k === 0 ? -1 : 1) * (op.contexto.aberturaMm / 2)
+        const pivo = new THREE.Group()
+        pivo.position.z = z0
+        m.position.z = -z0
+        pivo.add(m)
+        this.relevo.add(pivo)
+        this.pivosEmpeno.push({ pivo, sinal: k === 0 ? 1 : -1 })
+      } else this.relevo.add(m)
+    })
     // Sala da oficina (H47): piso, paredes e teto dão a referência de "para baixo" quando a peça tomba.
     this.montarSala()
     // Suporte: coluna do piso até uma orelha na ponta da peça, presa por uma garra.
@@ -338,6 +355,8 @@ export class Palco3D {
     // Os buffers mudam a cada quadro e lugares sem uso ficam zerados: sem recorte por esfera envolvente.
     this.cordao3d.frustumCulled = false
     this.relevo.add(this.cordao3d)
+    this.defeitos3d = new Defeitos3D(op.geometria, Math.ceil(PECA.comprimentoMm / MODELO.passoMm), MODELO.passoMm, juntaPeca, op.contexto, material.id, this.cores[2])
+    this.relevo.add(this.defeitos3d.grupo)
 
     // Escala real: com 3× o cordão do topo reto parecia três vezes mais alto do que o modelo calcula.
     const inicial = op.contexto.posicaoInicial
@@ -522,6 +541,33 @@ export class Palco3D {
     let mudou = !nova && s0Mm !== undefined && s1Mm !== undefined ? viva.atualizar(cordao, cordao.indiceEm(s0Mm), cordao.indiceEm(s1Mm)) : false
     if (!mudou) mudou = viva.atualizar(cordao)
     if (!mudou) return false
+    this.enviarCordao()
+    return true
+  }
+
+  /**
+   * Defeitos visíveis (defeitos.ts): mudam a forma do cordão e desenham gotas,
+   * respingos, poros e faixas na chapa. null apaga. Não muda nada no modelo.
+   */
+  atualizarDefeitos(a: AnaliseDefeitos | null): void {
+    const viva = this.viva
+    if (viva && this.cordaoAtual) {
+      viva.definirDefeitos(a)
+      if (viva.atualizar(this.cordaoAtual)) this.enviarCordao()
+    }
+    this.defeitos3d.atualizar(a, viva)
+  }
+
+  /** Empeno angular das chapas (graus, H57): no topo e no V, as pontas de fora sobem. */
+  definirEmpeno(graus: number): void {
+    const r = THREE.MathUtils.degToRad(graus)
+    for (const { pivo, sinal } of this.pivosEmpeno) pivo.rotation.x = sinal * r
+    this.defeitos3d.definirEmpeno(this.pivosEmpeno.length ? graus : 0)
+  }
+
+  /** Envia à placa de vídeo só a faixa de vértices que a malha viva reescreveu. */
+  private enviarCordao(): void {
+    const viva = this.viva!
     const g = this.cordao3d.geometry
     const a = viva.inicioMudado
     const b = viva.fimMudado
@@ -539,12 +585,13 @@ export class Palco3D {
       g.setDrawRange(0, viva.nIndices)
       this.cordao3d.visible = viva.nIndices > 0
     }
-    return true
   }
 
   /** Aloca os buffers do cordão (uma vez por cordão; as cores das camadas não mudam). */
   private novaMalha(cordao: Cordao): void {
     const viva = (this.viva = new MalhaCordaoViva(cordao.nPosicoes, cordao.passoMm, this.op.geometria, undefined, cordao.forma))
+    // Peça nova: os defeitos da anterior somem até a próxima análise.
+    this.defeitos3d.atualizar(null, null)
     const cor = new Float32Array(viva.raios.length * 3)
     const c = new THREE.Color()
     viva.raios.forEach((r, k) => this.corDaCamada(r, c).toArray(cor, 3 * k))
@@ -598,6 +645,7 @@ export class Palco3D {
       }
     })
     for (const t of this.texturas) t.dispose()
+    this.defeitos3d.destruir()
     this.ambiente.dispose()
     this.pmrem.dispose()
     this.sol.shadow.map?.dispose()

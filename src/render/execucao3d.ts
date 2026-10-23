@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { Cordao } from '../modelo/cordao'
+import { analisarDefeitos, type AnaliseDefeitos } from '../modelo/defeitos'
 import { aporteNecessario } from '../modelo/fusao'
 import type { GeometriaJunta } from '../modelo/junta'
 import { MATERIAIS } from '../modelo/material'
@@ -7,7 +8,7 @@ import { MODELO, PECA } from '../modelo/parametros'
 import type { Percurso } from '../modelo/percurso'
 import { gravidade, juntaDe } from '../modelo/juntas'
 import { dbcpDe, movimentoDe, oscilacaoVisual, tecnicaDe, type ContextoProcesso } from '../modelo/processo'
-import { sobreAPeca, type PontoRegistro } from '../modelo/simulacao'
+import { sobreAPeca, type EventoTentativa, type PontoRegistro } from '../modelo/simulacao'
 import { Calor3D } from './calor3d'
 import { janelaDoRegistro } from './cordaoVivo'
 import { taxaFaiscas } from './efeitos'
@@ -46,6 +47,8 @@ export interface DadosQuadro3D {
   percurso: Percurso
   /** Peça tombada (graus, H47): o mundo gira em volta da junta. */
   rolagemGraus: number
+  /** Aberturas e fechamentos do arco (crateras, H55); sem eles, não há crateras. */
+  eventos?: readonly EventoTentativa[]
 }
 
 export interface CenaExecucao3D {
@@ -104,7 +107,8 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
   palco.guardarTexturas(...tocha.texturas)
   const movimento = movimentoDe(op.contexto)
   const aparencia = MATERIAIS[op.contexto.material].aparencia
-  const calor = new Calor3D(op.geometria, Math.ceil(PECA.comprimentoMm / MODELO.passoMm), MODELO.passoMm, perfil.particulas, aparencia.tintaTermica, juntaDe(op.contexto), op.contexto)
+  // As cores de calor da chapa agora vêm dos defeitos (oxidação, H56), para todos os materiais.
+  const calor = new Calor3D(op.geometria, Math.ceil(PECA.comprimentoMm / MODELO.passoMm), MODELO.passoMm, perfil.particulas, false, juntaDe(op.contexto), op.contexto)
   palco.peca.add(calor.particulas)
   palco.relevo.add(calor.relevo)
   palco.guardarTexturas(...calor.texturas)
@@ -115,7 +119,12 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
   let cordaoAtual: Cordao | null = null
   const emissor = { x: 0, y: 0, z: 0 }
   // Reaproveitado a cada quadro (sem alocar).
-  const qt: QuadroTocha = { x: 0, dbcpMm: dbcpDe(op.contexto), z: 0, topoMm: 0, soldando: false, fora: false, desvio: 0, larguraMm: 0, rumo: 0, angulo: 0, inclinacao: 0, intensidadePoca: aparencia.brilhoFraco ? 0.5 : 1 }
+  const qt: QuadroTocha = { x: 0, dbcpMm: dbcpDe(op.contexto), z: 0, topoMm: 0, soldando: false, fora: false, desvio: 0, larguraMm: 0, rumo: 0, angulo: 0, inclinacao: 0, intensidadePoca: aparencia.brilhoFraco ? 0.5 : 1, calorPoca: 1.5, sentido: 1, gravidadeX: 0, gravidadeZ: 0 }
+  // Defeitos visíveis (H50–H57): recalculados no máximo 4 vezes por segundo e ao fechar o arco.
+  let analise: AnaliseDefeitos | null = null
+  let tDefeitos = -Infinity
+  let defeitosPendentes = false
+  let arcoAntes = false
   const gPeca = { x: 0, y: -1, z: 0 }
   // H38: empurrando, o topo da tocha fica atrás do avanço; puxando, à frente.
   const tecnica = tecnicaDe(op.contexto)
@@ -159,10 +168,20 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
       // Peça limpa (cordão novo): a tinta antiga tem de sumir já.
       if (d.cordao !== cordaoAtual) {
         cordaoAtual = d.cordao
+        analise = null
+        defeitosPendentes = true
         tTinta = -Infinity
         tintaPendente = true
       }
-      if (mudou) tintaPendente = true
+      if (mudou) tintaPendente = defeitosPendentes = true
+      const fechou = arcoAntes && !d.arcoAberto
+      arcoAntes = d.arcoAberto
+      if ((defeitosPendentes && d.agoraMs - tDefeitos >= 250) || fechou) {
+        analise = analisarDefeitos({ cordao: d.cordao, percurso: d.percurso, contexto: op.contexto, registro: d.registro, eventos: d.eventos })
+        palco.atualizarDefeitos(analise)
+        tDefeitos = d.agoraMs
+        defeitosPendentes = false
+      }
       if (calor.comTinta && tintaPendente && d.agoraMs - tTinta >= 100) {
         calor.atualizarTinta(d.percurso.copiaDosAportes(), necessario, palco.malhaCordao)
         tTinta = d.agoraMs
@@ -201,6 +220,11 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
           qt.larguraMm = d.cordao.secao(d.cordao.indiceEm(p.x)).larguraMm
           qt.rumo = op.geometria.rumoEm(p.x)
           qt.angulo = d.angulo
+          qt.sentido = sentido
+          qt.calorPoca = analise ? analise.calor[d.cordao.indiceEm(p.x)] : 1.5
+          // Gravidade no plano da chapa (o "para fora da face" não puxa a poça de lado).
+          qt.gravidadeX = gPeca.x
+          qt.gravidadeZ = gPeca.z
           tocha.atualizar(qt)
           if (qt.soldando) {
             emissor.x = x
@@ -210,7 +234,9 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
           }
         } else tocha.esconder()
       } else tocha.esconder()
-      calor.atualizarParticulas(d.agoraMs, emite ? emissor : null, taxaFaiscas(op.contexto, d.desvio), gPeca)
+      // Na sobrecabeça, com poça grande, gotas de metal caem do arco (H50).
+      const gotejando = emite && analise && d.posicao ? analise.gotejamento[d.cordao.indiceEm(d.posicao.x)] : 0
+      calor.atualizarParticulas(d.agoraMs, emite ? emissor : null, taxaFaiscas(op.contexto, d.desvio), gPeca, gotejando)
       palco.desenhar(vista.camera)
     },
     destruir() {
