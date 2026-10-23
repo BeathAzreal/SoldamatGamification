@@ -56,7 +56,7 @@ export const INFO_JUNTA: Record<TipoJunta, InfoJunta> = {
     fatorFusao: 1.1,
     espessuraTesteMm: 6,
     aberturaTesteMm: 1,
-    velocidadeReferenciaMms: 7,
+    velocidadeReferenciaMms: 5,
   },
   t: {
     nome: 'Em T (filete)',

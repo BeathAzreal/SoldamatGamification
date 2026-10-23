@@ -259,7 +259,7 @@ describe('nota, replay e relatório técnico', () => {
     andar(95, 143, 10)
     const resultado = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
     const r = relatorioTecnico({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, eventos: sim.eventos, tempoArcoMs: sim.tempoDeArcoMs, resultado })
-    expect(r.versaoPontuacao).toBe('pontuacao-v4')
+    expect(r.versaoPontuacao).toBe('pontuacao-v5')
     expect(r.preparo).toMatchObject({ dbcpMm: 15, tecnica: 'neutra', anguloAvancoGraus: 0, junta: 'topo' })
     expect(r.regulagens).toHaveLength(1)
     expect(r.regulagens[0].correnteRelativa).toBeCloseTo(1, 9)
@@ -282,7 +282,7 @@ describe('nota, replay e relatório técnico', () => {
     expect(MATERIAIS[ctx.material].id).toBe('aco-carbono')
   })
 
-  it('pontuacao-v4: escala 0–1000; um buraco no cordão perde na extensão, não de novo na largura', () => {
+  it('pontuacao-v5: escala 0–1000; um buraco no cordão perde na extensão, não de novo na largura', () => {
     const ctx = ctxRef()
     const sim = new Simulacao(ctx)
     sim.definirAjustes(AJUSTES)
@@ -297,7 +297,7 @@ describe('nota, replay e relatório técnico', () => {
       sim.encerrarArco({ t, x: x1, y: 0 })
     }
     const r = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs, aberturasDeArco: 2 })
-    expect(r.versao).toBe('pontuacao-v4')
+    expect(r.versao).toBe('pontuacao-v5')
     expect(r.categorias.reduce((s, c) => s + c.maximo, 0)).toBe(1000)
     const desenho = r.categorias.find((c) => c.id === 'desenho')!
     const pct = (rotulo: string) => Number.parseInt(desenho.detalhes.find((d) => d.rotulo === rotulo)!.valor, 10)
@@ -308,7 +308,7 @@ describe('nota, replay e relatório técnico', () => {
     expect(r.medidas.reiniciosArco).toBe(1)
   })
 
-  it('pontuacao-v4: nota graduada — um pouco fora da faixa perde pouco, muito fora perde tudo', () => {
+  it('pontuacao-v5: nota graduada — um pouco fora da faixa perde pouco, muito fora perde tudo', () => {
     const ctx = ctxRef()
     const notaLargura = (v: number) => {
       const { sim } = passe(ctx, AJUSTES, v)
@@ -325,7 +325,7 @@ describe('nota, replay e relatório técnico', () => {
     expect(muitoLargo.nota).toBe(0)
   })
 
-  it('pontuacao-v4: reinícios de arco e metal fora do trecho baixam a Execução', () => {
+  it('pontuacao-v5: reinícios de arco e metal fora do trecho baixam a Execução', () => {
     const ctx = ctxRef()
     const { sim } = passe(ctx)
     const base = { missao: MISSAO, dificuldade: 'aprendiz' as const, contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs }
