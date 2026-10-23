@@ -668,6 +668,7 @@ nota iguais ao vivo, e o passe de referência aprovado.
 | Formato da junta (H41) segue no modelo, mas a junta é sempre reta desde a v1.2 | Mantido para dados antigos |
 | A eficiência dá metade dos pontos pelo gás escolhido (preparo, não execução) | Mantido e documentado (PONTUACAO.md) |
 | Fusão excessiva (integridade) e deformação usam o mesmo calor | Mantido: são fenômenos diferentes (local × global), documentado |
+| O 3D do topo reto desenhava o cordão com **exagero vertical de 3×** (na solda e no resultado): parecia três vezes mais alto do que o modelo calcula | Corrigido: escala real (1×) por padrão; o exagero (até 6×) fica só como opção na inspeção |
 
 ## O que o modelo **não** representa (e não deve fingir que representa)
 
@@ -680,6 +681,10 @@ nota iguais ao vivo, e o passe de referência aprovado.
   filete e a prumo no topo), forma real do empenamento. A DBCP (H48) e o
   ângulo de avanço (H38) entram só como escolhas fixas da bancada.
 - Corrente elétrica em ampères (só existe a corrente relativa de H28).
+- O metal que entra na **fresta** da junta de topo (abertura × espessura):
+  no topo reto todo o metal fica acima da chapa, então o reforço calculado
+  é um pouco maior que o real (cerca de 3 mm² de 14 mm² no caso de
+  referência). No V a fresta e o chanfro já são preenchidos (H46).
 - Buracos curtos no cordão: o espalhamento numérico de 2 mm (H4) cobre
   boa parte de uma interrupção de alguns milímetros; só interrupções acima
   de ~10 mm aparecem inteiras como "sem cordão".

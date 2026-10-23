@@ -15,6 +15,11 @@
   experimentar os diâmetros de arame da missão (o desafio só trava a
   técnica). Com a corrente revista, arame de 1,2 mm no inox de 2 mm perfura
   em qualquer alimentação; com 0,8 mm há solução.
+- Cordão alto demais no 3D: era o exagero vertical de 3× do topo reto.
+  Agora a solda e o resultado começam em 1× (escala real), conferido no
+  navegador. O preenchimento da fresta do topo reto foi testado e
+  **adiado**: muda a relação largura × área usada pelas explicações e
+  12 testes das etapas 1–4.
 - Pendências: mesa digitalizadora e controle físicos não testados; os
   números do jogo seguem sem validação experimental (só a direção das
   relações tem fonte).
