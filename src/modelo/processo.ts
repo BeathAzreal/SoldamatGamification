@@ -1,7 +1,7 @@
 import type { FormatoJunta } from './junta'
 import type { PosicaoPeca, TipoJunta } from './juntas'
 import { GASES, type GasId, type MaterialId } from './material'
-import { AJUSTES, EQUILIBRIO, MODELO, MOVIMENTO, VELOCIDADE } from './parametros'
+import { AJUSTES, DBCP, EQUILIBRIO, MODELO, MOVIMENTO, VELOCIDADE } from './parametros'
 
 /**
  * Relações entre os ajustes da máquina e o modelo do cordão.
@@ -45,16 +45,33 @@ export interface ContextoProcesso {
   readonly posicaoInicial?: PosicaoPeca
   /** A peça está presa na estrutura e não pode ser girada nem tombada (H47). */
   readonly posicaoFixa?: boolean
+  /**
+   * Distância bico de contato–peça, DBCP/CTWD (mm, H48). Ausente = 15 mm, o
+   * valor em que o modelo foi calibrado (dados antigos ficam iguais).
+   */
+  readonly dbcpMm?: number
+}
+
+/** H48: DBCP usada pelo modelo; valores fora da faixa do jogo voltam ao padrão. */
+export function dbcpDe(ctx: ContextoProcesso): number {
+  const d = ctx.dbcpMm
+  return typeof d === 'number' && Number.isFinite(d) && d >= DBCP.minimoMm && d <= DBCP.maximoMm ? d : DBCP.referenciaMm
 }
 
 /** H38: inclinação da tocha no sentido do deslocamento. */
 export type Tecnica = 'empurrando' | 'neutra' | 'puxando'
 export const TECNICAS: Tecnica[] = ['empurrando', 'neutra', 'puxando']
 
-export const INFO_TECNICA: Record<Tecnica, { nome: string; resumo: string; forma: number; fusao: number }> = {
-  empurrando: { nome: 'Empurrando', resumo: 'Tocha inclinada para a frente: cordão mais largo e baixo, menos fusão.', forma: 0.88, fusao: 0.9 },
-  neutra: { nome: 'Neutra', resumo: 'Tocha a prumo: comportamento de referência.', forma: 1, fusao: 1 },
-  puxando: { nome: 'Puxando', resumo: 'Tocha inclinada para trás: cordão mais alto e estreito, mais fusão.', forma: 1.12, fusao: 1.12 },
+/**
+ * Ângulo de avanço (H38): inclinação da tocha no plano que contém a junta,
+ * medida da normal à face. Positivo = empurrando (a tocha aponta para onde
+ * vai). O jogo usa só três posições; 20° fica na faixa usual de 10–20° das
+ * apostilas. Os fatores de forma e fusão são do jogo.
+ */
+export const INFO_TECNICA: Record<Tecnica, { nome: string; resumo: string; anguloAvancoGraus: number; forma: number; fusao: number }> = {
+  empurrando: { nome: 'Empurrando', resumo: 'Tocha inclinada para a frente: cordão mais largo e baixo, menos fusão.', anguloAvancoGraus: 20, forma: 0.88, fusao: 0.9 },
+  neutra: { nome: 'Neutra', resumo: 'Tocha a prumo: comportamento de referência.', anguloAvancoGraus: 0, forma: 1, fusao: 1 },
+  puxando: { nome: 'Puxando', resumo: 'Tocha inclinada para trás: cordão mais alto e estreito, mais fusão.', anguloAvancoGraus: -20, forma: 1.12, fusao: 1.12 },
 }
 
 export function tecnicaDe(ctx: ContextoProcesso): Tecnica {
@@ -118,20 +135,43 @@ export function limitarAjustes(a: Ajustes): Ajustes {
 }
 
 /**
- * H28: corrente RELATIVA (1 = alimentação 5 com arame de 1,0 mm). É derivada
- * da alimentação e do diâmetro — numa fonte de tensão constante ela não é um
- * controle independente.
+ * H1: volume de arame que a máquina empurra por segundo, RELATIVO (1 =
+ * alimentação 5 com arame de 1,0 mm): velocidade do arame × seção do arame.
+ * É conservação de massa: não depende da tensão nem da DBCP.
  */
-export function correnteRelativa(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
+export function volumeArameRelativo(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
   return (a.alimentacao / AJUSTES.alimentacaoReferencia) * ctx.diametroArameMm ** 2
 }
 
-/** H1 + H29: volume por segundo ∝ alimentação × seção do arame × rendimento do gás. A tensão não entra. */
-export function taxaDeposicao(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
-  return MODELO.taxaDeposicaoMm3s * correnteRelativa(a, ctx) * GASES[ctx.gas].rendimento
+/**
+ * H28 (revista na v1.3) + H48: corrente RELATIVA (1 = alimentação 5, arame
+ * de 1,0 mm, DBCP 15 mm). Numa fonte de tensão constante a corrente não é um
+ * botão: é a que funde o arame na velocidade em que ele chega. Forma da
+ * relação de fusão do eletrodo (Lesnewich, 1958): volume fundido = a·I +
+ * b·L·I²/A — o arco (∝ I) mais o aquecimento resistivo do arame livre
+ * (∝ L·I²/A, A = seção do arame). Normalizada na referência, com a fração
+ * resistiva DBCP.fracaoResistiva (número do jogo):
+ *   V = (1 − r)·i + r·(L/L₀)·i²/d²  →  i = raiz positiva.
+ * Consequências (direção documentada; números do jogo): a corrente cresce
+ * menos que a alimentação; mais DBCP → menos corrente para o mesmo arame.
+ */
+export function correnteRelativa(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
+  const v = volumeArameRelativo(a, ctx)
+  if (v <= 0) return 0
+  const r = DBCP.fracaoResistiva
+  const b = (r * (dbcpDe(ctx) / DBCP.referenciaMm)) / ctx.diametroArameMm ** 2
+  return (-(1 - r) + Math.sqrt((1 - r) ** 2 + 4 * b * v)) / (2 * b)
 }
 
-/** H31: potência relativa do arco = corrente relativa × tensão relativa. */
+/** H1 + H29: volume depositado por segundo ∝ volume de arame × rendimento do gás. Tensão e DBCP não entram. */
+export function taxaDeposicao(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
+  return MODELO.taxaDeposicaoMm3s * volumeArameRelativo(a, ctx) * GASES[ctx.gas].rendimento
+}
+
+/**
+ * H31: potência relativa do arco = corrente relativa × tensão relativa (a
+ * forma U·I da energia do arco; o aporte por mm divide pela velocidade, H33).
+ */
 export function potenciaRelativa(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
   return correnteRelativa(a, ctx) * (a.tensao / AJUSTES.tensaoReferencia)
 }
