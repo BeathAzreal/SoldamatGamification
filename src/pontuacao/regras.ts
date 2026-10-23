@@ -297,7 +297,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     },
     {
       id: 'E2',
-      descricao: 'Nenhuma perfuração prevista',
+      descricao: 'Evitar perfuração',
       cumprida: perfuracaoMm < 1,
       justificativa: perfuracaoMm < 1 ? 'Sem perfuração prevista.' : `Perfuração prevista em até ${fmt1(perfuracaoMm)} mm contínuos.`,
     },

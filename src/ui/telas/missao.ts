@@ -25,7 +25,7 @@ export function montarBriefing(m: Missao, d: Dificuldade, extras: { tentativas?:
   const pesos = extras.pesos ?? PESOS_PADRAO
   const essenciais = [
     `Integridade prevista em pelo menos ${pct(req.integridadeMinima)} do trecho`,
-    'Nenhuma perfuração prevista',
+    'Evitar perfuração',
     'Cordão contínuo no trecho exigido',
     ...(material.exigeLimpeza ? ['Óxido removido antes de soldar'] : []),
   ]
