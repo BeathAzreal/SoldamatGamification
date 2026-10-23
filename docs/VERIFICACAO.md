@@ -1,5 +1,27 @@
 # Verificação
 
+## Alpha v1.4 — correções da revisão visual do GPT (branch `claude/v1.4`)
+
+- Preparação em 1280×720: a peça de teste ficava atrás da barra de ações.
+  Novo `src/estilo-espaco.css` (carregado por último): em telas baixas, título
+  menor, cabeçalho da peça numa faixa, descrição da junta escondida (está na
+  ficha), giro/posição/Centralizar numa linha só (o "Rotação somente X" some e
+  fica a posição), altura mínima da peça 150 px e o resumo do passe rolando
+  por dentro.
+- Inspeção no resultado: a seção da peça encolhia por baixo das abas.
+  Agora peça, controles (numa faixa compacta), abas e conteúdo ficam em
+  faixas separadas; o conteúdo da aba rola por dentro e, se faltar altura, o
+  cartão rola.
+- Corrimão da rampa (peça de pé): a câmera começava de cima e via as bordas.
+  A câmera inicial e o "Centralizar" agora sobem a elevação igual ao
+  tombamento da peça (de frente para a face da junta); a posição física da
+  peça e os limites da câmera não mudaram.
+- Condição essencial E2: "Nenhuma perfuração prevista" virou "Evitar
+  perfuração" (a evidência continua na justificativa).
+- Conferido no navegador em 1280×720 e 1366×768: preparação → tentativa →
+  resultado (abas Largura, Corte e Defeitos) → Treinar de novo; corrimão na
+  preparação e na execução.
+
 ## Alpha v1.4 — defeitos visíveis (branch `claude/v1.4`)
 
 - Novo `tests/defeitos.test.ts` (19 testes): referência sem defeitos;
