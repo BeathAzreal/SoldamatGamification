@@ -20,7 +20,7 @@ import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/ca
  * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v6'
+export const VERSAO_PONTUACAO = 'pontuacao-v7'
 /** Nota máxima (cada ponto de peso vale ESCALA ÷ 100). */
 export const ESCALA_PONTUACAO = 1000
 
@@ -281,6 +281,8 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     metalTotal += volumes[i]
     if (noTrecho((i + 0.5) * passo)) metalTrecho += volumes[i]
   }
+  // H58: metal de cordões soltos (outro ponto de solda longe da junta) é metal fora do trecho.
+  metalTotal += cordao.volumeSolto()
   const aproveitamento = metalTotal > 0 ? metalTrecho / metalTotal : 0
   const fracaoEficiencia =
     0.4 * limitar((tempoUtil - 0.7) / 0.3) + 0.3 * cair(reinicios, T.reinicios) + 0.3 * limitar((aproveitamento - T.aproveitamentoMinimo) / (1 - T.aproveitamentoMinimo))
@@ -297,7 +299,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     },
     {
       id: 'E2',
-      descricao: 'Nenhuma perfuração prevista',
+      descricao: 'Evitar perfuração',
       cumprida: perfuracaoMm < 1,
       justificativa: perfuracaoMm < 1 ? 'Sem perfuração prevista.' : `Perfuração prevista em até ${fmt1(perfuracaoMm)} mm contínuos.`,
     },

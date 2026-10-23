@@ -70,6 +70,15 @@ export interface FisicaLocal {
   instabilidade: number
 }
 
+/**
+ * H58: até esta distância lateral da linha da junta (mm) o metal é sempre do
+ * cordão da junta (tecimento largo incluído). Mais longe, só se continuar o
+ * cordão que já existe naquela posição; senão vira um cordão solto.
+ */
+export const LIMITE_JUNTA_MM = 8
+/** Cordões soltos guardados no máximo; além disso o metal vai para o mais próximo. */
+const MAX_SOLTOS = 12
+
 /** Em que junta o cordão está (H46). Ausente = topo reto (etapas anteriores). */
 export interface FormaCordao {
   junta: TipoJunta
@@ -101,12 +110,22 @@ export class Cordao {
   private readonly nucleo: Float64Array
   private readonly raio: number
   private readonly raioRecente: number
+  /**
+   * H58: cordões soltos — metal que caiu longe da junta e longe do cordão que
+   * já estava ali (outro ponto de solda na chapa). Cada um tem a própria
+   * forma (domo sobre a superfície) e não entra na seção da junta.
+   */
+  readonly soltos: Cordao[] = []
+  /** Centro lateral de referência de um cordão solto (onde começou). */
+  private yReferencia = 0
 
   constructor(
     readonly comprimentoMm: number = PECA.comprimentoMm,
     passoMm: number = MODELO.passoMm,
-    sigmaMm: number = MODELO.sigmaPocaMm,
+    readonly sigmaMm: number = MODELO.sigmaPocaMm,
     readonly forma: FormaCordao | null = null,
+    /** Este é um cordão solto (H58): aceita todo depósito, sem repartir. */
+    readonly solto = false,
   ) {
     this.passoMm = passoMm
     this.nPosicoes = Math.ceil(comprimentoMm / passoMm)
@@ -150,6 +169,10 @@ export class Cordao {
     g: GravidadePoca | null = null,
   ): void {
     if (volumeMm3 <= 0) return
+    if (!this.solto && !this.daJunta(xMm, yMm)) {
+      this.soltoPara(xMm, yMm).depositar(xMm, yMm, volumeMm3, tMs, razao, sigmaLateralMm, instabilidade, g)
+      return
+    }
     const centro = this.indiceEm(xMm)
     const ini = Math.max(0, centro - this.raio)
     const fim = Math.min(this.nPosicoes - 1, centro + this.raio)
@@ -205,6 +228,59 @@ export class Cordao {
     return this.forma ? secaoNaJunta(base, this.forma.junta, this.forma.dimensoes, razao) : base
   }
 
+  /** Centro lateral do metal na fatia de x, ou null se ela ainda não tem metal. */
+  private centroEm(xMm: number): number | null {
+    const i = this.indiceEm(xMm)
+    const v = this.volumes[i]
+    return v > 1e-9 ? this.momentosY[i] / v : null
+  }
+
+  /** Distância lateral até onde um depósito ainda continua o cordão já existente na fatia de x. */
+  private alcanceEm(xMm: number): number {
+    const i = this.indiceEm(xMm)
+    const v = this.volumes[i]
+    if (v <= 1e-9) return 0
+    const c = this.momentosY[i] / v
+    const largura = Math.sqrt(larguraPelaArea(v / this.passoMm, this.momentosRazao[i] / v) ** 2 + 12 * Math.max(0, this.momentosY2[i] / v - c * c))
+    return Math.max(5, 0.75 * largura)
+  }
+
+  /** H58: o depósito em (x, y) é do cordão da junta? Perto da junta, ou continuando o cordão que já está ali. */
+  private daJunta(xMm: number, yMm: number): boolean {
+    if (Math.abs(yMm) <= LIMITE_JUNTA_MM) return true
+    const c = this.centroEm(xMm)
+    return c !== null && Math.abs(yMm - c) <= this.alcanceEm(xMm)
+  }
+
+  /** Cordão solto que recebe o depósito: o que já passa perto, ou um novo. */
+  private soltoPara(xMm: number, yMm: number): Cordao {
+    let melhor: Cordao | null = null
+    let menor = Infinity
+    for (const s of this.soltos) {
+      const c = s.centroEm(xMm)
+      const d = Math.abs(yMm - (c ?? s.yReferencia))
+      const alcance = c === null ? 5 : s.alcanceEm(xMm)
+      if (d <= alcance && d < menor) {
+        menor = d
+        melhor = s
+      }
+    }
+    if (melhor) return melhor
+    if (this.soltos.length >= MAX_SOLTOS) {
+      // Sem lugar: o mais próximo pela referência.
+      return this.soltos.reduce((a, b) => (Math.abs(b.yReferencia - yMm) < Math.abs(a.yReferencia - yMm) ? b : a))
+    }
+    const novo = new Cordao(this.comprimentoMm, this.passoMm, this.sigmaMm, null, true)
+    novo.yReferencia = yMm
+    this.soltos.push(novo)
+    return novo
+  }
+
+  /** Metal dos cordões soltos (mm³, H58): fora da seção da junta. */
+  volumeSolto(): number {
+    return this.soltos.reduce((t, s) => t + s.volumeTotal(), 0)
+  }
+
   /** Gravidade e arco médios na fatia i, ponderados pelo metal (H50); zeros sem metal. */
   fisica(i: number): FisicaLocal {
     const v = this.volumes[i]
@@ -219,12 +295,14 @@ export class Cordao {
     return n * this.passoMm
   }
 
+  /** Todo o metal depositado: o do cordão da junta e o dos cordões soltos (H58). */
   volumeTotal(): number {
     let v = 0
     for (let i = 0; i < this.nPosicoes; i++) v += this.volumes[i]
-    return v
+    return v + this.volumeSolto()
   }
 
+  /** Volumes por fatia do cordão da junta (sem os soltos). */
   copiaDosVolumes(): Float64Array {
     return this.volumes.slice()
   }

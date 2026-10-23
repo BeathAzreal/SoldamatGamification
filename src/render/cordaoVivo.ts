@@ -1,7 +1,7 @@
 import { padraoIrregular, type FormaCordao, type SecaoLocal } from '../modelo/cordao'
 import { formaDomo, type AnaliseDefeitos } from '../modelo/defeitos'
 import type { GeometriaJunta } from '../modelo/junta'
-import { perfilNaJunta, pontosDeBaixo, type TipoJunta } from '../modelo/juntas'
+import { perfilNaJunta, pontoNaSuperficie, pontosDeBaixo, type DimensoesJunta, type TipoJunta } from '../modelo/juntas'
 import { DIVISOES_PERFIL, LARGURA_MINIMA_3D_MM, paraMundo } from './malha3d'
 
 /*
@@ -90,6 +90,11 @@ export class MalhaCordaoViva {
     private readonly geo: Geo,
     divisoes = DIVISOES_PERFIL,
     private readonly forma: FormaCordao | null = null,
+    /**
+     * Cordão solto (H58): o domo fica apoiado na superfície das chapas desta
+     * junta (chapa plana ou parede do filete), na posição lateral em que caiu.
+     */
+    private readonly superficie: { junta: TipoJunta; dimensoes: DimensoesJunta } | null = null,
   ) {
     const M = (this.M = divisoes)
     this.junta = forma?.junta ?? 'topo'
@@ -192,6 +197,18 @@ export class MalhaCordaoViva {
   }
 
   private escrever(v: number, s: number, u: number, z: number): void {
+    if (this.superficie) {
+      // Ponto na superfície em u e a normal para o lado do ar (tangente girada 90°).
+      const { junta, dimensoes } = this.superficie
+      const [n0, w0] = pontoNaSuperficie(junta, dimensoes, u)
+      const a = pontoNaSuperficie(junta, dimensoes, u - 0.05)
+      const b = pontoNaSuperficie(junta, dimensoes, u + 0.05)
+      const tn = b[0] - a[0]
+      const tw = b[1] - a[1]
+      const t = Math.hypot(tn, tw) || 1
+      u = n0 - (tw / t) * z
+      z = w0 + (tn / t) * z
+    }
     const p = this.geo.pontoEm(s, u)
     const [x, y, w] = paraMundo(p.x, p.y, z)
     this.posicoes[3 * v] = x
