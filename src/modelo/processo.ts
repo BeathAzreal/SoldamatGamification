@@ -119,11 +119,15 @@ export function oscilacaoVisual(m: Movimento, tMs: number): { dx: number; dy: nu
   return { dx: 0, dy: 0 }
 }
 
-/** O contexto do modo livre das etapas 1–4: reproduz exatamente o modelo antigo. */
+/**
+ * O contexto do modo livre das etapas 1–4: reproduz exatamente o modelo
+ * antigo, cordão sobre chapa (sem fresta). Desde a v1.3 o metal enche a
+ * fresta da junta de topo antes de virar reforço; com abertura 0 nada muda.
+ */
 export const CONTEXTO_PADRAO: ContextoProcesso = {
   material: 'aco-carbono',
   espessuraMm: 3,
-  aberturaMm: 1,
+  aberturaMm: 0,
   diametroArameMm: 1,
   gas: 'ar-co2',
   oxidoRemovido: true,

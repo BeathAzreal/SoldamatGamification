@@ -81,7 +81,8 @@ export function sobreAPeca(x: number, y: number): boolean {
 /** Cordão na forma da junta do contexto (H46). */
 function novoCordao(ctx: ContextoProcesso): Cordao {
   const junta = juntaDe(ctx)
-  return new Cordao(undefined, undefined, undefined, junta === 'topo' ? null : { junta, dimensoes: { espessuraMm: ctx.espessuraMm, aberturaMm: ctx.aberturaMm } })
+  // Também no topo reto: o metal enche a fresta antes de virar reforço (v1.3).
+  return new Cordao(undefined, undefined, undefined, { junta, dimensoes: { espessuraMm: ctx.espessuraMm, aberturaMm: ctx.aberturaMm } })
 }
 
 export class Simulacao {

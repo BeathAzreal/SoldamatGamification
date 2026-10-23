@@ -16,7 +16,7 @@ export type EstadoFusao = 'sem-cordao' | 'perfuracao' | 'enchimento' | 'borda' |
 export const DESCRICAO_ESTADO: Record<EstadoFusao, string> = {
   'sem-cordao': 'sem cordão',
   perfuracao: 'perfuração prevista',
-  enchimento: 'chanfro não preenchido',
+  enchimento: 'junta não preenchida',
   borda: 'borda da junta não coberta',
   falta: 'falta de fusão prevista',
   adequada: 'fusão adequada prevista',

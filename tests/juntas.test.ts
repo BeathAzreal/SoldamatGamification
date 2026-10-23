@@ -31,11 +31,34 @@ function cordaoCom(junta: TipoJunta, areaMm2: number, y = 0, d = D) {
 }
 
 describe('seção do cordão em cada junta (H46)', () => {
-  it('topo reto: a mesma seção de sempre', () => {
+  it('topo reto sem abertura: a mesma seção de sempre', () => {
     const base = new Cordao()
-    const comForma = new Cordao(undefined, undefined, undefined, { junta: 'topo', dimensoes: D })
+    const comForma = new Cordao(undefined, undefined, undefined, { junta: 'topo', dimensoes: { ...D, aberturaMm: 0 } })
     for (const c of [base, comForma]) for (let x = 20; x <= 130; x += 0.25) c.depositar(x, 0.3, 3, x)
-    expect(comForma.secao(150)).toEqual(base.secao(150))
+    const { areaReforcoMm2: _r, enchimento: _e, ...semExtras } = comForma.secao(150)
+    expect(semExtras).toEqual(base.secao(150))
+  })
+
+  it('topo reto com abertura (v1.3): o metal enche a fresta antes de virar reforço', () => {
+    const d = { espessuraMm: 3, aberturaMm: 1 }
+    const fresta = d.aberturaMm * d.espessuraMm
+    const base = new Cordao()
+    const topo = new Cordao(undefined, undefined, undefined, { junta: 'topo', dimensoes: d })
+    for (const c of [base, topo]) for (let x = 20; x <= 130; x += 0.25) c.depositar(x, 0, 3, x)
+    const b = base.secao(150)
+    const t = topo.secao(150)
+    // Mesmo metal; o reforço é o que sobra da fresta, com a mesma forma (H3).
+    expect(t.areaMm2).toBeCloseTo(b.areaMm2, 9)
+    expect(t.areaReforcoMm2!).toBeCloseTo(b.areaMm2 - fresta, 9)
+    expect((2 / 3) * t.larguraMm * t.alturaMm).toBeCloseTo(b.areaMm2 - fresta, 6)
+    expect(t.alturaMm).toBeLessThan(b.alturaMm)
+    expect(t.larguraMm).toBeLessThan(b.larguraMm)
+    // Pouco metal: a fresta fica pela metade e a superfície do metal fica abaixo da face.
+    const pouco = new Cordao(undefined, undefined, undefined, { junta: 'topo', dimensoes: d })
+    for (let x = 20; x <= 130; x += 0.25) pouco.depositar(x, 0, 0.25 * (fresta / 2), x)
+    const p = pouco.secao(150)
+    expect(p.enchimento!).toBeCloseTo(0.5, 2)
+    expect(p.alturaMm).toBeCloseTo(-1.5, 2)
   })
 
   it('V: o metal enche o chanfro primeiro; só o que sobra vira reforço', () => {

@@ -82,7 +82,7 @@ const SIGLA: Record<EstadoFusao, string> = {
   falta: 'falta',
   excessiva: 'excesso',
   perfuracao: 'furo',
-  enchimento: 'V aberto',
+  enchimento: 'não cheia',
   borda: 'borda',
   'sem-cordao': 'vazio',
 }

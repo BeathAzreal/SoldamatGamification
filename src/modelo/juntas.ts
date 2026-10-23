@@ -156,8 +156,21 @@ export function convexidadeFilete(razao: number): number {
  * largura de base e a largura só pela área.
  */
 export function secaoNaJunta(base: SecaoLocal, junta: TipoJunta, d: DimensoesJunta, razao: number): SecaoLocal {
-  if (junta === 'topo' || base.areaMm2 <= 0) return { ...base, areaReforcoMm2: base.areaMm2, enchimento: junta === 'v' ? 0 : 1 }
+  if (base.areaMm2 <= 0 || (junta === 'topo' && d.aberturaMm <= 0)) return { ...base, areaReforcoMm2: base.areaMm2, enchimento: junta === 'v' ? 0 : 1 }
   const A = base.areaMm2
+  if (junta === 'topo') {
+    // v1.3: o metal enche primeiro a fresta entre as bordas (abertura × espessura); só o resto é reforço.
+    const Af = d.aberturaMm * d.espessuraMm
+    if (A < Af) {
+      const nivel = A / d.aberturaMm
+      return { ...base, larguraMm: d.aberturaMm, alturaMm: -(d.espessuraMm - nivel), razaoAlturaLargura: 0, areaReforcoMm2: 0, enchimento: A / Af }
+    }
+    const excesso = A - Af
+    // Mesma forma (razão) de antes, só com o metal que sobra acima da face; a largura nunca fica menor que a fresta.
+    const largura = Math.max(d.aberturaMm, base.larguraMm * Math.sqrt(excesso / A))
+    const altura = (1.5 * excesso) / largura
+    return { ...base, larguraMm: largura, alturaMm: altura, razaoAlturaLargura: altura / largura, areaReforcoMm2: excesso, enchimento: A / Af }
+  }
   if (junta === 'v') {
     const Ach = areaChanfroMm2(d)
     const wTopo = larguraTopoChanfroMm(d)
@@ -206,7 +219,7 @@ export function secaoNaJunta(base: SecaoLocal, junta: TipoJunta, d: DimensoesJun
  * da tela e para os testes que procuram uma solução.
  */
 export function areaParaLargura(junta: TipoJunta, d: DimensoesJunta, larguraMm: number, razao: number): number {
-  if (junta === 'topo') return (2 / 3) * razao * larguraMm ** 2
+  if (junta === 'topo') return d.aberturaMm * d.espessuraMm + (2 / 3) * razao * larguraMm ** 2
   if (junta === 'v') {
     const minima = larguraTopoChanfroMm(d) + SOBRA_V_MM
     return areaChanfroMm2(d) + (2 / 3) * razao * Math.max(larguraMm, minima) ** 2 * (larguraMm > minima ? 1 : 0.3)
