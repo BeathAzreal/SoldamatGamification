@@ -42,15 +42,13 @@ export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
   elemento.className = 'inspecao-tela inspecao-tela-3d'
   elemento.setAttribute('aria-label', 'Vista 3D da peça soldada: arraste para girar, role para aproximar')
 
-  const camera = new THREE.PerspectiveCamera(35, 1, 1, 6000)
+  const camera = new THREE.PerspectiveCamera(35, 1, 1, 3000)
   const controles = new OrbitControls(camera, elemento)
   controles.enableDamping = true
   controles.dampingFactor = 0.12
   controles.screenSpacePanning = true
   controles.minDistance = 25
   controles.maxDistance = 900
-  // Não deixa a câmera passar para baixo do piso da sala (palco3d.ts).
-  controles.maxPolarAngle = Math.PI * 0.6
 
   // Tocha simplificada (bocal) e o clarão do arco: só durante o replay.
   const tocha = new THREE.Mesh(new THREE.CylinderGeometry(7, 5, 28, 24, 1, true), new THREE.MeshStandardMaterial({ color: '#b08a4a', metalness: 0.9, roughness: 0.3 }))

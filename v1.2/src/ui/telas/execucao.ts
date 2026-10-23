@@ -72,8 +72,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
     const canvas = h('canvas', { class: 'tela-solda', 'aria-label': `Vista de cima das chapas. ${INSTRUCOES[op.dispositivo]}` })
     const area = h('div', { class: 'area-peca' }, canvas)
     const sobreposicao = h('div', { class: 'pausa', hidden: true, role: 'alertdialog', 'aria-live': 'assertive' })
-    const sobreGiro = h('div', { class: 'giro-sobre', title: 'Posicionar a peça (arco fechado): Q/E giram no plano, W/S tombam; no controle, o direcional' }, giro.elemento)
-    area.append(sobreGiro, sobreposicao)
+    area.append(h('div', { class: 'giro-sobre', title: 'Posicionar a peça (arco fechado): Q/E giram no plano, W/S tombam; no controle, o direcional' }, giro.elemento), sobreposicao)
 
     // Visual 3D (só desenho): o canvas 2D fica por cima, transparente, recebendo o ponteiro.
     const visual = montarVisual3D({
@@ -85,8 +84,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
       aoMudarMapa: () => reamostrarPonteiro(),
       quando: 'nesta tentativa',
     })
-    // Câmera junto do giro: um só painel no canto, nada por cima da peça.
-    sobreGiro.append(visual.elemento)
+    area.append(visual.elemento)
 
     const vAvanco = h('span', { class: 'valor-grande' }, '0,0')
     const marcador = h('div', { class: 'marcador' })
@@ -110,7 +108,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
       status,
       h(
         'section',
-        { class: 'bloco', title: 'Faixa verde: velocidade que daria a largura do desenho com estes ajustes (pelo modelo).' },
+        { class: 'bloco' },
         h('h2', {}, 'Velocidade de avanço'),
         h('p', { class: 'valor' }, vAvanco, h('small', {}, ' mm/s')),
         h('div', { class: 'barra', 'aria-hidden': 'true' }, faixa, marcador),
@@ -119,7 +117,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
       ),
       h(
         'section',
-        { class: 'bloco', title: 'Calor acumulado da peça (relativo, sintético).' },
+        { class: 'bloco' },
         h('h2', {}, 'Aquecimento da peça'),
         h('div', { class: 'barra barra-calor', role: 'meter', 'aria-label': 'Aquecimento acumulado relativo' }, aquecimento),
         h('p', { class: 'nota' }, MATERIAIS[op.contexto.material].exigeLimpeza ? 'O alumínio esquenta muito ao longo do passe: a fusão aumenta com o calor acumulado.' : 'Calor acumulado da peça (relativo, sintético).'),

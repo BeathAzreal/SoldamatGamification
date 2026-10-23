@@ -1,7 +1,6 @@
 import { FICHA_CATEGORIA, type ResultadoPontuacao } from '../../pontuacao/regras'
 import { abrirPainel } from '../dialogo'
 import { contarAte, h, n1 } from '../dom'
-import { montarAbas } from './abas'
 
 /**
  * Conceito estilo arcade (S, A, B, C, D) — só APRESENTAÇÃO da nota total.
@@ -59,37 +58,35 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
     }),
   )
 
-  // O detalhe fica numa sobreposição, em abas (o resumo e uma por categoria): cabe sem rolar.
-  const detalhe = () => {
-    const resumo = h(
-      'section',
-      { class: 'cartao' },
-      h('h4', {}, 'Condições essenciais'),
-      h('ul', { class: 'lista-essenciais' }, r.essenciais.map((e) => h('li', { class: e.cumprida ? 'ok' : 'falha' }, h('strong', {}, `${e.cumprida ? '✔' : '✖'} ${e.descricao}. `), e.justificativa))),
-      r.penalidades.length ? h('h4', {}, 'Penalidades') : null,
-      r.penalidades.length ? h('ul', { class: 'lista-penalidades' }, r.penalidades.map((p) => h('li', {}, h('strong', {}, `${p.descricao} (${n1(p.pontos)})`), ` — ${p.justificativa}`))) : null,
-      h('h4', {}, 'Trechos com problema (previsão sintética)'),
-      r.problemas.length
-        ? h('ul', { class: 'lista-problemas' }, r.problemas.map((p) => h('li', {}, `${n1(p.inicioMm)} a ${n1(p.fimMm)} mm: ${p.descricao}`)))
-        : h('p', { class: 'dica' }, 'Nenhum trecho com problema previsto.'),
-      h('p', { class: 'dica pequena' }, `Regras ${r.versao}. O conceito (${letra}) é só apresentação da nota. A integridade é uma previsão sintética do modelo, não um ensaio.`),
-    )
-    const porCategoria = r.categorias.map((c): [string, HTMLElement] => {
-      const ficha = FICHA_CATEGORIA[c.id]
-      return [
-        `${c.nome} · ${n1(c.pontos)}`,
-        h(
+  // O detalhe de cada categoria, as penalidades e os trechos com problema ficam numa sobreposição.
+  const detalhe = () =>
+    h(
+      'div',
+      { class: 'detalhe-pontuacao' },
+      r.categorias.map((c) => {
+        const ficha = FICHA_CATEGORIA[c.id]
+        return h(
           'section',
           { class: 'cartao' },
           h('h4', {}, `${c.nome}: ${n1(c.pontos)} / ${c.maximo}`),
           h('p', {}, c.explicacao),
           h('dl', { class: 'ficha' }, h('dt', {}, 'Definição'), h('dd', {}, ficha.definicao), h('dt', {}, 'Dados'), h('dd', {}, ficha.dados), h('dt', {}, 'Regra'), h('dd', {}, ficha.regra), h('dt', {}, 'Limitações'), h('dd', {}, ficha.limitacoes)),
-        ),
-      ]
-    })
-    const abas = montarAbas([['Resumo', resumo], ...porCategoria], 'Detalhe da pontuação')
-    return h('div', { class: 'detalhe-pontuacao' }, abas.lista, ...abas.corpos)
-  }
+        )
+      }),
+      h(
+        'section',
+        { class: 'cartao' },
+        h('h4', {}, 'Condições essenciais'),
+        h('ul', { class: 'lista-essenciais' }, r.essenciais.map((e) => h('li', { class: e.cumprida ? 'ok' : 'falha' }, h('strong', {}, `${e.cumprida ? '✔' : '✖'} ${e.descricao}. `), e.justificativa))),
+        r.penalidades.length ? h('h4', {}, 'Penalidades') : null,
+        r.penalidades.length ? h('ul', { class: 'lista-penalidades' }, r.penalidades.map((p) => h('li', {}, h('strong', {}, `${p.descricao} (${n1(p.pontos)})`), ` — ${p.justificativa}`))) : null,
+        h('h4', {}, 'Trechos com problema (previsão sintética)'),
+        r.problemas.length
+          ? h('ul', { class: 'lista-problemas' }, r.problemas.map((p) => h('li', {}, `${n1(p.inicioMm)} a ${n1(p.fimMm)} mm: ${p.descricao}`)))
+          : h('p', { class: 'dica' }, 'Nenhum trecho com problema previsto.'),
+        h('p', { class: 'dica pequena' }, `Regras ${r.versao}. O conceito (${letra}) é só apresentação da nota. A integridade é uma previsão sintética do modelo, não um ensaio.`),
+      ),
+    )
 
   return h(
     'section',

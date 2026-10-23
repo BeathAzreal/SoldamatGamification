@@ -10,7 +10,7 @@ import { chapasNaJunta, cristaMm, juntaDe, pontoNaSuperficie } from '../modelo/j
 import { paraMundo } from './malha3d'
 
 /*
- * Palco 3D comum à inspeção e à execução: renderer, luz, chapas, sala,
+ * Palco 3D comum à inspeção e à execução: renderer, luz, chapas, bancada,
  * cordão, marcas da missão e régua. Só LÊ o modelo (H3, H41); brilho,
  * riscos e luz são aparência (H8, H40).
  *
@@ -102,67 +102,6 @@ function texturaEscovada(): THREE.CanvasTexture {
   return t
 }
 
-/** Ladrilhos de concreto do piso da oficina: rejunte a cada 500 mm (uma volta da textura). */
-function texturaPiso(): THREE.CanvasTexture {
-  const c = document.createElement('canvas')
-  c.width = c.height = 256
-  const ctx = c.getContext('2d')!
-  ctx.fillStyle = '#5a5d61'
-  ctx.fillRect(0, 0, 256, 256)
-  let semente = 7
-  const sorteio = () => (semente = (semente * 16807) % 2147483647) / 2147483647
-  for (let k = 0; k < 900; k++) {
-    ctx.fillStyle = sorteio() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)'
-    ctx.fillRect(sorteio() * 256, sorteio() * 256, 1 + sorteio() * 3, 1 + sorteio() * 3)
-  }
-  ctx.strokeStyle = '#2b2d30'
-  ctx.lineWidth = 4
-  ctx.strokeRect(0, 0, 256, 256)
-  // Faixa de segurança amarela na borda de um ladrilho: marca bem onde fica o chão.
-  ctx.fillStyle = '#a8862c'
-  ctx.fillRect(0, 40, 256, 14)
-  const t = new THREE.CanvasTexture(c)
-  t.colorSpace = THREE.SRGBColorSpace
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  return t
-}
-
-/** Parede de blocos; o teto (teto = true) é escuro com luminárias. */
-function texturaParede(teto: boolean): THREE.CanvasTexture {
-  const c = document.createElement('canvas')
-  c.width = c.height = 256
-  const ctx = c.getContext('2d')!
-  ctx.fillStyle = teto ? '#2a2d31' : '#6b7178'
-  ctx.fillRect(0, 0, 256, 256)
-  if (teto) {
-    ctx.fillStyle = '#f2f4f0'
-    ctx.fillRect(40, 108, 176, 40)
-  } else {
-    ctx.strokeStyle = 'rgba(30,32,36,0.55)'
-    ctx.lineWidth = 2
-    for (let y = 0; y <= 256; y += 32) {
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(256, y)
-      ctx.stroke()
-      const desloc = (y / 32) % 2 ? 32 : 0
-      for (let x = desloc; x < 256; x += 64) {
-        ctx.beginPath()
-        ctx.moveTo(x, y)
-        ctx.lineTo(x, y + 32)
-        ctx.stroke()
-      }
-    }
-  }
-  const t = new THREE.CanvasTexture(c)
-  t.colorSpace = THREE.SRGBColorSpace
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  return t
-}
-
-/** Sala da oficina em volta da peça (mm, eixos do mundo): piso, paredes e teto. */
-const SALA = { piso: -380, altura: 2600, meia: 1700 }
-
 /**
  * Chapas da junta (H46): o corte de chapasNaJunta, no plano (n, w),
  * extrudado ao longo da junta (reta) de s = 0 a 150 mm.
@@ -214,15 +153,11 @@ export class Palco3D {
   /** Tudo que tem relevo: o exagero escala só o y. */
   readonly relevo = new THREE.Group()
   readonly sol: THREE.DirectionalLight
-  /** Sala, suporte e sol: giram com a peça tombada (H47), porque a câmera fica de frente para a junta. */
+  /** Bancada, chão e sol: giram com a peça tombada (H47), porque a câmera fica de frente para a junta. */
   readonly ambienteGrupo = new THREE.Group()
-  /** Coluna do suporte que segura a peça pela orelha da ponta (vai do piso até ela). */
-  private readonly coluna: THREE.Mesh
-  private readonly garra: THREE.Mesh
-  private readonly sapata: THREE.Mesh
-  /** Orelha soldada na ponta da peça (coordenadas da peça): por onde o suporte a segura. */
-  private readonly orelha = new THREE.Vector3()
-  private readonly temp = new THREE.Vector3()
+  private readonly bancada: THREE.Mesh
+  /** Cantos das chapas (coordenadas da peça, sem exagero), para pôr o chão embaixo dela. */
+  private readonly cantos: [number, number, number][] = []
   private rolagemGraus = 0
   private anguloGiro = 0
   private readonly cordao3d: THREE.Mesh
@@ -276,10 +211,10 @@ export class Palco3D {
     cena.add(frontal)
     cena.add(this.ambienteGrupo)
     const sol = new THREE.DirectionalLight(0xffffff, 2.4)
-    sol.position.set(-180, 340, 140)
+    sol.position.set(-90, 170, 70)
     sol.castShadow = op.sombras ?? true
     sol.shadow.mapSize.set(op.mapaSombra ?? 2048, op.mapaSombra ?? 2048)
-    Object.assign(sol.shadow.camera, { left: -260, right: 260, top: 260, bottom: -260, near: 10, far: 1200 })
+    Object.assign(sol.shadow.camera, { left: -110, right: 110, top: 110, bottom: -110, near: 10, far: 500 })
     sol.shadow.bias = -0.0004
     sol.shadow.normalBias = 0.3
     sol.shadow.camera.updateProjectionMatrix()
@@ -305,23 +240,15 @@ export class Palco3D {
       m.castShadow = true
       this.relevo.add(m)
     }
-    // Sala da oficina (H47): piso, paredes e teto dão a referência de "para baixo" quando a peça tomba.
-    this.montarSala()
-    // Suporte: coluna do piso até uma orelha na ponta da peça, presa por uma garra.
-    const matSuporte = new THREE.MeshStandardMaterial({ color: '#2f5f8f', metalness: 0.5, roughness: 0.55 })
-    this.coluna = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 1, 20), matSuporte)
-    this.garra = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 16), matSuporte)
-    this.sapata = new THREE.Mesh(new THREE.CylinderGeometry(45, 52, 12, 32), matSuporte)
-    for (const m of [this.coluna, this.garra, this.sapata]) {
-      m.castShadow = true
-      m.receiveShadow = true
-      this.ambienteGrupo.add(m)
+    for (const poligono of chapasNaJunta(juntaDe(op.contexto), op.contexto, PECA.larguraChapaMm)) {
+      for (const [n, w] of poligono) for (const x of [-PECA.comprimentoMm / 2, PECA.comprimentoMm / 2]) this.cantos.push([x, w, n])
     }
-    const orelha = new THREE.Mesh(new THREE.BoxGeometry(18, 5, 12), matChapa)
-    orelha.castShadow = true
-    orelha.position.set(PECA.comprimentoMm / 2 + 10, -3, 0)
-    this.orelha.copy(orelha.position)
-    this.peca.add(orelha)
+
+    // Bancada embaixo da peça (aparece pela fresta e recebe a sombra): fica no "mundo", que tomba ao contrário da peça.
+    this.bancada = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1000), new THREE.MeshStandardMaterial({ color: '#25282c', roughness: 0.9, metalness: 0.2 }))
+    this.bancada.rotation.x = -Math.PI / 2
+    this.bancada.receiveShadow = true
+    this.ambienteGrupo.add(this.bancada)
 
     this.montarMarcas()
 
@@ -336,26 +263,6 @@ export class Palco3D {
 
     // H46: o exagero vertical só ajuda na chapa fina vista de cima; no V e no filete deformaria os ângulos.
     this.definirExagero(juntaDe(op.contexto) === 'topo' ? EXAGERO_PADRAO : 1)
-  }
-
-  /** Caixa da sala vista por dentro: piso de ladrilhos, paredes de blocos e teto com luminárias. */
-  private montarSala(): void {
-    const { piso, altura, meia } = SALA
-    const tPiso = texturaPiso()
-    tPiso.repeat.set((2 * meia) / 500, (2 * meia) / 500)
-    const tParede = texturaParede(false)
-    tParede.repeat.set((2 * meia) / 600, altura / 600)
-    const tTeto = texturaParede(true)
-    tTeto.repeat.set((2 * meia) / 800, (2 * meia) / 800)
-    this.texturas.push(tPiso, tParede, tTeto)
-    const parede = new THREE.MeshStandardMaterial({ map: tParede, roughness: 0.95, metalness: 0, side: THREE.BackSide })
-    const teto = new THREE.MeshStandardMaterial({ map: tTeto, roughness: 0.9, metalness: 0, side: THREE.BackSide, emissive: '#ffffff', emissiveMap: tTeto, emissiveIntensity: 0.25 })
-    const chao = new THREE.MeshStandardMaterial({ map: tPiso, roughness: 0.9, metalness: 0.05, side: THREE.BackSide })
-    // Ordem das faces do BoxGeometry: +x, −x, +y (teto), −y (piso), +z, −z.
-    const sala = new THREE.Mesh(new THREE.BoxGeometry(2 * meia, altura, 2 * meia), [parede, parede, teto, chao, parede, parede])
-    sala.position.y = piso + altura / 2
-    sala.receiveShadow = true
-    this.ambienteGrupo.add(sala)
   }
 
   /** Marcas da missão (INÍCIO/FIM, tolerância) e régua, como em cena.ts. */
@@ -447,7 +354,7 @@ export class Palco3D {
 
   /**
    * Peça tombada (H47). A câmera continua de frente para a junta; quem gira
-   * é o mundo (sala, suporte, sol, gravidade): tombar φ é girar o ambiente −φ em
+   * é o mundo (bancada, sol, gravidade): tombar φ é girar o ambiente −φ em
    * torno do eixo horizontal da tela.
    */
   definirRolagem(graus: number): void {
@@ -456,19 +363,20 @@ export class Palco3D {
     this.posicionarAmbiente()
   }
 
-  /** Gira o mundo em volta da peça e leva o suporte (coluna vertical do piso) até a orelha dela. */
+  /** Gira o mundo e põe a bancada logo abaixo do ponto mais baixo da peça. */
   private posicionarAmbiente(): void {
     const f = (this.rolagemGraus * Math.PI) / 180
     this.ambienteGrupo.rotation.x = -f
-    this.cena.updateMatrixWorld(true)
-    // Orelha nas coordenadas do mundo que tombou (y = para cima de verdade).
-    const o = this.ambienteGrupo.worldToLocal(this.peca.localToWorld(this.temp.copy(this.orelha)))
-    const base = SALA.piso
-    const topo = Math.max(base + 20, o.y - 8)
-    this.coluna.scale.y = topo - base
-    this.coluna.position.set(o.x, (base + topo) / 2, o.z)
-    this.garra.position.copy(o)
-    this.sapata.position.set(o.x, base + 6, o.z)
+    // "Para cima" no mundo, nas coordenadas da cena: (0, cos φ, −sin φ).
+    const c = Math.cos(this.anguloGiro)
+    const s = Math.sin(this.anguloGiro)
+    let menor = Infinity
+    for (const [x, w, n] of this.cantos) {
+      const z = s * x + c * n
+      const altura = w * this.exagero * Math.cos(f) - z * Math.sin(f)
+      if (altura < menor) menor = altura
+    }
+    this.bancada.position.y = menor - 0.05
   }
 
   /**

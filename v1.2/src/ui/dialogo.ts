@@ -45,9 +45,7 @@ function abrir(conteudo: HTMLElement, botoes: { texto: string; valor: string; pr
     camada.replaceChildren(h('div', { class: 'dialogo-fundo' }, caixa))
     document.addEventListener('keydown', teclas, true)
     const foco = caixa.querySelector<HTMLElement>('input, textarea, select') ?? caixa.querySelector<HTMLElement>('.acoes button.primario, .acoes button')
-    // Sem rolar até o botão: textos longos começam do topo.
-    foco?.focus({ preventScroll: true })
-    caixa.scrollTop = 0
+    foco?.focus()
   })
 }
 

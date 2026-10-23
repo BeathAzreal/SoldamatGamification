@@ -2354,7 +2354,7 @@ details > summary {
   gap: 0 14px;
 }
 .tela-bancada .grupo-maquina {
-  margin: 3px 0;
+  margin: 5px 0;
 }
 .tela-bancada .painel-maquina .dica {
   font-size: 0.78rem;
@@ -2368,45 +2368,6 @@ details > summary {
 .tela-bancada .mostradores,
 .tela-bancada .leituras {
   margin-top: 6px;
-}
-/* Tudo da máquina numa tela só: leituras numa linha, mostradores e técnica mais baixos. */
-.tela-bancada .leituras {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  font-size: 0.8rem;
-}
-.tela-bancada .leitura {
-  padding: 5px 7px;
-}
-.tela-bancada .leitura .rotulo-maquina {
-  font-size: 0.62rem;
-  letter-spacing: 0.05em;
-}
-.tela-bancada .forma-secao svg {
-  max-height: 22px;
-}
-.tela-bancada .mostrador {
-  padding: 5px 8px 6px;
-}
-.tela-bancada .mostrador-linha {
-  margin-bottom: 2px;
-}
-.tela-bancada .led {
-  font-size: 1.45rem;
-  min-width: 70px;
-}
-.tela-bancada .mostrador .botao-redondo {
-  width: 30px;
-  height: 30px;
-}
-.tela-bancada .chip-icone {
-  flex-direction: row;
-  min-width: 0;
-  gap: 5px;
-}
-.tela-bancada .chip-icone .icone {
-  width: 18px;
-  height: 18px;
 }
 
 .tela-bancada .peca-teste {
@@ -2478,11 +2439,6 @@ details > summary {
   position: absolute;
   top: 8px;
   right: 8px;
-  max-width: calc(100% - 16px);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
   background: rgba(8, 10, 13, 0.78);
   border: 1px solid #ffffff1c;
   border-radius: 10px;
@@ -2501,11 +2457,8 @@ canvas.tela-solda-3d[hidden] {
 }
 .visual-sobre {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  max-width: calc(100% - 16px);
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  top: 8px;
+  left: 8px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -2557,30 +2510,9 @@ canvas.tela-solda-3d[hidden] {
   border-color: var(--laranja);
   color: var(--texto);
 }
-.giro-sobre .visual-sobre {
-  position: static;
-  background: none;
-  border: 0;
-  padding: 0 2px 2px;
-}
-.giro-sobre {
-  font-size: 0.8rem;
-}
 .giro-sobre .botao-redondo {
-  width: 28px;
-  height: 28px;
-  font-size: 0.95rem;
-}
-.giro-sobre .giro .giro-lado {
-  width: 30px;
-  height: 30px;
-}
-.giro-sobre .giro .giro-posicao {
-  min-width: 0;
-}
-.giro-sobre .botao-endireitar {
-  padding: 3px 8px;
-  font-size: 0.78rem;
+  width: 34px;
+  height: 34px;
 }
 .tela-bancada .resumo-passe h4 {
   margin: 0 0 6px;
@@ -2955,28 +2887,6 @@ canvas.tela-solda-3d[hidden] {
   color: var(--texto);
   min-width: 9.5em;
 }
-/* Peça vista de lado: mostra o tombamento contra o piso (H47). */
-.giro .giro-lado {
-  width: 40px;
-  height: 40px;
-  flex: none;
-}
-.giro .giro-lado .chapa {
-  fill: #c9ced6;
-}
-.giro .giro-lado .face {
-  stroke: var(--laranja);
-  stroke-width: 2.5;
-}
-.giro .giro-lado .tocha {
-  stroke: var(--laranja);
-  stroke-width: 1.6;
-  fill: none;
-}
-.giro .giro-lado .piso {
-  stroke: var(--texto-3);
-  stroke-width: 1.5;
-}
 .giro.travado .giro-grupo {
   opacity: 0.55;
 }
@@ -3094,45 +3004,4 @@ canvas.tela-solda-3d[hidden] {
 }
 .tela-resultado .grafico-corte {
   height: 190px;
-}
-
-/* ---------------------------------------------------------- telas baixas (notebook 1280×720)
- * Tudo continua numa tela só: espaços e textos auxiliares menores.          */
-.detalhe-pontuacao .abas {
-  margin: 0 0 4px;
-}
-.detalhe-pontuacao .abas [role='tab'] {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-}
-.detalhe-pontuacao .cartao p {
-  margin: 4px 0;
-}
-@media (max-height: 800px) {
-  .execucao .painel {
-    gap: 6px;
-  }
-  .execucao .painel .etiqueta {
-    padding: 4px 10px;
-  }
-  /* As notas explicativas dos medidores somem (o mesmo texto fica no título do bloco). */
-  .execucao .painel .bloco .nota {
-    display: none;
-  }
-  .tela-resultado .barras-categorias {
-    gap: 4px;
-    margin-top: 6px;
-  }
-  .tela-resultado .barras-categorias li {
-    margin-bottom: 2px;
-  }
-  .tela-resultado .essenciais-curtos {
-    margin: 4px 0;
-  }
-  .tela-resultado .painel-pontuacao .selo {
-    margin: 6px 0;
-  }
-  .dialogo-largo .detalhe-pontuacao .cartao {
-    padding: 10px 14px;
-  }
 }
