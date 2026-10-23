@@ -1,4 +1,8 @@
-# Pontuação automática — versão `pontuacao-v1`
+# Pontuação automática — versão `pontuacao-v2`
+
+> **v2 (Alpha v1.3).** Mudanças em relação à `pontuacao-v1` no fim deste
+> documento ("Versão das regras"). Pesos, faixas, limiares e condições
+> essenciais **não mudaram**.
 
 A pontuação é uma **proposta didática**. Ela só mede o que o modelo do jogo
 calcula (ver [HIPOTESES.md](HIPOTESES.md)). Nenhum item é medido por
@@ -58,7 +62,8 @@ medidos no trecho exigido **menos 2 mm em cada ponta** (H37).
 - **Dados usados:** extensão, largura, altura (reforço) e centro do cordão.
 - **Regra:** quatro partes, cada uma uma fração de 0 a 1:
   extensão (7/25) = fração do trecho exigido com cordão;
-  largura (8/25) = fração do trecho avaliado com largura dentro da faixa;
+  largura (8/25) = fração das posições **com cordão** do trecho avaliado com
+  largura dentro da faixa (v2; na v1 contava o trecho todo);
   reforço (5/25) = fração com altura até o máximo;
   alinhamento (5/25) = fração com o centro a até a tolerância da linha da junta.
 - **Limitações:** as tolerâncias são **objetivos didáticos do jogo**, não
@@ -111,7 +116,7 @@ Na tela, a categoria zerada mostra **quanto valeria** (barra tracejada e
 "Valeria X — zerada porque a solda não foi aprovada"), e logo abaixo do selo
 "Não aprovada" aparece uma dica do motivo mais provável (falta de fusão →
 andar mais devagar; perfuração → mais rápido; óxido; trecho sem cordão).
-Isso é só apresentação: a regra e o total não mudam (`pontuacao-v1`).
+Isso é só apresentação: a regra e o total não mudam.
 
 - as categorias **deformação e eficiência ficam zeradas** (penalidade
   registrada com justificativa), para que economia ou rapidez não compensem;
@@ -142,7 +147,7 @@ nem em desempate.
 
 ## Arcade (desafios aleatórios)
 
-No modo Arcade, cada desafio usa a pontuação v1 da missão sorteada. O desafio
+No modo Arcade, cada desafio usa a pontuação atual (v2) da missão sorteada. O desafio
 é **concluído** se a solda for aprovada **e** a condição extra for cumprida
 (arco aberto uma só vez; tempo de arco até o limite; técnica exigida; ajustes
 pré-definidos sem alteração). Pontos do desafio = nota × multiplicador do
@@ -153,6 +158,57 @@ solução.
 
 ## Versão das regras
 
-Todo resultado guarda `versaoPontuacao: "pontuacao-v1"`, os pesos e o
-detalhamento. Se as regras mudarem, a versão muda; resultados antigos **não
-são recalculados**, e os rankings separam versões diferentes.
+Todo resultado guarda `versaoPontuacao` (hoje `"pontuacao-v2"`), os pesos e
+o detalhamento. Se as regras mudarem, a versão muda; resultados antigos
+**não são recalculados**, e os rankings separam versões diferentes (a chave
+de ranking inclui a versão). Recordes `pontuacao-v1` continuam guardados,
+mas não se misturam com os da v2.
+
+### O que mudou na `pontuacao-v2` (Alpha v1.3)
+
+1. **Largura na faixa** (8 dos 25 pontos de Atendimento ao desenho) passa a
+   ser medida **só onde há cordão**. Na v1 um trecho sem cordão perdia em
+   Integridade (sem cordão não é íntegro), em Extensão (7/25), na condição
+   essencial E3 **e de novo** na largura. Agora a falta de cordão conta na
+   Integridade, na Extensão e em E3, cada uma com um papel diferente (junta
+   unida, encomenda atendida, requisito obrigatório); a largura avalia só o
+   cordão que existe. Reforço e alinhamento já eram assim.
+2. **O modelo mudou** (H28 revista, H48 e H49 em HIPOTESES.md): a corrente
+   cresce menos que a alimentação e depende da DBCP; o arco fora da peça não
+   aquece; pausa não vira solda. O mesmo registro pode dar outra nota na
+   v2 — por isso a versão mudou, mesmo com os pesos iguais.
+
+### Critérios mantidos de propósito (e por quê)
+
+- **Fusão excessiva (Integridade) × Deformação.** As duas vêm do calor, mas
+  medem coisas diferentes: a primeira é local (índice de fusão acima de 2 em
+  cada posição); a segunda é o calor médio de todo o trecho ponderado pelo
+  material (H36). Um passe pode ter pontos excessivos e deformação baixa, e
+  vice-versa.
+- **Eficiência.** Metade dela é o rendimento do gás escolhido (H29): uma
+  decisão de preparo, não de execução. Fica porque escolher CO₂ puro tem
+  consequência real (mais respingo). Com essencial descumprida, a eficiência
+  é zerada (economia não compensa falha crítica).
+
+## Dados técnicos para a didática (`relatorio-tecnico-v1`)
+
+`src/pontuacao/relatorio.ts` monta, a partir do **mesmo registro** que gera
+a nota, um relatório estruturado (`RelatorioTecnico`, sem frases prontas).
+Use `relatorioDoRegistro(...)` em `src/pontuacao/oficial.ts` (replay + nota +
+relatório) ou `relatorioTecnico(...)` com o cordão e o percurso já
+calculados. Campos:
+
+| Campo | O que é | Tipo de informação |
+|---|---|---|
+| `preparo` | material, espessura, abertura, junta, arame, gás, técnica e ângulo de avanço, DBCP, limpeza | valor usado |
+| `regulagens[]` | cada par tensão × alimentação usado com o arco aberto: volume de arame, metal por segundo, corrente, potência, forma e estabilidade do arco | valor calculado |
+| `posicoes[]` | posições de soldagem usadas (H47) | valor usado |
+| `trechos[]` | de 10 em 10 mm no trecho pedido: `observacao` (largura, altura, centro, área, índice de fusão, estado), `fatores` (velocidade efetiva e relativa, aporte ÷ necessário, desvio da tocha) e `desvios` (frações fora da faixa) | observação × fator calculado |
+| `ocorrencias[]` | os trechos com problema da nota, com magnitude e limiar, condição (código da hipótese) e limitação | ocorrência |
+| `consumo` | tempo de arco, tempo sobre a junta, aberturas de arco, metal no cordão e no trecho, arame correspondente | valor calculado |
+| `indices` | fração íntegra e índice de deformação | índice sintético |
+| `limitacoes[]` | o que o modelo não permite concluir (códigos estáveis) | limitação |
+
+Regras para quem escreve as explicações: os `fatores` são **candidatos**,
+não a causa; um trecho largo pode ter permanência maior **e** aporte maior
+ao mesmo tempo. O relatório não muda a nota nem o formato salvo.

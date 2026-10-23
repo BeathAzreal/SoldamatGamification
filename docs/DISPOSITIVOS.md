@@ -105,8 +105,26 @@ caneta e controle sejam equivalentes em competição — isso não foi testado.
 - **Controle:** o analógico anda **ao longo da junta** (direita = avançar,
   cima/baixo = desvio lateral), em qualquer formato. É mais fácil que seguir
   a curva com o mouse — diferença entre dispositivos ainda não medida.
-- **Girar a peça:** segurar **Q / E**, os botões ⟲ ⟳ ao lado da peça ou o
-  **direcional ← →** do controle (60°/s). Com o arco aberto, a peça gira sob
-  a tocha (posicionador; na junta circular, em torno do centro do círculo). O zoom não muda ao girar; "Endireitar" volta a 0° com
-  o arco fechado. Com mouse ou caneta parados e a peça girando, o jogo gera
-  leituras a cada quadro (H42); no controle o giro é só visual.
+- **Girar a peça:** desde a v1.3, veja a seção "Câmera, giro e pausa"
+  abaixo. As teclas Q/E/W/S e o giro com o arco aberto saíram.
+
+## Câmera, giro e pausa (Alpha v1.3)
+
+| Ação | Mouse | Caneta (mesa) | Controle |
+|---|---|---|---|
+| Soldar | botão esquerdo | ponta encostada | gatilho configurado |
+| Câmera em volta da peça | arrastar com o botão do meio; roda aproxima | segurar **Espaço** e mover | analógico direito |
+| Girar e tombar a peça | arrastar com o botão direito | segurar **E** ou **B** e mover | direcional |
+
+- Câmera e peça **só se mexem com o arco fechado**; com uma tecla de gesto
+  apertada a caneta não abre o arco. Botões, roda e teclas mudam em
+  **Controles** (bancada).
+- **A câmera não muda nada do modelo**: ela só muda que ponto da peça fica
+  sob o ponteiro. O modelo recebe sempre a posição na junta (s, n) e a
+  posição da peça (H47); a técnica e a DBCP são fixas na tentativa.
+- **Perda de foco (H49):** esconder a janela ou tirar o foco dela durante a
+  tentativa oficial **pausa**; na bancada, o arco da peça de teste fecha.
+  Nos dois casos o arco fecha no último instante já calculado, então o
+  tempo parado não vira solda.
+- **Não testado em aparelho físico nesta versão:** mesa digitalizadora e
+  controle (os testes usaram mouse e teclado simulados no navegador).

@@ -1,5 +1,24 @@
 # Verificação
 
+## Alpha v1.3 — mecânica técnica (branch `claude/v1.3`)
+
+- `npm run typecheck` e `npm test` antes de cada commit; o resultado final
+  está no fim desta seção.
+- Novo `tests/referencia.test.ts` (caso de referência de HIPOTESES.md):
+  metal, corrente e potência na referência; alimentação, tensão, DBCP,
+  diâmetro, velocidade e técnica (cada um mexendo só no que deve);
+  conservação de metal; tocha parada depositando e aquecendo; pausa sem
+  salto (H49); arco fora da peça sem aquecer; 30, 60 e 144 quadros/s;
+  limites da DBCP e preparo antigo sem DBCP; nota e relatório iguais no
+  replay e ao vivo; buraco no cordão na pontuação v2.
+- `tests/arcade.test.ts`: o teste "técnicas puxando e empurrando" passa a
+  experimentar os diâmetros de arame da missão (o desafio só trava a
+  técnica). Com a corrente revista, arame de 1,2 mm no inox de 2 mm perfura
+  em qualquer alimentação; com 0,8 mm há solução.
+- Pendências: mesa digitalizadora e controle físicos não testados; os
+  números do jogo seguem sem validação experimental (só a direção das
+  relações tem fonte).
+
 ## Etapa 6 (21/10/2026): bancada, História, Arcade aleatório, técnica, visual
 
 - `npm run build`: sem erros. `npm test`: **127 testes em 10 arquivos, todos

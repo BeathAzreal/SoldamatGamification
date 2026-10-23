@@ -35,6 +35,10 @@ VERSÃO 3D ALPHA v1.3 (2026-10-23)
   O mini desenho ao lado dos botões mostra a peça de lado.
 - A tocha tem cano reto: empurrando ou puxando, ela inclina 20° e isso aparece no 3D.
 - As telas cabem também em notebook 1280×720, sem rolar; "O que aconteceu e como é calculado" abre em abas.
+- Mecânica: a corrente agora sai da alimentação, do arame e da DISTÂNCIA BICO–PEÇA (DBCP, nova escolha
+  na bancada: 10, 15 ou 20 mm). Mais DBCP = menos corrente e menos fusão, com o mesmo metal.
+- Pausar, esconder a janela ou tirar o foco não vira solda parada. Pontuação passa a ser a "pontuacao-v2"
+  (recordes da v1 ficam separados).
 
 VERSÃO 3D ALPHA v1.2 (2026-10-23)
 - O jogo é só 3D (sem WebGL, ele usa um desenho 2D de reserva).
