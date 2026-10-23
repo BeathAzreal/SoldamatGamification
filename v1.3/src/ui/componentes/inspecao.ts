@@ -120,8 +120,8 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
 
   // --- Peça em 3D (o jogo é só 3D). Sem WebGL, fica a vista de cima 2D de reserva.
   const temWebgl = webglDisponivel()
-  // H46: o exagero vertical só ajuda na chapa fina do topo reto; no V e no filete deformaria os ângulos.
-  const exageroInicial = juntaDe(d.contexto) === 'topo' ? EXAGERO_PADRAO : 1
+  // Começa na escala real; o exagero vertical (até 6×) é opcional, para ver detalhes da forma.
+  const exageroInicial = EXAGERO_PADRAO
   const exagero = h('input', { type: 'range', min: String(EXAGERO_MIN), max: String(EXAGERO_MAX), step: '0.5', value: String(exageroInicial), id: `exagero-${Math.random().toString(36).slice(2)}` })
   const rotuloExagero = h('span', {})
   const textoExagero = () => `${Number(exagero.value).toLocaleString('pt-BR')}×`

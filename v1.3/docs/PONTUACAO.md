@@ -1,102 +1,114 @@
-# Pontuação automática — versão `pontuacao-v1`
+# Pontuação automática — versão `pontuacao-v3` (0 a 1000)
+
+> **v3 (Alpha v1.3).** Escala de **0 a 1000** e notas **graduadas** pelo
+> tamanho do desvio. Pesos (somando 100), condições essenciais, regra de
+> aprovação e desempate **iguais** às versões anteriores; cada ponto de peso
+> vale 10 pontos. O que mudou desde a v1 está em "Versão das regras".
 
 A pontuação é uma **proposta didática**. Ela só mede o que o modelo do jogo
 calcula (ver [HIPOTESES.md](HIPOTESES.md)). Nenhum item é medido por
-aparência da imagem: tudo vem dos números do modelo.
+aparência da imagem: tudo vem dos números do modelo. **Não é qualificação
+profissional nem previsão certificada de resistência.**
 
-Escala de 0 a 100, com pesos padrão:
+| Categoria | Peso padrão | Pontos máximos |
+|---|---|---|
+| Fusão prevista (integridade) | 40 | 400 |
+| Geometria do cordão | 25 | 250 |
+| Regularidade da largura | 15 | 150 |
+| Controle térmico | 10 | 100 |
+| Execução | 10 | 100 |
 
-| Categoria | Peso padrão |
-|---|---|
-| Integridade da junta prevista pelo modelo | 40 |
-| Atendimento ao desenho | 25 |
-| Regularidade do cordão | 15 |
-| Controle de deformação | 10 |
-| Eficiência | 10 |
+Os pesos podem ser mudados **antes** de um torneio começar (somando 100); a
+nota máxima de cada categoria é peso × 10. O Arcade usa sempre os pesos
+padrão. Cada resultado guarda os pesos e a versão das regras.
 
-Os pesos podem ser mudados **antes** de um torneio começar (somando 100). O
-Arcade usa sempre os pesos padrão. Cada resultado guarda os pesos e a versão
-das regras usados naquele momento.
-
-## Por que todas as categorias puderam ser mantidas
-
-Antes da etapa 5 o modelo não tinha calor, fusão nem deformação, e as
-categorias "integridade" e "deformação" não teriam o que medir. A etapa 5
-acrescentou o aporte relativo, o aquecimento acumulado, o índice de fusão
-sintético (H31–H34) e o índice de deformação (H36). Por isso a distribuição
-40/25/15/10/10 foi mantida — mas cada categoria só usa esses índices, e
-todos são aproximações didáticas.
+**Nota graduada.** Em vez de contar só "dentro/fora", cada posição da junta
+ganha de 0 a 1 conforme a distância ao critério, e a categoria usa a média.
+Assim duas soldas que estariam empatadas na v1 (as duas "fora da faixa")
+se separam: quem errou por 0,2 mm perde pouco; quem errou por 2 mm perde
+tudo. As distâncias de corte (`TOLERANCIAS` em `src/pontuacao/regras.ts`)
+são **critérios do jogo**, inspirados na ideia de níveis de aceitação por
+desvio (ex.: ISO 5817), sem reproduzir os limites de nenhuma norma.
 
 ## Trecho avaliado
 
 Cada missão define um **trecho exigido** (por exemplo, de 10 a 140 mm). A
-integridade, a largura, o reforço, o alinhamento e a regularidade são
-medidos no trecho exigido **menos 2 mm em cada ponta** (H37).
+fusão, a largura, o reforço, o alinhamento e a regularidade são medidos no
+trecho exigido **menos 2 mm em cada ponta** (H37).
 
 ## Categorias
 
-### Integridade da junta prevista pelo modelo (40)
+### Fusão prevista — integridade (400)
 
-- **Definição:** fração do trecho avaliado em que o modelo prevê uma junta
-  íntegra.
-- **Dados usados:** largura, centro e seção do cordão em cada posição;
-  aporte relativo e aquecimento acumulado (H31, H32); espessura, material,
-  gás e limpeza (H33, H35).
-- **Regra:** uma posição é íntegra quando (1) há cordão (largura ≥ 1 mm),
-  (2) o cordão cobre as duas bordas da junta (H34) e (3) o índice de fusão F
-  está entre 1 e 2 (H33). Pontos = peso × fração de posições íntegras.
-- **Limitações:** o índice F é **sintético**. Não representa porosidade,
-  trincas, inclusões, diluição nem penetração real.
-- **Explicação no jogo:** lista os trechos com "falta de fusão prevista",
-  "fusão excessiva prevista", "perfuração prevista", "borda não coberta" ou
-  "sem cordão".
+- **Definição:** quanto da junta o modelo prevê fundida na medida certa,
+  posição por posição.
+- **Dados usados:** índice de fusão sintético F (aporte, aquecimento,
+  espessura, material, gás, técnica, DBCP — H31 a H35, H48), cobertura das
+  bordas (H34, H46) e enchimento da junta (H46 e, no topo reto, a fresta).
+- **Regra (nota por posição):**
 
-### Atendimento ao desenho (25)
+  | Estado previsto | Nota |
+  |---|---|
+  | adequada (1 ≤ F ≤ 2) | 1 |
+  | falta de fusão (F < 1) | (F − 0,6) ÷ 0,4, entre 0 e 1 |
+  | fusão excessiva (2 < F ≤ 2,6) | (2,6 − F) ÷ 0,6 |
+  | junta não enchida | 0,5 × enchimento |
+  | perfuração, borda descoberta, sem cordão | 0 |
 
-- **Definição:** quanto o cordão obedece às medidas e tolerâncias do desenho
-  da missão.
-- **Dados usados:** extensão, largura, altura (reforço) e centro do cordão.
-- **Regra:** quatro partes, cada uma uma fração de 0 a 1:
-  extensão (7/25) = fração do trecho exigido com cordão;
-  largura (8/25) = fração do trecho avaliado com largura dentro da faixa;
-  reforço (5/25) = fração com altura até o máximo;
-  alinhamento (5/25) = fração com o centro a até a tolerância da linha da junta.
-- **Limitações:** as tolerâncias são **objetivos didáticos do jogo**, não
-  requisitos de norma. A largura e a altura vêm do modelo de forma (H3, H9).
-- **Explicação no jogo:** mostra cada parte com a fração atendida.
+  Pontos = peso × 10 × média das notas. A **fração íntegra** (só posições
+  adequadas) continua sendo a condição essencial E1.
+- **Limitações:** F é **sintético**. Não representa porosidade, trincas,
+  inclusões, diluição nem penetração real.
 
-### Regularidade do cordão (15)
+### Geometria do cordão (250)
 
-- **Definição:** constância da largura ao longo do trecho avaliado.
-- **Dados usados:** coeficiente de variação da largura (H15).
-- **Regra:** pontos = peso × (0,20 − variação) ÷ 0,17, limitado entre 0 e o
-  peso. Variação de até 3 % ganha tudo; 20 % ou mais, nada.
+- **Dados usados:** extensão, largura, altura e centro do cordão (mm).
+- **Regra:** extensão 7/25 = fração do trecho exigido com cordão. Nas
+  posições **com cordão**, cada uma de 0 a 1:
+  - largura (8/25): 1 dentro da faixa do desenho; cai até 0 a **1,5 mm**
+    além do limite (para menos ou para mais);
+  - reforço (5/25): 1 até o reforço máximo; cai até 0 a **1,0 mm** acima.
+    Metal **abaixo da face** (junta não enchida) também perde: 0 a 1,0 mm
+    abaixo;
+  - alinhamento (5/25): 1 com o centro até a tolerância; cai até 0 a
+    **1,0 mm** além.
+- **Limitações:** as tolerâncias são **objetivos didáticos do jogo**. A
+  forma vem do modelo (H3, H9, H46).
+
+### Regularidade da largura (150)
+
+- **Regra:** pontos = peso × 10 × (0,20 − variação) ÷ 0,17, entre 0 e o
+  máximo. Variação (coeficiente de variação da largura) de até 3 % ganha
+  tudo; 20 % ou mais, nada.
 - **Limitações:** o espalhamento numérico (H4) alisa oscilações menores que
   uns 2 mm.
-- **Explicação no jogo:** a variação em % e a ligação com a velocidade.
 
-### Controle de deformação (10)
+### Controle térmico (100)
 
-- **Definição:** quanto calor além do necessário foi colocado, ponderado pela
-  tendência do material a deformar.
-- **Dados usados:** índice D (H36).
-- **Regra:** pontos = peso × (2 − D), limitado entre 0 e o peso.
+- **Regra:** pontos = peso × 10 × (2 − D), entre 0 e o máximo, com D o
+  índice de deformação (H36).
 - **Limitações:** não há medida de empenamento, só um índice.
-- **Explicação no jogo:** o valor de D e a comparação com 1 e 2.
 
-### Eficiência (10)
+### Execução (100)
 
-- **Definição:** aproveitamento do metal e do tempo de arco.
-- **Dados usados:** rendimento η (H29) e fração do tempo de arco com a tocha
-  dentro do trecho exigido (com 5 mm de folga) e a até 10 mm da junta.
-- **Regra:** metade para o metal: (η − 0,85) ÷ 0,15; metade para o tempo:
-  (fração − 0,70) ÷ 0,30; cada metade limitada entre 0 e 1.
-- **Limitações:** η é aproximação (respingo por gás e por desequilíbrio).
-- **Explicação no jogo:** η e a fração de tempo bem usado.
+- **Definição:** como o passe foi executado.
+- **Regra:** três partes, cada uma entre 0 e 1:
+  - **arco sobre a junta (40 %)**: fração do tempo de arco com a tocha no
+    trecho (5 mm de folga) e a até 10 mm da junta: (fração − 0,70) ÷ 0,30;
+  - **reinícios de arco (30 %)**: 1 − reinícios ÷ 3 (reinícios = aberturas
+    de arco − 1). Na prática, cada parada e retomada é um ponto de início e
+    fim de cordão a mais;
+  - **metal no trecho (30 %)**: metal dentro do trecho pedido ÷ metal na
+    peça: (fração − 0,80) ÷ 0,20.
+- **Mudou desde a v2:** o rendimento do gás saiu da nota (era uma escolha
+  de preparo, não de execução); ele continua agindo no metal depositado
+  (H29) e aparece em `medidas.rendimento`.
+- **Limitações:** o reinício é contado, não modelado (o jogo não prevê
+  cratera nem sobreposição).
 
 ## Condições essenciais (aprovação)
 
-Cada missão lista suas condições essenciais. As usadas na v1:
+Cada missão lista suas condições essenciais (iguais desde a v1):
 
 | Código | Condição | Aprendiz | Profissional |
 |---|---|---|---|
@@ -111,9 +123,9 @@ Na tela, a categoria zerada mostra **quanto valeria** (barra tracejada e
 "Valeria X — zerada porque a solda não foi aprovada"), e logo abaixo do selo
 "Não aprovada" aparece uma dica do motivo mais provável (falta de fusão →
 andar mais devagar; perfuração → mais rápido; óxido; trecho sem cordão).
-Isso é só apresentação: a regra e o total não mudam (`pontuacao-v1`).
+Isso é só apresentação: a regra e o total não mudam.
 
-- as categorias **deformação e eficiência ficam zeradas** (penalidade
+- as categorias **Controle térmico e Execução ficam zeradas** (penalidade
   registrada com justificativa), para que economia ou rapidez não compensem;
 - nos rankings, **toda entrega aprovada fica acima de qualquer não aprovada**,
   qualquer que seja a nota.
@@ -124,8 +136,8 @@ Ordem padrão (Arcade e torneios):
 
 1. aprovada antes de não aprovada;
 2. maior nota total;
-3. maior nota de integridade;
-4. maior nota de atendimento ao desenho;
+3. maior nota de fusão prevista (integridade);
+4. maior nota de geometria do cordão;
 5. menos tentativas usadas (só torneios);
 6. registro mais antigo (Arcade).
 
@@ -135,14 +147,15 @@ integridade" nos itens 3 e 4.
 ## Conceito (S, A, B, C, D)
 
 A partir da etapa 6 a tela mostra um **conceito estilo arcade**, que é só uma
-forma de apresentar a nota total: S ≥ 95, A ≥ 85, B ≥ 70, C ≥ 50, D abaixo.
+forma de apresentar a nota total: S ≥ 950, A ≥ 850, B ≥ 700, C ≥ 500, D
+abaixo (na escala de 1000; as mesmas frações de antes).
 Uma entrega **não aprovada fica no máximo com C**, para o conceito não
 esconder uma condição essencial descumprida. O conceito não entra em ranking
 nem em desempate.
 
 ## Arcade (desafios aleatórios)
 
-No modo Arcade, cada desafio usa a pontuação v1 da missão sorteada. O desafio
+No modo Arcade, cada desafio usa a pontuação atual (v3, 0–1000) da missão sorteada. O desafio
 é **concluído** se a solda for aprovada **e** a condição extra for cumprida
 (arco aberto uma só vez; tempo de arco até o limite; técnica exigida; ajustes
 pré-definidos sem alteração). Pontos do desafio = nota × multiplicador do
@@ -153,6 +166,90 @@ solução.
 
 ## Versão das regras
 
-Todo resultado guarda `versaoPontuacao: "pontuacao-v1"`, os pesos e o
-detalhamento. Se as regras mudarem, a versão muda; resultados antigos **não
-são recalculados**, e os rankings separam versões diferentes.
+Todo resultado guarda `versaoPontuacao` (hoje `"pontuacao-v3"`), os pesos e
+o detalhamento. Se as regras mudarem, a versão muda; resultados antigos
+**não são recalculados**, e os rankings separam versões diferentes (a chave
+de ranking inclui a versão). Recordes `pontuacao-v1` e `v2` (0–100)
+continuam guardados, mas não se misturam com os da v3 (0–1000).
+
+### O que mudou na `pontuacao-v3` (Alpha v1.3)
+
+1. Escala de 0 a 1000 (peso × 10 por categoria); total inteiro.
+2. Notas graduadas por distância ao critério na fusão e na geometria.
+3. Falta de enchimento (metal abaixo da face) perde no reforço.
+4. Execução = arco sobre a junta, reinícios e metal no trecho (sem o
+   rendimento do gás).
+5. O modelo passou a encher a fresta da junta de topo antes do reforço
+   (HIPOTESES.md, H18 revista): reforço e largura um pouco menores com o
+   mesmo metal.
+6. No torneio com professor, a nota do professor (0–10) vale × 100 para
+   ficar na escala de 1000 na média ponderada.
+
+### O que mudou na `pontuacao-v2` (Alpha v1.3)
+
+1. **Largura na faixa** (8 dos 25 pontos de Atendimento ao desenho) passa a
+   ser medida **só onde há cordão**. Na v1 um trecho sem cordão perdia em
+   Integridade (sem cordão não é íntegro), em Extensão (7/25), na condição
+   essencial E3 **e de novo** na largura. Agora a falta de cordão conta na
+   Integridade, na Extensão e em E3, cada uma com um papel diferente (junta
+   unida, encomenda atendida, requisito obrigatório); a largura avalia só o
+   cordão que existe. Reforço e alinhamento já eram assim.
+2. **O modelo mudou** (H28 revista, H48 e H49 em HIPOTESES.md): a corrente
+   cresce menos que a alimentação e depende da DBCP; o arco fora da peça não
+   aquece; pausa não vira solda. O mesmo registro pode dar outra nota na
+   v2 — por isso a versão mudou, mesmo com os pesos iguais.
+
+### Critérios mantidos de propósito (e por quê)
+
+- **Fusão excessiva (Integridade) × Deformação.** As duas vêm do calor, mas
+  medem coisas diferentes: a primeira é local (índice de fusão acima de 2 em
+  cada posição); a segunda é o calor médio de todo o trecho ponderado pelo
+  material (H36). Um passe pode ter pontos excessivos e deformação baixa, e
+  vice-versa.
+- **Eficiência.** Metade dela é o rendimento do gás escolhido (H29): uma
+  decisão de preparo, não de execução. Fica porque escolher CO₂ puro tem
+  consequência real (mais respingo). Com essencial descumprida, a eficiência
+  é zerada (economia não compensa falha crítica).
+
+## Dados técnicos para a didática (`relatorio-tecnico-v1`)
+
+`src/pontuacao/relatorio.ts` monta, a partir do **mesmo registro** que gera
+a nota, um relatório estruturado (`RelatorioTecnico`, sem frases prontas).
+Use `relatorioDoRegistro(...)` em `src/pontuacao/oficial.ts` (replay + nota +
+relatório) ou `relatorioTecnico(...)` com o cordão e o percurso já
+calculados. Campos:
+
+| Campo | O que é | Tipo de informação |
+|---|---|---|
+| `preparo` | material, espessura, abertura, junta, arame, gás, técnica e ângulo de avanço, DBCP, limpeza | valor usado |
+| `regulagens[]` | cada par tensão × alimentação usado com o arco aberto: volume de arame, metal por segundo, corrente, potência, forma e estabilidade do arco | valor calculado |
+| `posicoes[]` | posições de soldagem usadas (H47) | valor usado |
+| `trechos[]` | de 10 em 10 mm no trecho pedido: `observacao` (largura, altura, centro, área, índice de fusão, estado), `fatores` (velocidade efetiva e relativa, aporte ÷ necessário, desvio da tocha) e `desvios` (frações fora da faixa) | observação × fator calculado |
+| `ocorrencias[]` | os trechos com problema da nota, com magnitude e limiar, condição (código da hipótese) e limitação | ocorrência |
+| `consumo` | tempo de arco, tempo sobre a junta, aberturas de arco, metal no cordão e no trecho, arame correspondente | valor calculado |
+| `indices` | fração íntegra e índice de deformação | índice sintético |
+| `limitacoes[]` | o que o modelo não permite concluir (códigos estáveis) | limitação |
+
+Regras para quem escreve as explicações: os `fatores` são **candidatos**,
+não a causa; um trecho largo pode ter permanência maior **e** aporte maior
+ao mesmo tempo. O relatório não muda a nota nem o formato salvo.
+
+## Correção pontuacao-v4
+
+Mantém escala de 0 a 1000 e notas graduadas da v3. A missão em V admite
+duas aberturas planejadas (raiz e acabamento); as demais admitem uma.
+Reinícios excedentes = máximo de zero e aberturas realizadas menos as
+planejadas. Não há reconhecimento físico de passes: trata-se de uma
+franquia explícita do roteiro, não de inspeção de raiz/acabamento.
+O campo medidas.reiniciosArco passa a indicar esses reinícios excedentes.
+
+A versão das regras subiu para pontuacao-v4 para separar os novos recordes.
+Pontuações históricas mantêm os valores salvos e sua escala de origem.
+O placar usa essa escala ao mostrar o máximo e o conceito.
+
+## pontuacao-v5 (reforço realista)
+
+As regras de nota não mudaram. Mudou o modelo do cordão (H3 revista em
+HIPOTESES.md): o mesmo passe agora dá um reforço menor: um cordão de 8 mm de
+largura passa de cerca de 2,9 mm para cerca de 2,1 mm de reforço. Como a mesma solda passa a ter outra nota, a
+versão subiu para pontuacao-v5, e os recordes anteriores ficam separados.

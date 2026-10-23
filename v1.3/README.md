@@ -85,7 +85,7 @@ peça de teste conta.
 | Arquivo | Assunto |
 |---|---|
 | [docs/HIPOTESES.md](docs/HIPOTESES.md) | Todas as hipóteses do modelo (H1–H37), o que é fixo, configurável ou controlado, fontes consultadas |
-| [docs/PONTUACAO.md](docs/PONTUACAO.md) | Pontuação automática v1: categorias, regras, limitações, essenciais, desempates, versão |
+| [docs/PONTUACAO.md](docs/PONTUACAO.md) | Pontuação automática v3 (0–1000): categorias, notas graduadas, essenciais, desempates, versão e dados para a didática |
 | [docs/MISSOES.md](docs/MISSOES.md) | Catálogo de missões, combinações não oferecidas, missões e processos ainda não jogáveis |
 | [docs/TORNEIO.md](docs/TORNEIO.md) | Torneio local, regras de entrega, julgamento do professor, revisões |
 | [docs/DISPOSITIVOS.md](docs/DISPOSITIVOS.md) | Mouse, caneta e controle; calibração; desconexão; limites do controle de PS4 |

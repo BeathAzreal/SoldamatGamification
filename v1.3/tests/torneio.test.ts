@@ -19,7 +19,7 @@ function ambiente(): Ambiente {
 function resultado(total: number, aprovada = true, integridade = total * 0.4, desenho = total * 0.25): ResultadoPontuacao {
   const pontos = { integridade, desenho, regularidade: 0, deformacao: 0, eficiencia: 0 }
   return {
-    versao: 'pontuacao-v1',
+    versao: 'pontuacao-v5',
     pesos: { ...PESOS_PADRAO },
     total,
     aprovada,
@@ -338,9 +338,9 @@ describe('torneio com professor', () => {
 
   it('média ponderada normaliza as escalas', () => {
     const { base } = novaBase({ modo: 'professor', classificacao: 'ponderada', pesosMedia: { professor: 3, sistema: 1 } })
-    // Professor 8/10 → 80; sistema 60 → (3·80 + 1·60) ÷ 4 = 75.
-    expect(notaDeClassificacao(base.torneio.config, 60, 8)).toBe(75)
-    expect(notaDeClassificacao({ ...base.torneio.config, classificacao: 'professor' }, 60, 8)).toBe(80)
-    expect(notaDeClassificacao({ ...base.torneio.config, classificacao: 'sistema' }, 60, 8)).toBe(60)
+    // Escala de 1000 (pontuacao-v3): professor 8/10 → 800; sistema 600 → (3·800 + 1·600) ÷ 4 = 750.
+    expect(notaDeClassificacao(base.torneio.config, 600, 8)).toBe(750)
+    expect(notaDeClassificacao({ ...base.torneio.config, classificacao: 'professor' }, 600, 8)).toBe(800)
+    expect(notaDeClassificacao({ ...base.torneio.config, classificacao: 'sistema' }, 600, 8)).toBe(600)
   })
 })

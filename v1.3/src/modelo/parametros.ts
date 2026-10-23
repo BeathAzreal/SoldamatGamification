@@ -27,12 +27,12 @@ export const AJUSTES = {
 
 export const MODELO = {
   /** Volume depositado por segundo com a alimentação de referência (mm³/s do jogo) (H1). */
-  taxaDeposicaoMm3s: 140,
+  taxaDeposicaoMm3s: 100,
   /** Altura do cordão dividida pela largura, na tensão de referência (H3). */
-  razaoAlturaLargura: 0.35,
+  razaoAlturaLargura: 0.25,
   /** Razão altura/largura nos extremos do botão de tensão: 1 → 10 (H9). */
-  razaoTensaoMinima: 0.48,
-  razaoTensaoMaxima: 0.22,
+  razaoTensaoMinima: 0.34,
+  razaoTensaoMaxima: 0.16,
   /** Resolução da discretização ao longo da junta (mm). */
   passoMm: 0.5,
   /** Espalhamento numérico do depósito ao longo da junta, em mm (H4). */
@@ -118,6 +118,21 @@ export const FUSAO = {
   fatorSemLimpeza: 0.6,
   /** Normalização do índice de deformação (H36). */
   normalizacaoDeformacao: 2.07,
+} as const
+
+/**
+ * Distância bico de contato–peça, DBCP/CTWD (H48). A faixa de escolhas (10 a
+ * 20 mm) cobre o que guias de fabricante indicam para MIG/MAG por curto-
+ * circuito (≈ 10–12 mm) e um pouco além; a fração resistiva é do jogo.
+ */
+export const DBCP = {
+  referenciaMm: 15,
+  minimoMm: 8,
+  maximoMm: 25,
+  /** Opções da bancada (mm). */
+  opcoesMm: [10, 15, 20] as readonly number[],
+  /** Parte da fusão do arame que vem do aquecimento resistivo do arame livre, na referência (H48). */
+  fracaoResistiva: 0.3,
 } as const
 
 /** Equilíbrio tensão × alimentação do jogo (H10). Reta e tolerância inventadas. */

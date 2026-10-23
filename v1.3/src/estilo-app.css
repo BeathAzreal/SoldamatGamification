@@ -3184,3 +3184,31 @@ canvas.tela-solda-3d[hidden] {
   border-color: var(--laranja);
   color: var(--laranja-2);
 }
+
+/* v1.3 (mecânica técnica): DBCP na máquina e barra do dispositivo numa linha. */
+.peca-teste-topo .barra-dispositivo .botao-fantasma {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+.peca-teste-topo .segmentado button {
+  padding-inline: 8px;
+}
+@media (max-height: 800px) {
+  /* O resumo da técnica some (o nome do chip já diz); a tela não rola. */
+  .tela-bancada .painel-maquina .dica-tecnica {
+    display: none;
+  }
+  .tela-bancada .leituras {
+    margin-top: 4px;
+  }
+}
+@media (max-height: 800px) {
+  .execucao .painel .medidas {
+    margin: 0;
+    row-gap: 2px;
+    font-size: 0.85rem;
+  }
+  .execucao .painel .rotulo-tentativa {
+    margin: 0;
+  }
+}

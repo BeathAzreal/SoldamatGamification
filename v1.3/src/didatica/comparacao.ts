@@ -1,6 +1,7 @@
 import type { Tentativa } from '../modelo/avaliacao'
 import { EXPLICACAO } from '../modelo/parametros'
 import { razaoAlturaLargura, taxaDeposicao, type Ajustes } from '../modelo/processo'
+import { exigeExplicacaoContextual } from './contexto'
 import { n1, pct, variacao } from './formato'
 
 /*
@@ -85,6 +86,7 @@ export function comparar(anterior: Tentativa, atual: Tentativa): Comparacao | nu
     ),
   ]
 
+  const contextual = exigeExplicacaoContextual(anterior) || exigeExplicacaoContextual(atual)
   const frases: string[] = []
 
   // Regularidade ← variação da velocidade (H2 + H3).
@@ -95,7 +97,7 @@ export function comparar(anterior: Tentativa, atual: Tentativa): Comparacao | nu
       jVel === jReg
         ? `No modelo, isso acompanha a variação da sua velocidade, que foi de ${pct(va.cvVelocidade)} para ${pct(vb.cvVelocidade)}.`
         : `A variação da velocidade quase não acompanhou (${pct(va.cvVelocidade)} → ${pct(vb.cvVelocidade)}); ` +
-          'no modelo, a diferença vem então de pausas, emendas ou troca de ajustes.'
+          'outros fatores, como emendas, oscilação, posição e regulagens, também podem contribuir.'
     frases.push(
       `A regularidade ${jReg === 'melhor' ? 'melhorou' : 'piorou'}: a variação da largura foi de ` +
         `${pct(ma.cvLargura)} para ${pct(mb.cvLargura)}. ${causa}`,
@@ -103,7 +105,7 @@ export function comparar(anterior: Tentativa, atual: Tentativa): Comparacao | nu
   }
 
   // Largura média: decomposição em alimentação, velocidade e tensão (H25).
-  const unicos = anterior.ajustesUsados.length === 1 && atual.ajustesUsados.length === 1
+  const unicos = !contextual && anterior.ajustesUsados.length === 1 && atual.ajustesUsados.length === 1
   const fatoresRelevantes = unicos
     ? decomporLargura(anterior.ajustesUsados[0], atual.ajustesUsados[0], va.velocidadeMediaMms, vb.velocidadeMediaMms)
         .filter((f) => Math.abs(f.fator - 1) > EXPLICACAO.fatorRelevante)
@@ -126,7 +128,9 @@ export function comparar(anterior: Tentativa, atual: Tentativa): Comparacao | nu
           : `${inicio} Alimentação, velocidade média e tensão quase não mudaram; no modelo, a diferença vem de pausas e emendas.`,
       )
     } else {
-      frases.push(`${inicio} Como alguma tentativa usou mais de um ajuste, o jogo não separa as contribuições.`)
+      frases.push(contextual
+        ? `${inicio} Junta, preenchimento, consumíveis, técnica e posição podem mudar a relação entre área e largura. A comparação é descritiva e não separa causas.`
+        : `${inicio} Como alguma tentativa usou mais de um ajuste, o jogo não separa as contribuições.`)
     }
   }
 
@@ -134,7 +138,7 @@ export function comparar(anterior: Tentativa, atual: Tentativa): Comparacao | nu
   if (jAlin === 'melhor' || jAlin === 'pior') {
     frases.push(
       `O cordão ficou ${jAlin === 'melhor' ? 'mais' : 'menos'} centrado (desvio médio de ${mm(ma.desvioCentro.medioAbsMm)} ` +
-        `para ${mm(mb.desvioCentro.medioAbsMm)}). No modelo, isso depende só da posição lateral da tocha.`,
+        `para ${mm(mb.desvioCentro.medioAbsMm)}). Movimento lateral e posição da peça podem contribuir para esse deslocamento.`,
     )
   }
 

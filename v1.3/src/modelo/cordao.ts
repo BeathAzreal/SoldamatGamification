@@ -170,7 +170,7 @@ export class Cordao {
       tUltimoDepositoMs: this.tUltimo[i],
     }
     // H46: a mesma quantidade de metal, na forma da junta.
-    return this.forma && this.forma.junta !== 'topo' ? secaoNaJunta(base, this.forma.junta, this.forma.dimensoes, razao) : base
+    return this.forma ? secaoNaJunta(base, this.forma.junta, this.forma.dimensoes, razao) : base
   }
 
   /** Quantos mm da junta têm cordão mais largo que o limiar. */

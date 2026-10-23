@@ -77,7 +77,8 @@ describe('recordes do Arcade', () => {
     const b = rec('Bruno', 90)
     const texto = exportarRecordes([a, b], new Date())
     const obj = JSON.parse(texto)
-    obj.recordes.push({ ...a, id: 'outro', total: 500 }, { foo: 1 })
+    // Nota acima da escala (1000 na pontuacao-v3) é inválida.
+    obj.recordes.push({ ...a, id: 'outro', total: 5000 }, { foo: 1 })
     const r = importarRecordes(JSON.stringify(obj), [a])
     expect(r.erro).toBeUndefined()
     expect(r.novos.map((x) => x.nome)).toEqual(['Bruno'])

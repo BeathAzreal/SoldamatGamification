@@ -1,5 +1,53 @@
 # Verificação
 
+## Alpha v1.3 — mecânica técnica (branch `claude/v1.3`)
+
+- `npm run typecheck` e `npm test` antes de cada commit; o resultado final
+  está no fim desta seção.
+- Novo `tests/referencia.test.ts` (caso de referência de HIPOTESES.md):
+  metal, corrente e potência na referência; alimentação, tensão, DBCP,
+  diâmetro, velocidade e técnica (cada um mexendo só no que deve);
+  conservação de metal; tocha parada depositando e aquecendo; pausa sem
+  salto (H49); arco fora da peça sem aquecer; 30, 60 e 144 quadros/s;
+  limites da DBCP e preparo antigo sem DBCP; nota e relatório iguais no
+  replay e ao vivo; buraco no cordão na pontuação v2.
+- `tests/arcade.test.ts`: o teste "técnicas puxando e empurrando" passa a
+  experimentar os diâmetros de arame da missão (o desafio só trava a
+  técnica). Com a corrente revista, arame de 1,2 mm no inox de 2 mm perfura
+  em qualquer alimentação; com 0,8 mm há solução.
+- Cordão alto demais no 3D: era o exagero vertical de 3× do topo reto.
+  Agora a solda e o resultado começam em 1× (escala real), conferido no
+  navegador.
+- Fresta do topo reto (H18 revista): o metal enche a fresta antes do
+  reforço. `CONTEXTO_PADRAO` passou a ter abertura 0 (modelo das etapas
+  1–4, cordão sobre chapa), então os testes daquelas etapas seguem iguais;
+  testes novos em `tests/juntas.test.ts`. A didática (área do GPT) usa
+  largura ∝ √área e fica aproximada no topo com abertura: ver
+  `docs/NOTAS-PARA-GPT.md`.
+- Pontuação `pontuacao-v3` (0–1000, notas graduadas): testes novos em
+  `tests/referencia.test.ts` (escala, nota graduada da largura, reinícios
+  e metal fora do trecho); `tests/torneio.test.ts` e `tests/dados.test.ts`
+  ajustados à escala de 1000. No navegador: placar "/ 1000" com notas
+  inteiras, nomes novos das categorias e a aba "Execução" da explicação,
+  em 1366×768 e 1280×720, sem rolagem.
+- Pendências: mesa digitalizadora e controle físicos não testados; os
+  números do jogo seguem sem validação experimental (só a direção das
+  relações tem fonte).
+
+## Exercícios técnicos orientados — GPT
+
+Adicionados três roteiros ao treino (avanço, alimentação e tensão), com
+consulta na preparação e no resultado. Reutilizam a comparação existente;
+não alteram a física, a pontuação nem os dados persistidos.
+
+Verificação nesta alteração:
+- TypeScript: aprovado.
+- Vitest: 22 arquivos, 278 testes aprovados.
+- Build de produção: aprovado.
+- Navegador: tentativa de acesso à prévia local bloqueada pelo ambiente.
+  Pendentes a navegação manual e a conferência em 1280×720 e 1366×768.
+- Portátil regenerado na integração da `alpha-v1.3` (inclui estes roteiros).
+
 ## Etapa 6 (21/10/2026): bancada, História, Arcade aleatório, técnica, visual
 
 - `npm run build`: sem erros. `npm test`: **127 testes em 10 arquivos, todos
@@ -92,3 +140,20 @@ desenhar com raio negativo quando o gráfico ainda não tinha largura.
 - **Limite de espaço do localStorage** em torneios longos (cada tentativa
   oficial guarda seu registro de eventos; tipicamente dezenas de kB).
 - **Validação física** das hipóteses H27–H36 em livro-texto (ver HIPOTESES).
+
+## Correções da revisão técnica pelo GPT (2026-10-23)
+
+- Regressões adicionadas em tests/revisao-gpt.test.ts: pausa longa e
+  repetida sem alteração térmica, temporal ou de metal; replay compacto;
+  média de torneio antigo; bloqueio de mistura de versões sem mutar dados;
+  magnitude de borda no topo e margem de filete; aberturas planejadas;
+  explicação e comparação de juntas com fresta.
+- Os objetos simulados em tests/torneio.test.ts agora usam a versão atual
+  ao representar tentativas de torneios novos. O caso legado tem teste próprio.
+- Atualizadas as asserções de versão de tests/referencia.test.ts para v4.
+- A revisão visual em 1280×720 e 1366×768 permanece pendente: o navegador
+  integrado não acessa o servidor local deste ambiente.
+- Esta entrega atualiza código e documentação. O portátil e o ZIP
+  previamente publicados não foram substituídos.
+
+Validação final: TypeScript, 305 testes em 24 arquivos e build de produção aprovados.

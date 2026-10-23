@@ -28,7 +28,8 @@ const ACABAMENTO: Record<MaterialId, { metalness: number; roughness: number }> =
 /** Faixas de cor do cordão pela distância ao centro, como as camadas da vista de cima. */
 const LIMITES_CAMADAS = [1, 0.72, 0.42, 0.14]
 
-export const EXAGERO_PADRAO = 3
+/** Escala real por padrão: o exagero (até 6×) é só um recurso de inspeção, escolhido pelo jogador. */
+export const EXAGERO_PADRAO = 1
 export const EXAGERO_MIN = 1
 export const EXAGERO_MAX = 6
 
@@ -334,8 +335,8 @@ export class Palco3D {
     this.cordao3d.frustumCulled = false
     this.relevo.add(this.cordao3d)
 
-    // H46: o exagero vertical só ajuda na chapa fina vista de cima; no V e no filete deformaria os ângulos.
-    this.definirExagero(juntaDe(op.contexto) === 'topo' ? EXAGERO_PADRAO : 1)
+    // Escala real: com 3× o cordão do topo reto parecia três vezes mais alto do que o modelo calcula.
+    this.definirExagero(EXAGERO_PADRAO)
   }
 
   /** Caixa da sala vista por dentro: piso de ladrilhos, paredes de blocos e teto com luminárias. */

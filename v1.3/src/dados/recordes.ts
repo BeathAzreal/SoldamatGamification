@@ -1,7 +1,7 @@
 import { DISPOSITIVOS, type Dispositivo } from '../entrada/tipos'
 import { buscarMissao, DIFICULDADES, type Dificuldade } from '../missoes/catalogo'
 import { MATERIAIS, type MaterialId } from '../modelo/material'
-import { CATEGORIAS, type CategoriaId } from '../pontuacao/regras'
+import { CATEGORIAS, ESCALA_PONTUACAO, type CategoriaId } from '../pontuacao/regras'
 import { novoId } from './armazenamento'
 
 /*
@@ -78,7 +78,8 @@ export function problemasDoRecorde(o: unknown): string[] {
   const texto = (k: string) => typeof r[k] === 'string' && (r[k] as string).length > 0
   if (!texto('id')) p.push('id ausente')
   if (!texto('nome') || normalizarNome(r.nome as string) !== r.nome) p.push('nome ausente ou inválido')
-  if (typeof r.total !== 'number' || !(r.total >= 0 && r.total <= 100)) p.push('total fora de 0–100')
+  // pontuacao-v1/v2 iam até 100; a v3 vai até 1000.
+  if (typeof r.total !== 'number' || !(r.total >= 0 && r.total <= ESCALA_PONTUACAO)) p.push(`total fora de 0–${ESCALA_PONTUACAO}`)
   if (typeof r.aprovada !== 'boolean') p.push('aprovada ausente')
   const cats = r.categorias as Record<string, unknown> | undefined
   if (!cats || typeof cats !== 'object' || CATEGORIAS.some((c) => typeof cats[c] !== 'number' || (cats[c] as number) < 0)) {
