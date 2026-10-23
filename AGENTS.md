@@ -7,17 +7,17 @@
 
 | Branch | Dono | Pode fazer commit/push? |
 |---|---|---|
-| `gpt/v1.3` | **GPT (OpenAI Codex / ChatGPT)** | só o GPT |
-| `claude/v1.3` | **Claude (Anthropic Claude Code)** | só o Claude |
-| `alpha-v1.3` | dono do projeto (versão entregue) | **ninguém**, só por pull request aprovado pelo dono |
+| `gpt/v1.4` | **GPT (OpenAI Codex / ChatGPT)** | só o GPT |
+| `claude/v1.4` | **Claude (Anthropic Claude Code)** | só o Claude |
+| `alpha-v1.4` | dono do projeto (versão entregue) | **ninguém**, só por pull request aprovado pelo dono |
 | `claude/epic-allen-8rmum9` | histórico de todas as versões (v1.1, v1.2, v1.3) | **ninguém** |
 
 Antes de começar, rode `git branch --show-current`:
 
-- Se você é o **GPT** e não está em `gpt/v1.3`: rode `git checkout gpt/v1.3`. Nunca faça commit ou push em `claude/v1.3`.
-- Se você é o **Claude** e não está em `claude/v1.3`: rode `git checkout claude/v1.3`. Nunca faça commit ou push em `gpt/v1.3`.
+- Se você é o **GPT** e não está em `gpt/v1.4`: rode `git checkout gpt/v1.4`. Nunca faça commit ou push em `claude/v1.4`.
+- Se você é o **Claude** e não está em `claude/v1.4`: rode `git checkout claude/v1.4`. Nunca faça commit ou push em `gpt/v1.4`.
 - **Nunca** use `git push --force`, `git rebase` ou reescreva o histórico da branch do outro agente.
-- Para trazer o trabalho do outro agente, **não** faça merge direto entre as duas branches. O dono junta tudo em `alpha-v1.3` por pull request, e depois cada agente atualiza a sua com `git merge origin/alpha-v1.3`.
+- Para trazer o trabalho do outro agente, **não** faça merge direto entre as duas branches. O dono junta tudo em `alpha-v1.4` por pull request, e depois cada agente atualiza a sua com `git merge origin/alpha-v1.4`.
 - Se o pedido do dono parecer exigir trabalhar na branch do outro, **pare e pergunte**.
 
 ## 2. O projeto
@@ -89,7 +89,7 @@ ficam em `scripts/portatil.mjs` (viram o `LEIA-ME.txt`).
    - tudo só com o arco fechado, e configurável em "Controles" (`src/ui/componentes/controles.ts`).
    Não quebre isso.
 7. **Dados salvos:** mudou o formato de algo em `src/dados/`? Mantenha a leitura de dados antigos (veja `validarPreferencias`).
-8. **Versões:** esta branch é a **Alpha v1.3**. Não crie pastas de outras versões aqui. Uma versão nova (v1.4) é decidida pelo dono.
+8. **Versões:** esta branch é a **Alpha v1.4**. Não crie pastas de outras versões aqui. Versões posteriores são decididas pelo dono.
 9. **Sem dependências novas** sem o dono pedir. O jogo tem de continuar funcionando offline, num HTML único.
 10. Commits pequenos, um assunto por commit, mensagem em português dizendo o que mudou e por quê.
 

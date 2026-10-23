@@ -1,60 +1,26 @@
-OFICINA DE SOLDAGEM MIG/MAG — jogo didático
+OFICINA DE SOLDAGEM — ALPHA v1.4
+Versão: 1.4.0-alpha.1
 
-COMO JOGAR EM OUTRO PC
-1. Copie esta pasta inteira (pendrive, rede, e-mail compactado).
-2. Dê dois cliques em "Abrir o jogo.bat" (ou no arquivo "Oficina de Soldagem.html").
-3. Use Google Chrome ou Microsoft Edge atualizados. Não precisa de internet nem instalar nada.
+COMO TESTAR
+1. Extraia o ZIP inteiro para uma pasta.
+2. Abra "Abrir o jogo.bat" ou "Oficina de Soldagem.html" no Chrome ou Edge.
+3. O topo deve mostrar ALPHA v1.4 e uma navegação lateral.
+Não precisa de Node.js, instalação ou internet.
 
-CONTROLE (PS4/PS5/Xbox) E MESA DIGITALIZADORA
-- Controle: conecte e APERTE QUALQUER BOTÃO com o jogo aberto (o navegador só mostra o controle depois disso).
-- Mesa/caneta: escolha "Caneta" na bancada; se não soldar, abra "Calibrar" e veja a linha "Último evento".
+ESTA VERSÃO
+Nova interface em estilo laboratório industrial.
+MIG/MAG é o processo disponível. Eletrodo revestido está apenas planejado.
+Versão de teste: conferência visual e dos dispositivos ainda pendente.
 
-ONDE FICAM OS DADOS
-- Recordes, torneios e preferências ficam guardados NO NAVEGADOR deste PC, ligados a este arquivo.
-- Se mover ou renomear a pasta, o navegador trata como outro jogo e os dados não aparecem.
-- Para levar os recordes, use Recordes → "Exportar JSON" e depois importe o arquivo no outro PC.
+CONTROLES
+Mouse: esquerdo solda, meio move a câmera, direito gira a peça.
+Caneta: Espaço move a câmera; E ou B giram a peça.
+Controle: analógico direito move a câmera; direcional gira a peça.
+Posicionamento só com arco fechado. Ajuste os comandos em Controles.
 
-SOM
-- O som do arco liga/desliga no botão "Som" do topo.
+DADOS
+Os dados ficam no navegador deste computador.
+Se mudar a pasta ou o arquivo, os dados anteriores podem não aparecer.
+Para preservar recordes, exporte o JSON na versão anterior.
 
-Modelo qualitativo simplificado: números do jogo, não valores de processo.
-A aparência do cordão não indica qualidade interna.
-
-VERSÃO 3D ALPHA v1.3 (2026-10-23)
-- CÂMERA LIVRE (só com o arco fechado):
-    Mouse ........ arraste com o botão do meio (rodinha): a câmera dá a volta na peça e sobe/desce;
-                   a roda aproxima e afasta; "Centralizar" volta para a vista de frente.
-    Caneta ....... segure ESPAÇO e mova a caneta.
-    Controle ..... analógico direito.
-- GIRAR A PEÇA (só com o arco fechado):
-    Mouse ........ arraste com o botão direito: para os lados gira no plano, para cima/baixo tomba (0° a 180°).
-    Caneta ....... segure E ou B e mova a caneta (com a tecla apertada a caneta não abre o arco).
-    Controle ..... direcional. Os botões ⟲ ⟳ ▲ ▼ na tela continuam valendo.
-- Os botões, a roda e as teclas mudam em "Controles", ao lado de "Calibrar" na bancada (antes da tentativa).
-- A peça fica numa oficina (piso, paredes, teto) presa num suporte: ao tombar, aparece o chão, a parede ou o teto.
-  O mini desenho ao lado dos botões mostra a peça de lado.
-- A tocha tem cano reto: empurrando ou puxando, ela inclina 20° e isso aparece no 3D.
-- As telas cabem também em notebook 1280×720, sem rolar; "O que aconteceu e como é calculado" abre em abas.
-- Mecânica: a corrente agora sai da alimentação, do arame e da DISTÂNCIA BICO–PEÇA (DBCP, nova escolha
-  na bancada: 10, 15 ou 20 mm). Mais DBCP = menos corrente e menos fusão, com o mesmo metal.
-- Pausar, esconder a janela ou tirar o foco não vira solda parada.
-- PONTUAÇÃO DE 0 A 1000 ("pontuacao-v3"): fusão prevista 400, geometria do cordão 250, regularidade 150,
-  controle térmico 100 e execução 100 (arco sobre a junta, reinícios de arco, metal no trecho). Cada critério
-  perde pontos aos poucos, conforme o tamanho do erro. Recordes das versões antigas (0 a 100) ficam separados.
-- Junta de topo: o metal enche primeiro a fresta entre as chapas; o cordão aparece em escala real (sem exagero).
-
-VERSÃO 3D ALPHA v1.2 (2026-10-23)
-- O jogo é só 3D (sem WebGL, ele usa um desenho 2D de reserva).
-- Juntas reais: topo reto, topo em V (chapa grossa: encha o V devagar ou em dois passes),
-  em T, sobreposta e de canto. Cada missão tem a sua; no treino livre dá para escolher.
-- Posicionar a peça (só com o arco fechado):
-    Q / E ou ⟲ ⟳ ...... gira a peça no próprio plano
-    W / S ou ▲ ▼ ...... tomba a peça de 0° (face para cima) a 180° (de cabeça para baixo)
-  O canto da peça mostra a posição de soldagem (plana, horizontal, vertical, sobrecabeça).
-  Na vertical, subir funde mais e descer funde menos; de cabeça para baixo o cordão fica mais alto.
-  Algumas peças estão presas na estrutura e não giram (ex.: o corrimão).
-- A técnica (empurrando/puxando) agora inclina a tocha no 3D.
-- Saíram o "Ver desenho e ficha" e o "Movimento da tocha"; o arame mostra 0,8, 1,0 e 1,2 mm em toda missão.
-- As telas cabem numa página; os textos longos abrem por botões ("O que aconteceu e como é calculado",
-  "Por que saiu assim").
-- Os recordes desta pasta ficam separados dos das outras versões.
+Modelo didático simplificado; não qualifica um procedimento de soldagem.
