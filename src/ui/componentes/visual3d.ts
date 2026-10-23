@@ -81,8 +81,18 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
     aviso.hidden = false
   }
 
+  /**
+   * Vista de frente para a face da junta: a peça tomba em torno do eixo X
+   * (palco3d.ts), e a normal da face fica a `rolagem` graus da vertical; a
+   * câmera sobe a mesma elevação. Peça de pé (corrimão, vertical) → câmera
+   * de lado, olhando a junta, e não as bordas de cima.
+   */
+  const elevacaoDeFrente = (rolagemGraus: number) => (Math.min(180, Math.max(0, rolagemGraus)) * Math.PI) / 180
+  let rolagemAtual = 0
   // Câmera livre: guardada aqui para sobreviver quando a cena é refeita (troca de peça ou de qualidade).
+  // A elevação inicial sai da peça na primeira cena (a peça ainda não existe aqui).
   const camera = { azimute: 0, elevacao: 0, zoom: 1 }
+  let cameraIniciada = false
   const aplicarCamera = () => {
     cena?.vista.definirCamera(camera.azimute, camera.elevacao, camera.zoom)
     op.aoMudarMapa()
@@ -103,7 +113,8 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
   }
   const rotuloCamera = h('span', { class: 'camera-livre', hidden: true }, botaoCentralizar, lembrete)
   botaoCentralizar.addEventListener('click', () => {
-    camera.azimute = camera.elevacao = 0
+    camera.azimute = 0
+    camera.elevacao = elevacaoDeFrente(rolagemAtual)
     camera.zoom = 1
     aplicarCamera()
     canvas.focus()
@@ -111,8 +122,14 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
   let tAnterior: number | null = null
 
   const criar = (): boolean => {
-    cena = criarCenaExecucao3D({ ...op.peca(), vista2d: vista, qualidade })
+    const peca = op.peca()
+    cena = criarCenaExecucao3D({ ...peca, vista2d: vista, qualidade })
     if (!cena) return false
+    if (!cameraIniciada) {
+      cameraIniciada = true
+      rolagemAtual = peca.contexto.posicaoInicial?.rolagemGraus ?? 0
+      camera.elevacao = elevacaoDeFrente(rolagemAtual)
+    }
     chaveAtual = chave()
     area.prepend(cena.elemento)
     cena.vista.definirCamera(camera.azimute, camera.elevacao, camera.zoom)
@@ -176,6 +193,7 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
       botaoCentralizar.click()
     },
     desenhar(d) {
+      rolagemAtual = d.rolagemGraus
       if (!cena) return
       // Analógico direito do controle move a câmera (arco fechado), se não estiver guiando a tocha.
       const dt = tAnterior === null ? 0 : Math.min(0.1, (d.agoraMs - tAnterior) / 1000)
