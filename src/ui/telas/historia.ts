@@ -6,7 +6,7 @@ import { NOME_DISPOSITIVO } from '../../entrada/tipos'
 import { DIFICULDADES, MISSOES, NOME_DIFICULDADE, PLANEJADAS, requisitosEfetivos, type Dificuldade, type Missao } from '../../missoes/catalogo'
 import { MATERIAIS } from '../../modelo/material'
 import { pontuarRegistro } from '../../pontuacao/oficial'
-import { CATEGORIAS, NOME_CATEGORIA, type ResultadoPontuacao } from '../../pontuacao/regras'
+import { CATEGORIAS, NOME_CATEGORIA, VERSAO_PONTUACAO, type ResultadoPontuacao } from '../../pontuacao/regras'
 import type { App } from '../app'
 import { montarInspecao } from '../componentes/inspecao'
 import { montarPontuacao } from '../componentes/pontuacao'
@@ -86,7 +86,7 @@ function passoNome(app: App): void {
 
 function melhorDe(app: App, m: Missao, d: Dificuldade): Recorde | undefined {
   const dispositivo = app.preferencias.dispositivo
-  return ranking(app.recordes, chaveRanking({ missaoId: m.id, missaoVersao: m.versao, dificuldade: d, dispositivo, versaoPontuacao: 'pontuacao-v1' }))[0]
+  return ranking(app.recordes, chaveRanking({ missaoId: m.id, missaoVersao: m.versao, dificuldade: d, dispositivo, versaoPontuacao: VERSAO_PONTUACAO }))[0]
 }
 
 function passoMissoes(app: App, nome: string): void {

@@ -6,11 +6,15 @@ import type { ContextoProcesso } from '../modelo/processo'
 import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/catalogo'
 
 /*
- * Pontuação automática — regras da versão pontuacao-v1 (docs/PONTUACAO.md).
+ * Pontuação automática — regras da versão pontuacao-v2 (docs/PONTUACAO.md).
  * Só usa grandezas do modelo; nada é medido pela imagem.
+ *
+ * v2 (Alpha v1.3): a largura passa a ser medida só onde há cordão (um trecho
+ * sem cordão já perde em Integridade, Extensão e E3), e o modelo da corrente
+ * mudou (H28 revista, H48): o mesmo registro pode dar outra nota que na v1.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v1'
+export const VERSAO_PONTUACAO = 'pontuacao-v2'
 
 export type CategoriaId = 'integridade' | 'desenho' | 'regularidade' | 'deformacao' | 'eficiencia'
 export type Pesos = Record<CategoriaId, number>
@@ -182,7 +186,8 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   // Desenho.
   const noTrechoSecoes = secoes.filter((s) => noTrecho(s.xMm))
   const extensao = noTrechoSecoes.filter((s) => s.larguraMm >= 1).length / Math.max(1, noTrechoSecoes.length)
-  const largura = sAvaliado.filter((s) => s.larguraMm >= req.larguraMinMm && s.larguraMm <= req.larguraMaxMm).length / n
+  // Só onde há cordão: a falta de cordão já conta na extensão, na integridade e em E3.
+  const largura = comCordao.length ? comCordao.filter((s) => s.larguraMm >= req.larguraMinMm && s.larguraMm <= req.larguraMaxMm).length / comCordao.length : 0
   const reforco = comCordao.length ? comCordao.filter((s) => s.alturaMm <= req.reforcoMaxMm).length / comCordao.length : 0
   const alinhamento = comCordao.length
     ? comCordao.filter((s) => Math.abs(s.yCentroMm) <= req.alinhamentoMm).length / comCordao.length
