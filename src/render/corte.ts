@@ -108,7 +108,7 @@ export function desenharCorteSintetico(
     const medidas = filete && s.pernasMm
       ? `pernas ${fmt(s.pernasMm[1])} e ${fmt(s.pernasMm[0])} mm · face ${fmt(s.larguraMm)} mm`
       : s.alturaMm < 0
-        ? `V aberto: falta ${fmt(-s.alturaMm)} mm para encher`
+        ? `junta não cheia: falta ${fmt(-s.alturaMm)} mm para a face`
         : `largura ${fmt(s.larguraMm)} mm · reforço ${fmt(s.alturaMm)} mm`
     ctx.fillText(medidas, w - 10, 8)
   } else {

@@ -6,7 +6,7 @@ import { MATERIAIS } from '../modelo/material'
 import { MODELO, PECA } from '../modelo/parametros'
 import type { Percurso } from '../modelo/percurso'
 import { gravidade, juntaDe } from '../modelo/juntas'
-import { movimentoDe, oscilacaoVisual, tecnicaDe, type ContextoProcesso } from '../modelo/processo'
+import { dbcpDe, movimentoDe, oscilacaoVisual, tecnicaDe, type ContextoProcesso } from '../modelo/processo'
 import { sobreAPeca, type PontoRegistro } from '../modelo/simulacao'
 import { Calor3D } from './calor3d'
 import { janelaDoRegistro } from './cordaoVivo'
@@ -114,7 +114,7 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
   let cordaoAtual: Cordao | null = null
   const emissor = { x: 0, y: 0, z: 0 }
   // Reaproveitado a cada quadro (sem alocar).
-  const qt: QuadroTocha = { x: 0, z: 0, topoMm: 0, soldando: false, fora: false, desvio: 0, larguraMm: 0, rumo: 0, angulo: 0, inclinacao: 0, intensidadePoca: aparencia.brilhoFraco ? 0.5 : 1 }
+  const qt: QuadroTocha = { x: 0, dbcpMm: dbcpDe(op.contexto), z: 0, topoMm: 0, soldando: false, fora: false, desvio: 0, larguraMm: 0, rumo: 0, angulo: 0, inclinacao: 0, intensidadePoca: aparencia.brilhoFraco ? 0.5 : 1 }
   const gPeca = { x: 0, y: -1, z: 0 }
   // H38: empurrando, o topo da tocha fica atrás do avanço; puxando, à frente.
   const tecnica = tecnicaDe(op.contexto)

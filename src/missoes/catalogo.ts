@@ -1,5 +1,5 @@
 import { ARAMES, GASES, MATERIAIS, gasCompativel, type GasId, type MaterialId } from '../modelo/material'
-import { PECA } from '../modelo/parametros'
+import { DBCP, PECA } from '../modelo/parametros'
 import type { FormatoJunta } from '../modelo/junta'
 import { INFO_JUNTA, TIPOS_JUNTA, type TipoJunta } from '../modelo/juntas'
 import type { ContextoProcesso, Movimento, Tecnica } from '../modelo/processo'
@@ -40,6 +40,8 @@ export interface Missao {
   equipamentos: string[]
   tentativas: Record<Dificuldade, number>
   integridadeMinima: Record<Dificuldade, number>
+  /** Aberturas previstas pelo roteiro; ausente = um passe. */
+  aberturasPlanejadas?: number
   desafio: string
 }
 
@@ -163,6 +165,7 @@ export const MISSOES: Missao[] = [
   },
   {
     id: 'estrutura-leve',
+    aberturasPlanejadas: 2,
     versao: 1,
     titulo: 'Estrutura metálica leve',
     setor: 'Sociedade',
@@ -253,10 +256,12 @@ export interface Preparo {
   tecnica?: Tecnica
   /** H39. Ausente = linha reta. */
   movimento?: Movimento
+  /** H48: distância bico de contato–peça (mm). Ausente = 15 mm (referência). */
+  dbcpMm?: number
 }
 
 export function preparoPadrao(m: Missao): Preparo {
-  return { diametroArameMm: m.consumiveis.diametrosMm[0], gas: m.consumiveis.gases[0], oxidoRemovido: false, tecnica: 'neutra', movimento: 'reto' }
+  return { diametroArameMm: m.consumiveis.diametrosMm[0], gas: m.consumiveis.gases[0], oxidoRemovido: false, tecnica: 'neutra', movimento: 'reto', dbcpMm: DBCP.referenciaMm }
 }
 
 /** Erros se a combinação não for permitida pela missão (nunca deve passar para a simulação). */
@@ -265,6 +270,7 @@ export function validarPreparo(m: Missao, p: Preparo): string[] {
   if (!m.consumiveis.diametrosMm.includes(p.diametroArameMm)) erros.push('Diâmetro de arame não previsto na missão.')
   if (!m.consumiveis.gases.includes(p.gas)) erros.push('Gás não previsto na missão.')
   if (!gasCompativel(p.gas, m.material)) erros.push('Gás incompatível com o material.')
+  if (p.dbcpMm !== undefined && !DBCP.opcoesMm.includes(p.dbcpMm)) erros.push('Distância bico–peça fora das opções da bancada.')
   return erros
 }
 
@@ -285,6 +291,7 @@ export function contextoDaMissao(m: Missao, p: Preparo): ContextoProcesso {
     junta: m.geometria.junta,
     posicaoInicial: { rolagemGraus: m.montagem.rolagemGraus, giroGraus: m.montagem.giroGraus },
     posicaoFixa: m.montagem.fixa,
+    dbcpMm: p.dbcpMm ?? DBCP.referenciaMm,
   }
 }
 

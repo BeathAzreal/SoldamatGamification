@@ -66,19 +66,23 @@ describe('cada condição sorteável tem solução', () => {
 
       it(`técnicas puxando e empurrando: ${m.id} / ${d}`, () => {
         for (const tecnica of ['puxando', 'empurrando'] as const) {
-          const preparo = { diametroArameMm: m.consumiveis.diametrosMm[m.consumiveis.diametrosMm.length - 1], gas: m.consumiveis.gases[0], oxidoRemovido: true, tecnica }
-          const ctx = contextoDaMissao(m, preparo)
-          const req = requisitosEfetivos(m, d)
+          // A condição só trava a técnica: o arame continua sendo escolha do jogador (H48: arame
+          // grosso em chapa fina dá corrente alta mesmo com pouca alimentação).
           let achou = false
-          for (let w = 2; w <= 10 && !achou; w += 0.5) {
-            const tensao = Math.round(Math.min(10, equilibrioArco({ alimentacao: w, tensao: 5 }, ctx).tensaoEquilibrio) * 2) / 2
-            const a = { alimentacao: w, tensao }
-            const area = areaParaLargura(m.geometria.junta, ctx, (req.larguraMinMm + req.larguraMaxMm) / 2, razaoEfetiva(a, ctx))
-            const v = taxaDeposicao(a, ctx) / area
-            for (const f of [0.9, 1, 1.1]) {
-              for (const acel of m.material === 'aluminio' ? [0, 0.3, 0.5] : [0]) {
-                for (const jeito of jeitosDeSoldar(m)) {
-                  if (!achou && executar(m, d, preparo, a, v * f, acel, jeito).aprovada) achou = true
+          for (const diametro of m.consumiveis.diametrosMm) {
+            const preparo = { diametroArameMm: diametro, gas: m.consumiveis.gases[0], oxidoRemovido: true, tecnica }
+            const ctx = contextoDaMissao(m, preparo)
+            const req = requisitosEfetivos(m, d)
+            for (let w = 2; w <= 10 && !achou; w += 0.5) {
+              const tensao = Math.round(Math.min(10, equilibrioArco({ alimentacao: w, tensao: 5 }, ctx).tensaoEquilibrio) * 2) / 2
+              const a = { alimentacao: w, tensao }
+              const area = areaParaLargura(m.geometria.junta, ctx, (req.larguraMinMm + req.larguraMaxMm) / 2, razaoEfetiva(a, ctx))
+              const v = taxaDeposicao(a, ctx) / area
+              for (const f of [0.9, 1, 1.1]) {
+                for (const acel of m.material === 'aluminio' ? [0, 0.3, 0.5] : [0]) {
+                  for (const jeito of jeitosDeSoldar(m)) {
+                    if (!achou && executar(m, d, preparo, a, v * f, acel, jeito).aprovada) achou = true
+                  }
                 }
               }
             }

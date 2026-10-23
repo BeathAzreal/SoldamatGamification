@@ -1,3 +1,4 @@
+import { INFO_TECNICA } from '../modelo/processo'
 import * as THREE from 'three'
 import { estiloArco } from './efeitos'
 
@@ -22,14 +23,21 @@ function texturaRadial(paradas: [number, string][]): THREE.CanvasTexture {
   return t
 }
 
-/** Altura do bico acima da superfície (mm do jogo, só desenho). */
-const BICO_MM = 9
+/**
+ * Desenho da DBCP (H48): o bico de contato fica a DBCP mm da superfície; o
+ * arame sai do bico e o arco ocupa os últimos ARCO_MM até a poça. O
+ * comprimento do arco não é calculado pelo modelo (é só desenho); a DBCP é.
+ */
+const BICO_MM = 15
+const ARCO_MM = 3
 /** Intensidade da luz do arco equilibrado (candela do Three, ajuste visual). */
 const LUZ_ARCO = 700
 
 export interface QuadroTocha {
   /** Ponto do arco no mundo (x, z), já com o vaivém visual (H39). */
   x: number
+  /** Distância bico de contato–peça escolhida na bancada (mm, H48). */
+  dbcpMm: number
   z: number
   /** Altura da superfície do cordão sob a tocha (mm, com exagero). */
   topoMm: number
@@ -53,8 +61,8 @@ export interface QuadroTocha {
   inclinacao: number
 }
 
-/** Quanto a tocha tomba na técnica empurrando/puxando: 20°, o ângulo de trabalho usual (só desenho; o efeito no cordão é o de H38). */
-export const INCLINACAO_TECNICA_RAD = (20 * Math.PI) / 180
+/** Quanto a tocha tomba na técnica empurrando/puxando: o ângulo de avanço do modelo (H38). */
+export const INCLINACAO_TECNICA_RAD = (INFO_TECNICA.empurrando.anguloAvancoGraus * Math.PI) / 180
 
 export class Tocha3D {
   readonly grupo = new THREE.Group()
@@ -72,6 +80,7 @@ export class Tocha3D {
   private readonly matBocal: THREE.MeshStandardMaterial
   private readonly corBocal = new THREE.Color('#b9915a')
   private readonly corFora = new THREE.Color('#d0473a')
+  private dbcpAtual = BICO_MM
 
   constructor() {
     // Bocal aberto (vê-se o arco por dentro olhando de cima), bico de contato, cano reto no eixo da tocha
@@ -104,8 +113,7 @@ export class Tocha3D {
     // Bocal acima do arco; o arame vai do bico até a superfície. Tudo gira em torno da ponta do arame.
     this.corpo.position.y = BICO_MM - 1
     this.arame = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1, 8), new THREE.MeshStandardMaterial({ color: '#d9dde2', metalness: 1, roughness: 0.25 }))
-    this.arame.scale.y = BICO_MM
-    this.arame.position.y = BICO_MM / 2
+    this.posicionarBico(BICO_MM)
     this.inclinacao.add(this.corpo, this.arame)
     this.grupo.add(this.inclinacao)
 
@@ -127,6 +135,13 @@ export class Tocha3D {
     this.grupo.visible = false
   }
 
+  /** Bico de contato a `dbcp` mm da superfície; arame do bico até o arco. */
+  private posicionarBico(dbcp: number): void {
+    this.corpo.position.y = dbcp - 1
+    this.arame.scale.y = Math.max(0.5, dbcp - ARCO_MM)
+    this.arame.position.y = ARCO_MM + this.arame.scale.y / 2
+  }
+
   esconder(): void {
     this.grupo.visible = false
     this.luz.intensity = 0
@@ -138,6 +153,10 @@ export class Tocha3D {
     // A ponta do arame fica na superfície do cordão; a técnica tomba a tocha em torno dela.
     this.inclinacao.position.y = q.topoMm
     this.inclinacao.rotation.z = q.inclinacao
+    if (q.dbcpMm !== this.dbcpAtual) {
+      this.dbcpAtual = q.dbcpMm
+      this.posicionarBico(q.dbcpMm)
+    }
     // −z do grupo = para cima na tela; +45° em y leva para cima e à esquerda; +giro desfaz o giro da peça.
     this.pescoco.rotation.y = Math.PI / 4 + q.angulo
     this.arame.visible = !q.fora

@@ -1,6 +1,6 @@
-import { FICHA_CATEGORIA, type ResultadoPontuacao } from '../../pontuacao/regras'
+import { ESCALA_PONTUACAO, escalaDaPontuacao, FICHA_CATEGORIA, type ResultadoPontuacao } from '../../pontuacao/regras'
 import { abrirPainel } from '../dialogo'
-import { contarAte, h, n1 } from '../dom'
+import { contarAte, h, n0, n1 } from '../dom'
 import { montarAbas } from './abas'
 
 /**
@@ -8,8 +8,10 @@ import { montarAbas } from './abas'
  * Entrega não aprovada fica no máximo com C, para o conceito não esconder um
  * requisito essencial descumprido (docs/PONTUACAO.md).
  */
-export function conceito(total: number, aprovada: boolean): string {
-  const c = total >= 95 ? 'S' : total >= 85 ? 'A' : total >= 70 ? 'B' : total >= 50 ? 'C' : 'D'
+export function conceito(total: number, aprovada: boolean, escala = ESCALA_PONTUACAO): string {
+  // Limites em fração da escala (S ≥ 95 %, A ≥ 85 %, B ≥ 70 %, C ≥ 50 %).
+  const f = total / escala
+  const c = f >= 0.95 ? 'S' : f >= 0.85 ? 'A' : f >= 0.7 ? 'B' : f >= 0.5 ? 'C' : 'D'
   return !aprovada && 'SAB'.includes(c) ? 'C' : c
 }
 
@@ -34,9 +36,13 @@ function dicaReprovada(r: ResultadoPontuacao): string {
  * penalidades e os trechos com problema) abre numa sobreposição.
  */
 export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolean; rotulo?: string } = {}): HTMLElement {
-  const total = h('span', { class: 'placar-numero' }, opcoes.animar ? '0,0' : n1(r.total))
-  if (opcoes.animar) contarAte(total, r.total)
-  const letra = conceito(r.total, r.aprovada)
+  // pontuacao-v3: escala de 1000, nota inteira; versões antigas (0–100) mantêm uma casa.
+  const casas = r.versao === 'pontuacao-v1' || r.versao === 'pontuacao-v2' ? 1 : 0
+  const nota = (v: number) => (casas === 0 ? n0(v) : n1(v))
+  const total = h('span', { class: 'placar-numero' }, opcoes.animar ? nota(0) : nota(r.total))
+  if (opcoes.animar) contarAte(total, r.total, casas)
+  const escala = escalaDaPontuacao(r.versao)
+  const letra = conceito(r.total, r.aprovada, escala)
 
   const categorias = h(
     'ul',
@@ -48,7 +54,7 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
       return h(
         'li',
         {},
-        h('div', { class: 'barra-cabeca' }, h('span', {}, c.nome), zerada ? h('small', { class: 'nota-zerada', title: 'Zerada porque a solda não foi aprovada' }, `valeria ${n1(valeria)}`) : null, h('strong', {}, `${n1(c.pontos)} / ${c.maximo}`)),
+        h('div', { class: 'barra-cabeca' }, h('span', {}, c.nome), zerada ? h('small', { class: 'nota-zerada', title: 'Zerada porque a solda não foi aprovada' }, `valeria ${nota(valeria)}`) : null, h('strong', {}, `${nota(c.pontos)} / ${c.maximo}`)),
         h(
           'div',
           { class: 'barra-trilho', role: 'meter', 'aria-valuemin': '0', 'aria-valuemax': String(c.maximo), 'aria-valuenow': String(c.pontos), 'aria-label': c.nome },
@@ -67,7 +73,7 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
       h('h4', {}, 'Condições essenciais'),
       h('ul', { class: 'lista-essenciais' }, r.essenciais.map((e) => h('li', { class: e.cumprida ? 'ok' : 'falha' }, h('strong', {}, `${e.cumprida ? '✔' : '✖'} ${e.descricao}. `), e.justificativa))),
       r.penalidades.length ? h('h4', {}, 'Penalidades') : null,
-      r.penalidades.length ? h('ul', { class: 'lista-penalidades' }, r.penalidades.map((p) => h('li', {}, h('strong', {}, `${p.descricao} (${n1(p.pontos)})`), ` — ${p.justificativa}`))) : null,
+      r.penalidades.length ? h('ul', { class: 'lista-penalidades' }, r.penalidades.map((p) => h('li', {}, h('strong', {}, `${p.descricao} (${nota(p.pontos)})`), ` — ${p.justificativa}`))) : null,
       h('h4', {}, 'Trechos com problema (previsão sintética)'),
       r.problemas.length
         ? h('ul', { class: 'lista-problemas' }, r.problemas.map((p) => h('li', {}, `${n1(p.inicioMm)} a ${n1(p.fimMm)} mm: ${p.descricao}`)))
@@ -77,11 +83,11 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
     const porCategoria = r.categorias.map((c): [string, HTMLElement] => {
       const ficha = FICHA_CATEGORIA[c.id]
       return [
-        `${c.nome} · ${n1(c.pontos)}`,
+        `${c.nome} · ${nota(c.pontos)}`,
         h(
           'section',
           { class: 'cartao' },
-          h('h4', {}, `${c.nome}: ${n1(c.pontos)} / ${c.maximo}`),
+          h('h4', {}, `${c.nome}: ${nota(c.pontos)} / ${c.maximo}`),
           h('p', {}, c.explicacao),
           h('dl', { class: 'ficha' }, h('dt', {}, 'Definição'), h('dd', {}, ficha.definicao), h('dt', {}, 'Dados'), h('dd', {}, ficha.dados), h('dt', {}, 'Regra'), h('dd', {}, ficha.regra), h('dt', {}, 'Limitações'), h('dd', {}, ficha.limitacoes)),
         ),
@@ -98,7 +104,7 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
       'div',
       { class: 'placar' },
       h('span', { class: `conceito conceito-${letra}`, 'aria-label': `Conceito ${letra}` }, letra),
-      h('div', {}, h('span', { class: 'placar-rotulo' }, opcoes.rotulo ?? 'PONTUAÇÃO AUTOMÁTICA'), h('div', {}, total, h('span', { class: 'placar-max' }, '/ 100'))),
+      h('div', {}, h('span', { class: 'placar-rotulo' }, opcoes.rotulo ?? 'PONTUAÇÃO AUTOMÁTICA'), h('div', {}, total, h('span', { class: 'placar-max' }, `/ ${escala}`))),
     ),
     r.aprovada
       ? h('p', { class: 'selo selo-ok' }, '✔ Aprovada — condições essenciais cumpridas')

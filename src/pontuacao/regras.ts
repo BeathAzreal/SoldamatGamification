@@ -1,61 +1,99 @@
 import type { Cordao } from '../modelo/cordao'
 import { analisarFusao, DESCRICAO_ESTADO, indiceDeformacao, type EstadoFusao, type PontoFusao } from '../modelo/fusao'
 import { GASES, MATERIAIS } from '../modelo/material'
+import { FUSAO } from '../modelo/parametros'
 import type { Percurso } from '../modelo/percurso'
 import type { ContextoProcesso } from '../modelo/processo'
 import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/catalogo'
 
 /*
- * Pontuação automática — regras da versão pontuacao-v1 (docs/PONTUACAO.md).
+ * Pontuação automática — regras da versão pontuacao-v3 (docs/PONTUACAO.md).
  * Só usa grandezas do modelo; nada é medido pela imagem.
+ *
+ * v3 (Alpha v1.3): escala de 0 a 1000 e notas GRADUADAS pela distância ao
+ * critério (não só dentro/fora): fusão por posição pelo índice F, geometria
+ * pelo desvio em mm de largura, reforço (excesso ou falta de enchimento) e
+ * alinhamento; execução por tempo sobre a junta, reinícios de arco e metal
+ * no trecho. Pesos (somando 100) e condições essenciais iguais aos da v1;
+ * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v1'
+export const VERSAO_PONTUACAO = 'pontuacao-v4'
+/** Nota máxima (cada ponto de peso vale ESCALA ÷ 100). */
+export const ESCALA_PONTUACAO = 1000
+
+/** Escala histórica; não reavalia tentativas salvas com regras novas. */
+export function escalaDaPontuacao(versao: string): number {
+  return versao === 'pontuacao-v1' || versao === 'pontuacao-v2' ? 100 : ESCALA_PONTUACAO
+}
+
+/**
+ * Faixas de tolerância da nota graduada (critérios DO JOGO, em mm ou índice):
+ * fora da faixa pedida, a nota daquela posição cai linearmente até zero
+ * nessa distância. Inspirado na ideia de níveis de aceitação por desvio
+ * (ex.: ISO 5817), sem reproduzir os limites de nenhuma norma.
+ */
+export const TOLERANCIAS = {
+  /** Largura fora da faixa do desenho: zero a 1,5 mm além do limite. */
+  larguraMm: 1.5,
+  /** Reforço acima do máximo: zero a 1,0 mm além. */
+  reforcoMm: 1,
+  /** Junta não enchida (superfície do metal abaixo da face): zero a 1,0 mm abaixo. */
+  faltaEnchimentoMm: 1,
+  /** Centro do cordão fora do alinhamento: zero a 1,0 mm além. */
+  alinhamentoMm: 1,
+  /** Índice de fusão abaixo de 1: zero em 0,6. */
+  fusaoMinima: 0.6,
+  /** Reinícios de arco no trecho até zerar a parte de reinícios. */
+  reinicios: 3,
+  /** Metal no trecho ÷ metal na peça: zero em 80 %. */
+  aproveitamentoMinimo: 0.8,
+} as const
 
 export type CategoriaId = 'integridade' | 'desenho' | 'regularidade' | 'deformacao' | 'eficiencia'
 export type Pesos = Record<CategoriaId, number>
 
 export const CATEGORIAS: CategoriaId[] = ['integridade', 'desenho', 'regularidade', 'deformacao', 'eficiencia']
 export const NOME_CATEGORIA: Record<CategoriaId, string> = {
-  integridade: 'Integridade prevista pelo modelo',
-  desenho: 'Atendimento ao desenho',
-  regularidade: 'Regularidade do cordão',
-  deformacao: 'Controle de deformação',
-  eficiencia: 'Eficiência',
+  integridade: 'Fusão prevista (integridade)',
+  desenho: 'Geometria do cordão',
+  regularidade: 'Regularidade da largura',
+  deformacao: 'Controle térmico',
+  eficiencia: 'Execução',
 }
 export const PESOS_PADRAO: Pesos = { integridade: 40, desenho: 25, regularidade: 15, deformacao: 10, eficiencia: 10 }
 
 /** Texto fixo de cada categoria (definição, dados, regra, limitações). */
 export const FICHA_CATEGORIA: Record<CategoriaId, { definicao: string; dados: string; regra: string; limitacoes: string }> = {
   integridade: {
-    definicao: 'Fração do trecho avaliado em que o modelo prevê junta íntegra.',
-    dados: 'Largura, centro e seção do cordão; aporte relativo, aquecimento acumulado, espessura, material, gás e limpeza.',
-    regra: 'Posição íntegra = há cordão, ele cobre as duas bordas e o índice de fusão sintético está entre 1 e 2. Pontos = peso × fração íntegra.',
+    definicao: 'Quanto da junta o modelo prevê fundida na medida certa, posição por posição.',
+    dados: 'Índice de fusão sintético F (aporte, aquecimento, espessura, material, gás, técnica, DBCP), cobertura das bordas, enchimento da junta.',
+    regra: 'Cada posição vale de 0 a 1: 1 com F entre 1 e 2; abaixo de 1 cai até 0 em F = 0,6; acima de 2 cai até 0 em F = 2,6 (perfuração). Borda descoberta, perfuração e sem cordão valem 0; junta mal enchida vale metade do enchimento. Pontos = peso × 10 × média.',
     limitacoes: 'Índice sintético do modelo. Não representa porosidade, trincas, inclusões nem penetração real.',
   },
   desenho: {
-    definicao: 'Quanto o cordão obedece às medidas e tolerâncias do desenho da missão.',
-    dados: 'Extensão, largura, altura (reforço) e centro do cordão.',
-    regra: 'Extensão 7/25, largura 8/25, reforço 5/25 e alinhamento 5/25, cada parte pela fração atendida.',
+    definicao: 'Quanto o cordão obedece às medidas e tolerâncias do desenho, pelo tamanho do desvio.',
+    dados: 'Extensão, largura, altura (reforço ou falta de enchimento) e centro do cordão, em mm.',
+    regra: 'Extensão 7/25 (fração com cordão). Largura 8/25, reforço 5/25 e alinhamento 5/25, cada posição com cordão de 0 a 1: 1 dentro da faixa, caindo linearmente até 0 a 1,5 mm (largura) ou 1,0 mm (reforço, falta de enchimento, alinhamento) além do limite.',
     limitacoes: 'Tolerâncias são objetivos didáticos do jogo, não requisitos de norma.',
   },
   regularidade: {
     definicao: 'Constância da largura ao longo do trecho avaliado.',
     dados: 'Coeficiente de variação da largura (desvio-padrão ÷ média).',
-    regra: 'Pontos = peso × (0,20 − variação) ÷ 0,17, entre 0 e o peso.',
+    regra: 'Pontos = peso × 10 × (0,20 − variação) ÷ 0,17, entre 0 e o máximo.',
     limitacoes: 'Oscilações menores que uns 2 mm são alisadas pelo modelo.',
   },
   deformacao: {
     definicao: 'Calor colocado além do necessário, ponderado pela tendência do material a deformar.',
     dados: 'Índice de deformação D (aporte médio ÷ aporte necessário × fator do material).',
-    regra: 'Pontos = peso × (2 − D), entre 0 e o peso.',
+    regra: 'Pontos = peso × 10 × (2 − D), entre 0 e o máximo.',
     limitacoes: 'É um índice; não há medida de empenamento.',
   },
   eficiencia: {
-    definicao: 'Aproveitamento do metal e do tempo de arco.',
-    dados: 'Rendimento de deposição do gás e fração do tempo de arco sobre a junta, no trecho do desenho.',
-    regra: 'Metade: (rendimento − 0,85) ÷ 0,15. Metade: (fração de tempo − 0,70) ÷ 0,30. Cada metade entre 0 e 1.',
-    limitacoes: 'O rendimento é uma aproximação por gás.',
+    definicao: 'Como o passe foi executado: arco sobre a junta, sem reinícios além dos passes previstos e com o metal onde foi pedido.',
+    dados: 'Tempo de arco perto da junta no trecho; aberturas além dos passes previstos; metal no trecho ÷ metal na peça.',
+    regra: 'Tempo sobre a junta 40 % ((fração − 0,70) ÷ 0,30); reinícios 30 % (1 − reinícios ÷ 3); metal no trecho 30 % ((fração − 0,80) ÷ 0,20). Cada parte entre 0 e 1.',
+    limitacoes: 'Reinício é contado, não modelado: o jogo não prevê a cratera nem a sobreposição de um reinício real.',
   },
 }
 
@@ -104,8 +142,15 @@ export interface ResultadoPontuacao {
     alturaMediaMm: number
     cvLargura: number
     deformacao: number
+    /** Rendimento de deposição do gás (H29); desde a v3 não entra na nota. */
     rendimento: number
     fracaoTempoUtil: number
+    /** v3: média da nota de fusão por posição (0–1). */
+    notaFusao?: number
+    /** v3: aberturas de arco − 1 (dentro do registro). */
+    reiniciosArco?: number
+    /** v3: metal no trecho pedido ÷ metal na peça. */
+    aproveitamentoMetal?: number
   }
 }
 
@@ -116,10 +161,13 @@ export interface EntradaPontuacao {
   cordao: Cordao
   percurso: Percurso
   tempoArcoMs: number
+  /** Quantas vezes o arco foi aberto (v3); ausente = 1 (sem reinício). */
+  aberturasDeArco?: number
 }
 
 const limitar = (v: number) => Math.min(1, Math.max(0, v))
-const arred = (v: number) => Math.round(v * 10) / 10
+/** Linear: 1 até `limite`, 0 a `faixa` além dele. */
+const cair = (excesso: number, faixa: number) => limitar(1 - Math.max(0, excesso) / faixa)
 const fmt1 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const fmtPct = (v: number) => v.toLocaleString('pt-BR', { style: 'percent', maximumFractionDigits: 0 })
 
@@ -165,6 +213,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   const { inicioMm: x0, fimMm: x1 } = missao.trecho
   const a0 = x0 + 2
   const a1 = x1 - 2
+  const T = TOLERANCIAS
 
   const fusao = analisarFusao(cordao, e.percurso, contexto)
   const secoes = Array.from({ length: cordao.nPosicoes }, (_, i) => cordao.secao(i))
@@ -174,38 +223,60 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   const sAvaliado = secoes.filter((s) => avaliado(s.xMm))
   const comCordao = sAvaliado.filter((s) => s.larguraMm >= 1)
   const n = Math.max(1, fAvaliado.length)
+  const media = (v: number[]) => (v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0)
 
-  // Integridade.
+  // Fusão prevista: nota graduada por posição pelo índice F (H33).
   const fracaoIntegra = fAvaliado.filter((p) => p.estado === 'adequada').length / n
   const contagem = (estado: EstadoFusao) => fAvaliado.filter((p) => p.estado === estado).length / n
+  const notaPosicao = (p: PontoFusao): number => {
+    if (p.estado === 'adequada') return 1
+    if (p.estado === 'falta') return limitar((p.indice - T.fusaoMinima) / (FUSAO.minimoAdequado - T.fusaoMinima))
+    if (p.estado === 'excessiva') return limitar((FUSAO.perfuracao - p.indice) / (FUSAO.perfuracao - FUSAO.maximoAdequado))
+    if (p.estado === 'enchimento') return 0.5 * limitar(cordao.secao(cordao.indiceEm(p.xMm)).enchimento ?? 0)
+    return 0
+  }
+  const notaFusao = fAvaliado.length ? media(fAvaliado.map(notaPosicao)) : 0
 
-  // Desenho.
+  // Geometria: extensão + desvios graduados em mm onde há cordão.
   const noTrechoSecoes = secoes.filter((s) => noTrecho(s.xMm))
   const extensao = noTrechoSecoes.filter((s) => s.larguraMm >= 1).length / Math.max(1, noTrechoSecoes.length)
-  const largura = sAvaliado.filter((s) => s.larguraMm >= req.larguraMinMm && s.larguraMm <= req.larguraMaxMm).length / n
-  const reforco = comCordao.length ? comCordao.filter((s) => s.alturaMm <= req.reforcoMaxMm).length / comCordao.length : 0
-  const alinhamento = comCordao.length
-    ? comCordao.filter((s) => Math.abs(s.yCentroMm) <= req.alinhamentoMm).length / comCordao.length
-    : 0
+  const nota = (f: (s: (typeof comCordao)[number]) => number) => (comCordao.length ? media(comCordao.map(f)) : 0)
+  const largura = nota((s) => cair(Math.max(req.larguraMinMm - s.larguraMm, s.larguraMm - req.larguraMaxMm), T.larguraMm))
+  const reforco = nota((s) => (s.alturaMm < 0 ? cair(-s.alturaMm, T.faltaEnchimentoMm) : cair(s.alturaMm - req.reforcoMaxMm, T.reforcoMm)))
+  const alinhamento = nota((s) => cair(Math.abs(s.yCentroMm) - req.alinhamentoMm, T.alinhamentoMm))
   const fracaoDesenho = (7 * extensao + 8 * largura + 5 * reforco + 5 * alinhamento) / 25
+  // Frações estritas (dentro do limite), só para mostrar.
+  const estrita = (f: (s: (typeof comCordao)[number]) => boolean) => (comCordao.length ? comCordao.filter(f).length / comCordao.length : 0)
+  const larguraDentro = estrita((s) => s.larguraMm >= req.larguraMinMm && s.larguraMm <= req.larguraMaxMm)
 
   // Regularidade.
   const larguras = comCordao.map((s) => s.larguraMm)
-  const media = larguras.length ? larguras.reduce((a, b) => a + b, 0) / larguras.length : 0
-  const cv = larguras.length >= 10 ? Math.sqrt(larguras.reduce((s, w) => s + (w - media) ** 2, 0) / larguras.length) / media : 1
+  const larguraMedia = media(larguras)
+  const cv = larguras.length >= 10 ? Math.sqrt(larguras.reduce((s, w) => s + (w - larguraMedia) ** 2, 0) / larguras.length) / larguraMedia : 1
   const fracaoRegularidade = larguras.length >= 10 ? limitar((0.2 - cv) / 0.17) : 0
-  const alturaMedia = comCordao.length ? comCordao.reduce((s, c) => s + c.alturaMm, 0) / comCordao.length : 0
+  const alturaMedia = media(comCordao.map((c) => c.alturaMm))
 
-  // Deformação.
+  // Controle térmico.
   const deformacao = indiceDeformacao(fAvaliado, contexto)
   const fracaoDeformacao = fAvaliado.some((p) => p.estado !== 'sem-cordao') ? limitar(2 - deformacao) : 0
 
-  // Eficiência.
+  // Execução: arco sobre a junta, reinícios e metal no trecho.
   const rendimento = GASES[contexto.gas].rendimento
   const tempoUtil = e.tempoArcoMs > 0 ? e.percurso.pertoDaJuntaEntre(x0 - 5, x1 + 5) / e.tempoArcoMs : 0
-  const fracaoEficiencia = 0.5 * limitar((rendimento - 0.85) / 0.15) + 0.5 * limitar((tempoUtil - 0.7) / 0.3)
+  const aberturasPlanejadas = Math.max(1, missao.aberturasPlanejadas ?? 1)
+  const reinicios = Math.max(0, (e.aberturasDeArco ?? 1) - aberturasPlanejadas)
+  const volumes = cordao.copiaDosVolumes()
+  let metalTrecho = 0
+  let metalTotal = 0
+  for (let i = 0; i < volumes.length; i++) {
+    metalTotal += volumes[i]
+    if (noTrecho((i + 0.5) * passo)) metalTrecho += volumes[i]
+  }
+  const aproveitamento = metalTotal > 0 ? metalTrecho / metalTotal : 0
+  const fracaoEficiencia =
+    0.4 * limitar((tempoUtil - 0.7) / 0.3) + 0.3 * cair(reinicios, T.reinicios) + 0.3 * limitar((aproveitamento - T.aproveitamentoMinimo) / (1 - T.aproveitamentoMinimo))
 
-  // Condições essenciais.
+  // Condições essenciais (iguais às da v1).
   const perfuracaoMm = maiorSequencia(fAvaliado, (p) => p.estado === 'perfuracao', passo)
   const semCordaoMm = maiorSequencia(fAvaliado, (p) => p.estado === 'sem-cordao', passo)
   const essenciais: CondicaoEssencial[] = [
@@ -213,7 +284,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
       id: 'E1',
       descricao: `Integridade prevista em pelo menos ${fmtPct(req.integridadeMinima)} do trecho avaliado`,
       cumprida: fracaoIntegra >= req.integridadeMinima,
-      justificativa: `Integridade prevista em ${fmtPct(fracaoIntegra)} do trecho.`,
+      justificativa: `Fusão adequada prevista em ${fmtPct(fracaoIntegra)} do trecho.`,
     },
     {
       id: 'E2',
@@ -238,32 +309,37 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   }
   const aprovada = essenciais.every((c) => c.cumprida)
 
-  const pontos = (c: CategoriaId, fracao: number) => arred(pesos[c] * fracao)
+  const fator = ESCALA_PONTUACAO / 100
+  const pontos = (c: CategoriaId, fracao: number) => Math.round(pesos[c] * fator * fracao)
+  const maximo = (c: CategoriaId) => pesos[c] * fator
   const categorias: ResultadoCategoria[] = [
     {
       id: 'integridade',
       nome: NOME_CATEGORIA.integridade,
-      pontos: pontos('integridade', fracaoIntegra),
-      maximo: pesos.integridade,
+      pontos: pontos('integridade', notaFusao),
+      maximo: maximo('integridade'),
       explicacao:
-        `Junta íntegra prevista em ${fmtPct(fracaoIntegra)} do trecho avaliado. ` +
-        `Falta de fusão: ${fmtPct(contagem('falta'))}; fusão excessiva: ${fmtPct(contagem('excessiva'))}; ` +
+        `Nota média de fusão ${fmtPct(notaFusao)}; fusão adequada em ${fmtPct(fracaoIntegra)} do trecho avaliado. ` +
+        `Falta de fusão: ${fmtPct(contagem('falta'))}; excessiva: ${fmtPct(contagem('excessiva'))}; ` +
         `perfuração: ${fmtPct(contagem('perfuracao'))}; borda descoberta: ${fmtPct(contagem('borda'))}; ` +
-        `sem cordão: ${fmtPct(contagem('sem-cordao'))}. Resultado sintético do modelo.`,
-      detalhes: [{ rotulo: 'Fração íntegra', valor: fmtPct(fracaoIntegra) }],
+        `junta não enchida: ${fmtPct(contagem('enchimento'))}; sem cordão: ${fmtPct(contagem('sem-cordao'))}. Resultado sintético do modelo.`,
+      detalhes: [
+        { rotulo: 'Nota de fusão', valor: fmtPct(notaFusao) },
+        { rotulo: 'Fração íntegra', valor: fmtPct(fracaoIntegra) },
+      ],
     },
     {
       id: 'desenho',
       nome: NOME_CATEGORIA.desenho,
       pontos: pontos('desenho', fracaoDesenho),
-      maximo: pesos.desenho,
+      maximo: maximo('desenho'),
       explicacao:
-        `Extensão ${fmtPct(extensao)}, largura entre ${fmt1(req.larguraMinMm)} e ${fmt1(req.larguraMaxMm)} mm em ${fmtPct(largura)}, ` +
-        `reforço até ${fmt1(req.reforcoMaxMm)} mm em ${fmtPct(reforco)}, centro a até ${fmt1(req.alinhamentoMm)} mm da junta em ${fmtPct(alinhamento)}.`,
+        `Extensão ${fmtPct(extensao)}. Largura (${fmt1(req.larguraMinMm)}–${fmt1(req.larguraMaxMm)} mm): nota ${fmtPct(largura)}, ${fmtPct(larguraDentro)} dentro. ` +
+        `Reforço até ${fmt1(req.reforcoMaxMm)} mm (sem afundar abaixo da face): nota ${fmtPct(reforco)}. Centro a até ${fmt1(req.alinhamentoMm)} mm da junta: nota ${fmtPct(alinhamento)}.`,
       detalhes: [
         { rotulo: 'Extensão', valor: fmtPct(extensao) },
-        { rotulo: 'Largura na faixa', valor: fmtPct(largura) },
-        { rotulo: 'Reforço no limite', valor: fmtPct(reforco) },
+        { rotulo: 'Largura', valor: fmtPct(largura) },
+        { rotulo: 'Reforço', valor: fmtPct(reforco) },
         { rotulo: 'Alinhamento', valor: fmtPct(alinhamento) },
       ],
     },
@@ -271,10 +347,10 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
       id: 'regularidade',
       nome: NOME_CATEGORIA.regularidade,
       pontos: pontos('regularidade', fracaoRegularidade),
-      maximo: pesos.regularidade,
+      maximo: maximo('regularidade'),
       explicacao:
         larguras.length >= 10
-          ? `A largura variou ${fmtPct(cv)} (média ${fmt1(media)} mm). Até 3 % ganha tudo; 20 % ou mais, nada.`
+          ? `A largura variou ${fmtPct(cv)} (média ${fmt1(larguraMedia)} mm). Até 3 % ganha tudo; 20 % ou mais, nada.`
           : 'Cordão curto demais para medir a regularidade.',
       detalhes: [{ rotulo: 'Variação da largura', valor: larguras.length >= 10 ? fmtPct(cv) : '—' }],
     },
@@ -282,7 +358,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
       id: 'deformacao',
       nome: NOME_CATEGORIA.deformacao,
       pontos: pontos('deformacao', fracaoDeformacao),
-      maximo: pesos.deformacao,
+      maximo: maximo('deformacao'),
       explicacao: `Índice de deformação ${fmt1(deformacao)} (até 1 sem perda; 2 ou mais perde tudo). ${MATERIAIS[contexto.material].nome}: fator ${fmt1(MATERIAIS[contexto.material].fatorDeformacao)}.`,
       detalhes: [{ rotulo: 'Índice D', valor: fmt1(deformacao) }],
     },
@@ -290,16 +366,17 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
       id: 'eficiencia',
       nome: NOME_CATEGORIA.eficiencia,
       pontos: pontos('eficiencia', fracaoEficiencia),
-      maximo: pesos.eficiencia,
-      explicacao: `Rendimento do metal ${fmtPct(rendimento)} (${GASES[contexto.gas].nome}); ${fmtPct(tempoUtil)} do tempo de arco sobre a junta, no trecho do desenho.`,
+      maximo: maximo('eficiencia'),
+      explicacao: `${fmtPct(tempoUtil)} do tempo de arco sobre a junta; ${reinicios} reinício(s) além dos passes previstos; ${fmtPct(aproveitamento)} do metal dentro do trecho pedido.`,
       detalhes: [
-        { rotulo: 'Rendimento', valor: fmtPct(rendimento) },
-        { rotulo: 'Tempo útil de arco', valor: fmtPct(tempoUtil) },
+        { rotulo: 'Arco sobre a junta', valor: fmtPct(tempoUtil) },
+        { rotulo: 'Reinícios além dos passes previstos', valor: String(reinicios) },
+        { rotulo: 'Metal no trecho', valor: fmtPct(aproveitamento) },
       ],
     },
   ]
 
-  // Essencial descumprido: economia e rapidez não podem compensar (docs/PONTUACAO.md).
+  // Essencial descumprida: economia e rapidez não podem compensar (docs/PONTUACAO.md).
   const penalidades: Penalidade[] = []
   if (!aprovada) {
     for (const c of categorias.filter((c) => c.id === 'deformacao' || c.id === 'eficiencia')) {
@@ -307,7 +384,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
         penalidades.push({
           descricao: `${c.nome} zerada`,
           pontos: -c.pontos,
-          justificativa: 'Condição essencial descumprida: deformação e eficiência não compensam o requisito.',
+          justificativa: 'Condição essencial descumprida: controle térmico e execução não compensam o requisito.',
         })
       }
       c.pontos = 0
@@ -317,7 +394,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   return {
     versao: VERSAO_PONTUACAO,
     pesos: { ...pesos },
-    total: arred(categorias.reduce((s, c) => s + c.pontos, 0)),
+    total: categorias.reduce((s, c) => s + c.pontos, 0),
     aprovada,
     categorias,
     essenciais,
@@ -325,12 +402,15 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     problemas: agruparProblemas(fusao.filter((p) => noTrecho(p.xMm)), passo),
     medidas: {
       fracaoIntegra,
-      larguraMediaMm: media,
+      larguraMediaMm: larguraMedia,
       alturaMediaMm: alturaMedia,
       cvLargura: larguras.length >= 10 ? cv : NaN,
       deformacao,
       rendimento,
       fracaoTempoUtil: tempoUtil,
+      notaFusao,
+      reiniciosArco: reinicios,
+      aproveitamentoMetal: aproveitamento,
     },
   }
 }

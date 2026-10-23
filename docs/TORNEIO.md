@@ -79,10 +79,22 @@ Classificação configurável:
 - **pela nota final do professor** (padrão neste modo; a automática aparece
   como referência separada);
 - pela nota automática;
-- por **média ponderada**: a nota do professor (0–10) é convertida para
-  0–100 e combinada com a automática pelos pesos mostrados na tela. Aviso
+- por **média ponderada**: a nota do professor (0–10) é convertida para a
+  escala da pontuação automática (0–1000 na `pontuacao-v3`) e combinada com a automática pelos pesos mostrados na tela. Aviso
   exibido: a nota final do professor já pode considerar o sistema, então a
   média pode repetir critérios.
 
 O julgamento por código é apresentado como **medida para reduzir vieses**.
 Num aplicativo local não há anonimato completo nem proteção contra fraude.
+
+## Compatibilidade após pontuacao-v4
+
+Novos torneios registram versaoPontuacao. Em torneios antigos, a versão é
+inferida dos resultados. Para exibir a classificação, notas v1/v2 são
+normalizadas de 0–100 para 0–1000 antes de combinar com a nota docente.
+Os resultados salvos não são reavaliados nem alterados.
+
+Não é permitido iniciar uma nova tentativa em um torneio que já usa
+outras regras: é necessário duplicar sua configuração. Isso evita misturar
+v3/v4 ou notas de escalas diferentes na mesma disputa. Torneios antigos
+ainda sem resultados podem começar com as regras atuais.

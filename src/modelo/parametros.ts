@@ -120,6 +120,21 @@ export const FUSAO = {
   normalizacaoDeformacao: 2.07,
 } as const
 
+/**
+ * Distância bico de contato–peça, DBCP/CTWD (H48). A faixa de escolhas (10 a
+ * 20 mm) cobre o que guias de fabricante indicam para MIG/MAG por curto-
+ * circuito (≈ 10–12 mm) e um pouco além; a fração resistiva é do jogo.
+ */
+export const DBCP = {
+  referenciaMm: 15,
+  minimoMm: 8,
+  maximoMm: 25,
+  /** Opções da bancada (mm). */
+  opcoesMm: [10, 15, 20] as readonly number[],
+  /** Parte da fusão do arame que vem do aquecimento resistivo do arame livre, na referência (H48). */
+  fracaoResistiva: 0.3,
+} as const
+
 /** Equilíbrio tensão × alimentação do jogo (H10). Reta e tolerância inventadas. */
 export const EQUILIBRIO = {
   /** tensão de equilíbrio = base + inclinação × alimentação */

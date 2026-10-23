@@ -67,7 +67,7 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
   /** O que define a cena 3D; recriar() só refaz se isto mudou. */
   const chave = () => {
     const { contexto: c, geometria } = op.peca()
-    return [c.material, c.espessuraMm, c.aberturaMm, c.junta ?? 'topo', geometria.formato, c.gas, c.tecnica ?? 'neutra'].join('|')
+    return [c.material, c.espessuraMm, c.aberturaMm, c.junta ?? 'topo', geometria.formato, c.gas, c.tecnica ?? 'neutra', c.dbcpMm ?? 15].join('|')
   }
   let chaveAtual = ''
   const monitor = new MonitorQuadros()
