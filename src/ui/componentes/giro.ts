@@ -161,7 +161,10 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
       leituraRolagem.textContent = `${Math.round(((rolagem % 360) + 360) % 360)}°`
       pecaLado.setAttribute('transform', `rotate(${-rolagem.toFixed(1)} 20 21)`)
       const pos = posicaoDe(gravidade({ rolagemGraus: rolagem, giroGraus: giro }))
-      leituraPosicao.textContent = `${fixa ? 'Presa na garra · ' : 'Rotação somente X · '}${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[familia][pos]})`
+      // Duas partes: em telas baixas o modo de fixação some e fica só a posição (estilo-espaco.css).
+      const modo = fixa ? 'Presa na garra · ' : 'Rotação somente X · '
+      const nome = `${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[familia][pos]})`
+      if (leituraPosicao.textContent !== modo + nome) leituraPosicao.replaceChildren(h('span', { class: 'giro-modo' }, modo), nome)
       elemento.classList.toggle('travado', !pode)
     },
     reiniciar(novo = {}) {
