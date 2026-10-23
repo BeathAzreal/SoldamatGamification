@@ -53,6 +53,7 @@ export interface CenaExecucao3D {
   readonly vista: Vista3D
   ajustarTamanho(largura: number, altura: number): void
   desenhar(d: DadosQuadro3D): void
+  permitePosicao(giro: number, rolagem: number): boolean
   destruir(): void
 }
 
@@ -132,6 +133,7 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
   return {
     elemento,
     vista,
+    permitePosicao: (giro, rolagem) => palco.permitePosicao(giro, rolagem),
     ajustarTamanho(l, a) {
       palco.ajustarTamanho(l, a)
       vista.ajustar(l, a)
@@ -139,6 +141,9 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
     desenhar(d) {
       palco.definirGiro(d.angulo)
       palco.definirRolagem(d.rolagemGraus)
+      vista.definirRolagem(d.rolagemGraus)
+      palco.cena.updateMatrixWorld(true)
+      vista.definirMatrizPeca(palco.peca.matrixWorld)
       // Gravidade nos eixos da peça (x ao longo da junta, y para fora da face, z lateral), H47.
       const g = gravidade({ rolagemGraus: d.rolagemGraus, giroGraus: (d.angulo * 180) / Math.PI })
       gPeca.x = g.t

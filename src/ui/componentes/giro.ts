@@ -1,6 +1,6 @@
 import type { FonteEntrada } from '../../entrada/fonte'
 import { FontePonteiro } from '../../entrada/ponteiro'
-import { gravidade, NOME_POSICAO, POSICAO_PLANA, posicaoDe, ROLAGEM_MAX_GRAUS, SIGLAS_POSICAO, type FamiliaJunta, type PosicaoPeca } from '../../modelo/juntas'
+import { gravidade, NOME_POSICAO, POSICAO_PLANA, posicaoDe, SIGLAS_POSICAO, type FamiliaJunta, type PosicaoPeca } from '../../modelo/juntas'
 import type { Vista } from '../../render/vista'
 import { h } from '../dom'
 
@@ -10,7 +10,7 @@ import { h } from '../dom'
  *   da caneta segurada (padrão: E ou B): para os lados gira no próprio
  *   plano, para cima e para baixo tomba (gestos.ts);
  * - ou segurando os botões ⟲ ⟳ ▲ ▼, ou o direcional do controle.
- * Tombar vai de 0° (face para cima) a 180° (de cabeça para baixo).
+ * Apenas rotação em X, em torno da garra, limitada pelo suporte.
  * As duas juntas decidem a posição de soldagem (plana, horizontal, vertical
  * ou sobrecabeça), que muda a poça (H47). Peça presa na estrutura não mexe.
  */
@@ -19,8 +19,6 @@ const VELOCIDADE_GRAUS_S = 60
 /** Direcional do controle no mapeamento padrão do navegador. */
 const BOTAO_CIMA = 12
 const BOTAO_BAIXO = 13
-const BOTAO_ESQUERDA = 14
-const BOTAO_DIREITA = 15
 
 export interface OpcoesGiro {
   /** Como a peça chega (H47). */
@@ -35,6 +33,7 @@ export interface Giro {
   elemento: HTMLElement
   /** Posição atual da peça (graus). */
   readonly posicao: PosicaoPeca
+  limitar: (teste: (giro: number, rolagem: number) => boolean) => void
   /** Chamado a cada quadro, antes de desenhar. */
   atualizar: (agoraMs: number, vista: Vista, fonte: FonteEntrada | null, arcoAberto: boolean) => void
   /** Gesto de arrastar (graus): só com o arco fechado e a peça solta. */
@@ -52,6 +51,15 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
   let rolagem = inicial.rolagemGraus
   let tAnterior: number | null = null
   let arcoAberto = false
+  let permite = (_g: number, _r: number) => true
+  const mover = (dg: number, dr: number) => {
+    const n = Math.max(1, Math.ceil(Math.max(Math.abs(dg), Math.abs(dr))))
+    for (let i = 0; i < n; i++) {
+      const g = giro + dg / n, r = rolagem + dr / n
+      if (!permite(g, r)) break
+      giro = g; rolagem = r
+    }
+  }
   const tela = { esq: false, dir: false, cima: false, baixo: false }
   type Lado = keyof typeof tela
 
@@ -75,10 +83,10 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
   const botoes = [
     segurar('⟲', 'Girar a peça no plano, sentido anti-horário (segure)', 'esq'),
     segurar('⟳', 'Girar a peça no plano, sentido horário (segure)', 'dir'),
-    segurar('▲', 'Tombar a peça para trás, até 0° com a face para cima (segure)', 'cima'),
-    segurar('▼', 'Tombar a peça para a frente, até 180° de cabeça para baixo (segure)', 'baixo'),
+    segurar('▲', 'Girar a peça em X para trás, até o limite do suporte (segure)', 'cima'),
+    segurar('▼', 'Girar a peça em X para a frente, até o limite do suporte (segure)', 'baixo'),
   ]
-  const leituraGiro = h('output', { class: 'giro-angulo', title: 'Giro no plano' }, '0°')
+  const leituraGiro = h('output', { class: 'giro-angulo', title: 'Rotação da peça: volta completa de 360°' }, '0°')
   const leituraRolagem = h('output', { class: 'giro-angulo', title: 'Tombamento (0° = face para cima)' }, '0°')
   const leituraPosicao = h('output', { class: 'giro-posicao', 'aria-live': 'polite' })
   // A peça vista de lado: a chapa tomba contra o piso e a tocha fica sempre do lado da face (H47).
@@ -124,13 +132,14 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
 
   const api: Giro = {
     elemento,
+    limitar(teste) { permite = teste },
     get posicao() {
       return { rolagemGraus: rolagem, giroGraus: giro }
     },
     aplicar(dGiro, dRolagem) {
       if (arcoAberto || fixa) return
-      giro += dGiro
-      rolagem = Math.min(ROLAGEM_MAX_GRAUS, Math.max(0, rolagem + dRolagem))
+      void dGiro
+      mover(0, dRolagem)
     },
     atualizar(agoraMs, vista, fonte, aberto) {
       arcoAberto = aberto
@@ -139,20 +148,20 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
       // H47: a peça só se mexe com o arco fechado (e não se estiver presa).
       const pode = !arcoAberto && !fixa
       if (pode) {
-        giro += sentido('esq', 'dir', BOTAO_ESQUERDA, BOTAO_DIREITA) * VELOCIDADE_GRAUS_S * dt
-        rolagem = Math.min(ROLAGEM_MAX_GRAUS, Math.max(0, rolagem + sentido('cima', 'baixo', BOTAO_CIMA, BOTAO_BAIXO) * VELOCIDADE_GRAUS_S * dt))
+        mover(0, sentido('cima', 'baixo', BOTAO_CIMA, BOTAO_BAIXO) * VELOCIDADE_GRAUS_S * dt)
       }
       for (const b of botoes) b.disabled = !pode
+      botoes[0].disabled = botoes[1].disabled = true
       endireitar.disabled = !pode || (giro === inicial.giroGraus && rolagem === inicial.rolagemGraus)
       const angulo = (giro * Math.PI) / 180
       const mudou = vista.angulo !== angulo
       vista.definirAngulo(angulo)
       if (mudou && fonte instanceof FontePonteiro) fonte.reamostrar(agoraMs)
       leituraGiro.textContent = `${Math.round(((giro % 360) + 360) % 360)}°`
-      leituraRolagem.textContent = `${Math.round(rolagem)}°`
+      leituraRolagem.textContent = `${Math.round(((rolagem % 360) + 360) % 360)}°`
       pecaLado.setAttribute('transform', `rotate(${-rolagem.toFixed(1)} 20 21)`)
       const pos = posicaoDe(gravidade({ rolagemGraus: rolagem, giroGraus: giro }))
-      leituraPosicao.textContent = `${fixa ? 'Peça fixa · ' : ''}${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[familia][pos]})`
+      leituraPosicao.textContent = `${fixa ? 'Presa na garra · ' : 'Rotação somente X · '}${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[familia][pos]})`
       elemento.classList.toggle('travado', !pode)
     },
     reiniciar(novo = {}) {

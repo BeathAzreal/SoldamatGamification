@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { FORMATOS, geometriaDa } from '../src/modelo/junta'
 import { Vista } from '../src/render/vista'
@@ -124,15 +125,18 @@ describe('Vista3D: câmera livre (v1.3)', () => {
     })
   }
 
-  it('o azimute dá a volta; a elevação e o zoom ficam nos limites', () => {
+  it('câmera limitada a 180 graus e zoom limitado', () => {
     const v3 = new Vista3D()
     v3.definirCamera(3 * Math.PI, 5, 99)
-    expect(Math.cos(v3.azimute)).toBeCloseTo(-1, 9)
-    expect(v3.elevacao).toBeCloseTo((ELEVACAO_MAX_GRAUS * Math.PI) / 180, 9)
+    expect(v3.azimute).toBeCloseTo(Math.PI / 2, 9)
+    expect(v3.elevacao).toBeCloseTo(Math.PI, 9)
     expect(v3.zoom).toBe(ZOOM_MAX)
     v3.definirCamera(0, -1, 0)
     expect(v3.elevacao).toBe(0)
     expect(v3.zoom).toBe(ZOOM_MIN)
+    v3.definirCamera(-100, -100)
+    expect(v3.azimute).toBe(-Math.PI / 2)
+    expect(v3.elevacao).toBe(0)
     expect(INCLINACAO_MAX_GRAUS).toBe(ELEVACAO_MAX_GRAUS)
   })
 
@@ -150,4 +154,51 @@ describe('Vista3D: câmera livre (v1.3)', () => {
     expect(b.x).toBeCloseTo(a.x, 6)
     expect(b.y).toBeCloseTo(a.y, 6)
   })
+})
+
+// A orientação física da peça não pode arrastar a câmera nem perder a mira.
+describe('Peça e câmera independentes', () => {
+  for (const graus of [-360, -270, -35, 0, 35, 120, 180, 250, 315, 360, 720]) {
+    it(`mantém câmera fixa e mapeamento reversível com peça a ${graus}°`, () => {
+      const { v3 } = par('reta', 1000, 600, 1.3)
+      v3.definirCamera(.6, .4)
+      const camera = v3.camera.matrixWorld.clone()
+      v3.definirRolagem(graus)
+      expect(v3.camera.matrixWorld.equals(camera)).toBe(true)
+      for (const [x, y] of [[60, -5], [90, 8], [75, 0]]) {
+        const tela = v3.daChapa(x, y)
+        const chapa = v3.paraChapa(tela.x, tela.y)
+        expect(chapa.x).toBeCloseTo(x, 6)
+        expect(chapa.y).toBeCloseTo(y, 6)
+      }
+    })
+  }
+})
+
+describe('Câmera limitada em torno da peça', () => {
+  for (const p of [-2.8, -1.7, 1.7, 2.6, Math.PI * 2]) {
+    it(`mira reversível pela parte inferior e superior, elevação ${p}`, () => {
+      const { v3 } = par('reta', 1000, 600, .3)
+      v3.definirCamera(.7, p)
+      for (const [x,y] of [[65, -3], [90, 7]]) {
+        const t = v3.daChapa(x,y), q = v3.paraChapa(t.x,t.y)
+        expect(q.x).toBeCloseTo(x, 6)
+        expect(q.y).toBeCloseTo(y, 6)
+      }
+      expect(v3.angulo).toBe(.3)
+      expect(v3.rolagem).toBe(0)
+    })
+  }
+})
+
+it('mira acompanha a peça articulada em uma garra fora do centro', () => {
+  const { v3 } = par('reta', 1000, 600, 0)
+  const giro = new THREE.Group(), peca = new THREE.Group()
+  giro.position.set(85,-3,0); peca.position.set(-85,3,0); giro.add(peca)
+  giro.rotation.set(.4,-.2,0); giro.updateMatrixWorld(true)
+  v3.definirMatrizPeca(peca.matrixWorld)
+  for (const [x,y] of [[60,-5],[90,8]]) {
+    const t=v3.daChapa(x,y), q=v3.paraChapa(t.x,t.y)
+    expect(q.x).toBeCloseTo(x,6); expect(q.y).toBeCloseTo(y,6)
+  }
 })

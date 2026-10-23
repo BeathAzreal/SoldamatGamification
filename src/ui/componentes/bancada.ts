@@ -282,7 +282,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   const hudVel = h('strong', {}, '0,0')
   const hudLarg = h('strong', {}, '—')
   const hudCalor = h('div', { class: 'medidor-preenchimento calor' })
-  const sobreGiro = h('div', { class: 'giro-sobre', title: 'Posicionar a peça e a câmera só com o arco fechado: arraste com o botão direito (peça) ou o do meio (câmera), ou segure E/B (peça) ou Espaço (câmera) movendo a caneta; mude em Controles. No controle: direcional (peça) e analógico direito (câmera).' }, giro.elemento)
+  const sobreGiro = h('div', { class: 'giro-sobre', title: 'Peça articulada na garra lateral: rotação limitada pelo suporte. Use a câmera para inspecionar. Posicionar a câmera só com o arco fechado: arraste com o botão direito (peça) ou o do meio (câmera), ou segure E/B (peça) ou Espaço (câmera) movendo a caneta; mude em Controles. No controle: direcional (peça) e analógico direito (câmera).' }, giro.elemento)
   areaPeca.append(
     sobreGiro,
     h(
@@ -533,6 +533,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       }
     }
     fonte?.atualizar(agora)
+    giro.limitar((g, r) => visual.permitePosicao(g, r))
     giro.atualizar(agora, vista, fonte, sim.arcoAberto)
     // H47: a posição da peça entra no modelo (gravada ao abrir o arco).
     sim.definirPosicao(giro.posicao)

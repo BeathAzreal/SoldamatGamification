@@ -54,6 +54,7 @@ export interface Visual3D {
   centralizar(): void
   /** A peça pode ter mudado (material, espessura, formato, gás, movimento): refaz a cena 3D se mudou. */
   recriar(): void
+  permitePosicao(giro: number, rolagem: number): boolean
   destruir(): void
 }
 
@@ -144,6 +145,7 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
 
   const quando = op.quando ?? 'nesta tela'
   const api: Visual3D = {
+    permitePosicao: (giro, rolagem) => cena?.permitePosicao(giro, rolagem) ?? true,
     elemento: h('div', { class: 'visual-sobre', role: 'group', 'aria-label': 'Câmera' }, rotuloCamera, aviso),
     mapa: { paraPeca: (px, py) => (modo === '3d' && cena ? cena.vista : vista).paraPeca(px, py) },
     get ativo() {
