@@ -19,7 +19,7 @@ function ambiente(): Ambiente {
 function resultado(total: number, aprovada = true, integridade = total * 0.4, desenho = total * 0.25): ResultadoPontuacao {
   const pontos = { integridade, desenho, regularidade: 0, deformacao: 0, eficiencia: 0 }
   return {
-    versao: 'pontuacao-v4',
+    versao: 'pontuacao-v5',
     pesos: { ...PESOS_PADRAO },
     total,
     aprovada,

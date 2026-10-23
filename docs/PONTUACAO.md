@@ -246,3 +246,10 @@ O campo medidas.reiniciosArco passa a indicar esses reinícios excedentes.
 A versão das regras subiu para pontuacao-v4 para separar os novos recordes.
 Pontuações históricas mantêm os valores salvos e sua escala de origem.
 O placar usa essa escala ao mostrar o máximo e o conceito.
+
+## pontuacao-v5 (reforço realista)
+
+As regras de nota não mudaram. Mudou o modelo do cordão (H3 revista em
+HIPOTESES.md): o mesmo passe agora dá um reforço menor: um cordão de 8 mm de
+largura passa de cerca de 2,9 mm para cerca de 2,1 mm de reforço. Como a mesma solda passa a ter outra nota, a
+versão subiu para pontuacao-v5, e os recordes anteriores ficam separados.

@@ -18,7 +18,7 @@ import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/ca
  * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v4'
+export const VERSAO_PONTUACAO = 'pontuacao-v5'
 /** Nota máxima (cada ponto de peso vale ESCALA ÷ 100). */
 export const ESCALA_PONTUACAO = 1000
 

@@ -27,12 +27,12 @@ export const AJUSTES = {
 
 export const MODELO = {
   /** Volume depositado por segundo com a alimentação de referência (mm³/s do jogo) (H1). */
-  taxaDeposicaoMm3s: 140,
+  taxaDeposicaoMm3s: 100,
   /** Altura do cordão dividida pela largura, na tensão de referência (H3). */
-  razaoAlturaLargura: 0.35,
+  razaoAlturaLargura: 0.25,
   /** Razão altura/largura nos extremos do botão de tensão: 1 → 10 (H9). */
-  razaoTensaoMinima: 0.48,
-  razaoTensaoMaxima: 0.22,
+  razaoTensaoMinima: 0.34,
+  razaoTensaoMaxima: 0.16,
   /** Resolução da discretização ao longo da junta (mm). */
   passoMm: 0.5,
   /** Espalhamento numérico do depósito ao longo da junta, em mm (H4). */
