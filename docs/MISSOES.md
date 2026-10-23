@@ -88,3 +88,22 @@ disponíveis. Seus controles (tipo e diâmetro do eletrodo, corrente,
 polaridade; corrente contínua ou alternada, gás) e comportamentos precisam de
 modelos próprios — copiar o comportamento do MIG/MAG com outro nome seria
 enganoso (H26).
+
+## Exercícios técnicos orientados (Alpha v1.3)
+
+Em Treino → Treino livre → Exercícios técnicos há três roteiros:
+controle do avanço, alimentação e deposição, tensão e forma.
+Todos usam a peça padrão de aço carbono de 3 mm, junta de topo,
+abertura de 1 mm e dificuldade Aprendiz. Não criam missões oficiais,
+recordes ou critérios novos de aprovação.
+
+O aluno faz uma referência e usa “Treinar de novo” para comparar.
+Os ajustes são preservados entre tentativas; o roteiro pede manter as
+demais condições. Os controles não ficam bloqueados e a velocidade é
+manual: portanto, a comparação não comprova causalidade isolada.
+O roteiro permanece consultável na preparação e no resultado.
+A escolha de outro exercício inicia uma sessão sem tentativa anterior.
+
+São orientações para explorar o modelo atual, sem mudar física,
+pontuação, consumíveis ou armazenamento. A futura revisão do modelo
+deve ser acompanhada de revisão desses roteiros.

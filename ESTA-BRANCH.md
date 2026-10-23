@@ -1,5 +1,12 @@
-# Esta branch é do Claude (Anthropic Claude Code)
+# Qual é esta branch?
 
-Branch `claude/v1.3`: só o **Claude (Anthropic Claude Code)** faz commit e push aqui.
+Confira antes de qualquer commit: `git branch --show-current`.
 
-Não trabalhe na branch gpt/v1.3 (do GPT). As regras estão no [`AGENTS.md`](AGENTS.md).
+| Branch | Dono | Quem faz commit e push |
+| --- | --- | --- |
+| `alpha-v1.3` | dono do projeto (versão entregue) | ninguém; só por pull request aprovado pelo dono |
+| `claude/v1.3` | Claude (Anthropic Claude Code) | só o Claude |
+| `gpt/v1.3` | GPT (OpenAI Codex / ChatGPT) | só o GPT |
+
+Este arquivo é igual nas três branches, para não gerar conflito nos merges.
+Trabalhe só na sua branch. As regras estão no [`AGENTS.md`](AGENTS.md).
