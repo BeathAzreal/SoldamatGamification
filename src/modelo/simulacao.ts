@@ -61,7 +61,8 @@ export interface EstadoTocha {
 export function instabilidadeArco(a: Ajustes, ctx: ContextoProcesso): number {
   const { desvio } = equilibrioArco(a, ctx)
   const excesso = Math.max(0, Math.abs(desvio) - EQUILIBRIO.tolerancia)
-  return Math.sign(desvio) * Math.min(1, excesso / 3)
+  // Dentro da tolerância é exatamente 0 (nunca −0).
+  return excesso === 0 ? 0 : Math.sign(desvio) * Math.min(1, excesso / 3)
 }
 
 export function sobreAPeca(x: number, y: number): boolean {
@@ -194,6 +195,18 @@ export class Simulacao {
   }
 
   /**
+   * Fecha o arco SEM consolidar o tempo que passou desde a última leitura
+   * consolidada (H49): pausa, perda de foco ou janela escondida. Fechar com
+   * encerrarArco(agora) depositaria, de uma vez, todo o tempo parado da
+   * pausa como se a tocha tivesse ficado ali soldando.
+   */
+  interromperArco(): void {
+    if (!this.arco || !this.ultima) return
+    const p = this.ultima
+    this.encerrarArco({ t: Math.max(this.tConsolidado, p.t), x: p.x, y: p.y })
+  }
+
+  /**
    * Chamado a cada quadro com o relógio atual. Se o mouse não mandou leituras,
    * a tocha está parada e continua depositando no mesmo lugar.
    *
@@ -306,9 +319,13 @@ export class Simulacao {
 
   private depositarParado(p: Amostra, t0: number, t1: number): void {
     this.tempoArcoMs += t1 - t0
+    // Arco fora da peça não aquece a peça (H32): ela só esfria.
+    if (!sobreAPeca(p.x, p.y)) {
+      this.esfriarAte(t1)
+      return
+    }
     const potencia = potenciaRelativa(this.ajustesAtuais, this.contexto)
     const integral = this.aquecer(t0, t1, potencia)
-    if (!sobreAPeca(p.x, p.y)) return
     const volume = (taxaDeposicao(this.ajustesAtuais, this.contexto) * (t1 - t0)) / 1000
     // H47: parada, só pesa a gravidade de lado e para fora da face (sem subir nem descer).
     const ef = efeitoPosicao(this.gravidadeAtual, 0)
@@ -332,8 +349,11 @@ export class Simulacao {
       const f = (j + 0.5) / n
       const x = p0.x + (p1.x - p0.x) * f
       const y = p0.y + (p1.y - p0.y) * f
+      if (!sobreAPeca(x, y)) {
+        this.esfriarAte(t0 + (j + 1) * dt)
+        continue
+      }
       const integral = this.aquecer(t0 + j * dt, t0 + (j + 1) * dt, potencia)
-      if (!sobreAPeca(x, y)) continue
       this.cordao.depositar(x, y + ef.desvioMm, volume, t0 + (j + 1) * dt, razao, sigma, instab)
       this.percurso.registrar(x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao)
     }
