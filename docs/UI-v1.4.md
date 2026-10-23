@@ -27,8 +27,7 @@ não interceptam campos de formulário nem diálogos.
 
 Não há fontes remotas nem bibliotecas novas. Os dados mantêm as chaves da
 versão anterior; ao copiar o HTML para outra pasta, o navegador pode tratar
-o arquivo como outra origem. A geração do portátil será feita após a
-conferência visual.
+o arquivo como outra origem. O portátil e o ZIP foram gerados para permitir o teste visual pelo dono.
 
 ## Próximo processo
 
@@ -45,4 +44,4 @@ TypeScript, 305 testes em 24 arquivos e build de produção aprovados.
 O navegador integrado não conseguiu acessar o servidor local (timeout).
 A revisão visual e de interação em 1280×720 e 1366×768 permanece pendente,
 incluindo zoom, formulários, navegação durante tentativa oficial, câmera
-e os três dispositivos. Por isso o PR fica em rascunho.
+e os três dispositivos. O PR inclui um pacote de teste; a revisão visual permanece pendente.
