@@ -287,7 +287,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         ctx.clearRect(0, 0, vista.larguraCss, vista.alturaCss)
         const p = posicao ?? estado.posicao
         const desvio = equilibrioArco(estado.ajustes, op.contexto).desvio
-        visual.desenhar({ cordao: sim.cordao, registro: sim.registro, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: instanteProcesso, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: posicao !== null && !pausado, angulo: vista.angulo })
+        visual.desenhar({ cordao: sim.cordao, registro: sim.registro, eventos: sim.eventos, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: instanteProcesso, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: posicao !== null && !pausado, angulo: vista.angulo })
         // Som do arco (H45) com a mesma regra de cena.ts.
         if (!pausado) somArco.atualizar(!!(p && estado.arcoAberto && estado.sobreAPeca), desvio, EQUILIBRIO.tolerancia)
       } else desenharCena(ctx, vista, {

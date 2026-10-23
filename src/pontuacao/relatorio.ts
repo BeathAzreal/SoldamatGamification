@@ -1,4 +1,5 @@
 import type { Cordao } from '../modelo/cordao'
+import { analisarDefeitos, type OcorrenciaDefeito } from '../modelo/defeitos'
 import { analisarFusao, aporteNecessario, margemCoberturaBordas, type EstadoFusao, type PontoFusao } from '../modelo/fusao'
 import { gravidade, juntaDe, NOME_POSICAO, posicaoDe, type CodigoPosicao } from '../modelo/juntas'
 import { GASES } from '../modelo/material'
@@ -36,7 +37,7 @@ import { VERSAO_PONTUACAO, type ResultadoPontuacao } from './regras'
  * registro dá o mesmo relatório. Versão própria em VERSAO_RELATORIO.
  */
 
-export const VERSAO_RELATORIO = 'relatorio-tecnico-v1'
+export const VERSAO_RELATORIO = 'relatorio-tecnico-v2'
 
 /** Tamanho dos trechos do relatório (mm). */
 export const TRECHO_RELATORIO_MM = 10
@@ -139,6 +140,12 @@ export interface RelatorioTecnico {
   }
   /** Índices sintéticos globais (H33, H36). */
   indices: { fracaoIntegra: number; deformacao: number }
+  /**
+   * Defeitos visíveis previstos (v2, H50–H57): tipo, trecho, maior valor e
+   * limiar do jogo. Os textos (nome, causa, correção) ficam com quem exibe;
+   * defeitos.ts tem NOME_DEFEITO e CONSELHO_DEFEITO de base.
+   */
+  defeitos: { ocorrencias: OcorrenciaDefeito[]; respingos: number; poros: number; gotas: number; empenoGraus: number }
   /** Limitações gerais do modelo (códigos estáveis). */
   limitacoes: string[]
 }
@@ -146,7 +153,7 @@ export interface RelatorioTecnico {
 const LIMITACOES_GERAIS = [
   'modelo-qualitativo: números do jogo; tendências, não valores de processo',
   'sem-penetracao-real: a fusão é um índice sintético, não profundidade medida',
-  'sem-defeitos-internos: porosidade, trincas e inclusões não são calculadas',
+  'defeitos-por-regra: porosidade, mordedura e afins são previstos por regras do jogo; trincas e inclusões não são calculadas',
   'aparencia-nao-indica-qualidade: o cordão desenhado não mostra qualidade interna',
   'arco-nao-modelado: comprimento do arco e transferência metálica não são calculados',
   'sem-qualificacao: não substitui ensaio, procedimento qualificado nem prática supervisionada',
@@ -316,6 +323,10 @@ export function relatorioTecnico(e: EntradaRelatorio): RelatorioTecnico {
       dbcpMm: dbcpDe(ctx),
       oxidoRemovido: ctx.oxidoRemovido,
     },
+    defeitos: (() => {
+      const d = analisarDefeitos({ cordao, percurso, contexto: ctx, eventos: e.eventos })
+      return { ocorrencias: d.ocorrencias, respingos: d.respingos.length, poros: d.poros.length, gotas: d.gotas.length, empenoGraus: d.empenoGraus }
+    })(),
     regulagens: usos.ajustes.map((a) => regulagem(a, ctx)),
     posicoes: usos.posicoes,
     trechos,

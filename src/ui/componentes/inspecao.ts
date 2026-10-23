@@ -3,6 +3,8 @@ import { NOME_DISPOSITIVO, type Dispositivo } from '../../entrada/tipos'
 import { requisitosEfetivos, type Dificuldade, type Missao, type Preparo } from '../../missoes/catalogo'
 import { avaliar } from '../../modelo/avaliacao'
 import { analisarFusao, type PontoFusao } from '../../modelo/fusao'
+import { analisarDefeitos, CONSELHO_DEFEITO, NOME_DEFEITO, type AnaliseDefeitos } from '../../modelo/defeitos'
+import type { Cordao } from '../../modelo/cordao'
 import { GASES, MATERIAIS } from '../../modelo/material'
 import { analisarMovimento } from '../../modelo/movimento'
 import { correnteRelativa, type Ajustes, type ContextoProcesso, INFO_TECNICA, tecnicaDe } from '../../modelo/processo'
@@ -45,6 +47,8 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
   const secoes = Array.from({ length: final.cordao.nPosicoes }, (_, i) => final.cordao.secao(i))
   const fusao = analisarFusao(final.cordao, final.percurso, d.contexto)
   const movimento = analisarMovimento(final.percurso, avaliar(final.cordao))
+  // Defeitos visíveis previstos (H50–H57): os mesmos do registro, com o empeno da peça fria.
+  const defeitos = analisarDefeitos({ cordao: final.cordao, percurso: final.percurso, contexto: d.contexto, registro: final.registro, eventos, fusao })
 
   // --- Vista de cima com replay.
   const tela = h('canvas', { class: 'inspecao-tela', 'aria-label': 'Vista de cima da peça soldada (replay do registro)' })
@@ -58,6 +62,10 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
   // Vista 3D (só leitura do modelo): criada na primeira vez que é aberta.
   let modo: '2d' | '3d' = '2d'
   let cena3d: Cena3D | null = null
+  // O que a vista 3D mostra de defeitos: refeito quando o cordão muda (replay) ou volta ao final.
+  let cordaoMostrado: Cordao | null = null
+  let defeitosMostrados: AnaliseDefeitos | null = null
+  let tDefeitosReplay = -Infinity
 
   const desenharTopo = (agora = performance.now()) => {
     const { width, height } = area.getBoundingClientRect()
@@ -65,6 +73,19 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
     if (modo === '3d' && cena3d) {
       cena3d.ajustarTamanho(width, height)
       cena3d.atualizarCordao(simAtual.cordao)
+      if (simAtual.cordao !== cordaoMostrado) {
+        cordaoMostrado = simAtual.cordao
+        defeitosMostrados = null
+        tDefeitosReplay = -Infinity
+      }
+      if (simAtual === final) {
+        if (defeitosMostrados !== defeitos) cena3d.atualizarDefeitos((defeitosMostrados = defeitos), true)
+      } else if (agora - tDefeitosReplay >= 300) {
+        // No replay a peça ainda está quente: defeitos sim, empeno não.
+        defeitosMostrados = analisarDefeitos({ cordao: simAtual.cordao, percurso: simAtual.percurso, contexto: d.contexto, registro: simAtual.registro, eventos: simAtual.eventos })
+        cena3d.atualizarDefeitos(defeitosMostrados, false)
+        tDefeitosReplay = agora
+      }
       const est = simAtual.estado(agora)
       cena3d.definirTocha(simAtual !== final ? est.posicao : null, est.arcoAberto && est.sobreAPeca)
       return
@@ -221,7 +242,7 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
   const desenharGraficos = () => {
     desenharPerfilMissao(perfil, secoes, fusao, req, d.missao.trecho, xCorte, xHover)
     const i = Math.min(secoes.length - 1, Math.floor(xCorte / 0.5))
-    desenharCorteSintetico(corte, secoes[i], fusao[i] as PontoFusao, d.contexto)
+    desenharCorteSintetico(corte, secoes[i], fusao[i] as PontoFusao, d.contexto, { a: defeitos, i })
     rotuloCorte.textContent = `x = ${n1(xCorte)} mm`
     deslizador.value = String(xCorte)
     if (movimento) desenharVelocidades(velocidades, movimento, null, xCorte, null)
@@ -280,10 +301,35 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
     ].flatMap(([a, b]) => [h('dt', {}, a), h('dd', {}, b)]),
   )
 
+  // Lista de defeitos visíveis (H50–H57), com causa típica e correção.
+  const n1mm = (v: number) => `${n1(v)} mm`
+  const listaDefeitos = h(
+    'div',
+    { class: 'defeitos-previstos' },
+    defeitos.ocorrencias.length
+      ? h(
+          'ul',
+          { class: 'lista-defeitos' },
+          defeitos.ocorrencias.map((o) =>
+            h(
+              'li',
+              {},
+              h('strong', {}, NOME_DEFEITO[o.tipo]),
+              ` · de ${n1mm(o.inicioMm)} a ${n1mm(o.fimMm)} · ${o.unidade === 'mm' ? `${n1(o.valor)} mm (limite do jogo ${n1(o.limiar)} mm)` : o.unidade === 'por 10 mm' ? `${n1(o.valor)} por 10 mm` : `índice ${n1(o.valor)}`}`,
+              h('br', {}),
+              h('span', { class: 'dica' }, CONSELHO_DEFEITO[o.tipo]),
+            ),
+          ),
+        )
+      : h('p', {}, 'Nenhum defeito visível previsto.'),
+    h('p', { class: 'dica' }, `Empeno previsto das chapas: ${n1(defeitos.empenoGraus)}° (aparece na peça 3D). Previsão do modelo didático, com limiares do jogo: não é inspeção visual real.`),
+  )
+
   // Abas: a peça fica sempre à vista; os gráficos ficam em abas para não virar um rolo.
   const paineis: [string, HTMLElement][] = [
     ['Largura', h('div', {}, perfil, legenda, h('p', { class: 'dica' }, 'Faixa verde: largura pedida no desenho. Marcas amarelas: início e fim do trecho exigido. Clique no gráfico para escolher o corte.'))],
     ['Corte', h('div', {}, h('p', { class: 'dica' }, 'Corte transversal sintético em ', rotuloCorte), deslizador, corte)],
+    [`Defeitos${defeitos.ocorrencias.length ? ` (${defeitos.ocorrencias.length})` : ''}`, listaDefeitos],
     ...(movimento ? ([['Velocidade', h('div', {}, velocidades, h('p', { class: 'dica' }, 'Velocidade efetiva em cada trecho de 5 mm (tempo de arco que a tocha passou ali).'))]] as [string, HTMLElement][]) : []),
     ['Parâmetros', parametros],
   ]

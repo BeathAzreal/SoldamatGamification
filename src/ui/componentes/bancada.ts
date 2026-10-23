@@ -17,6 +17,7 @@ import {
   type Preparo,
 } from '../../missoes/catalogo'
 import { analisarFusao, DESCRICAO_ESTADO, type EstadoFusao } from '../../modelo/fusao'
+import { analisarDefeitos, CONSELHO_DEFEITO, NOME_DEFEITO } from '../../modelo/defeitos'
 import { GASES, MATERIAIS } from '../../modelo/material'
 import { AJUSTES, DBCP, EQUILIBRIO, PECA } from '../../modelo/parametros'
 import {
@@ -359,7 +360,11 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       return
     }
     const ctx = contextoDaMissao(m, preparo)
-    const fusao = analisarFusao(sim.cordao, sim.percurso, ctx).filter((p) => p.xMm >= x0 && p.xMm <= x1)
+    const fusaoToda = analisarFusao(sim.cordao, sim.percurso, ctx)
+    const fusao = fusaoToda.filter((p) => p.xMm >= x0 && p.xMm <= x1)
+    // Defeitos visíveis deste passe (H50–H57), contando as pontas (a cratera fica no fim).
+    const defeitos = analisarDefeitos({ cordao: sim.cordao, percurso: sim.percurso, contexto: ctx, registro: sim.registro, eventos: sim.eventos, fusao: fusaoToda }).ocorrencias.filter((o) => o.fimMm >= x0 - 4 && o.inicioMm <= x1 + 4)
+    const tiposDefeito = [...new Set(defeitos.map((o) => o.tipo))]
     const secoes = fusao.map((p) => sim.cordao.secao(sim.cordao.indiceEm(p.xMm)))
     const media = (v: number[]) => v.reduce((a, b) => a + b, 0) / Math.max(1, v.length)
     const larg = media(secoes.map((s) => s.larguraMm))
@@ -388,6 +393,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
           ? null
           : h('p', { class: 'dica dica-arco' }, eq.condicao === 'curto' ? `Arco curto demais (tensão ${n1(ajustes.tensao)}, equilíbrio perto de ${n1(eq.tensaoEquilibrio)}): estalos e cordão irregular. Suba a tensão ou baixe a alimentação.` : `Arco longo demais (tensão ${n1(ajustes.tensao)}, equilíbrio perto de ${n1(eq.tensaoEquilibrio)}): chiado agudo e cordão irregular e achatado. Baixe a tensão ou suba a alimentação.`)
       })(),
+      tiposDefeito.length ? h('p', { class: 'dica dica-defeitos' }, `Defeitos visíveis: ${tiposDefeito.map((t) => NOME_DEFEITO[t].toLowerCase()).join('; ')}. ${CONSELHO_DEFEITO[tiposDefeito[0]]}`) : null,
       principal !== 'adequada' ? h('p', { class: 'dica' }, `Previsão predominante: ${DESCRICAO_ESTADO[principal]}. ${principal === 'falta' ? `Mais calor por mm: mais tensão, mais alimentação, andar mais devagar ou puxar a tocha${sim.contexto.posicaoFixa ? '' : '; ou posicione a peça na plana ou subindo'}.` : principal === 'excessiva' || principal === 'perfuracao' ? 'Menos calor por mm: reduza alimentação ou tensão, ande mais rápido ou empurre a tocha.' : principal === 'borda' ? (INFO_JUNTA[m.geometria.junta].familia === 'filete' ? 'Mire na raiz (o canto): fora dela uma perna fica curta.' : 'Mantenha a tocha sobre a linha da junta ou alargue o cordão (mais devagar).') : principal === 'enchimento' ? 'O V não encheu: ande mais devagar ou faça outro passe por cima.' : ''}`) : null,
     )
   }
@@ -551,7 +557,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       ctx2d.clearRect(0, 0, vista.larguraCss, vista.alturaCss)
       const p = pos ?? estado.posicao
       const desvio = equilibrioArco(estado.ajustes, sim.contexto).desvio
-      visual.desenhar({ cordao: sim.cordao, registro: sim.registro, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: agora, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: pos !== null, angulo: vista.angulo })
+      visual.desenhar({ cordao: sim.cordao, registro: sim.registro, eventos: sim.eventos, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: agora, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: pos !== null, angulo: vista.angulo })
       // Som do arco (H45) com a mesma regra de cena.ts.
       somArco.atualizar(!!(p && estado.arcoAberto && estado.sobreAPeca), desvio, EQUILIBRIO.tolerancia)
     } else desenharCena(ctx2d, vista, {

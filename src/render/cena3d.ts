@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { Cordao } from '../modelo/cordao'
+import type { AnaliseDefeitos } from '../modelo/defeitos'
 import type { GeometriaJunta } from '../modelo/junta'
 import { PECA } from '../modelo/parametros'
 import type { ContextoProcesso } from '../modelo/processo'
@@ -17,6 +18,8 @@ export { EXAGERO_MAX, EXAGERO_MIN, EXAGERO_PADRAO, webglDisponivel }
 export interface Cena3D {
   readonly elemento: HTMLCanvasElement
   atualizarCordao(cordao: Cordao): void
+  /** Defeitos visíveis (H50–H57); `empeno` dobra as chapas (só na peça fria, fora do replay). */
+  atualizarDefeitos(a: AnaliseDefeitos | null, empeno: boolean): void
   /** Posição da tocha em (s, n) da junta; null esconde. */
   definirTocha(posicao: { x: number; y: number } | null, arcoAberto: boolean): void
   definirExagero(fator: number): void
@@ -117,6 +120,11 @@ export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
     atualizarCordao(cordao) {
       palco.atualizarCordao(cordao)
       posicionarTocha()
+      pedir()
+    },
+    atualizarDefeitos(a, empeno) {
+      palco.atualizarDefeitos(a)
+      palco.definirEmpeno(a && empeno ? a.empenoGraus : 0)
       pedir()
     },
     definirTocha(posicao, arcoAberto) {

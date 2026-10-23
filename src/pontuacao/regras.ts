@@ -1,4 +1,6 @@
 import type { Cordao } from '../modelo/cordao'
+import { analisarDefeitos, fatorIntegridade, notaSuperficie, respingosPor10mm } from '../modelo/defeitos'
+import type { EventoTentativa } from '../modelo/simulacao'
 import { analisarFusao, DESCRICAO_ESTADO, indiceDeformacao, type EstadoFusao, type PontoFusao } from '../modelo/fusao'
 import { GASES, MATERIAIS } from '../modelo/material'
 import { FUSAO } from '../modelo/parametros'
@@ -18,7 +20,7 @@ import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/ca
  * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v5'
+export const VERSAO_PONTUACAO = 'pontuacao-v6'
 /** Nota máxima (cada ponto de peso vale ESCALA ÷ 100). */
 export const ESCALA_PONTUACAO = 1000
 
@@ -68,13 +70,13 @@ export const FICHA_CATEGORIA: Record<CategoriaId, { definicao: string; dados: st
   integridade: {
     definicao: 'Quanto da junta o modelo prevê fundida na medida certa, posição por posição.',
     dados: 'Índice de fusão sintético F (aporte, aquecimento, espessura, material, gás, técnica, DBCP), cobertura das bordas, enchimento da junta.',
-    regra: 'Cada posição vale de 0 a 1: 1 com F entre 1 e 2; abaixo de 1 cai até 0 em F = 0,6; acima de 2 cai até 0 em F = 2,6 (perfuração). Borda descoberta, perfuração e sem cordão valem 0; junta mal enchida vale metade do enchimento. Pontos = peso × 10 × média.',
-    limitacoes: 'Índice sintético do modelo. Não representa porosidade, trincas, inclusões nem penetração real.',
+    regra: 'Cada posição vale de 0 a 1: 1 com F entre 1 e 2; abaixo de 1 cai até 0 em F = 0,6; acima de 2 cai até 0 em F = 2,6 (perfuração). Borda descoberta, perfuração e sem cordão valem 0; junta mal enchida vale metade do enchimento. Porosidade prevista multiplica por (1 − 0,6 × risco) e sobreposição por (1 − 0,4 × índice). Pontos = peso × 10 × média.',
+    limitacoes: 'Índice sintético do modelo. Poros e sobreposição previstos tiram nota (v6), mas não há trincas, inclusões nem penetração real.',
   },
   desenho: {
     definicao: 'Quanto o cordão obedece às medidas e tolerâncias do desenho, pelo tamanho do desvio.',
-    dados: 'Extensão, largura, altura (reforço ou falta de enchimento) e centro do cordão, em mm.',
-    regra: 'Extensão 7/25 (fração com cordão). Largura 8/25, reforço 5/25 e alinhamento 5/25, cada posição com cordão de 0 a 1: 1 dentro da faixa, caindo linearmente até 0 a 1,5 mm (largura) ou 1,0 mm (reforço, falta de enchimento, alinhamento) além do limite.',
+    dados: 'Extensão, largura, altura (reforço ou falta de enchimento) e centro do cordão, em mm; defeitos visíveis previstos (mordedura, sobreposição, escorrimento, gotas, caimento, cratera, respingos).',
+    regra: 'Extensão 7/30 (fração com cordão). Largura 8/30, reforço 5/30, alinhamento 5/30 e superfície 5/30, cada posição com cordão de 0 a 1: 1 dentro da faixa, caindo linearmente até 0 a 1,5 mm (largura) ou 1,0 mm (reforço, falta de enchimento, alinhamento) além do limite. Superfície: 1 sem defeito visível, caindo com cada defeito; respingos acima de 2 por 10 mm tiram até 0,3.',
     limitacoes: 'Tolerâncias são objetivos didáticos do jogo, não requisitos de norma.',
   },
   regularidade: {
@@ -163,6 +165,8 @@ export interface EntradaPontuacao {
   tempoArcoMs: number
   /** Quantas vezes o arco foi aberto (v3); ausente = 1 (sem reinício). */
   aberturasDeArco?: number
+  /** Aberturas e fechamentos do arco: crateras (v6, H55). Sem eles, não há crateras. */
+  eventos?: readonly EventoTentativa[]
 }
 
 const limitar = (v: number) => Math.min(1, Math.max(0, v))
@@ -216,6 +220,8 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   const T = TOLERANCIAS
 
   const fusao = analisarFusao(cordao, e.percurso, contexto)
+  // v6: defeitos visíveis previstos (H50–H57), do mesmo registro.
+  const defeitos = analisarDefeitos({ cordao, percurso: e.percurso, contexto, eventos: e.eventos, fusao })
   const secoes = Array.from({ length: cordao.nPosicoes }, (_, i) => cordao.secao(i))
   const noTrecho = (x: number) => x >= x0 && x <= x1
   const avaliado = (x: number) => x >= a0 && x <= a1
@@ -235,7 +241,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     if (p.estado === 'enchimento') return 0.5 * limitar(cordao.secao(cordao.indiceEm(p.xMm)).enchimento ?? 0)
     return 0
   }
-  const notaFusao = fAvaliado.length ? media(fAvaliado.map(notaPosicao)) : 0
+  const notaFusao = fAvaliado.length ? media(fAvaliado.map((p) => notaPosicao(p) * fatorIntegridade(defeitos, cordao.indiceEm(p.xMm)))) : 0
 
   // Geometria: extensão + desvios graduados em mm onde há cordão.
   const noTrechoSecoes = secoes.filter((s) => noTrecho(s.xMm))
@@ -244,7 +250,10 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   const largura = nota((s) => cair(Math.max(req.larguraMinMm - s.larguraMm, s.larguraMm - req.larguraMaxMm), T.larguraMm))
   const reforco = nota((s) => (s.alturaMm < 0 ? cair(-s.alturaMm, T.faltaEnchimentoMm) : cair(s.alturaMm - req.reforcoMaxMm, T.reforcoMm)))
   const alinhamento = nota((s) => cair(Math.abs(s.yCentroMm) - req.alinhamentoMm, T.alinhamentoMm))
-  const fracaoDesenho = (7 * extensao + 8 * largura + 5 * reforco + 5 * alinhamento) / 25
+  const comprimentoComCordao = secoes.filter((s) => s.larguraMm >= 1).length * passo
+  const respingos10 = respingosPor10mm(defeitos, comprimentoComCordao)
+  const superficie = limitar(nota((s) => notaSuperficie(defeitos, cordao.indiceEm(s.xMm))) - Math.min(0.3, 0.05 * Math.max(0, respingos10 - 2)))
+  const fracaoDesenho = (7 * extensao + 8 * largura + 5 * reforco + 5 * alinhamento + 5 * superficie) / 30
   // Frações estritas (dentro do limite), só para mostrar.
   const estrita = (f: (s: (typeof comCordao)[number]) => boolean) => (comCordao.length ? comCordao.filter(f).length / comCordao.length : 0)
   const larguraDentro = estrita((s) => s.larguraMm >= req.larguraMinMm && s.larguraMm <= req.larguraMaxMm)
@@ -335,12 +344,14 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
       maximo: maximo('desenho'),
       explicacao:
         `Extensão ${fmtPct(extensao)}. Largura (${fmt1(req.larguraMinMm)}–${fmt1(req.larguraMaxMm)} mm): nota ${fmtPct(largura)}, ${fmtPct(larguraDentro)} dentro. ` +
-        `Reforço até ${fmt1(req.reforcoMaxMm)} mm (sem afundar abaixo da face): nota ${fmtPct(reforco)}. Centro a até ${fmt1(req.alinhamentoMm)} mm da junta: nota ${fmtPct(alinhamento)}.`,
+        `Reforço até ${fmt1(req.reforcoMaxMm)} mm (sem afundar abaixo da face): nota ${fmtPct(reforco)}. Centro a até ${fmt1(req.alinhamentoMm)} mm da junta: nota ${fmtPct(alinhamento)}. ` +
+        `Superfície (defeitos visíveis previstos): nota ${fmtPct(superficie)}.`,
       detalhes: [
         { rotulo: 'Extensão', valor: fmtPct(extensao) },
         { rotulo: 'Largura', valor: fmtPct(largura) },
         { rotulo: 'Reforço', valor: fmtPct(reforco) },
         { rotulo: 'Alinhamento', valor: fmtPct(alinhamento) },
+        { rotulo: 'Superfície', valor: fmtPct(superficie) },
       ],
     },
     {

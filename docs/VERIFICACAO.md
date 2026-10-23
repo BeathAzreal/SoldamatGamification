@@ -1,5 +1,34 @@
 # Verificação
 
+## Alpha v1.4 — defeitos visíveis (branch `claude/v1.4`)
+
+- Novo `tests/defeitos.test.ts` (19 testes): referência sem defeitos;
+  cratera ao fechar andando, cheia parando 400 ms e coberta por outro passe;
+  gotas na sobrecabeça (e não na plana); escorrimento e sobreposição na
+  vertical descendente; caimento, mordedura em cima e sobreposição embaixo na
+  horizontal; mordedura com arco longo; sobreposição devagar com arco curto;
+  respingos (mistura < CO₂ < CO₂ desequilibrado); porosidade (alumínio sujo,
+  DBCP 20); empeno com mais calor; escamas mais juntas devagar; os mesmos
+  defeitos no replay e com quadros de 7 e 33 ms; pontuação v6 (superfície,
+  porosidade na fusão, essenciais iguais, cratera barata).
+- No navegador (página de teste temporária, fora do repositório, em
+  1400×800): referência lisa com escamas; gotas penduradas na sobrecabeça;
+  ondas na vertical; borda de cima mordida e cordão caído na horizontal;
+  mordedura e respingos com arco longo; respingos com CO₂ e arco curto;
+  sobreposição devagar; cores do inox (palha → roxo → azul); poros abertos
+  no alumínio sujo (junta em T); cratera afundada × ponta cheia parando.
+- Na bancada: poça viva maior e para trás do avanço durante o passe; linha
+  "Defeitos visíveis" no resumo do passe. No resultado do treino: aba
+  "Defeitos" com a lista e o conselho, empeno de 3,5° na peça 3D e o corte.
+- Erros achados e corrigidos: falsa mordedura na referência (regra de calor
+  começava em F = 1,2; agora acima do adequado, F = 2); faixas de oxidação
+  escondidas sob a chapa (altura pequena demais para a profundidade e, na
+  inspeção, a chapa empenada passava por cima: agora as faixas acompanham o
+  empeno).
+- **Não testado**: queda de gotas do arco na sobrecabeça ao vivo (o giro da
+  bancada é por tempo de botão e o navegador de teste é lento demais para
+  chegar a 180°); mesa digitalizadora e controle físicos.
+
 ## Alpha v1.3 — mecânica técnica (branch `claude/v1.3`)
 
 - `npm run typecheck` e `npm test` antes de cada commit; o resultado final

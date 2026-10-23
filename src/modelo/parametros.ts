@@ -143,3 +143,25 @@ export const EQUILIBRIO = {
   /** Diferença (em pontos de botão) ainda considerada equilibrada. */
   tolerancia: 1,
 } as const
+
+/**
+ * Defeitos visíveis (H50–H57). Todos os números são DO JOGO: as fontes
+ * consultadas dão a direção (o que piora o quê), não os limiares.
+ */
+export const DEFEITOS = {
+  /** Poça de referência (mm² de seção): acima dela a gravidade começa a pesar (H50). */
+  areaPocaRefMm2: 10,
+  /** Mordedura máxima pelos fatores de regulagem (mm, H52). */
+  mordeduraMaxMm: 0.6,
+  /** Mordedura a mais no lado de cima na horizontal, com o metal caindo inteiro (mm, H50/H52). */
+  mordeduraCaimentoMm: 0.4,
+  /** Respingos presos por mm de cordão, por unidade de excesso de respingo (H54). */
+  respingosPorMm: 0.35,
+  /** Permanência no fim do passe que enche a cratera (ms, H55). */
+  enchimentoCrateraMs: 250,
+  /** Escama a cada tanto tempo de arco (ms, H56): espaçamento = velocidade × intervalo. */
+  intervaloEscamaMs: 120,
+  /** Empeno angular por unidade do índice de deformação D (graus, H57). */
+  empenoPorD: 1.2,
+  empenoMaxGraus: 6,
+} as const

@@ -1,6 +1,7 @@
 import { avaliar, type Tentativa } from './avaliacao'
 import { Cordao } from './cordao'
 import { efeitoPosicao, gravidade, juntaDe, POSICAO_PLANA, type GravidadeJunta, type PosicaoPeca } from './juntas'
+import type { GravidadePoca } from './cordao'
 import { MATERIAIS } from './material'
 import { analisarMovimento } from './movimento'
 import { EQUILIBRIO, MODELO, PECA, TRAJETORIA } from './parametros'
@@ -63,6 +64,11 @@ export function instabilidadeArco(a: Ajustes, ctx: ContextoProcesso): number {
   const excesso = Math.max(0, Math.abs(desvio) - EQUILIBRIO.tolerancia)
   // Dentro da tolerância é exatamente 0 (nunca −0).
   return excesso === 0 ? 0 : Math.sign(desvio) * Math.min(1, excesso / 3)
+}
+
+/** Gravidade nos eixos da poça (H50), com o mesmo sentido de avanço de efeitoPosicao (H47). */
+export function gravidadePoca(g: GravidadeJunta, sentido: number): GravidadePoca {
+  return { cabeca: Math.max(0, g.w), lado: g.n, descida: g.t * Math.sign(sentido) }
 }
 
 export function sobreAPeca(x: number, y: number): boolean {
@@ -356,7 +362,7 @@ export class Simulacao {
     const volume = (taxaDeposicao(this.ajustesAtuais, this.contexto) * (t1 - t0)) / 1000
     // H47: parada, só pesa a gravidade de lado e para fora da face (sem subir nem descer).
     const ef = efeitoPosicao(this.gravidadeAtual, 0)
-    this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto))
+    this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto), gravidadePoca(this.gravidadeAtual, 0))
     this.percurso.registrar(p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao)
   }
 
@@ -372,6 +378,7 @@ export class Simulacao {
     const potencia = potenciaRelativa(this.ajustesAtuais, this.contexto)
     const sigma = espalhamentoDoMovimento(this.contexto)
     const instab = instabilidadeArco(this.ajustesAtuais, this.contexto)
+    const gp = gravidadePoca(this.gravidadeAtual, p1.x - p0.x)
     for (let j = 0; j < n; j++) {
       const f = (j + 0.5) / n
       const x = p0.x + (p1.x - p0.x) * f
@@ -381,7 +388,7 @@ export class Simulacao {
         continue
       }
       const integral = this.aquecer(t0 + j * dt, t0 + (j + 1) * dt, potencia)
-      this.cordao.depositar(x, y + ef.desvioMm, volume, t0 + (j + 1) * dt, razao, sigma, instab)
+      this.cordao.depositar(x, y + ef.desvioMm, volume, t0 + (j + 1) * dt, razao, sigma, instab, gp)
       this.percurso.registrar(x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao)
     }
   }
