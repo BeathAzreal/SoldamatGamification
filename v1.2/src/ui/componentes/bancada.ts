@@ -145,12 +145,6 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     visual.recriar()
   }
 
-  const processo = grupo(
-    'Processo',
-    chip('proc', 'mig', 'MIG/MAG', true, () => {}),
-    chip('proc', 'ele', 'Eletrodo revestido', false, () => {}, true, 'Não disponível nesta versão: sem modelo próprio'),
-    chip('proc', 'tig', 'TIG', false, () => {}, true, 'Não disponível nesta versão: sem modelo próprio'),
-  )
   const arame = grupo(
     'Arame (diâmetro)',
     ...m.consumiveis.diametrosMm.map((d) =>
@@ -246,11 +240,12 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   const maquina = h(
     'section',
     { class: 'painel-maquina', 'aria-label': 'Máquina de solda' },
-    h('header', { class: 'maquina-topo' }, icone('maquina'), h('div', {}, h('strong', {}, 'Máquina MIG/MAG'), h('small', {}, 'Fonte de tensão constante · polaridade CC+ fixa'))),
+    // Processo: só MIG/MAG tem modelo próprio nesta versão (eletrodo revestido e TIG ainda não).
+    h('header', { class: 'maquina-topo' }, icone('maquina'), h('div', {}, h('strong', {}, 'Máquina MIG/MAG'), h('small', {}, 'Tensão constante · CC+ fixa · eletrodo e TIG: em breve'))),
     h(
       'div',
       { class: 'maquina-grade' },
-      h('div', { class: 'maquina-coluna' }, processo, arame, gas, limpeza),
+      h('div', { class: 'maquina-coluna' }, arame, gas, limpeza),
       h('div', { class: 'maquina-coluna' }, tecnica, resumoTecnica, dicaAluminio),
     ),
     h('div', { class: 'mostradores' }, tensao, alimentacao),
@@ -273,8 +268,9 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   const hudVel = h('strong', {}, '0,0')
   const hudLarg = h('strong', {}, '—')
   const hudCalor = h('div', { class: 'medidor-preenchimento calor' })
+  const sobreGiro = h('div', { class: 'giro-sobre', title: 'Posicionar a peça (arco fechado): Q/E giram no plano, W/S tombam; no controle, o direcional' }, giro.elemento)
   areaPeca.append(
-    h('div', { class: 'giro-sobre', title: 'Posicionar a peça (arco fechado): Q/E giram no plano, W/S tombam; no controle, o direcional' }, giro.elemento),
+    sobreGiro,
     h(
       'div',
       { class: 'hud-sobre' },
@@ -299,7 +295,8 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       if (fonte instanceof FontePonteiro) fonte.reamostrar(performance.now())
     },
   })
-  areaPeca.append(visual.elemento)
+  // Câmera junto do giro: um só painel no canto, nada por cima da peça.
+  sobreGiro.append(visual.elemento)
   const escamas = new Escamas()
   const particulas = new Particulas()
   let sim = new Simulacao(contextoDaMissao(m, preparo))
@@ -437,10 +434,10 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     ? h(
         'div',
         { class: 'grupo-maquina grupo-formato' },
-        h('span', { class: 'rotulo-maquina' }, 'Formato da junta'),
+        h('span', { class: 'rotulo-maquina' }, 'Tipo de junta'),
         h(
           'div',
-          { class: 'linha-chips', role: 'group', 'aria-label': 'Formato da junta' },
+          { class: 'linha-chips', role: 'group', 'aria-label': 'Tipo de junta' },
           TIPOS_JUNTA.map((f: TipoJunta) =>
             chip('fmt', f, INFO_JUNTA[f].nome, m.geometria.junta === f, (v) => {
               m = comJunta(m, v)

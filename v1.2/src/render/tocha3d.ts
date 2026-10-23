@@ -53,8 +53,8 @@ export interface QuadroTocha {
   inclinacao: number
 }
 
-/** Quanto a tocha tomba na técnica empurrando/puxando (só desenho; o efeito no cordão é o de H38). */
-export const INCLINACAO_TECNICA_RAD = (15 * Math.PI) / 180
+/** Quanto a tocha tomba na técnica empurrando/puxando: 20°, o ângulo de trabalho usual (só desenho; o efeito no cordão é o de H38). */
+export const INCLINACAO_TECNICA_RAD = (20 * Math.PI) / 180
 
 export class Tocha3D {
   readonly grupo = new THREE.Group()
@@ -74,22 +74,33 @@ export class Tocha3D {
   private readonly corFora = new THREE.Color('#d0473a')
 
   constructor() {
-    // Bocal aberto (vê-se o arco por dentro olhando de cima), bico de contato e pescoço curvado para longe da câmera.
+    // Bocal aberto (vê-se o arco por dentro olhando de cima), bico de contato, cano reto no eixo da tocha
+    // e, no alto, a curva do pescoço e o punho indo para longe da câmera.
     this.matBocal = new THREE.MeshStandardMaterial({ color: this.corBocal, metalness: 0.9, roughness: 0.32, side: THREE.DoubleSide })
     const bocal = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 5, 18, 32, 1, true), this.matBocal)
     bocal.position.y = 9
     const matCobre = new THREE.MeshStandardMaterial({ color: '#c77b43', metalness: 0.9, roughness: 0.35 })
     const bico = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.1, 6, 12), matCobre)
     bico.position.y = 4
-    // Pescoço semitransparente: vista de cima, não esconde a junta à frente da tocha.
-    const matCorpo = new THREE.MeshStandardMaterial({ color: '#2c3036', metalness: 0.4, roughness: 0.6, transparent: true, opacity: 0.45, depthWrite: false })
-    const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.6, 32, 16), matCorpo)
-    // Sai do topo do bocal inclinado 45°; o grupo aponta para cima e à esquerda NA TELA.
-    pescoco.position.set(0, 18 + 11.3, -11.3)
-    pescoco.rotation.x = -Math.PI / 4
-    this.pescoco.add(pescoco)
-    this.corpo.add(bocal, bico, this.pescoco)
-    for (const m of [bocal, bico, pescoco]) m.castShadow = true
+    // Cano reto no eixo da tocha: é ele que mostra a inclinação da técnica (H38), mesmo vista de cima.
+    const matCano = new THREE.MeshStandardMaterial({ color: '#3a3f46', metalness: 0.6, roughness: 0.45 })
+    const cano = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 5.2, 34, 20), matCano)
+    cano.position.y = 18 + 17
+    const anel = new THREE.Mesh(new THREE.TorusGeometry(5.6, 1.1, 10, 28), matCobre)
+    anel.rotation.x = Math.PI / 2
+    anel.position.y = 18.5
+    // Pescoço curvado e punho semitransparentes: vistos de cima, não escondem a junta à frente da tocha.
+    const matCorpo = new THREE.MeshStandardMaterial({ color: '#2c3036', metalness: 0.4, roughness: 0.6, transparent: true, opacity: 0.5, depthWrite: false })
+    const curva = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, 22, 16), matCorpo)
+    // Sai do topo do cano inclinado 45°; o grupo aponta para cima e à esquerda NA TELA.
+    curva.position.set(0, 52 + 7.8, -7.8)
+    curva.rotation.x = -Math.PI / 4
+    const punho = new THREE.Mesh(new THREE.CylinderGeometry(7, 6, 46, 18), matCorpo)
+    punho.position.set(0, 52 + 15.6 + 6, -15.6 - 21)
+    punho.rotation.x = -Math.PI / 2.6
+    this.pescoco.add(curva, punho)
+    this.corpo.add(bocal, bico, cano, anel, this.pescoco)
+    for (const m of [bocal, bico, cano, curva, punho]) m.castShadow = true
     // Bocal acima do arco; o arame vai do bico até a superfície. Tudo gira em torno da ponta do arame.
     this.corpo.position.y = BICO_MM - 1
     this.arame = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1, 8), new THREE.MeshStandardMaterial({ color: '#d9dde2', metalness: 1, roughness: 0.25 }))

@@ -20,6 +20,14 @@ SOM
 Modelo qualitativo simplificado: números do jogo, não valores de processo.
 A aparência do cordão não indica qualidade interna.
 
+VERSÃO 3D ALPHA v1.3 (2026-10-23)
+- A peça fica numa oficina de verdade (piso, paredes, teto) e presa num suporte: ao tombar a peça,
+  dá para ver o chão, a parede ou o teto atrás dela. O mini desenho ao lado dos botões mostra a peça de lado.
+- A tocha tem cano reto: empurrando ou puxando, ela inclina 20° e isso aparece mesmo vista de cima.
+- A inclinação da câmera fica junto dos botões de girar a peça, sem cobrir a peça.
+- A máquina e as telas cabem também em notebook 1280×720, sem rolar.
+- "O que aconteceu e como é calculado" abre em abas (resumo e uma por categoria).
+
 VERSÃO 3D ALPHA v1.2 (2026-10-23)
 - O jogo é só 3D (sem WebGL, ele usa um desenho 2D de reserva).
 - Juntas reais: topo reto, topo em V (chapa grossa: encha o V devagar ou em dois passes),

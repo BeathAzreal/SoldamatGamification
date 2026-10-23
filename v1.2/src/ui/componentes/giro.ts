@@ -77,6 +77,14 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
   const leituraGiro = h('output', { class: 'giro-angulo', title: 'Giro no plano' }, '0°')
   const leituraRolagem = h('output', { class: 'giro-angulo', title: 'Tombamento (0° = face para cima)' }, '0°')
   const leituraPosicao = h('output', { class: 'giro-posicao', 'aria-live': 'polite' })
+  // A peça vista de lado: a chapa tomba contra o piso e a tocha fica sempre do lado da face (H47).
+  const lado = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  lado.setAttribute('viewBox', '0 0 40 40')
+  lado.setAttribute('class', 'giro-lado')
+  lado.setAttribute('aria-hidden', 'true')
+  lado.innerHTML =
+    '<line class="piso" x1="2" y1="37" x2="38" y2="37"/><g class="peca-lado"><rect class="chapa" x="8" y="19" width="24" height="4" rx="1"/><line class="face" x1="8" y1="19" x2="32" y2="19"/><path class="tocha" d="M20 16 L20 6 M17 9 L20 5 L23 9"/></g>'
+  const pecaLado = lado.querySelector('.peca-lado')!
   const endireitar = h('button', { type: 'button', class: 'botao-fantasma botao-endireitar', title: 'Voltar a peça para como ela chegou (com o arco fechado)' }, 'Como chegou')
   endireitar.addEventListener('click', () => {
     giro = inicial.giroGraus
@@ -88,6 +96,7 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
     { class: 'giro', role: 'group', 'aria-label': 'Posicionar a peça' },
     h('span', { class: 'giro-grupo' }, botoes[0], leituraGiro, botoes[1]),
     h('span', { class: 'giro-grupo' }, botoes[2], leituraRolagem, botoes[3]),
+    lado,
     leituraPosicao,
     endireitar,
   )
@@ -143,6 +152,7 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
       if (mudou && fonte instanceof FontePonteiro) fonte.reamostrar(agoraMs)
       leituraGiro.textContent = `${Math.round(((giro % 360) + 360) % 360)}°`
       leituraRolagem.textContent = `${Math.round(rolagem)}°`
+      pecaLado.setAttribute('transform', `rotate(${-rolagem.toFixed(1)} 20 21)`)
       const pos = posicaoDe(gravidade({ rolagemGraus: rolagem, giroGraus: giro }))
       leituraPosicao.textContent = `${fixa ? 'Peça fixa · ' : ''}${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[familia][pos]})`
       elemento.classList.toggle('travado', !pode)
