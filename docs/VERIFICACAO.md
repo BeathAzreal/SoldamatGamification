@@ -18,6 +18,12 @@
   peça e os limites da câmera não mudaram.
 - Condição essencial E2: "Nenhuma perfuração prevista" virou "Evitar
   perfuração" (a evidência continua na justificativa).
+- Cordão esticado em lâminas ao soldar de novo longe do primeiro (relato do
+  dono, junta em T na horizontal): o segundo passe entrava na mesma fatia e o
+  modelo usava um centro médio com espalhamento enorme. Agora vira um cordão
+  solto (H58), com malha própria sobre a chapa ou a parede. Testes novos em
+  `tests/soltos.test.ts`; conferido em 3D (T com passes na raiz, na alma e na
+  base; topo com um passe a 22 mm). Pontuação `pontuacao-v7`.
 - Conferido no navegador em 1280×720 e 1366×768: preparação → tentativa →
   resultado (abas Largura, Corte e Defeitos) → Treinar de novo; corrimão na
   preparação e na execução.
