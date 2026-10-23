@@ -1,4 +1,5 @@
 import type { SecaoLocal } from '../modelo/cordao'
+import { formaDomo, NOME_DEFEITO, type AnaliseDefeitos, type TipoDefeito } from '../modelo/defeitos'
 import { DESCRICAO_ESTADO, type PontoFusao } from '../modelo/fusao'
 import { chapasNaJunta, INFO_JUNTA, juntaDe, perfilNaJunta, type Ponto2 } from '../modelo/juntas'
 import { MATERIAIS } from '../modelo/material'
@@ -20,6 +21,8 @@ export function desenharCorteSintetico(
   s: SecaoLocal | null,
   fusao: PontoFusao | null,
   ctx0: ContextoProcesso,
+  /** Defeitos previstos (H50–H57) e a fatia do corte: poros, mordedura, sobreposição e caimento. */
+  defeitos: { a: AnaliseDefeitos; i: number } | null = null,
 ): void {
   const { ctx, w, h } = prepararCanvas(canvas)
   // Ainda sem tamanho (aba fechada ou fora da tela): nada a desenhar.
@@ -93,17 +96,80 @@ export function desenharCorteSintetico(
 
     // Cordão na forma da junta (domo de H3, V cheio ou aberto, filete).
     const p = perfilNaJunta(s, junta, ctx0, 40)
-    caminho([...p.topo, ...[...p.baixo].reverse()])
+    const df = defeitos
+    // No topo reto, a mesma forma do 3D: caimento e borda "enrolada" da sobreposição (H50, H53).
+    const topo: Ponto2[] =
+      df && junta === 'topo' && s.alturaMm > 0
+        ? p.topo.map(([n], k) => {
+            const r = -1 + (2 * k) / (p.topo.length - 1)
+            return [n, s.alturaMm * formaDomo(r, df.a.caimento[df.i], df.a.sobreposicaoMenos[df.i], df.a.sobreposicaoMais[df.i])] as Ponto2
+          })
+        : p.topo
+    caminho([...topo, ...[...p.baixo].reverse()])
     ctx.fillStyle = material.aparencia.cordao[2]
     ctx.fill()
     ctx.strokeStyle = 'rgba(20,22,25,0.9)'
     ctx.stroke()
+
+    if (df && !filete) {
+      const { a, i } = df
+      const bordas: [number, number, number][] = [
+        [s.yCentroMm - s.larguraMm / 2, -1, 0],
+        [s.yCentroMm + s.larguraMm / 2, 1, 1],
+      ]
+      for (const [borda, lado, k] of bordas) {
+        // Mordedura (H52): entalhe na chapa logo fora da borda do cordão.
+        const mm = k === 0 ? a.mordeduraMenos[i] : a.mordeduraMais[i]
+        if (mm >= 0.4 * a.limiteMordeduraMm) {
+          const larg = 0.4 + 1.5 * mm
+          ctx.fillStyle = '#121519'
+          ctx.beginPath()
+          ctx.moveTo(pu(borda), pz(0))
+          ctx.quadraticCurveTo(pu(borda + lado * larg * 0.4), pz(-2 * mm), pu(borda + lado * larg), pz(0))
+          ctx.closePath()
+          ctx.fill()
+        }
+        // Sobreposição (H53): metal deitado sobre a chapa sem fundir — linha de não fusão sob a borda.
+        const sob = k === 0 ? a.sobreposicaoMenos[i] : a.sobreposicaoMais[i]
+        if (sob > 0.15) {
+          ctx.strokeStyle = 'rgba(255, 90, 70, 0.95)'
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(pu(borda), pz(0) - 1)
+          ctx.lineTo(pu(borda - lado * Math.min(0.45 * s.larguraMm, 0.6 + 2 * sob)), pz(0) - 1)
+          ctx.stroke()
+          ctx.lineWidth = 1
+        }
+      }
+    }
+    if (df) {
+      // Poros (H57) desta fatia: bolhas de gás presas no metal.
+      ctx.fillStyle = '#0b0c0e'
+      ctx.strokeStyle = 'rgba(200, 210, 220, 0.5)'
+      const x = (df.i + 0.5) * df.a.passoMm
+      for (const po of df.a.poros) {
+        if (Math.abs(po.xMm - x) > df.a.passoMm) continue
+        ctx.beginPath()
+        ctx.arc(pu(filete ? 0 : po.nMm), pz(Math.min(po.wMm, Math.max(0, s.alturaMm) - po.raioMm)), Math.max(1.5, po.raioMm * escala), 0, Math.PI * 2)
+        ctx.fill()
+        ctx.stroke()
+      }
+    }
 
     ctx.fillStyle = '#e4e7ea'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'top'
     ctx.fillText(`Índice de fusão F = ${fmt(F)} (adequado de ${fmt(FUSAO.minimoAdequado)} a ${fmt(FUSAO.maximoAdequado)})`, 10, 8)
     ctx.fillText(`Previsão: ${DESCRICAO_ESTADO[fusao.estado]}`, 10, 26)
+    if (defeitos) {
+      const x = defeitos.i * defeitos.a.passoMm
+      const aqui = [...new Set(defeitos.a.ocorrencias.filter((o) => x >= o.inicioMm - 0.5 && x <= o.fimMm + 0.5).map((o) => o.tipo))] as TipoDefeito[]
+      if (aqui.length) {
+        ctx.fillStyle = '#ffb4a6'
+        ctx.fillText(`Defeitos aqui: ${aqui.map((t) => NOME_DEFEITO[t].toLowerCase()).join('; ')}`, 10, 44)
+      }
+    }
+    ctx.fillStyle = '#e4e7ea'
     ctx.textAlign = 'right'
     const medidas = filete && s.pernasMm
       ? `pernas ${fmt(s.pernasMm[1])} e ${fmt(s.pernasMm[0])} mm · face ${fmt(s.larguraMm)} mm`

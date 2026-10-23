@@ -1,4 +1,5 @@
-import type { FormaCordao, SecaoLocal } from '../modelo/cordao'
+import { padraoIrregular, type FormaCordao, type SecaoLocal } from '../modelo/cordao'
+import { formaDomo, type AnaliseDefeitos } from '../modelo/defeitos'
 import type { GeometriaJunta } from '../modelo/junta'
 import { perfilNaJunta, pontosDeBaixo, type TipoJunta } from '../modelo/juntas'
 import { DIVISOES_PERFIL, LARGURA_MINIMA_3D_MM, paraMundo } from './malha3d'
@@ -78,6 +79,10 @@ export class MalhaCordaoViva {
   readonly perna2: Float64Array
   /** Último depósito de cada fatia (ms; −Infinity se nunca), para o brilho esfriar sem reler o cordão. */
   readonly tUltimo: Float64Array
+  /** Defeitos visíveis aplicados na forma (H50–H56); null = cordão liso. */
+  private defeitos: AnaliseDefeitos | null = null
+  /** Reescrever todas as fatias na próxima atualização (os defeitos mudaram). */
+  private forcar = false
 
   constructor(
     readonly nPosicoes: number,
@@ -140,15 +145,24 @@ export class MalhaCordaoViva {
    * (e as vizinhas, cujas normais dependem delas) e refaz os índices se
    * alguma apareceu ou sumiu. Devolve true se algo mudou.
    */
+  /** Troca os defeitos desenhados na forma; a próxima atualização reescreve tudo. */
+  definirDefeitos(a: AnaliseDefeitos | null): void {
+    if (a === this.defeitos) return
+    this.defeitos = a && a.n === this.nPosicoes ? a : null
+    this.forcar = true
+  }
+
   atualizar(cordao: FonteCordao, i0 = 0, i1 = cordao.nPosicoes - 1): boolean {
-    i0 = Math.max(0, i0)
-    i1 = Math.min(this.nPosicoes - 1, i1)
+    const forcar = this.forcar
+    this.forcar = false
+    i0 = forcar ? 0 : Math.max(0, i0)
+    i1 = forcar ? this.nPosicoes - 1 : Math.min(this.nPosicoes - 1, i1)
     let menor = Infinity
     let maior = -Infinity
     let topologia = false
     for (let i = i0; i <= i1; i++) {
       const s = cordao.secao(i)
-      if (s.larguraMm === this.largura[i] && s.alturaMm === this.altura[i] && s.yCentroMm === this.centro[i]) continue
+      if (!forcar && s.larguraMm === this.largura[i] && s.alturaMm === this.altura[i] && s.yCentroMm === this.centro[i]) continue
       this.largura[i] = s.larguraMm
       this.altura[i] = s.alturaMm
       this.centro[i] = s.yCentroMm
@@ -185,13 +199,37 @@ export class MalhaCordaoViva {
     this.posicoes[3 * v + 2] = w
   }
 
-  /** Domo do topo reto, o mesmo de perfilSecao (malha3d.ts), sem criar listas. */
-  private escreverDomo(v: number, s: number, sec: SecaoLocal): void {
+  /**
+   * Fator da altura no ponto (s, r) pelos defeitos da fatia i (1 sem
+   * defeitos): cratera (H55), ondas de metal escorrido (H50) e escamas
+   * (H56), com o vértice da escama apontando para onde a tocha já passou.
+   */
+  private fatorAltura(i: number, s: number, r: number, larguraMm: number): number {
+    const a = this.defeitos
+    if (!a) return 1
+    // Ondas de metal escorrido com espaçamento irregular (padrão fixo, o mesmo do arco instável, H44).
+    let f = 1 - 0.8 * a.cratera[i] + 0.25 * a.rolos[i] * Math.sin((2 * Math.PI * s) / 3.6 + 2.2 * padraoIrregular(s * 0.7))
+    const dir = a.escamaDir[i]
+    if (dir !== 0) {
+      const p = this.passoMm
+      const ant = i > 0 && a.escamaDir[i - 1] !== 0 ? a.escamaFase[i - 1] : a.escamaFase[i]
+      const prox = i + 1 < a.n && a.escamaDir[i + 1] !== 0 ? a.escamaFase[i + 1] : a.escamaFase[i]
+      const g = (prox - ant) / (2 * p)
+      const fase = a.escamaFase[i] + (s - (i + 0.5) * p) * g + g * dir * 0.8 * (larguraMm / 2) * (1 - r * r)
+      f *= 1 + 0.07 * Math.cos(2 * Math.PI * fase)
+    }
+    return Math.max(0, f)
+  }
+
+  /** Domo do topo reto, o mesmo de perfilSecao (malha3d.ts), sem criar listas; com os defeitos na forma. */
+  private escreverDomo(v: number, s: number, sec: SecaoLocal, i: number): void {
     const esq = sec.yCentroMm - sec.larguraMm / 2
+    const a = this.defeitos
     for (let k = 0; k <= this.M; k++) {
       const u = esq + (sec.larguraMm * k) / this.M
       const r = (2 * (u - sec.yCentroMm)) / sec.larguraMm
-      this.escrever(v + k, s, u, sec.alturaMm * (1 - r * r))
+      const forma = a ? formaDomo(r, a.caimento[i], a.sobreposicaoMenos[i], a.sobreposicaoMais[i]) : 1 - r * r
+      this.escrever(v + k, s, u, sec.alturaMm * forma * this.fatorAltura(i, s, r, sec.larguraMm))
     }
   }
 
@@ -200,15 +238,15 @@ export class MalhaCordaoViva {
     const [sIni, sMeio, sFim] = [i * p, (i + 0.5) * p, (i + 1) * p]
     const M = this.M
     if (this.junta === 'topo') {
-      this.escreverDomo(this.anel(i, 0), sMeio, sec)
-      this.escreverDomo(this.anel(i, 1), sIni, sec)
-      this.escreverDomo(this.anel(i, 2), sFim, sec)
+      this.escreverDomo(this.anel(i, 0), sMeio, sec, i)
+      this.escreverDomo(this.anel(i, 1), sIni, sec, i)
+      this.escreverDomo(this.anel(i, 2), sFim, sec, i)
       const ti = this.tampaIni(i)
       this.escrever(ti, sIni, sec.yCentroMm, 0)
-      this.escreverDomo(ti + 1, sIni, sec)
+      this.escreverDomo(ti + 1, sIni, sec, i)
       const tf = this.tampaFim(i)
       this.escrever(tf, sFim, sec.yCentroMm, 0)
-      this.escreverDomo(tf + 1, sFim, sec)
+      this.escreverDomo(tf + 1, sFim, sec, i)
       const [e, d] = [sec.yCentroMm - sec.larguraMm / 2, sec.yCentroMm + sec.larguraMm / 2]
       for (const [qual, s] of [[0, sMeio], [1, sIni], [2, sFim]] as const) {
         this.escrever(this.base(i, qual), s, e, 0)
@@ -216,9 +254,13 @@ export class MalhaCordaoViva {
       }
       return
     }
-    // H46: perfil na junta (V, filete), o mesmo nos três anéis da fatia.
+    // H46: perfil na junta (V, filete); os defeitos só mudam a altura do reforço em cada anel.
     const perfil = perfilNaJunta(sec, this.junta, this.forma!.dimensoes, M)
-    const superficie = (v: number, s: number) => perfil.topo.forEach(([n, w], k) => this.escrever(v + k, s, n, w))
+    const superficie = (v: number, s: number) => {
+      const f = this.fatorAltura(i, s, 0, sec.larguraMm)
+      const topo = f === 1 || sec.alturaMm <= 0 ? perfil.topo : perfilNaJunta({ ...sec, alturaMm: sec.alturaMm * f }, this.junta, this.forma!.dimensoes, M).topo
+      topo.forEach(([n, w], k) => this.escrever(v + k, s, n, w))
+    }
     superficie(this.anel(i, 0), sMeio)
     superficie(this.anel(i, 1), sIni)
     superficie(this.anel(i, 2), sFim)

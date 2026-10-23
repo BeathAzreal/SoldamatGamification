@@ -29,6 +29,8 @@ export function pontuarRegistro(
       tempoArcoMs: sim.tempoDeArcoMs,
       // v3: reinícios de arco contam na Execução.
       aberturasDeArco: sim.eventos.filter((ev) => ev.tipo === 'inicio').length,
+      // v6: crateras nos fins de passe.
+      eventos: sim.eventos,
     },
     pesos,
   )

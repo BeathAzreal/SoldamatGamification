@@ -62,6 +62,11 @@ export class Percurso {
     return this.permanenciaEntre(0, Infinity)
   }
 
+  /** Tempo de arco por fatia (ms), com a tocha em cima dela. */
+  copiaDasPermanencias(): Float64Array {
+    return this.permanenciaMs.slice()
+  }
+
   copiaDosAportes(): Float64Array {
     return this.aportes.slice()
   }

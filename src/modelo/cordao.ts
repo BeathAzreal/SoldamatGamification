@@ -51,6 +51,25 @@ export interface SecaoLocal {
   pernasMm?: [number, number]
 }
 
+/**
+ * Gravidade vista pela poça no momento do depósito (H47, H50): para fora da
+ * face (0 a 1, sobrecabeça), de lado (−1 a 1, sinal = lado da junta para onde
+ * cai) e ao longo do avanço (−1 subindo … 1 descendo).
+ */
+export interface GravidadePoca {
+  cabeca: number
+  lado: number
+  descida: number
+}
+
+/** Médias por fatia do que agiu sobre a poça quando o metal caiu ali (H50). */
+export interface FisicaLocal {
+  cabeca: number
+  lado: number
+  descida: number
+  instabilidade: number
+}
+
 /** Em que junta o cordão está (H46). Ausente = topo reto (etapas anteriores). */
 export interface FormaCordao {
   junta: TipoJunta
@@ -74,6 +93,10 @@ export class Cordao {
   private readonly momentosInstab: Float64Array
   /** Soma de volume × razão altura/largura, para a forma média em cada fatia. */
   private readonly momentosRazao: Float64Array
+  /** Somas de volume × componentes da gravidade (H50). */
+  private readonly momentosCabeca: Float64Array
+  private readonly momentosLado: Float64Array
+  private readonly momentosDescida: Float64Array
   private readonly tUltimo: Float64Array
   private readonly nucleo: Float64Array
   private readonly raio: number
@@ -92,6 +115,9 @@ export class Cordao {
     this.momentosY2 = new Float64Array(this.nPosicoes)
     this.momentosInstab = new Float64Array(this.nPosicoes)
     this.momentosRazao = new Float64Array(this.nPosicoes)
+    this.momentosCabeca = new Float64Array(this.nPosicoes)
+    this.momentosLado = new Float64Array(this.nPosicoes)
+    this.momentosDescida = new Float64Array(this.nPosicoes)
     this.tUltimo = new Float64Array(this.nPosicoes).fill(-Infinity)
 
     // Núcleo gaussiano (H4): espalha cada depósito por alguns milímetros.
@@ -121,6 +147,7 @@ export class Cordao {
     razao: number = MODELO.razaoAlturaLargura,
     sigmaLateralMm = 0,
     instabilidade = 0,
+    g: GravidadePoca | null = null,
   ): void {
     if (volumeMm3 <= 0) return
     const centro = this.indiceEm(xMm)
@@ -137,6 +164,11 @@ export class Cordao {
       this.momentosY2[i] += dv * (yMm * yMm + sigmaLateralMm * sigmaLateralMm)
       this.momentosInstab[i] += dv * instabilidade
       this.momentosRazao[i] += dv * razao
+      if (g) {
+        this.momentosCabeca[i] += dv * g.cabeca
+        this.momentosLado[i] += dv * g.lado
+        this.momentosDescida[i] += dv * g.descida
+      }
       if (Math.abs(i - centro) <= this.raioRecente && tMs > this.tUltimo[i]) this.tUltimo[i] = tMs
     }
   }
@@ -171,6 +203,13 @@ export class Cordao {
     }
     // H46: a mesma quantidade de metal, na forma da junta.
     return this.forma ? secaoNaJunta(base, this.forma.junta, this.forma.dimensoes, razao) : base
+  }
+
+  /** Gravidade e arco médios na fatia i, ponderados pelo metal (H50); zeros sem metal. */
+  fisica(i: number): FisicaLocal {
+    const v = this.volumes[i]
+    if (v <= 0) return { cabeca: 0, lado: 0, descida: 0, instabilidade: 0 }
+    return { cabeca: this.momentosCabeca[i] / v, lado: this.momentosLado[i] / v, descida: this.momentosDescida[i] / v, instabilidade: this.momentosInstab[i] / v }
   }
 
   /** Quantos mm da junta têm cordão mais largo que o limiar. */

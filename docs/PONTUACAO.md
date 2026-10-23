@@ -253,3 +253,24 @@ As regras de nota não mudaram. Mudou o modelo do cordão (H3 revista em
 HIPOTESES.md): o mesmo passe agora dá um reforço menor: um cordão de 8 mm de
 largura passa de cerca de 2,9 mm para cerca de 2,1 mm de reforço. Como a mesma solda passa a ter outra nota, a
 versão subiu para pontuacao-v5, e os recordes anteriores ficam separados.
+
+## pontuacao-v6 (defeitos visíveis, Alpha v1.4)
+
+Os defeitos visíveis previstos (H50–H57 em HIPOTESES.md, `src/modelo/defeitos.ts`)
+entram na nota:
+
+- **Geometria do cordão** ganha um quinto item, **superfície**: extensão 7/30,
+  largura 8/30, reforço 5/30, alinhamento 5/30 e superfície 5/30. Cada posição
+  com cordão vale de 0 a 1 e perde com mordedura (a partir de metade do limite),
+  sobreposição, escorrimento, gotas, cratera e caimento forte; respingos acima
+  de 2 por 10 mm tiram mais até 0,3.
+- **Fusão prevista**: a nota de cada posição é multiplicada por
+  (1 − 0,6 × risco de porosidade) × (1 − 0,4 × sobreposição).
+- Os essenciais E1–E4 não mudaram; a cratera aparece, mas custa pouco (só a ponta).
+- A pontuação precisa dos eventos do registro para achar as crateras
+  (`EntradaPontuacao.eventos`; `pontuarRegistro` já passa).
+- O relatório técnico subiu para `relatorio-tecnico-v2`, com o campo
+  `defeitos` (ocorrências, respingos, poros, gotas e empeno).
+
+A mesma solda muda de nota, então a versão subiu para pontuacao-v6 e os
+recordes anteriores ficam separados.

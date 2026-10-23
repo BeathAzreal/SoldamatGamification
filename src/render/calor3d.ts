@@ -83,6 +83,9 @@ export class Calor3D {
   readonly texturas: THREE.Texture[] = []
   private readonly faiscas: Nuvem
   private readonly fumaca: Nuvem
+  /** Gotas de metal que caem da poça na sobrecabeça (H50). */
+  private readonly gotas: Nuvem
+  private acumGota = 0
   private acumFaisca = 0
   private acumFumaca = 0
   private tAnterior: number | null = null
@@ -136,7 +139,8 @@ export class Calor3D {
       new THREE.PointsMaterial({ size: 3.2, map: ponto, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
     )
     this.fumaca = new Nuvem(limites.fumaca, new THREE.PointsMaterial({ size: 14, map: ponto, vertexColors: true, transparent: true, depthWrite: false }))
-    this.particulas.add(this.fumaca.pontos, this.faiscas.pontos)
+    this.gotas = new Nuvem(40, new THREE.PointsMaterial({ size: 4.5, map: ponto, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))
+    this.particulas.add(this.fumaca.pontos, this.faiscas.pontos, this.gotas.pontos)
 
     this.brilho = new THREE.Mesh(
       new THREE.BufferGeometry(),
@@ -211,7 +215,7 @@ export class Calor3D {
    * Faíscas e fumaça (H43). `emissor`: ponto do arco (coordenadas da peça)
    * ou null com o arco fechado; `taxa` vem de taxaFaiscas (efeitos.ts).
    */
-  atualizarParticulas(agoraMs: number, emissor: { x: number; y: number; z: number } | null, taxa: number, g: { x: number; y: number; z: number } = { x: 0, y: -1, z: 0 }): void {
+  atualizarParticulas(agoraMs: number, emissor: { x: number; y: number; z: number } | null, taxa: number, g: { x: number; y: number; z: number } = { x: 0, y: -1, z: 0 }, gotejamento = 0): void {
     const dt = this.tAnterior === null ? 0 : Math.min(0.05, (agoraMs - this.tAnterior) / 1000)
     this.tAnterior = agoraMs
     const F = this.faiscas
@@ -249,6 +253,36 @@ export class Calor3D {
         S.duracao[k] = 1.6 + Math.random() * 1.4
       }
     }
+    // Gotas que se soltam da poça (H50): caem pela gravidade, sem arrasto, e apagam esfriando.
+    const G = this.gotas
+    if (emissor && dt > 0 && gotejamento > 0) {
+      this.acumGota += dt * 4 * gotejamento
+      while (this.acumGota >= 1) {
+        this.acumGota--
+        const k = G.nova()
+        G.pos[3 * k] = emissor.x + (Math.random() - 0.5) * 2
+        G.pos[3 * k + 1] = emissor.y
+        G.pos[3 * k + 2] = emissor.z + (Math.random() - 0.5) * 2
+        for (let e = 0; e < 3; e++) G.vel[3 * k + e] = 0
+        G.vida[k] = 0
+        G.duracao[k] = 1.1 + Math.random() * 0.4
+      }
+    }
+    for (let k = 0; k < G.max; k++) {
+      G.vida[k] += dt
+      const resto = G.duracao[k] > 0 ? Math.max(0, 1 - G.vida[k] / G.duracao[k]) : 0
+      if (resto > 0) {
+        G.vel[3 * k] += 900 * g.x * dt
+        G.vel[3 * k + 1] += 900 * g.y * dt
+        G.vel[3 * k + 2] += 900 * g.z * dt
+        for (let e = 0; e < 3; e++) G.pos[3 * k + e] += G.vel[3 * k + e] * dt
+      }
+      G.cor[4 * k] = 1
+      G.cor[4 * k + 1] = (90 + 130 * resto) / 255
+      G.cor[4 * k + 2] = (30 + 60 * resto) / 255
+      G.cor[4 * k + 3] = resto
+    }
+    G.enviar()
     for (let k = 0; k < F.max; k++) {
       F.vida[k] += dt
       const resto = F.duracao[k] > 0 ? Math.max(0, 1 - F.vida[k] / F.duracao[k]) : 0
