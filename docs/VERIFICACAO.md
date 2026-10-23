@@ -34,6 +34,20 @@
   números do jogo seguem sem validação experimental (só a direção das
   relações tem fonte).
 
+## Exercícios técnicos orientados — GPT
+
+Adicionados três roteiros ao treino (avanço, alimentação e tensão), com
+consulta na preparação e no resultado. Reutilizam a comparação existente;
+não alteram a física, a pontuação nem os dados persistidos.
+
+Verificação nesta alteração:
+- TypeScript: aprovado.
+- Vitest: 22 arquivos, 278 testes aprovados.
+- Build de produção: aprovado.
+- Navegador: tentativa de acesso à prévia local bloqueada pelo ambiente.
+  Pendentes a navegação manual e a conferência em 1280×720 e 1366×768.
+- Portátil regenerado na integração da `alpha-v1.3` (inclui estes roteiros).
+
 ## Etapa 6 (21/10/2026): bancada, História, Arcade aleatório, técnica, visual
 
 - `npm run build`: sem erros. `npm test`: **127 testes em 10 arquivos, todos
