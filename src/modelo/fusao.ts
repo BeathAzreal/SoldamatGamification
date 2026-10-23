@@ -33,7 +33,7 @@ export interface PontoFusao {
 }
 
 /** Mesmo espalhamento do cordão (H4): o calor também não fica num ponto só. */
-function suavizar(v: Float64Array, passoMm: number): Float64Array {
+export function suavizar(v: Float64Array, passoMm: number): Float64Array {
   const sigma = MODELO.sigmaPocaMm / passoMm
   const raio = Math.ceil(3 * sigma)
   const pesos = Array.from({ length: 2 * raio + 1 }, (_, k) => Math.exp(-0.5 * ((k - raio) / sigma) ** 2))
