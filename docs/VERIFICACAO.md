@@ -92,3 +92,18 @@ desenhar com raio negativo quando o gráfico ainda não tinha largura.
 - **Limite de espaço do localStorage** em torneios longos (cada tentativa
   oficial guarda seu registro de eventos; tipicamente dezenas de kB).
 - **Validação física** das hipóteses H27–H36 em livro-texto (ver HIPOTESES).
+
+## Exercícios técnicos orientados — GPT
+
+Adicionados três roteiros ao treino (avanço, alimentação e tensão), com
+consulta na preparação e no resultado. Reutilizam a comparação existente;
+não alteram a física, a pontuação nem os dados persistidos.
+
+Verificação nesta alteração:
+- TypeScript: aprovado.
+- Vitest: 22 arquivos, 278 testes aprovados.
+- Build de produção: aprovado.
+- Navegador: tentativa de acesso à prévia local bloqueada pelo ambiente.
+  Pendentes a navegação manual e a conferência em 1280×720 e 1366×768.
+- Portátil não regenerado nesta entrega de código; o pacote pronto ainda
+  não inclui estes roteiros.
