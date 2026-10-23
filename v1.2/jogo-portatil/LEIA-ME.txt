@@ -1,0 +1,37 @@
+OFICINA DE SOLDAGEM MIG/MAG — jogo didático
+
+COMO JOGAR EM OUTRO PC
+1. Copie esta pasta inteira (pendrive, rede, e-mail compactado).
+2. Dê dois cliques em "Abrir o jogo.bat" (ou no arquivo "Oficina de Soldagem.html").
+3. Use Google Chrome ou Microsoft Edge atualizados. Não precisa de internet nem instalar nada.
+
+CONTROLE (PS4/PS5/Xbox) E MESA DIGITALIZADORA
+- Controle: conecte e APERTE QUALQUER BOTÃO com o jogo aberto (o navegador só mostra o controle depois disso).
+- Mesa/caneta: escolha "Caneta" na bancada; se não soldar, abra "Calibrar" e veja a linha "Último evento".
+
+ONDE FICAM OS DADOS
+- Recordes, torneios e preferências ficam guardados NO NAVEGADOR deste PC, ligados a este arquivo.
+- Se mover ou renomear a pasta, o navegador trata como outro jogo e os dados não aparecem.
+- Para levar os recordes, use Recordes → "Exportar JSON" e depois importe o arquivo no outro PC.
+
+SOM
+- O som do arco liga/desliga no botão "Som" do topo.
+
+Modelo qualitativo simplificado: números do jogo, não valores de processo.
+A aparência do cordão não indica qualidade interna.
+
+VERSÃO 3D ALPHA v1.2 (2026-10-23)
+- O jogo é só 3D (sem WebGL, ele usa um desenho 2D de reserva).
+- Juntas reais: topo reto, topo em V (chapa grossa: encha o V devagar ou em dois passes),
+  em T, sobreposta e de canto. Cada missão tem a sua; no treino livre dá para escolher.
+- Posicionar a peça (só com o arco fechado):
+    Q / E ou ⟲ ⟳ ...... gira a peça no próprio plano
+    W / S ou ▲ ▼ ...... tomba a peça de 0° (face para cima) a 180° (de cabeça para baixo)
+  O canto da peça mostra a posição de soldagem (plana, horizontal, vertical, sobrecabeça).
+  Na vertical, subir funde mais e descer funde menos; de cabeça para baixo o cordão fica mais alto.
+  Algumas peças estão presas na estrutura e não giram (ex.: o corrimão).
+- A técnica (empurrando/puxando) agora inclina a tocha no 3D.
+- Saíram o "Ver desenho e ficha" e o "Movimento da tocha"; o arame mostra 0,8, 1,0 e 1,2 mm em toda missão.
+- As telas cabem numa página; os textos longos abrem por botões ("O que aconteceu e como é calculado",
+  "Por que saiu assim").
+- Os recordes desta pasta ficam separados dos das outras versões.

@@ -1,0 +1,165 @@
+import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import type { Cordao } from '../modelo/cordao'
+import type { GeometriaJunta } from '../modelo/junta'
+import { PECA } from '../modelo/parametros'
+import type { ContextoProcesso } from '../modelo/processo'
+import { paraMundo } from './malha3d'
+import { EXAGERO_MAX, EXAGERO_MIN, EXAGERO_PADRAO, Palco3D, webglDisponivel } from './palco3d'
+
+export { EXAGERO_MAX, EXAGERO_MIN, EXAGERO_PADRAO, webglDisponivel }
+
+/*
+ * Vista 3D da peça soldada na INSPEÇÃO e no replay: o palco comum
+ * (palco3d.ts) com câmera orbital livre e uma tocha simples. Só LÊ o modelo.
+ */
+
+export interface Cena3D {
+  readonly elemento: HTMLCanvasElement
+  atualizarCordao(cordao: Cordao): void
+  /** Posição da tocha em (s, n) da junta; null esconde. */
+  definirTocha(posicao: { x: number; y: number } | null, arcoAberto: boolean): void
+  definirExagero(fator: number): void
+  vistaDeCima(): void
+  vistaInicial(): void
+  ajustarTamanho(largura: number, altura: number): void
+  /** Fora da tela nada é desenhado (nem agendado). */
+  definirVisivel(visivel: boolean): void
+  destruir(): void
+}
+
+export interface OpcoesCena3D {
+  contexto: ContextoProcesso
+  geometria: GeometriaJunta
+  /** Início e fim do trecho exigido (marcas amarelas, como na vista de cima). */
+  missao?: { inicioMm: number; fimMm: number }
+}
+
+export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
+  const palco = Palco3D.criar({ contexto: op.contexto, geometria: op.geometria, missao: op.missao })
+  if (!palco) return null
+  const elemento = palco.elemento
+  elemento.className = 'inspecao-tela inspecao-tela-3d'
+  elemento.setAttribute('aria-label', 'Vista 3D da peça soldada: arraste para girar, role para aproximar')
+
+  const camera = new THREE.PerspectiveCamera(35, 1, 1, 3000)
+  const controles = new OrbitControls(camera, elemento)
+  controles.enableDamping = true
+  controles.dampingFactor = 0.12
+  controles.screenSpacePanning = true
+  controles.minDistance = 25
+  controles.maxDistance = 900
+
+  // Tocha simplificada (bocal) e o clarão do arco: só durante o replay.
+  const tocha = new THREE.Mesh(new THREE.CylinderGeometry(7, 5, 28, 24, 1, true), new THREE.MeshStandardMaterial({ color: '#b08a4a', metalness: 0.9, roughness: 0.3 }))
+  tocha.castShadow = true
+  tocha.visible = false
+  palco.peca.add(tocha)
+  const clarao = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 12), new THREE.MeshBasicMaterial({ color: '#dff4ff' }))
+  clarao.visible = false
+  palco.peca.add(clarao)
+  const luzArco = new THREE.PointLight('#bfe4ff', 0, 120, 2)
+  palco.peca.add(luzArco)
+  let tochaAtual: { x: number; y: number } | null = null
+  let arcoAtual = false
+
+  let visivel = false
+  let pedido = 0
+  const quadro = () => {
+    pedido = 0
+    if (!visivel || palco.largura === 0) return
+    const mexendo = controles.update()
+    palco.desenhar(camera)
+    if (mexendo) pedir()
+  }
+  const pedir = () => {
+    if (!pedido && visivel) pedido = requestAnimationFrame(quadro)
+  }
+  controles.addEventListener('change', pedir)
+
+  const posicionarTocha = () => {
+    const p = tochaAtual
+    tocha.visible = clarao.visible = !!p
+    luzArco.intensity = 0
+    if (!p) return
+    const q = op.geometria.pontoEm(p.x, p.y)
+    const [x, , z] = paraMundo(q.x, q.y, 0)
+    const base = palco.alturaEm(p.x)
+    tocha.position.set(x, base + 10 + 14, z)
+    clarao.position.set(x, base + 1.2, z)
+    clarao.visible = arcoAtual
+    luzArco.position.set(x, base + 4, z)
+    luzArco.intensity = arcoAtual ? 600 : 0
+  }
+
+  /** Distância para a chapa inteira caber na tela com o campo de visão atual. */
+  const distanciaEnquadrada = () => {
+    const meiaFov = THREE.MathUtils.degToRad(camera.fov / 2)
+    const aspecto = camera.aspect || 1
+    const meiaL = PECA.comprimentoMm / 2 + 8
+    const meiaW = PECA.larguraChapaMm + 8
+    return Math.max(meiaW / Math.tan(meiaFov), meiaL / (Math.tan(meiaFov) * aspecto))
+  }
+  const posicionarCamera = (polar: number, azimute: number, fator: number) => {
+    const d = distanciaEnquadrada() * fator
+    controles.target.set(0, 0, 0)
+    camera.position.setFromSphericalCoords(d, polar, azimute)
+    camera.lookAt(controles.target)
+    controles.update()
+    pedir()
+  }
+  let jaEnquadrou = false
+
+  const api: Cena3D = {
+    elemento,
+    atualizarCordao(cordao) {
+      palco.atualizarCordao(cordao)
+      posicionarTocha()
+      pedir()
+    },
+    definirTocha(posicao, arcoAberto) {
+      if (posicao?.x === tochaAtual?.x && posicao?.y === tochaAtual?.y && arcoAberto === arcoAtual) return
+      tochaAtual = posicao ? { x: posicao.x, y: posicao.y } : null
+      arcoAtual = arcoAberto
+      posicionarTocha()
+      pedir()
+    },
+    definirExagero(fator) {
+      palco.definirExagero(fator)
+      posicionarTocha()
+      pedir()
+    },
+    vistaDeCima() {
+      // Polar quase zero: o OrbitControls não aceita exatamente zero. Azimute 0 → x para a direita, z para baixo.
+      posicionarCamera(1e-4, 0, 1.02)
+    },
+    vistaInicial() {
+      posicionarCamera(0.95, -0.45, 0.95)
+    },
+    ajustarTamanho(l, a) {
+      if (!palco.ajustarTamanho(l, a)) return
+      camera.aspect = l / a
+      camera.updateProjectionMatrix()
+      if (!jaEnquadrou) {
+        jaEnquadrou = true
+        api.vistaInicial()
+      }
+      pedir()
+    },
+    definirVisivel(v) {
+      visivel = v
+      if (v) pedir()
+      else if (pedido) {
+        cancelAnimationFrame(pedido)
+        pedido = 0
+      }
+    },
+    destruir() {
+      api.definirVisivel(false)
+      controles.removeEventListener('change', pedir)
+      controles.dispose()
+      palco.destruir()
+    },
+  }
+  return api
+}
