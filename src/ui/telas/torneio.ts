@@ -204,7 +204,7 @@ function telaConfigTorneio(app: App, inicial?: ConfigTorneio, origemId: string |
         pesosMedia.hidden = false
       }),
       pesosMedia,
-      h('p', { class: 'nota' }, 'Na média ponderada, a nota do professor (0 a 10) é convertida para 0 a 100 antes de combinar, e os pesos aparecem no resultado. Atenção: a nota final do professor já pode considerar a avaliação do sistema, então a média pode contar os mesmos critérios duas vezes.'),
+      h('p', { class: 'nota' }, 'Na média ponderada, a nota do professor (0 a 10) é convertida para 0 a 1000 antes de combinar, e os pesos aparecem no resultado. Atenção: a nota final do professor já pode considerar a avaliação do sistema, então a média pode contar os mesmos critérios duas vezes.'),
       h('p', { class: 'nota' }, 'O julgamento por código reduz vieses, mas num aplicativo local não garante anonimato completo nem impede fraudes.'),
     )
 
@@ -444,7 +444,7 @@ export function tabelaClassificacao(b: BaseTorneio, grupos: GrupoClassificacao[]
       'p',
       { class: 'nota' },
       professor
-        ? `Classificação ${c.classificacao === 'professor' ? 'pela nota final do professor (convertida para 0–100)' : c.classificacao === 'sistema' ? 'pela nota automática' : `pela média ponderada: professor ${c.pesosMedia.professor}, sistema ${c.pesosMedia.sistema}, com a nota do professor convertida para 0–100`}. Desempate: nota automática, ${c.desempate === 'integridade-desenho' ? 'integridade, desenho' : 'desenho, integridade'}, menos tentativas.`
+        ? `Classificação ${c.classificacao === 'professor' ? 'pela nota final do professor (convertida para 0–1000)' : c.classificacao === 'sistema' ? 'pela nota automática' : `pela média ponderada: professor ${c.pesosMedia.professor}, sistema ${c.pesosMedia.sistema}, com a nota do professor convertida para 0–1000`}. Desempate: nota automática, ${c.desempate === 'integridade-desenho' ? 'integridade, desenho' : 'desenho, integridade'}, menos tentativas.`
         : `Desempate: aprovadas primeiro, depois nota, ${c.desempate === 'integridade-desenho' ? 'integridade, desenho' : 'desenho, integridade'} e menos tentativas.`,
     ),
   )

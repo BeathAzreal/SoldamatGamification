@@ -126,3 +126,20 @@ desenhar com raio negativo quando o gráfico ainda não tinha largura.
 - **Limite de espaço do localStorage** em torneios longos (cada tentativa
   oficial guarda seu registro de eventos; tipicamente dezenas de kB).
 - **Validação física** das hipóteses H27–H36 em livro-texto (ver HIPOTESES).
+
+## Correções da revisão técnica pelo GPT (2026-10-23)
+
+- Regressões adicionadas em tests/revisao-gpt.test.ts: pausa longa e
+  repetida sem alteração térmica, temporal ou de metal; replay compacto;
+  média de torneio antigo; bloqueio de mistura de versões sem mutar dados;
+  magnitude de borda no topo e margem de filete; aberturas planejadas;
+  explicação e comparação de juntas com fresta.
+- Os objetos simulados em tests/torneio.test.ts agora usam a versão atual
+  ao representar tentativas de torneios novos. O caso legado tem teste próprio.
+- Atualizadas as asserções de versão de tests/referencia.test.ts para v4.
+- A revisão visual em 1280×720 e 1366×768 permanece pendente: o navegador
+  integrado não acessa o servidor local deste ambiente.
+- Esta entrega atualiza código e documentação. O portátil e o ZIP
+  previamente publicados não foram substituídos.
+
+Validação final: TypeScript, 305 testes em 24 arquivos e build de produção aprovados.

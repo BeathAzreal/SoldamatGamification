@@ -18,9 +18,14 @@ import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/ca
  * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v3'
+export const VERSAO_PONTUACAO = 'pontuacao-v4'
 /** Nota máxima (cada ponto de peso vale ESCALA ÷ 100). */
 export const ESCALA_PONTUACAO = 1000
+
+/** Escala histórica; não reavalia tentativas salvas com regras novas. */
+export function escalaDaPontuacao(versao: string): number {
+  return versao === 'pontuacao-v1' || versao === 'pontuacao-v2' ? 100 : ESCALA_PONTUACAO
+}
 
 /**
  * Faixas de tolerância da nota graduada (critérios DO JOGO, em mm ou índice):
@@ -85,8 +90,8 @@ export const FICHA_CATEGORIA: Record<CategoriaId, { definicao: string; dados: st
     limitacoes: 'É um índice; não há medida de empenamento.',
   },
   eficiencia: {
-    definicao: 'Como o passe foi executado: arco sobre a junta, sem reinícios e com o metal onde foi pedido.',
-    dados: 'Tempo de arco perto da junta no trecho; aberturas de arco; metal no trecho ÷ metal na peça.',
+    definicao: 'Como o passe foi executado: arco sobre a junta, sem reinícios além dos passes previstos e com o metal onde foi pedido.',
+    dados: 'Tempo de arco perto da junta no trecho; aberturas além dos passes previstos; metal no trecho ÷ metal na peça.',
     regra: 'Tempo sobre a junta 40 % ((fração − 0,70) ÷ 0,30); reinícios 30 % (1 − reinícios ÷ 3); metal no trecho 30 % ((fração − 0,80) ÷ 0,20). Cada parte entre 0 e 1.',
     limitacoes: 'Reinício é contado, não modelado: o jogo não prevê a cratera nem a sobreposição de um reinício real.',
   },
@@ -258,7 +263,8 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   // Execução: arco sobre a junta, reinícios e metal no trecho.
   const rendimento = GASES[contexto.gas].rendimento
   const tempoUtil = e.tempoArcoMs > 0 ? e.percurso.pertoDaJuntaEntre(x0 - 5, x1 + 5) / e.tempoArcoMs : 0
-  const reinicios = Math.max(0, (e.aberturasDeArco ?? 1) - 1)
+  const aberturasPlanejadas = Math.max(1, missao.aberturasPlanejadas ?? 1)
+  const reinicios = Math.max(0, (e.aberturasDeArco ?? 1) - aberturasPlanejadas)
   const volumes = cordao.copiaDosVolumes()
   let metalTrecho = 0
   let metalTotal = 0
@@ -361,10 +367,10 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
       nome: NOME_CATEGORIA.eficiencia,
       pontos: pontos('eficiencia', fracaoEficiencia),
       maximo: maximo('eficiencia'),
-      explicacao: `${fmtPct(tempoUtil)} do tempo de arco sobre a junta; ${reinicios} reinício(s) de arco; ${fmtPct(aproveitamento)} do metal dentro do trecho pedido.`,
+      explicacao: `${fmtPct(tempoUtil)} do tempo de arco sobre a junta; ${reinicios} reinício(s) além dos passes previstos; ${fmtPct(aproveitamento)} do metal dentro do trecho pedido.`,
       detalhes: [
         { rotulo: 'Arco sobre a junta', valor: fmtPct(tempoUtil) },
-        { rotulo: 'Reinícios de arco', valor: String(reinicios) },
+        { rotulo: 'Reinícios além dos passes previstos', valor: String(reinicios) },
         { rotulo: 'Metal no trecho', valor: fmtPct(aproveitamento) },
       ],
     },

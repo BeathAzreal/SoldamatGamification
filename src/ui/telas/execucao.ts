@@ -163,7 +163,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
     const pausar = (motivo: string) => {
       if (pausado) return
       // H49: fecha o arco sem contar o tempo da pausa como solda parada.
-      sim.interromperArco()
+      sim.pausar(performance.now())
       fonte.desligar()
       pausado = true
       motivoPausa = motivo
@@ -173,6 +173,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
     const retomar = () => {
       if (!pausado || !fonte.conectado) return
       if (fonte instanceof FonteControle) fonte.reiniciarRelogio()
+      sim.retomar(performance.now())
       fonte.ligar(sim)
       pausado = false
       sobreposicao.hidden = true
@@ -275,6 +276,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         sim.definirPosicao(giro.posicao)
         sim.avancarTempo(agora)
       }
+      const instanteProcesso = sim.instanteDeProcesso(agora)
       const estado = sim.estado(agora)
       const posicao = fonte.posicao
       escamas.atualizar(sim.registro)
@@ -284,14 +286,14 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         ctx.clearRect(0, 0, vista.larguraCss, vista.alturaCss)
         const p = posicao ?? estado.posicao
         const desvio = equilibrioArco(estado.ajustes, op.contexto).desvio
-        visual.desenhar({ cordao: sim.cordao, registro: sim.registro, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: agora, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: posicao !== null && !pausado, angulo: vista.angulo })
+        visual.desenhar({ cordao: sim.cordao, registro: sim.registro, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: instanteProcesso, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: posicao !== null && !pausado, angulo: vista.angulo })
         // Som do arco (H45) com a mesma regra de cena.ts.
         if (!pausado) somArco.atualizar(!!(p && estado.arcoAberto && estado.sobreAPeca), desvio, EQUILIBRIO.tolerancia)
       } else desenharCena(ctx, vista, {
         cordao: sim.cordao,
         estado: { ...estado, posicao: posicao ?? estado.posicao },
         escamas,
-        agoraMs: agora,
+        agoraMs: instanteProcesso,
         ponteiroDentro: posicao !== null && !pausado,
         contexto: op.contexto,
         percurso: sim.percurso,

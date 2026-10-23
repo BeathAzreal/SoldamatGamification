@@ -10,6 +10,7 @@ import {
   taxaDeposicao,
   type Ajustes,
 } from '../modelo/processo'
+import { exigeExplicacaoContextual } from './contexto'
 import { n0, n1, n2, pct, plural } from './formato'
 
 /*
@@ -50,6 +51,8 @@ export function explicar(t: Tentativa): ItemExplicacao[] {
       limites(),
     ]
   }
+
+  if (exigeExplicacaoContextual(t)) return explicarContextual(t, m, mov)
 
   const unico = t.ajustesUsados.length === 1 ? t.ajustesUsados[0] : null
   const itens: ItemExplicacao[] = [quantidade(m, mov, t.ajustesUsados), regularidade(m, mov, unico)]
@@ -246,8 +249,7 @@ function equilibrio(a: Ajustes): ItemExplicacao | null {
     titulo: `Arco ${e.condicao} (aviso do jogo)`,
     texto:
       `Com ${descreverAjustes(a)}, o arco fica "${e.condicao}" pela reta do jogo (tensão de equilíbrio ≈ ${n1(e.tensaoEquilibrio)}). ` +
-      'No jogo isso não mudou o cordão. Na prática, tensão desequilibrada em relação à alimentação tende a trazer ' +
-      'instabilidade do arco e respingos — tendência a confirmar em fonte de referência.',
+      'No jogo, o desequilíbrio pode aumentar a irregularidade do cordão (H44). Essa previsão não mede respingos reais.',
   }
 }
 
@@ -267,8 +269,41 @@ function limites(): ItemExplicacao {
     tema: 'limites',
     titulo: 'O que esta explicação não cobre',
     texto:
-      'Tudo acima segue as relações do modelo do jogo. Ele não calcula penetração, fusão das bordas, ' +
-      'zona afetada pelo calor nem defeitos internos, e numa solda real outros fatores (ângulo da tocha, ' +
-      'distância do bico à peça, gás, preparação da junta) também mudam o cordão.',
+      'Tudo acima segue as relações do jogo. Fusão e aquecimento são previsões sintéticas; o modelo não calcula ' +
+      'penetração real, zona afetada pelo calor nem defeitos internos. A aparência não comprova qualidade interna.',
   }
+}
+
+
+/** Não aplica a relação largura ∝ raiz da área total à junta com fresta. */
+function explicarContextual(t: Tentativa, m: Medidas, mov: AnaliseMovimento): ItemExplicacao[] {
+  const ctx = t.contexto!
+  const unico = t.ajustesUsados.length === 1 ? t.ajustesUsados[0] : null
+  const itens: ItemExplicacao[] = [
+    { tema: 'quantidade', titulo: 'Metal e avanço nesta tentativa',
+      texto: `Seção média de ${n1(m.area.media)} mm², avanço médio de ${n1(mov.velocidadeMediaMms)} mm/s. ` +
+        (unico ? `Com estes consumíveis e alimentação, a taxa prevista é ${n0(taxaDeposicao(unico, ctx))} mm³/s do jogo. ` : 'Foram usadas várias regulagens. ') +
+        'Mais permanência concentra metal por comprimento; mudanças simultâneas de ajustes e movimento impedem isolar uma causa.' },
+    { tema: 'forma', titulo: 'Geometria e preenchimento',
+      texto: `Largura média ${n1(m.largura.media)} mm; altura média ${n1(m.altura.media)} mm. ` +
+        'A área total inclui o metal que preenche a junta. Com fresta ou chanfro, nem toda essa área vira reforço. ' +
+        'Por isso não usamos a raiz da área total para prever largura, nem apresentamos uma largura contrafactual exata.' },
+    { tema: 'regularidade', titulo: `Regularidade: ${m.regularidade}`,
+      texto: `Variação da largura ${pct(m.cvLargura)} e do avanço ${pct(mov.cvVelocidade)}. ` +
+        'Compare os trechos na inspeção. Oscilação, emendas, posição da peça e regulagens também podem contribuir.' },
+    { tema: 'alinhamento', titulo: 'Posicionamento do cordão',
+      texto: `Desvio médio do centro ${n1(m.desvioCentro.medioAbsMm)} mm. ` +
+        'Esse valor descreve o cordão calculado; movimento lateral e efeitos de posição da peça podem influenciá-lo.' },
+    continuidade(m, t.aberturasDeArco),
+  ]
+  const paradas = pausas(mov)
+  if (paradas) itens.push(paradas)
+  if (unico) {
+    const e = equilibrioArco(unico, ctx)
+    itens.push({ tema: 'equilibrio', titulo: `Arco ${e.condicao} (modelo)`,
+      texto: `Desvio de ${n1(e.desvio)} pontos em relação ao equilíbrio previsto para este preparo. ` +
+        'A DBCP influencia a corrente relativa; tensão, consumíveis e técnica devem ser considerados na comparação.' })
+  }
+  itens.push(limites())
+  return itens
 }

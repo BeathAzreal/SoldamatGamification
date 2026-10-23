@@ -1,7 +1,7 @@
 import type { Cordao, SecaoLocal } from './cordao'
 import type { AnaliseMovimento } from './movimento'
 import { AVALIACAO } from './parametros'
-import { areaAlvo, type Ajustes } from './processo'
+import { areaAlvo, type ContextoProcesso, type Ajustes } from './processo'
 
 /*
  * Avaliação ao fim da tentativa (H13–H17).
@@ -51,6 +51,7 @@ export interface Avaliacao {
 
 /** Dados de uma tentativa encerrada: a avaliação e as condições em que foi feita. */
 export interface Tentativa {
+  contexto?: ContextoProcesso
   avaliacao: Avaliacao
   /** Velocidade efetiva por trecho (H20); null se não há região avaliada. */
   movimento: AnaliseMovimento | null

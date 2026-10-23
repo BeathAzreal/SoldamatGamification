@@ -8,7 +8,7 @@ import {
   type Preparo, descreverJunta } from '../../missoes/catalogo'
 import { MATERIAIS } from '../../modelo/material'
 import type { Ajustes } from '../../modelo/processo'
-import { CATEGORIAS, NOME_CATEGORIA, PESOS_PADRAO, type Pesos } from '../../pontuacao/regras'
+import { CATEGORIAS, ESCALA_PONTUACAO, NOME_CATEGORIA, PESOS_PADRAO, type Pesos } from '../../pontuacao/regras'
 import type { App } from '../app'
 import { montarBancada, type ConfiguracaoTentativa } from '../componentes/bancada'
 import { icone } from '../componentes/icones'
@@ -76,8 +76,8 @@ export function montarBriefing(m: Missao, d: Dificuldade, extras: { tentativas?:
       h(
         'section',
         { class: 'cartao' },
-        h('h4', {}, 'Como pontua (0 a 100)'),
-        h('ul', { class: 'lista-pesos' }, CATEGORIAS.map((c) => h('li', {}, h('span', {}, NOME_CATEGORIA[c]), h('strong', {}, String(pesos[c]))))),
+        h('h4', {}, `Como pontua (0 a ${ESCALA_PONTUACAO})`),
+        h('ul', { class: 'lista-pesos' }, CATEGORIAS.map((c) => h('li', {}, h('span', {}, NOME_CATEGORIA[c]), h('strong', {}, String(pesos[c] * ESCALA_PONTUACAO / 100))))),
       ),
       h('section', { class: 'cartao' }, h('h4', {}, 'Consumíveis e equipamentos'), h('ul', {}, [...descreverConsumiveis(m), ...m.equipamentos].map((t) => h('li', {}, t)))),
     ),

@@ -233,3 +233,16 @@ calculados. Campos:
 Regras para quem escreve as explicações: os `fatores` são **candidatos**,
 não a causa; um trecho largo pode ter permanência maior **e** aporte maior
 ao mesmo tempo. O relatório não muda a nota nem o formato salvo.
+
+## Correção pontuacao-v4
+
+Mantém escala de 0 a 1000 e notas graduadas da v3. A missão em V admite
+duas aberturas planejadas (raiz e acabamento); as demais admitem uma.
+Reinícios excedentes = máximo de zero e aberturas realizadas menos as
+planejadas. Não há reconhecimento físico de passes: trata-se de uma
+franquia explícita do roteiro, não de inspeção de raiz/acabamento.
+O campo medidas.reiniciosArco passa a indicar esses reinícios excedentes.
+
+A versão das regras subiu para pontuacao-v4 para separar os novos recordes.
+Pontuações históricas mantêm os valores salvos e sua escala de origem.
+O placar usa essa escala ao mostrar o máximo e o conceito.

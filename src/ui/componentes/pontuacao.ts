@@ -1,4 +1,4 @@
-import { ESCALA_PONTUACAO, FICHA_CATEGORIA, type ResultadoPontuacao } from '../../pontuacao/regras'
+import { ESCALA_PONTUACAO, escalaDaPontuacao, FICHA_CATEGORIA, type ResultadoPontuacao } from '../../pontuacao/regras'
 import { abrirPainel } from '../dialogo'
 import { contarAte, h, n0, n1 } from '../dom'
 import { montarAbas } from './abas'
@@ -8,9 +8,9 @@ import { montarAbas } from './abas'
  * Entrega não aprovada fica no máximo com C, para o conceito não esconder um
  * requisito essencial descumprido (docs/PONTUACAO.md).
  */
-export function conceito(total: number, aprovada: boolean): string {
+export function conceito(total: number, aprovada: boolean, escala = ESCALA_PONTUACAO): string {
   // Limites em fração da escala (S ≥ 95 %, A ≥ 85 %, B ≥ 70 %, C ≥ 50 %).
-  const f = total / ESCALA_PONTUACAO
+  const f = total / escala
   const c = f >= 0.95 ? 'S' : f >= 0.85 ? 'A' : f >= 0.7 ? 'B' : f >= 0.5 ? 'C' : 'D'
   return !aprovada && 'SAB'.includes(c) ? 'C' : c
 }
@@ -41,7 +41,8 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
   const nota = (v: number) => (casas === 0 ? n0(v) : n1(v))
   const total = h('span', { class: 'placar-numero' }, opcoes.animar ? nota(0) : nota(r.total))
   if (opcoes.animar) contarAte(total, r.total, casas)
-  const letra = conceito(r.total, r.aprovada)
+  const escala = escalaDaPontuacao(r.versao)
+  const letra = conceito(r.total, r.aprovada, escala)
 
   const categorias = h(
     'ul',
@@ -103,7 +104,7 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
       'div',
       { class: 'placar' },
       h('span', { class: `conceito conceito-${letra}`, 'aria-label': `Conceito ${letra}` }, letra),
-      h('div', {}, h('span', { class: 'placar-rotulo' }, opcoes.rotulo ?? 'PONTUAÇÃO AUTOMÁTICA'), h('div', {}, total, h('span', { class: 'placar-max' }, `/ ${ESCALA_PONTUACAO}`))),
+      h('div', {}, h('span', { class: 'placar-rotulo' }, opcoes.rotulo ?? 'PONTUAÇÃO AUTOMÁTICA'), h('div', {}, total, h('span', { class: 'placar-max' }, `/ ${escala}`))),
     ),
     r.aprovada
       ? h('p', { class: 'selo selo-ok' }, '✔ Aprovada — condições essenciais cumpridas')

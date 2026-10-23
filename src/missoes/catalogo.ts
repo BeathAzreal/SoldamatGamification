@@ -40,6 +40,8 @@ export interface Missao {
   equipamentos: string[]
   tentativas: Record<Dificuldade, number>
   integridadeMinima: Record<Dificuldade, number>
+  /** Aberturas previstas pelo roteiro; ausente = um passe. */
+  aberturasPlanejadas?: number
   desafio: string
 }
 
@@ -163,6 +165,7 @@ export const MISSOES: Missao[] = [
   },
   {
     id: 'estrutura-leve',
+    aberturasPlanejadas: 2,
     versao: 1,
     titulo: 'Estrutura metálica leve',
     setor: 'Sociedade',

@@ -715,3 +715,21 @@ a integridade prevista é um resultado sintético do modelo.
   passar a usar unidades reais.
 - Comparar o critério de regularidade (H15) com o que se usa de fato em
   inspeção visual de cordões, e com que resolução se mede a largura.
+
+## Correção da revisão técnica (GPT, autorizada pelo dono)
+
+H49: a pausa da tentativa congela o relógio lógico do processo, inclusive
+o resfriamento. Ao retomar, o intervalo pausado é subtraído das leituras;
+os eventos gravados já usam esse tempo lógico. O replay não precisa de
+um evento novo e continua compatível com registros compactos antigos.
+Esperar com o arco fechado, sem pausar, continua permitindo resfriamento.
+
+H34/H46: a margem de cobertura é calculada pela mesma função na análise
+e no relatório. No topo/V desconta abertura na face e margem de borda;
+no filete mede a perna menor menos metade da maior. Valor negativo
+indica que o critério não foi atendido.
+
+A avaliação carrega opcionalmente seu contexto. Para juntas com fresta,
+outros materiais, consumíveis, técnicas ou posições, a didática mostra
+medidas e fatores sem usar a decomposição antiga da largura pela raiz
+da área total. As explicações históricas sobre chapa sem fresta permanecem.

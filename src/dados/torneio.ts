@@ -7,6 +7,8 @@ import type { Ajustes, ContextoProcesso } from '../modelo/processo'
 import {
   compararPontuacoes,
   ESCALA_PONTUACAO,
+  VERSAO_PONTUACAO,
+  escalaDaPontuacao,
   notaCategoria,
   PESOS_PADRAO,
   validarPesos,
@@ -88,6 +90,8 @@ export interface ConfigTorneio {
 export interface Torneio {
   id: string
   versao: 1
+  /** Ausente em torneios antigos: inferida dos resultados salvos. */
+  versaoPontuacao?: string
   config: ConfigTorneio
   participanteIds: string[]
   status: 'preparado' | 'em-andamento' | 'concluido'
@@ -243,6 +247,7 @@ export function criarTorneio(config: ConfigTorneio, participantes: Participante[
   return {
     id: amb.novoId('tor'),
     versao: 1,
+    versaoPontuacao: VERSAO_PONTUACAO,
     config: copiar(config),
     participanteIds: participantes.map((p) => p.id),
     status: 'preparado',
@@ -364,12 +369,18 @@ export function iniciarTentativa(
     throw new ErroTorneio('Já existe uma tentativa em andamento.')
   }
   if (tentativasRestantes(base, dados.participanteId, vez.rodada) <= 0) throw new ErroTorneio('Limite de tentativas atingido.')
+  const versoes = new Set(base.tentativas.flatMap((t) => t.resultado ? [t.resultado.versao] : []))
+  if ((base.torneio.versaoPontuacao && base.torneio.versaoPontuacao !== VERSAO_PONTUACAO) ||
+      [...versoes].some((v) => v !== VERSAO_PONTUACAO)) {
+    throw new ErroTorneio('Este torneio usa regras anteriores. Seus resultados foram preservados; duplique a configuração para jogar com as regras atuais.')
+  }
   const rodada = base.torneio.config.rodadas[vez.rodada]
   const missao = missaoDaRodada(rodada)
   const erros = validarPreparo(missao, dados.preparo)
   if (erros.length) throw new ErroTorneio(erros.join(' '))
 
   const b = copiar(base)
+  b.torneio.versaoPontuacao = VERSAO_PONTUACAO
   const tentativa: TentativaRegistro = {
     id: amb.novoId('ten'),
     torneioId: b.torneio.id,
@@ -704,7 +715,12 @@ export interface GrupoClassificacao {
 }
 
 /** Nota de classificação de uma entrega conforme a configuração. */
-export function notaDeClassificacao(c: ConfigTorneio, automatico: number, professor: number | null): number {
+export function normalizarNotaSalva(valor: number, versao: string): number {
+  return valor * (ESCALA_PONTUACAO / escalaDaPontuacao(versao))
+}
+
+export function notaDeClassificacao(c: ConfigTorneio, automatico: number, professor: number | null, versao = VERSAO_PONTUACAO): number {
+  automatico = normalizarNotaSalva(automatico, versao)
   if (c.modo === 'automatico' || c.classificacao === 'sistema') return automatico
   // Professor dá 0–10; a nota automática vai até ESCALA_PONTUACAO (1000 na pontuacao-v3).
   const prof = (professor ?? 0) * (ESCALA_PONTUACAO / 10)
@@ -724,7 +740,7 @@ function linhaDaRodada(b: BaseTorneio, pid: string, rodada: number): LinhaClassi
   const r = t?.resultado
   const a = b.avaliacoes.find((x) => x.entregaId === e.id)
   const professor = a?.final?.nota ?? null
-  const automatico = r?.total ?? 0
+  const automatico = r ? normalizarNotaSalva(r.total, r.versao) : 0
   return {
     participanteId: pid,
     nome: b.participantes.find((p) => p.id === pid)?.nome ?? '?',
@@ -734,8 +750,8 @@ function linhaDaRodada(b: BaseTorneio, pid: string, rodada: number): LinhaClassi
     aprovada: r?.aprovada ?? false,
     professor,
     tentativasUsadas: tentativasOficiais(b, pid, rodada).length,
-    integridade: r ? notaCategoria(r, 'integridade') : 0,
-    desenho: r ? notaCategoria(r, 'desenho') : 0,
+    integridade: r ? normalizarNotaSalva(notaCategoria(r, 'integridade'), r.versao) : 0,
+    desenho: r ? normalizarNotaSalva(notaCategoria(r, 'desenho'), r.versao) : 0,
     posicao: 0,
   }
 }

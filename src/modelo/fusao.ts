@@ -1,4 +1,4 @@
-import type { Cordao } from './cordao'
+import type { SecaoLocal, Cordao } from './cordao'
 import { aberturaNaFaceMm, INFO_JUNTA, juntaDe } from './juntas'
 import { GASES, MATERIAIS } from './material'
 import { FUSAO, MODELO, MOVIMENTO } from './parametros'
@@ -70,9 +70,6 @@ export function analisarFusao(cordao: Cordao, percurso: Percurso, ctx: ContextoP
   const material = MATERIAIS[ctx.material]
   const limpeza = material.exigeLimpeza && !ctx.oxidoRemovido ? FUSAO.fatorSemLimpeza : 1
   const gas = GASES[ctx.gas].fatorFusao * INFO_TECNICA[tecnicaDe(ctx)].fusao
-  const junta = juntaDe(ctx)
-  const filete = INFO_JUNTA[junta].familia === 'filete'
-  const abertura = aberturaNaFaceMm(junta, ctx)
 
   return Array.from({ length: cordao.nPosicoes }, (_, i) => {
     const s = cordao.secao(i)
@@ -83,7 +80,7 @@ export function analisarFusao(cordao: Cordao, percurso: Percurso, ctx: ContextoP
     if (s.larguraMm < 1) estado = 'sem-cordao'
     else if (indice > FUSAO.perfuracao) estado = 'perfuracao'
     else if ((s.enchimento ?? 1) < 1) estado = 'enchimento'
-    else if (filete ? pernasDesiguais(s.pernasMm) : Math.abs(s.yCentroMm) + abertura / 2 + FUSAO.margemBordaMm > s.larguraMm / 2) estado = 'borda'
+    else if (margemCoberturaBordas(s, ctx) < 0) estado = 'borda'
     else if (indice < FUSAO.minimoAdequado) estado = 'falta'
     else if (indice <= FUSAO.maximoAdequado) estado = 'adequada'
     else estado = 'excessiva'
@@ -91,10 +88,17 @@ export function analisarFusao(cordao: Cordao, percurso: Percurso, ctx: ContextoP
   })
 }
 
-/** Filete torto (H46): uma perna com menos da metade da outra — uma das chapas mal fundida. */
-function pernasDesiguais(p: [number, number] | undefined): boolean {
-  if (!p) return false
-  return Math.min(p[0], p[1]) < 0.5 * Math.max(p[0], p[1])
+/**
+ * Margem em mm até o critério de cobertura (H34/H46).
+ * Negativa = borda descoberta; zero ou positiva = atende ao critério.
+ */
+export function margemCoberturaBordas(s: SecaoLocal, ctx: ContextoProcesso): number {
+  const junta = juntaDe(ctx)
+  if (INFO_JUNTA[junta].familia === 'filete') {
+    if (!s.pernasMm) return 0
+    return Math.min(...s.pernasMm) - 0.5 * Math.max(...s.pernasMm)
+  }
+  return s.larguraMm / 2 - Math.abs(s.yCentroMm) - aberturaNaFaceMm(junta, ctx) / 2 - FUSAO.margemBordaMm
 }
 
 /**

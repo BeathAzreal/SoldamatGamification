@@ -101,6 +101,25 @@ export class Simulacao {
   private tempoArcoMs = 0
   private aberturasDeArco = 0
   private encerrada = false
+  private tempoPausadoMs = 0
+  private inicioPausaMs: number | null = null
+
+  /** H49: congela o tempo de processo, inclusive o resfriamento. */
+  pausar(agoraMs: number): void {
+    if (this.inicioPausaMs !== null) return
+    this.interromperArco()
+    this.inicioPausaMs = agoraMs
+  }
+
+  retomar(agoraMs: number): void {
+    if (this.inicioPausaMs === null) return
+    this.tempoPausadoMs += Math.max(0, agoraMs - this.inicioPausaMs)
+    this.inicioPausaMs = null
+  }
+
+  instanteDeProcesso(t: number): number {
+    return (this.inicioPausaMs ?? t) - this.tempoPausadoMs
+  }
   /** Aquecimento acumulado T (H32) e o instante a que ele se refere. */
   private aquecimento = 0
   private tAquecimento: number | null = null
@@ -158,6 +177,8 @@ export class Simulacao {
 
   /** Nova leitura de posição (com ou sem arco). */
   moverTocha(a: Amostra): void {
+    if (this.inicioPausaMs !== null) return
+    a = { ...a, t: this.instanteDeProcesso(a.t) }
     if (this.arco && this.ultima) this.integrarAte(a)
     this.ultima = a
     this.estimador.adicionar(a)
@@ -168,11 +189,13 @@ export class Simulacao {
   }
 
   iniciarArco(a: Amostra): void {
+    if (this.inicioPausaMs !== null) return
     if (this.arco || this.encerrada) {
       this.moverTocha(a)
       return
     }
     this.moverTocha(a)
+    a = { ...a, t: this.instanteDeProcesso(a.t) }
     // A posição só importa com o arco aberto: grava quando muda, antes do início.
     const p = this.posicaoAtual
     if (p.rolagemGraus !== this.posicaoGravada.rolagemGraus || p.giroGraus !== this.posicaoGravada.giroGraus) {
@@ -190,6 +213,7 @@ export class Simulacao {
   encerrarArco(a: Amostra): void {
     if (!this.arco) return
     this.moverTocha(a)
+    a = { ...a, t: this.instanteDeProcesso(a.t) }
     // O 'mover' acima já registrou a posição final; 'fim' só fecha o arco.
     this.eventos.push({ tipo: 'fim', t: a.t, x: a.x, y: a.y })
     this.arco = false
@@ -204,7 +228,7 @@ export class Simulacao {
   interromperArco(): void {
     if (!this.arco || !this.ultima) return
     const p = this.ultima
-    this.encerrarArco({ t: Math.max(this.tConsolidado, p.t), x: p.x, y: p.y })
+    this.encerrarArco({ t: Math.max(this.tConsolidado, p.t) + this.tempoPausadoMs, x: p.x, y: p.y })
   }
 
   /**
@@ -217,7 +241,8 @@ export class Simulacao {
    */
   avancarTempo(agoraMs: number): void {
     if (!this.arco || !this.ultima) return
-    const limite = agoraMs - TRAJETORIA.duracaoMaxDeslocamentoMs
+    if (this.inicioPausaMs !== null) return
+    const limite = this.instanteDeProcesso(agoraMs) - TRAJETORIA.duracaoMaxDeslocamentoMs
     if (limite > this.tConsolidado) {
       this.depositarParado(this.ultima, this.tConsolidado, limite)
       this.tConsolidado = limite
@@ -232,7 +257,7 @@ export class Simulacao {
       ajustes: this.ajustesAtuais,
       posicao: p ? { x: p.x, y: p.y } : null,
       sobreAPeca: p ? sobreAPeca(p.x, p.y) : false,
-      velocidades: this.estimador.medir(agoraMs),
+      velocidades: this.estimador.medir(this.instanteDeProcesso(agoraMs)),
       tempoArcoMs: this.tempoArcoMs,
       aquecimento: this.aquecimento,
     }
@@ -256,6 +281,7 @@ export class Simulacao {
     const avaliacao = avaliar(this.cordao)
     return {
       avaliacao,
+      contexto: this.contexto,
       movimento: analisarMovimento(this.percurso, avaliacao),
       ajustesUsados,
       tempoArcoMs: this.tempoArcoMs,
