@@ -67,3 +67,8 @@ As instruções dos agentes estão em [AGENTS.md](AGENTS.md);
 as decisões de interface, em [docs/UI-v1.4.md](docs/UI-v1.4.md).
 
 Modelo didático qualitativo: os números do jogo não qualificam procedimentos de soldagem.
+
+
+### Atualização didática da Alpha v1.4
+
+As missões apresentam roteiro de aprendizagem; capítulos mostram progresso e ação Continuar. Os resultados incluem Plano da próxima tentativa, baseado nos dados registrados. Arcade v2 introduz gradualmente missões, técnica e tempo, mantendo recordes antigos separados. Torneios têm resumo de pendências e desempates coerentes. Consulte `docs/ETAPA-DIDATICA.md`. As alterações de realismo do modelo e renderização continuam em desenvolvimento separado.

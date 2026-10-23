@@ -1,3 +1,4 @@
+import { roteiroDaMissao } from '../../missoes/aprendizagem'
 import type { Dispositivo } from '../../entrada/tipos'
 import {
   descreverConsumiveis,
@@ -18,6 +19,7 @@ export type { ConfiguracaoTentativa } from '../componentes/bancada'
 
 /** Ficha da missão: situação, desenho, requisitos, condições essenciais e critérios. */
 export function montarBriefing(m: Missao, d: Dificuldade, extras: { tentativas?: string; regra?: string; pesos?: Pesos } = {}): HTMLElement {
+  const roteiro = roteiroDaMissao(m)
   const req = requisitosEfetivos(m, d)
   const material = MATERIAIS[m.material]
   const pesos = extras.pesos ?? PESOS_PADRAO
@@ -36,6 +38,7 @@ export function montarBriefing(m: Missao, d: Dificuldade, extras: { tentativas?:
       { class: 'briefing-situacao' },
       h('p', { class: 'etiqueta-setor' }, `${m.setor} · ${NOME_DIFICULDADE[d]}`),
       h('p', { class: 'texto-grande' }, m.contexto),
+      h('p', { class: 'dica' }, h('strong', {}, 'Habilidade: '), roteiro.habilidade),
       h('p', { class: 'dica' }, h('strong', {}, 'Para que serve: '), m.finalidade),
     ),
     h(
@@ -72,6 +75,7 @@ export function montarBriefing(m: Missao, d: Dificuldade, extras: { tentativas?:
           item('Posição', m.posicao),
         ),
       ),
+      h('section', { class: 'cartao' }, h('h4', {}, 'Plano da tentativa'), h('ol', {}, [roteiro.preparar, roteiro.executar, roteiro.inspecionar].map(t => h('li', {}, t))), h('p', { class: 'nota' }, 'Experimento no treino: ', roteiro.experimento)),
       h('section', { class: 'cartao' }, h('h4', {}, 'Para ser aprovado'), h('ul', { class: 'lista-check' }, essenciais.map((t) => h('li', {}, t)))),
       h(
         'section',
