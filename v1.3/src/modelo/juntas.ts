@@ -160,10 +160,16 @@ export function secaoNaJunta(base: SecaoLocal, junta: TipoJunta, d: DimensoesJun
   const A = base.areaMm2
   if (junta === 'topo') {
     // v1.3: o metal enche primeiro a fresta entre as bordas (abertura × espessura); só o resto é reforço.
-    const Af = d.aberturaMm * d.espessuraMm
+    // Só enche o pedaço da fresta que fica embaixo do cordão: fora dela o metal fica sobre a chapa.
+    const a2 = d.aberturaMm / 2
+    const esq = Math.max(-a2, base.yCentroMm - base.larguraMm / 2)
+    const dir = Math.min(a2, base.yCentroMm + base.larguraMm / 2)
+    const sobreFresta = Math.max(0, dir - esq)
+    if (sobreFresta <= 0) return { ...base, areaReforcoMm2: A, enchimento: 1 }
+    const Af = sobreFresta * d.espessuraMm
     if (A < Af) {
-      const nivel = A / d.aberturaMm
-      return { ...base, larguraMm: d.aberturaMm, alturaMm: -(d.espessuraMm - nivel), razaoAlturaLargura: 0, areaReforcoMm2: 0, enchimento: A / Af }
+      const nivel = A / sobreFresta
+      return { ...base, larguraMm: sobreFresta, yCentroMm: (esq + dir) / 2, alturaMm: -(d.espessuraMm - nivel), razaoAlturaLargura: 0, areaReforcoMm2: 0, enchimento: A / Af }
     }
     const excesso = A - Af
     // Mesma forma (razão) de antes, só com o metal que sobra acima da face; a largura nunca fica menor que a fresta.
