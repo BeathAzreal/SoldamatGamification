@@ -24,6 +24,13 @@
   testes novos em `tests/juntas.test.ts`. A didática (área do GPT) usa
   largura ∝ √área e fica aproximada no topo com abertura: ver
   `docs/NOTAS-PARA-GPT.md`.
+- Cordão "dentro da chapa" com listras no 3D (relato do dono): na junta de
+  topo com abertura, o modelo mandava o metal para a fresta mesmo com o
+  cordão longe dela e desenhava o metal abaixo da face. Agora só o trecho
+  da fresta embaixo do cordão é enchido; fora dela o cordão fica sobre a
+  chapa. Teste novo em `tests/juntas.test.ts` (falhava antes da correção);
+  no navegador, passe em zigue-zague fora da fresta sem listras e com a
+  previsão "borda".
 - Pontuação `pontuacao-v3` (0–1000, notas graduadas): testes novos em
   `tests/referencia.test.ts` (escala, nota graduada da largura, reinícios
   e metal fora do trecho); `tests/torneio.test.ts` e `tests/dados.test.ts`
