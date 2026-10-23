@@ -17,9 +17,19 @@
   em qualquer alimentação; com 0,8 mm há solução.
 - Cordão alto demais no 3D: era o exagero vertical de 3× do topo reto.
   Agora a solda e o resultado começam em 1× (escala real), conferido no
-  navegador. O preenchimento da fresta do topo reto foi testado e
-  **adiado**: muda a relação largura × área usada pelas explicações e
-  12 testes das etapas 1–4.
+  navegador.
+- Fresta do topo reto (H18 revista): o metal enche a fresta antes do
+  reforço. `CONTEXTO_PADRAO` passou a ter abertura 0 (modelo das etapas
+  1–4, cordão sobre chapa), então os testes daquelas etapas seguem iguais;
+  testes novos em `tests/juntas.test.ts`. A didática (área do GPT) usa
+  largura ∝ √área e fica aproximada no topo com abertura: ver
+  `docs/NOTAS-PARA-GPT.md`.
+- Pontuação `pontuacao-v3` (0–1000, notas graduadas): testes novos em
+  `tests/referencia.test.ts` (escala, nota graduada da largura, reinícios
+  e metal fora do trecho); `tests/torneio.test.ts` e `tests/dados.test.ts`
+  ajustados à escala de 1000. No navegador: placar "/ 1000" com notas
+  inteiras, nomes novos das categorias e a aba "Execução" da explicação,
+  em 1366×768 e 1280×720, sem rolagem.
 - Pendências: mesa digitalizadora e controle físicos não testados; os
   números do jogo seguem sem validação experimental (só a direção das
   relações tem fonte).

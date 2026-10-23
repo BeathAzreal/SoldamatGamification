@@ -37,8 +37,11 @@ VERSÃO 3D ALPHA v1.3 (2026-10-23)
 - As telas cabem também em notebook 1280×720, sem rolar; "O que aconteceu e como é calculado" abre em abas.
 - Mecânica: a corrente agora sai da alimentação, do arame e da DISTÂNCIA BICO–PEÇA (DBCP, nova escolha
   na bancada: 10, 15 ou 20 mm). Mais DBCP = menos corrente e menos fusão, com o mesmo metal.
-- Pausar, esconder a janela ou tirar o foco não vira solda parada. Pontuação passa a ser a "pontuacao-v2"
-  (recordes da v1 ficam separados).
+- Pausar, esconder a janela ou tirar o foco não vira solda parada.
+- PONTUAÇÃO DE 0 A 1000 ("pontuacao-v3"): fusão prevista 400, geometria do cordão 250, regularidade 150,
+  controle térmico 100 e execução 100 (arco sobre a junta, reinícios de arco, metal no trecho). Cada critério
+  perde pontos aos poucos, conforme o tamanho do erro. Recordes das versões antigas (0 a 100) ficam separados.
+- Junta de topo: o metal enche primeiro a fresta entre as chapas; o cordão aparece em escala real (sem exagero).
 
 VERSÃO 3D ALPHA v1.2 (2026-10-23)
 - O jogo é só 3D (sem WebGL, ele usa um desenho 2D de reserva).

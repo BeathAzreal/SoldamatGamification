@@ -79,8 +79,8 @@ Classificação configurável:
 - **pela nota final do professor** (padrão neste modo; a automática aparece
   como referência separada);
 - pela nota automática;
-- por **média ponderada**: a nota do professor (0–10) é convertida para
-  0–100 e combinada com a automática pelos pesos mostrados na tela. Aviso
+- por **média ponderada**: a nota do professor (0–10) é convertida para a
+  escala da pontuação automática (0–1000 na `pontuacao-v3`) e combinada com a automática pelos pesos mostrados na tela. Aviso
   exibido: a nota final do professor já pode considerar o sistema, então a
   média pode repetir critérios.
 
