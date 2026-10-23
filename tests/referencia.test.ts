@@ -259,7 +259,7 @@ describe('nota, replay e relatório técnico', () => {
     andar(95, 143, 10)
     const resultado = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
     const r = relatorioTecnico({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, eventos: sim.eventos, tempoArcoMs: sim.tempoDeArcoMs, resultado })
-    expect(r.versaoPontuacao).toBe('pontuacao-v2')
+    expect(r.versaoPontuacao).toBe('pontuacao-v3')
     expect(r.preparo).toMatchObject({ dbcpMm: 15, tecnica: 'neutra', anguloAvancoGraus: 0, junta: 'topo' })
     expect(r.regulagens).toHaveLength(1)
     expect(r.regulagens[0].correnteRelativa).toBeCloseTo(1, 9)
@@ -282,7 +282,7 @@ describe('nota, replay e relatório técnico', () => {
     expect(MATERIAIS[ctx.material].id).toBe('aco-carbono')
   })
 
-  it('pontuacao-v2: um buraco no cordão não derruba de novo a "largura na faixa" (já perde em extensão, integridade e E3)', () => {
+  it('pontuacao-v3: escala 0–1000; um buraco no cordão perde na extensão, não de novo na largura', () => {
     const ctx = ctxRef()
     const sim = new Simulacao(ctx)
     sim.definirAjustes(AJUSTES)
@@ -296,14 +296,45 @@ describe('nota, replay e relatório técnico', () => {
       }
       sim.encerrarArco({ t, x: x1, y: 0 })
     }
-    const r = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
+    const r = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs, aberturasDeArco: 2 })
+    expect(r.versao).toBe('pontuacao-v3')
+    expect(r.categorias.reduce((s, c) => s + c.maximo, 0)).toBe(1000)
     const desenho = r.categorias.find((c) => c.id === 'desenho')!
-    const valor = (rotulo: string) => desenho.detalhes.find((d) => d.rotulo === rotulo)!.valor
+    const pct = (rotulo: string) => Number.parseInt(desenho.detalhes.find((d) => d.rotulo === rotulo)!.valor, 10)
     expect(r.essenciais.find((e) => e.id === 'E3')!.cumprida).toBe(false)
-    // A falta de cordão aparece na extensão; na largura só entram as pontas afinando do buraco.
-    const pct = (rotulo: string) => Number.parseInt(valor(rotulo), 10)
     expect(pct('Extensão')).toBeLessThan(95)
-    expect(pct('Largura na faixa')).toBeGreaterThanOrEqual(90)
-    expect(pct('Largura na faixa')).toBeGreaterThan(pct('Extensão'))
+    // A largura só avalia o cordão que existe: só as pontas que afinam perto do buraco perdem um pouco.
+    expect(pct('Largura')).toBeGreaterThanOrEqual(85)
+    expect(r.medidas.reiniciosArco).toBe(1)
+  })
+
+  it('pontuacao-v3: nota graduada — um pouco fora da faixa perde pouco, muito fora perde tudo', () => {
+    const ctx = ctxRef()
+    const notaLargura = (v: number) => {
+      const { sim } = passe(ctx, AJUSTES, v)
+      const r = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
+      return { r, largura: r.medidas.larguraMediaMm, nota: Number.parseInt(r.categorias.find((c) => c.id === 'desenho')!.detalhes.find((d) => d.rotulo === 'Largura')!.valor, 10) }
+    }
+    const certo = notaLargura(10)
+    const largo = notaLargura(5.5)
+    const muitoLargo = notaLargura(3.5)
+    expect(certo.nota).toBe(100)
+    expect(largo.largura).toBeGreaterThan(9.5)
+    expect(largo.nota).toBeLessThan(certo.nota)
+    expect(largo.nota).toBeGreaterThan(muitoLargo.nota)
+    expect(muitoLargo.nota).toBe(0)
+  })
+
+  it('pontuacao-v3: reinícios de arco e metal fora do trecho baixam a Execução', () => {
+    const ctx = ctxRef()
+    const { sim } = passe(ctx)
+    const base = { missao: MISSAO, dificuldade: 'aprendiz' as const, contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs }
+    const execucao = (aberturas: number) => pontuar({ ...base, aberturasDeArco: aberturas }).categorias.find((c) => c.id === 'eficiencia')!.pontos
+    expect(execucao(1)).toBeGreaterThan(execucao(2))
+    expect(execucao(2)).toBeGreaterThan(execucao(4))
+    // Passe que avança 30 mm além do FIM: mais metal fora do trecho.
+    const alem = passe(ctx, AJUSTES, 10, { x1: MISSAO.trecho.fimMm + 30 }).sim
+    const r = pontuar({ ...base, cordao: alem.cordao, percurso: alem.percurso, tempoArcoMs: alem.tempoDeArcoMs })
+    expect(r.medidas.aproveitamentoMetal!).toBeLessThan(pontuar(base).medidas.aproveitamentoMetal!)
   })
 })

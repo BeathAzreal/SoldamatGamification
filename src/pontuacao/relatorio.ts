@@ -155,7 +155,7 @@ const LIMITACOES_GERAIS = [
 const CONDICAO: Record<TipoOcorrencia, { grandeza: string; condicao: string; limitacao: string }> = {
   'sem-cordao': { grandeza: 'largura (mm)', condicao: 'H14: largura abaixo de 1 mm', limitacao: 'Só diz que não há metal depositado ali.' },
   perfuracao: { grandeza: 'índice de fusão', condicao: 'H33: índice acima do limiar de perfuração', limitacao: 'Previsão sintética de calor demais; não simula o furo nem a poça escorrendo.' },
-  enchimento: { grandeza: 'enchimento do V', condicao: 'H46: metal menor que a área do chanfro', limitacao: 'Supõe o V cheio por igual; não modela passes separados.' },
+  enchimento: { grandeza: 'enchimento da junta', condicao: 'H46 (V) ou H18 revista (fresta do topo): metal menor que a área a encher', limitacao: 'Supõe a junta cheia por igual; não modela passes separados nem penetração.' },
   borda: { grandeza: 'folga até a borda (mm)', condicao: 'H34 (topo) ou H46 (filete): o cordão não cobre as duas bordas', limitacao: 'Cobertura vista na face; não diz se as bordas fundiram em profundidade.' },
   falta: { grandeza: 'índice de fusão', condicao: 'H33: índice abaixo do mínimo adequado', limitacao: 'Previsão sintética; não mede a penetração.' },
   excessiva: { grandeza: 'índice de fusão', condicao: 'H33: índice acima do máximo adequado', limitacao: 'Previsão sintética de calor além do necessário.' },

@@ -20,7 +20,16 @@ export function pontuarRegistro(
 ): { sim: Simulacao; resultado: ResultadoPontuacao } {
   const sim = reproduzir(contexto, descompactar(eventos))
   const resultado = pontuar(
-    { missao, dificuldade, contexto, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs },
+    {
+      missao,
+      dificuldade,
+      contexto,
+      cordao: sim.cordao,
+      percurso: sim.percurso,
+      tempoArcoMs: sim.tempoDeArcoMs,
+      // v3: reinícios de arco contam na Execução.
+      aberturasDeArco: sim.eventos.filter((ev) => ev.tipo === 'inicio').length,
+    },
     pesos,
   )
   return { sim, resultado }

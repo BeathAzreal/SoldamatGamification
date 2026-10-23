@@ -6,6 +6,7 @@ import { buscarMissao, validarPreparo, type Dificuldade, type Missao, type Prepa
 import type { Ajustes, ContextoProcesso } from '../modelo/processo'
 import {
   compararPontuacoes,
+  ESCALA_PONTUACAO,
   notaCategoria,
   PESOS_PADRAO,
   validarPesos,
@@ -683,7 +684,7 @@ export interface LinhaClassificacao {
   participanteId: string
   nome: string
   dispositivo: Dispositivo | null
-  /** Nota usada para classificar (0–100). */
+  /** Nota usada para classificar (0–ESCALA_PONTUACAO). */
   nota: number
   /** Pontuação automática (referência separada no modo com professor). */
   automatico: number
@@ -705,7 +706,8 @@ export interface GrupoClassificacao {
 /** Nota de classificação de uma entrega conforme a configuração. */
 export function notaDeClassificacao(c: ConfigTorneio, automatico: number, professor: number | null): number {
   if (c.modo === 'automatico' || c.classificacao === 'sistema') return automatico
-  const prof = (professor ?? 0) * 10
+  // Professor dá 0–10; a nota automática vai até ESCALA_PONTUACAO (1000 na pontuacao-v3).
+  const prof = (professor ?? 0) * (ESCALA_PONTUACAO / 10)
   if (c.classificacao === 'professor') return prof
   const { professor: wp, sistema: ws } = c.pesosMedia
   return (wp * prof + ws * automatico) / (wp + ws)

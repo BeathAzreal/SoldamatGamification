@@ -338,9 +338,9 @@ describe('torneio com professor', () => {
 
   it('média ponderada normaliza as escalas', () => {
     const { base } = novaBase({ modo: 'professor', classificacao: 'ponderada', pesosMedia: { professor: 3, sistema: 1 } })
-    // Professor 8/10 → 80; sistema 60 → (3·80 + 1·60) ÷ 4 = 75.
-    expect(notaDeClassificacao(base.torneio.config, 60, 8)).toBe(75)
-    expect(notaDeClassificacao({ ...base.torneio.config, classificacao: 'professor' }, 60, 8)).toBe(80)
-    expect(notaDeClassificacao({ ...base.torneio.config, classificacao: 'sistema' }, 60, 8)).toBe(60)
+    // Escala de 1000 (pontuacao-v3): professor 8/10 → 800; sistema 600 → (3·800 + 1·600) ÷ 4 = 750.
+    expect(notaDeClassificacao(base.torneio.config, 600, 8)).toBe(750)
+    expect(notaDeClassificacao({ ...base.torneio.config, classificacao: 'professor' }, 600, 8)).toBe(800)
+    expect(notaDeClassificacao({ ...base.torneio.config, classificacao: 'sistema' }, 600, 8)).toBe(600)
   })
 })
