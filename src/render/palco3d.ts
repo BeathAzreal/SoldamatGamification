@@ -243,6 +243,8 @@ export class Palco3D {
   /** Buffers fixos do cordão (cordaoVivo.ts); refeitos só quando o cordão é outro. */
   private viva: MalhaCordaoViva | null = null
   private exagero = EXAGERO_PADRAO
+  /** Cordões soltos (H58): outro ponto de solda longe da junta, cada um com a sua malha. */
+  private soltos3d: { viva: MalhaCordaoViva; malha: THREE.Mesh }[] = []
   /** Gotas, respingos, faixas de borda e oxidação (H50–H57). */
   private readonly defeitos3d: Defeitos3D
   /** Chapas que dobram no empeno (topo e V): pivô na borda da junta e sentido do giro. */
@@ -547,9 +549,66 @@ export class Palco3D {
     const viva = this.viva!
     let mudou = !nova && s0Mm !== undefined && s1Mm !== undefined ? viva.atualizar(cordao, cordao.indiceEm(s0Mm), cordao.indiceEm(s1Mm)) : false
     if (!mudou) mudou = viva.atualizar(cordao)
-    if (!mudou) return false
-    this.enviarCordao()
-    return true
+    const soltos = this.atualizarSoltos(cordao)
+    if (mudou) this.enviarCordao()
+    return mudou || soltos
+  }
+
+  /** H58: uma malha por cordão solto, apoiada na superfície das chapas. Devolve true se algo mudou. */
+  private atualizarSoltos(cordao: Cordao): boolean {
+    let mudou = false
+    cordao.soltos.forEach((solto, k) => {
+      let s = this.soltos3d[k]
+      if (!s) {
+        const viva = new MalhaCordaoViva(solto.nPosicoes, solto.passoMm, this.op.geometria, undefined, null, { junta: juntaDe(this.op.contexto), dimensoes: this.op.contexto })
+        const malha = new THREE.Mesh(this.geometriaViva(viva), this.cordao3d.material)
+        malha.castShadow = malha.receiveShadow = true
+        malha.frustumCulled = false
+        this.relevo.add(malha)
+        s = this.soltos3d[k] = { viva, malha }
+      }
+      if (!s.viva.atualizar(solto)) return
+      mudou = true
+      const g = s.malha.geometry
+      for (const nome of ['position', 'normal'] as const) {
+        const atr = g.getAttribute(nome) as THREE.BufferAttribute
+        atr.clearUpdateRanges()
+        atr.addUpdateRange(3 * s.viva.inicioMudado, 3 * (s.viva.fimMudado - s.viva.inicioMudado))
+        atr.needsUpdate = true
+      }
+      if (s.viva.indicesMudaram) {
+        const idx = g.getIndex()!
+        idx.clearUpdateRanges()
+        idx.addUpdateRange(0, s.viva.nIndices)
+        idx.needsUpdate = true
+        g.setDrawRange(0, s.viva.nIndices)
+        s.malha.visible = s.viva.nIndices > 0
+      }
+    })
+    return mudou
+  }
+
+  /** Remove as malhas dos cordões soltos (peça nova). */
+  private limparSoltos(): void {
+    for (const s of this.soltos3d) {
+      this.relevo.remove(s.malha)
+      s.malha.geometry.dispose()
+    }
+    this.soltos3d = []
+  }
+
+  /** Geometria com os buffers fixos de uma malha viva e as cores das camadas. */
+  private geometriaViva(viva: MalhaCordaoViva): THREE.BufferGeometry {
+    const cor = new Float32Array(viva.raios.length * 3)
+    const c = new THREE.Color()
+    viva.raios.forEach((r, k) => this.corDaCamada(r, c).toArray(cor, 3 * k))
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.BufferAttribute(viva.posicoes, 3).setUsage(THREE.DynamicDrawUsage))
+    g.setAttribute('normal', new THREE.BufferAttribute(viva.normais, 3).setUsage(THREE.DynamicDrawUsage))
+    g.setAttribute('color', new THREE.BufferAttribute(cor, 3))
+    g.setIndex(new THREE.BufferAttribute(viva.indices, 1).setUsage(THREE.DynamicDrawUsage))
+    g.setDrawRange(0, 0)
+    return g
   }
 
   /**
@@ -597,17 +656,10 @@ export class Palco3D {
   /** Aloca os buffers do cordão (uma vez por cordão; as cores das camadas não mudam). */
   private novaMalha(cordao: Cordao): void {
     const viva = (this.viva = new MalhaCordaoViva(cordao.nPosicoes, cordao.passoMm, this.op.geometria, undefined, cordao.forma))
-    // Peça nova: os defeitos da anterior somem até a próxima análise.
+    // Peça nova: os defeitos e os cordões soltos da anterior somem.
     this.defeitos3d.atualizar(null, null)
-    const cor = new Float32Array(viva.raios.length * 3)
-    const c = new THREE.Color()
-    viva.raios.forEach((r, k) => this.corDaCamada(r, c).toArray(cor, 3 * k))
-    const g = new THREE.BufferGeometry()
-    g.setAttribute('position', new THREE.BufferAttribute(viva.posicoes, 3).setUsage(THREE.DynamicDrawUsage))
-    g.setAttribute('normal', new THREE.BufferAttribute(viva.normais, 3).setUsage(THREE.DynamicDrawUsage))
-    g.setAttribute('color', new THREE.BufferAttribute(cor, 3))
-    g.setIndex(new THREE.BufferAttribute(viva.indices, 1).setUsage(THREE.DynamicDrawUsage))
-    g.setDrawRange(0, 0)
+    this.limparSoltos()
+    const g = this.geometriaViva(viva)
     this.cordao3d.geometry.dispose()
     this.cordao3d.geometry = g
     this.cordao3d.visible = false

@@ -42,7 +42,7 @@ writeFileSync(join(saida, 'LEIA-ME.txt'), [
   'Versão de teste: conferência visual e dos dispositivos ainda pendente.',
   'Solda mais realista: a gravidade escorre o metal na vertical, pinga na sobrecabeça e derruba o cordão na horizontal;',
   'mordedura, sobreposição, respingos, cratera no fim, porosidade, escamas, cores de calor e empeno das chapas.',
-  'Os defeitos aparecem na peça 3D, no corte e na aba Defeitos do resultado. Pontuação "pontuacao-v6" (recordes antigos separados).',
+  'Os defeitos aparecem na peça 3D, no corte e na aba Defeitos do resultado. Pontuação "pontuacao-v7" (recordes antigos separados).',
   '',
   'CONTROLES',
   'Mouse: esquerdo solda, meio move a câmera, direito gira a peça.',
