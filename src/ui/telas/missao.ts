@@ -90,6 +90,7 @@ export function montarBriefing(m: Missao, d: Dificuldade, extras: { tentativas?:
 }
 
 export interface OpcoesPreparacao {
+  oficinaTreino?: boolean
   missao: Missao
   dificuldade: Dificuldade
   /** Texto do botão oficial, ex.: "Iniciar tentativa 2 de 3"; null = sem oficial. */
@@ -115,7 +116,7 @@ export function montarPreparacao(app: App, op: OpcoesPreparacao): { elemento: HT
   const req = requisitosEfetivos(m, op.dificuldade)
   // Tela em bloco: tudo cabe na altura da janela, sem rolar a página.
   app.raiz.classList.add('tela-bancada')
-  const bancada = montarBancada(app, { missao: m, dificuldade: op.dificuldade, dispositivos: op.dispositivos, inicial: op.inicial, travas: op.travas, escolherJunta: op.escolherJunta })
+  const bancada = montarBancada(app, { missao: m, dificuldade: op.dificuldade, dispositivos: op.dispositivos, inicial: op.inicial, travas: op.travas, escolherJunta: op.escolherJunta, oficinaTreino: op.oficinaTreino })
 
   const conferido = h('input', { type: 'checkbox', id: 'prep-conferi' })
   const erros = h('p', { class: 'erro', role: 'alert' })

@@ -61,6 +61,7 @@ export interface CenaExecucao3D {
 }
 
 export interface OpcoesExecucao3D {
+  oficinaTreino?: boolean
   contexto: ContextoProcesso
   geometria: GeometriaJunta
   /** Marcas do desenho da missão (a peça de teste da bancada não tem). */
@@ -74,6 +75,7 @@ export interface OpcoesExecucao3D {
 export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null {
   const perfil = PERFIS[op.qualidade]
   const palco = Palco3D.criar({
+    oficinaTreino: op.oficinaTreino,
     contexto: op.contexto,
     geometria: op.geometria,
     missao: op.missao,

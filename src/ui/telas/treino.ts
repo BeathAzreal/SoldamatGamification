@@ -71,6 +71,7 @@ function treinoMissao(app: App, m: Missao, d: Dificuldade): void {
 function bancadaTreino(app: App, s: SessaoTreino): void {
   app.ir((app) => {
     const prep = montarPreparacao(app, {
+      oficinaTreino: true,
       missao: s.m,
       dificuldade: s.d,
       oficial: null,
