@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 /** Cenografia estática: fora do volume de giro da chapa, sem participar da simulação. */
-export function criarOficinaTreino(piso: number): THREE.Group {
+export function criarOficinaTreino(piso: number, op: { armario?: boolean } = {}): THREE.Group {
   const oficina = new THREE.Group()
   oficina.name = 'Oficina pequena de treino'
   const material = (cor: string, metalness = 0.35) => new THREE.MeshStandardMaterial({ color: cor, metalness, roughness: 0.72 })
@@ -81,8 +81,10 @@ export function criarOficinaTreino(piso: number): THREE.Group {
   cabo([[265, piso + 230, -110], [302, piso + 204, -70], [300, piso + 110, -15]], 2, borracha)
 
   // Armário baixo ao fundo; a região central fica inteiramente livre.
-  caixa(140, 210, 90, -390, piso + 105, -230, azul)
-  caixa(3, 185, 3, -390, piso + 107, -183, estrutura)
-  for (const x of [-400, -380]) caixa(3, 28, 5, x, piso + 122, -180, claro)
+  if (op.armario !== false) {
+    caixa(140, 210, 90, -390, piso + 105, -230, azul)
+    caixa(3, 185, 3, -390, piso + 107, -183, estrutura)
+    for (const x of [-400, -380]) caixa(3, 28, 5, x, piso + 122, -180, claro)
+  }
   return oficina
 }

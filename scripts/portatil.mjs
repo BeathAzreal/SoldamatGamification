@@ -36,6 +36,7 @@ writeFileSync(join(saida, 'LEIA-ME.txt'), [
   'ESTA VERSÃO',
   'Menu ilustrado e identidade gráfica comum aos demais menus.',
   'Treino: oficina pequena com bancada, morsa, ferramentas e máquina no carrinho lateral. Ver oficina abre a vista geral; Centralizar volta à peça.',
+  'Missão Suporte de prateleira: serralheria com perfis em cavalete, barras fixadas e exemplos de suportes na bancada. Ver serralheria abre a vista geral.',
   'Roteiros de missões, progresso, plano da próxima tentativa e Arcade v2 gradual.',
   'Torneios: pendências por rodada e correção dos empates.',
   'MIG/MAG é o processo disponível. Eletrodo revestido está apenas planejado.',
