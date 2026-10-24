@@ -1,5 +1,37 @@
 # Verificação
 
+## Alpha v1.4 — sobrecabeça: inspeção, gotas e layout (branch `claude/v1.4`)
+
+Revisão visual do GPT na v1.4 integrada (três pontos), conferida no Chromium
+sem interface (Playwright) com o jogo em execução local:
+
+- **Orientação na inspeção:** a peça agora fica na mesma posição da soldagem
+  (rolagem e giro, H47). Antes, a inspeção redesenhava a chapa na posição
+  plana e as gotas de sobrecabeça apareciam por cima. Agora é a câmera que
+  se move. Em sobrecabeça, a vista inicial e o botão "Olhar a face" (antes
+  "Olhar de cima") olham a face por baixo, e a órbita pode descer abaixo da
+  peça. Conferido: chapa de cabeça para baixo, gotas penduradas para baixo.
+- **Desprendimento das gotas:** a gravidade das partículas passa a vir do
+  mundo, convertida para os eixos da peça, e não da peça girada. As gotas
+  que se soltam agora têm um corpo sólido (esfera) e cor opaca, em vez de
+  pontos aditivos quase invisíveis. Elas nascem onde o gotejamento previsto
+  existe perto da tocha (±4 mm). Conferido numa passada lenta em
+  sobrecabeça: gota laranja caindo em direção ao piso, abaixo da tocha.
+  Limite: no navegador sem interface a taxa de quadros é baixa, então
+  aparecem poucas gotas por segundo de tela. Não testado em GPU real.
+- **Câmera na execução:** "Centralizar" com a peça inclinada para baixo
+  (▲, ângulo negativo) não fazia nada. Agora olha a face (por baixo em
+  sobrecabeça), sem deixar as marcas de cabeça para baixo.
+- **Sobreposição no resultado:** conferida por medição dos retângulos dos
+  blocos da inspeção, das abas e do conteúdo da aba, com a aba Defeitos
+  aberta, em 960×720, 1024×768, 1166×884, 1280×720, 1366×768, 1440×900 e
+  1920×1080. Resultado: nenhuma sobreposição e página sem rolagem horizontal.
+- Ajustes de realismo e textos didáticos anteriores da v1.4 foram mantidos.
+  Pontuação inalterada (`pontuacao-v7`).
+
+Validação: TypeScript e 364 testes em 29 arquivos aprovados; build de
+produção e portátil regenerados.
+
 ## Alpha v1.4 — correções da revisão visual do GPT (branch `claude/v1.4`)
 
 - Preparação em 1280×720: a peça de teste ficava atrás da barra de ações.

@@ -38,6 +38,11 @@ export class Vista3D {
   elevacao = 0
   /** Volta em torno da normal (radianos; 0 = inclinando para baixo da tela). */
   azimute = 0
+  /**
+   * Centro do arco de 180° do azimute. 0 normalmente; π quando a vista de
+   * frente para a face fica do outro lado (peça tombada para trás).
+   */
+  azimuteBase = 0
   /** Fator da distância (1 = mesmo enquadramento do 2D). */
   zoom = 1
   /** Inclinação física da peça, independente da câmera. */
@@ -98,9 +103,10 @@ export class Vista3D {
     this.definirCamera(0, Math.min(THREE.MathUtils.degToRad(INCLINACAO_MAX_GRAUS), Math.max(0, radianos)))
   }
 
-  /** Posição da câmera em volta da peça (radianos). O azimute dá a volta; azimute limitado a ±90° e elevação de 0° a 180°. */
-  definirCamera(azimute: number, elevacao: number, zoom = this.zoom): void {
-    this.azimute = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, azimute))
+  /** Posição da câmera em volta da peça (radianos). Azimute limitado a ±90° em volta de `azimuteBase` e elevação de 0° a 180°. */
+  definirCamera(azimute: number, elevacao: number, zoom = this.zoom, base = this.azimuteBase): void {
+    this.azimuteBase = base
+    this.azimute = Math.max(base - Math.PI / 2, Math.min(base + Math.PI / 2, azimute))
     this.elevacao = Math.max(0, Math.min(Math.PI, elevacao))
     this.zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom))
     this.atualizarCamera()

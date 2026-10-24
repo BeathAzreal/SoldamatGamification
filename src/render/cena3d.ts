@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { Cordao } from '../modelo/cordao'
 import type { AnaliseDefeitos } from '../modelo/defeitos'
 import type { GeometriaJunta } from '../modelo/junta'
+import type { PosicaoPeca } from '../modelo/juntas'
 import { PECA } from '../modelo/parametros'
 import type { ContextoProcesso } from '../modelo/processo'
 import { paraMundo } from './malha3d'
@@ -23,6 +24,12 @@ export interface Cena3D {
   /** Posição da tocha em (s, n) da junta; null esconde. */
   definirTocha(posicao: { x: number; y: number } | null, arcoAberto: boolean): void
   definirExagero(fator: number): void
+  /**
+   * Posição da peça na soldagem (H47): a inspeção mantém a peça como ela
+   * estava em relação à gravidade (gotas penduradas para baixo); quem se
+   * move é a câmera.
+   */
+  definirPosicao(p: PosicaoPeca): void
   vistaDeCima(): void
   vistaInicial(): void
   ajustarTamanho(largura: number, altura: number): void
@@ -105,10 +112,22 @@ export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
     const meiaW = PECA.larguraChapaMm + 8
     return Math.max(meiaW / Math.tan(meiaFov), meiaL / (Math.tan(meiaFov) * aspecto))
   }
+  let posicao: PosicaoPeca = { rolagemGraus: 0, giroGraus: 0 }
+  /** Centro da peça e normal da face no mundo, com a peça na posição da soldagem. */
+  const centro = new THREE.Vector3()
+  const normal = new THREE.Vector3()
+  const medirPeca = () => {
+    palco.cena.updateMatrixWorld(true)
+    palco.peca.localToWorld(centro.set(0, 0, 0))
+    normal.set(0, 1, 0).transformDirection(palco.peca.matrixWorld)
+  }
+  /** Ângulos da câmera (polar a partir de +y, azimute) que olham a face de frente. */
+  const deFrente = () => ({ polar: Math.acos(Math.max(-1, Math.min(1, normal.y))), azimute: Math.atan2(normal.x, normal.z) })
   const posicionarCamera = (polar: number, azimute: number, fator: number) => {
     const d = distanciaEnquadrada() * fator
-    controles.target.set(0, 0, 0)
-    camera.position.setFromSphericalCoords(d, polar, azimute)
+    medirPeca()
+    controles.target.copy(centro)
+    camera.position.setFromSphericalCoords(d, Math.max(1e-4, Math.min(Math.PI - 1e-4, polar)), azimute).add(centro)
     camera.lookAt(controles.target)
     controles.update()
     pedir()
@@ -140,11 +159,28 @@ export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
       pedir()
     },
     vistaDeCima() {
-      // Polar quase zero: o OrbitControls não aceita exatamente zero. Azimute 0 → x para a direita, z para baixo.
-      posicionarCamera(1e-4, 0, 1.02)
+      // De frente para a face da junta (de cima na plana, de baixo na sobrecabeça).
+      medirPeca()
+      const f = deFrente()
+      posicionarCamera(f.polar, f.polar < 0.01 ? 0 : f.azimute, 1.02)
     },
     vistaInicial() {
-      posicionarCamera(0.95, -0.45, 0.95)
+      medirPeca()
+      const f = deFrente()
+      // Inclinada em relação à face: na plana desce 0,95 rad; de cabeça para baixo sobe por baixo; de pé, só um pouco acima.
+      const polar = f.polar < 1.2 ? f.polar + 0.95 : f.polar > 1.95 ? f.polar - 0.95 : f.polar - 0.35
+      posicionarCamera(polar, (f.polar < 0.01 ? 0 : f.azimute) - 0.45, 0.95)
+    },
+    definirPosicao(p) {
+      if (p.rolagemGraus === posicao.rolagemGraus && p.giroGraus === posicao.giroGraus) return
+      posicao = { ...p }
+      palco.definirGiro((p.giroGraus * Math.PI) / 180)
+      palco.definirRolagem(p.rolagemGraus)
+      medirPeca()
+      // Peça virada para baixo ou de lado: a câmera precisa poder olhar por baixo.
+      controles.maxPolarAngle = normal.y < 0.5 ? Math.PI * 0.97 : Math.PI * 0.6
+      if (jaEnquadrou) api.vistaInicial()
+      pedir()
     },
     ajustarTamanho(l, a) {
       if (!palco.ajustarTamanho(l, a)) return
