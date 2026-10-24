@@ -11,6 +11,7 @@ import { MalhaCordaoViva } from './cordaoVivo'
 import { Defeitos3D } from './defeitos3d'
 import { chapasNaJunta, cristaMm, juntaDe, pontoNaSuperficie } from '../modelo/juntas'
 import { paraMundo } from './malha3d'
+import { criarOficinaTreino } from './oficinaTreino'
 
 /*
  * Palco 3D comum à inspeção e à execução: renderer, luz, chapas, sala,
@@ -40,6 +41,7 @@ export const EXAGERO_MAX = 6
 const SOBRE_CHAPA = 0.03
 
 export interface OpcoesPalco {
+  oficinaTreino?: boolean
   contexto: ContextoProcesso
   geometria: GeometriaJunta
   /** Marcas do desenho da missão; `alinhamentoMm` liga a faixa de tolerância. */
@@ -329,6 +331,7 @@ export class Palco3D {
     })
     // Sala da oficina (H47): piso, paredes e teto dão a referência de "para baixo" quando a peça tomba.
     this.montarSala()
+    if (op.oficinaTreino) this.ambienteGrupo.add(criarOficinaTreino(SALA.piso))
     // Suporte: coluna do piso até uma orelha na ponta da peça, presa por uma garra.
     const matSuporte = new THREE.MeshStandardMaterial({ color: '#2f5f8f', metalness: 0.5, roughness: 0.55 })
     this.coluna = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 1, 20), matSuporte)
@@ -370,7 +373,9 @@ export class Palco3D {
 
   /** Caixa da sala vista por dentro: piso de ladrilhos, paredes de blocos e teto com luminárias. */
   private montarSala(): void {
-    const { piso, altura, meia } = SALA
+    const { piso } = SALA
+    const altura = this.op.oficinaTreino ? 1400 : SALA.altura
+    const meia = this.op.oficinaTreino ? 700 : SALA.meia
     const tPiso = texturaPiso()
     tPiso.repeat.set((2 * meia) / 500, (2 * meia) / 500)
     const tParede = texturaParede(false)
