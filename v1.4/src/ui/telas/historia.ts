@@ -1,3 +1,5 @@
+import { roteiroDaMissao } from '../../missoes/aprendizagem'
+import { progressoDoPerfil } from '../../dados/participantes'
 import { registrarExecucao } from '../../dados/arcade'
 import type { EventosCompactos } from '../../dados/eventos'
 import { buscarPerfilArcade, chaveProgresso, missaoLiberada } from '../../dados/participantes'
@@ -10,8 +12,8 @@ import { CATEGORIAS, NOME_CATEGORIA, VERSAO_PONTUACAO, type ResultadoPontuacao }
 import type { App } from '../app'
 import { montarInspecao } from '../componentes/inspecao'
 import { montarPontuacao } from '../componentes/pontuacao'
-import { confirmar } from '../dialogo'
-import { contarAte, dataHora, h, n1, titulo, anexar } from '../dom'
+import { confirmar, abrirPainel } from '../dialogo'
+import { contarAte, dataHora, h, n0, n1, titulo, anexar } from '../dom'
 import { telaExecucao } from './execucao'
 import { montarPreparacao, type ConfiguracaoTentativa } from './missao'
 import { etapas, ETAPAS_MISSAO } from '../componentes/etapas'
@@ -92,6 +94,8 @@ function melhorDe(app: App, m: Missao, d: Dificuldade): Recorde | undefined {
 function passoMissoes(app: App, nome: string): void {
   app.ir((app) => {
     const perfil = buscarPerfilArcade(app.perfis, nome)
+    const progresso = progressoDoPerfil(perfil)
+    const proxima = MISSOES.find(m => m.id === progresso.proximaId)
     const capitulos = MISSOES.map((m, i) => {
       const niveis = DIFICULDADES.map((d) => {
         const lib = missaoLiberada(perfil, m.id, d)
@@ -108,7 +112,7 @@ function passoMissoes(app: App, nome: string): void {
           },
           icone(lib.liberada ? (aprovada ? 'estrela' : 'continuar') : 'cadeado'),
           h('span', { class: 'nivel-nome' }, NOME_DIFICULDADE[d]),
-          h('span', { class: 'nivel-info' }, lib.liberada ? (melhor ? `recorde ${n1(melhor.total)}` : aprovada ? 'aprovado' : 'jogar') : 'bloqueado'),
+          h('span', { class: 'nivel-info' }, lib.liberada ? (melhor ? `recorde ${n0(melhor.total)}` : aprovada ? 'aprovado' : 'jogar') : 'bloqueado'),
         )
       })
       const liberado = missaoLiberada(perfil, m.id, 'aprendiz')
@@ -118,7 +122,8 @@ function passoMissoes(app: App, nome: string): void {
         h('span', { class: 'capitulo-num' }, `Capítulo ${i + 1}`),
         h('h3', {}, m.titulo),
         h('p', { class: 'capitulo-material' }, `${MATERIAIS[m.material].nome} · ${n1(m.geometria.espessuraMm)} mm · ${m.setor}`),
-        h('p', {}, m.desafio),
+        h('p', {}, roteiroDaMissao(m).habilidade),
+        h('button', { type: 'button', class: 'botao-fantasma', on: { click: () => { const r = roteiroDaMissao(m); abrirPainel('Roteiro de aprendizado', h('section', {}, h('h3', {}, r.habilidade), h('ol', {}, [r.preparar,r.executar,r.inspecionar].map(t => h('li', {}, t))), h('p', {}, 'Experimento: ', r.experimento))) } } }, 'Ver roteiro'),
         liberado.liberada ? null : h('p', { class: 'dica' }, icone('cadeado'), ' ', liberado.motivo),
         h('div', { class: 'niveis' }, niveis),
       )
@@ -133,6 +138,7 @@ function passoMissoes(app: App, nome: string): void {
     anexar(
       app.raiz,
       titulo(`Capítulos de ${nome}`, `Recordes mostrados para: ${NOME_DISPOSITIVO[app.preferencias.dispositivo]}. Eletrodo revestido e TIG ainda não estão disponíveis.`),
+      h('div', { class: 'acoes' }, h('span', {}, `Aprendiz: ${progresso.aprendiz}/${progresso.total} · Profissional: ${progresso.profissional}/${progresso.total}`), proxima ? h('button', { type: 'button', class: 'primario', on: { click: () => passoPreparacao(app, { nome, missao: proxima, dificuldade: progresso.dificuldade, tentativas: [] }) } }, `Continuar: ${proxima.titulo} · ${NOME_DIFICULDADE[progresso.dificuldade]}`) : h('span', {}, 'Todos os capítulos concluídos. Você pode repetir para aprimorar.')),
       h('ol', { class: 'trilha-capitulos' }, capitulos),
       planejadas,
       h('div', { class: 'acoes' }, h('button', { type: 'button', class: 'botao-fantasma', on: { click: () => passoNome(app) } }, 'Trocar nome')),
@@ -323,7 +329,7 @@ function passoPontuacaoFinal(app: App, s: Sessao, t: TentativaArcade): void {
         h('label', { for: 'recorde-nome' }, 'Confirme ou edite o nome que vai para o ranking'),
         campo,
         erro,
-        h('p', { class: 'nota' }, 'Os recordes ficam guardados só neste navegador e podem ser perdidos se os dados do site forem apagados. Use "Exportar" na tela de recordes para guardar uma cópia.'),
+        h('p', { class: 'nota' }, 'Os recordes ficam guardados só neste navegador e podem ser perdidos se os dados do site forem apagados.'),
         h('div', { class: 'acoes' }, h('button', { type: 'button', on: { click: () => telaMenu(app) } }, 'Sair sem registrar'), h('button', { type: 'submit', class: 'primario' }, 'Registrar no ranking')),
       ),
       h('details', {}, h('summary', {}, 'Ver a pontuação detalhada'), montarPontuacao(r)),

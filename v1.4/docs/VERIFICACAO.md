@@ -1,5 +1,65 @@
 # Verificação
 
+## Alpha v1.4 — sobrecabeça: inspeção, gotas e layout (branch `claude/v1.4`)
+
+Revisão visual do GPT na v1.4 integrada (três pontos), conferida no Chromium
+sem interface (Playwright) com o jogo em execução local:
+
+- **Orientação na inspeção:** a peça agora fica na mesma posição da soldagem
+  (rolagem e giro, H47). Antes, a inspeção redesenhava a chapa na posição
+  plana e as gotas de sobrecabeça apareciam por cima. Agora é a câmera que
+  se move. Em sobrecabeça, a vista inicial e o botão "Olhar a face" (antes
+  "Olhar de cima") olham a face por baixo, e a órbita pode descer abaixo da
+  peça. Conferido: chapa de cabeça para baixo, gotas penduradas para baixo.
+- **Desprendimento das gotas:** a gravidade das partículas passa a vir do
+  mundo, convertida para os eixos da peça, e não da peça girada. As gotas
+  que se soltam agora têm um corpo sólido (esfera) e cor opaca, em vez de
+  pontos aditivos quase invisíveis. Elas nascem onde o gotejamento previsto
+  existe perto da tocha (±4 mm). Conferido numa passada lenta em
+  sobrecabeça: gota laranja caindo em direção ao piso, abaixo da tocha.
+  Limite: no navegador sem interface a taxa de quadros é baixa, então
+  aparecem poucas gotas por segundo de tela. Não testado em GPU real.
+- **Câmera na execução:** "Centralizar" com a peça inclinada para baixo
+  (▲, ângulo negativo) não fazia nada. Agora olha a face (por baixo em
+  sobrecabeça), sem deixar as marcas de cabeça para baixo.
+- **Sobreposição no resultado:** conferida por medição dos retângulos dos
+  blocos da inspeção, das abas e do conteúdo da aba, com a aba Defeitos
+  aberta, em 960×720, 1024×768, 1166×884, 1280×720, 1366×768, 1440×900 e
+  1920×1080. Resultado: nenhuma sobreposição e página sem rolagem horizontal.
+- Ajustes de realismo e textos didáticos anteriores da v1.4 foram mantidos.
+  Pontuação inalterada (`pontuacao-v7`).
+
+Validação: TypeScript e 364 testes em 29 arquivos aprovados; build de
+produção e portátil regenerados.
+
+## Alpha v1.4 — correções da revisão visual do GPT (branch `claude/v1.4`)
+
+- Preparação em 1280×720: a peça de teste ficava atrás da barra de ações.
+  Novo `src/estilo-espaco.css` (carregado por último): em telas baixas, título
+  menor, cabeçalho da peça numa faixa, descrição da junta escondida (está na
+  ficha), giro/posição/Centralizar numa linha só (o "Rotação somente X" some e
+  fica a posição), altura mínima da peça 150 px e o resumo do passe rolando
+  por dentro.
+- Inspeção no resultado: a seção da peça encolhia por baixo das abas.
+  Agora peça, controles (numa faixa compacta), abas e conteúdo ficam em
+  faixas separadas; o conteúdo da aba rola por dentro e, se faltar altura, o
+  cartão rola.
+- Corrimão da rampa (peça de pé): a câmera começava de cima e via as bordas.
+  A câmera inicial e o "Centralizar" agora sobem a elevação igual ao
+  tombamento da peça (de frente para a face da junta); a posição física da
+  peça e os limites da câmera não mudaram.
+- Condição essencial E2: "Nenhuma perfuração prevista" virou "Evitar
+  perfuração" (a evidência continua na justificativa).
+- Cordão esticado em lâminas ao soldar de novo longe do primeiro (relato do
+  dono, junta em T na horizontal): o segundo passe entrava na mesma fatia e o
+  modelo usava um centro médio com espalhamento enorme. Agora vira um cordão
+  solto (H58), com malha própria sobre a chapa ou a parede. Testes novos em
+  `tests/soltos.test.ts`; conferido em 3D (T com passes na raiz, na alma e na
+  base; topo com um passe a 22 mm). Pontuação `pontuacao-v7`.
+- Conferido no navegador em 1280×720 e 1366×768: preparação → tentativa →
+  resultado (abas Largura, Corte e Defeitos) → Treinar de novo; corrimão na
+  preparação e na execução.
+
 ## Alpha v1.4 — defeitos visíveis (branch `claude/v1.4`)
 
 - Novo `tests/defeitos.test.ts` (19 testes): referência sem defeitos;

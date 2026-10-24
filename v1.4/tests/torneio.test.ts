@@ -1,3 +1,4 @@
+import { resumoOrganizacao } from '../src/dados/organizacaoTorneio'
 import { describe, expect, it } from 'vitest'
 import { alterarConfig, classificacaoGeral, classificacaoRodada, CONFIG_PADRAO, concluirTentativa, criarTorneio, duplicarConfig, entregar, ErroTorneio, evidenciaJulgamento, iniciar, iniciarTentativa, listaJulgamento, marcarInterrompidas, notaDeClassificacao, podePublicar, prepararJulgamento, publicar, registrarFinal, registrarInicial, revisar, selecionarEntrega, tentativasRestantes, vezAtual, type Ambiente, type BaseTorneio, type ConfigTorneio, type ItemFicha, type Participante, missaoDaRodada, descreverRodada, validarConfig } from '../src/dados/torneio'
 import { MISSOES, contextoDaMissao, preparoPadrao } from '../src/missoes/catalogo'
@@ -19,7 +20,7 @@ function ambiente(): Ambiente {
 function resultado(total: number, aprovada = true, integridade = total * 0.4, desenho = total * 0.25): ResultadoPontuacao {
   const pontos = { integridade, desenho, regularidade: 0, deformacao: 0, eficiencia: 0 }
   return {
-    versao: 'pontuacao-v6',
+    versao: 'pontuacao-v7',
     pesos: { ...PESOS_PADRAO },
     total,
     aprovada,
@@ -275,6 +276,32 @@ describe('torneio com professor', () => {
     itens: { acabamento: n, dimensoes: n, continuidade: n, alinhamento: n, fusao: null } as Record<ItemFicha, number | null>,
     geral: n,
     observacoes: '',
+  })
+
+  it('organização mostra pendências sem antecipar nota ou versão oculta', () => {
+    const { base } = rodadaEntregue()
+    const r = resumoOrganizacao(base)
+    expect(r.rodadas[0].acao).toContain('avaliação')
+    expect(r.rodadas[0].visivel).toBe(false)
+    expect(r.rodadas[1].faltam).toBe(2)
+    expect(r.aviso).not.toContain('mais de uma versão')
+  })
+
+  it('nota igual do professor não cria empate se o desempate automático é diferente', () => {
+    let { base, amb } = rodadaEntregue()
+    for (const t of base.tentativas) if(t.resultado) {
+      t.resultado.categorias.find(c=>c.id==='integridade')!.pontos=20
+      t.resultado.categorias.find(c=>c.id==='desenho')!.pontos=20
+    }
+    for (const item of listaJulgamento(base,0)) {
+      base=registrarInicial(base,item.entregaId,ficha(8),amb)
+      base=registrarFinal(base,item.entregaId,{nota:8,justificativa:'Mesma nota do professor.'},amb)
+    }
+    base=publicar(base,0,amb)
+    const linhas=classificacaoRodada(base,0)![0].linhas
+    expect(linhas[0].automatico).not.toBe(linhas[1].automatico)
+    expect(linhas.map(l=>l.posicao)).toEqual([1,2])
+    expect(resumoOrganizacao(base).rodadas[0].acao).toBe('Resultados disponíveis')
   })
 
   it('julgamento por código: sem nome e sem nota automática antes da avaliação inicial', () => {

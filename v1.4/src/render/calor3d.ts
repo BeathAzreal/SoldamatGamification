@@ -85,6 +85,10 @@ export class Calor3D {
   private readonly fumaca: Nuvem
   /** Gotas de metal que caem da poça na sobrecabeça (H50). */
   private readonly gotas: Nuvem
+  /** Corpo das gotas que caem: esferas de metal líquido (o brilho fica nos pontos). */
+  private readonly gotasCorpo: THREE.InstancedMesh
+  private readonly matrizGota = new THREE.Matrix4()
+  private readonly corGota = new THREE.Color()
   private acumGota = 0
   private acumFaisca = 0
   private acumFumaca = 0
@@ -139,8 +143,12 @@ export class Calor3D {
       new THREE.PointsMaterial({ size: 3.2, map: ponto, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
     )
     this.fumaca = new Nuvem(limites.fumaca, new THREE.PointsMaterial({ size: 14, map: ponto, vertexColors: true, transparent: true, depthWrite: false }))
-    this.gotas = new Nuvem(40, new THREE.PointsMaterial({ size: 4.5, map: ponto, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }))
-    this.particulas.add(this.fumaca.pontos, this.faiscas.pontos, this.gotas.pontos)
+    // Mistura normal (não aditiva): a gota é metal opaco, não luz; aparece laranja sobre qualquer fundo.
+    this.gotas = new Nuvem(40, new THREE.PointsMaterial({ size: 9, map: ponto, vertexColors: true, transparent: true, depthWrite: false, toneMapped: false }))
+    this.gotasCorpo = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }), this.gotas.max)
+    this.gotasCorpo.count = 0
+    this.gotasCorpo.frustumCulled = false
+    this.particulas.add(this.fumaca.pontos, this.faiscas.pontos, this.gotas.pontos, this.gotasCorpo)
 
     this.brilho = new THREE.Mesh(
       new THREE.BufferGeometry(),
@@ -277,12 +285,28 @@ export class Calor3D {
         G.vel[3 * k + 2] += 900 * g.z * dt
         for (let e = 0; e < 3; e++) G.pos[3 * k + e] += G.vel[3 * k + e] * dt
       }
+      // Metal líquido: amarelo-alaranjado ao se soltar, vermelho escuro esfriando na queda.
       G.cor[4 * k] = 1
-      G.cor[4 * k + 1] = (90 + 130 * resto) / 255
-      G.cor[4 * k + 2] = (30 + 60 * resto) / 255
-      G.cor[4 * k + 3] = resto
+      G.cor[4 * k + 1] = (70 + 150 * resto) / 255
+      G.cor[4 * k + 2] = (20 + 70 * resto) / 255
+      G.cor[4 * k + 3] = resto > 0 ? Math.min(1, 0.45 + resto) : 0
     }
     G.enviar()
+    let vivas = 0
+    for (let k = 0; k < G.max; k++) {
+      const resto = G.duracao[k] > 0 ? Math.max(0, 1 - G.vida[k] / G.duracao[k]) : 0
+      if (resto <= 0) continue
+      // Gota de ~2 mm, um pouco alongada na queda.
+      const r = 0.9 + 0.3 * resto
+      this.matrizGota.makeScale(r, r, r)
+      this.matrizGota.setPosition(G.pos[3 * k], G.pos[3 * k + 1], G.pos[3 * k + 2])
+      this.gotasCorpo.setMatrixAt(vivas, this.matrizGota)
+      this.gotasCorpo.setColorAt(vivas, this.corGota.setRGB(1, (60 + 160 * resto) / 255, (15 + 40 * resto) / 255))
+      vivas++
+    }
+    this.gotasCorpo.count = vivas
+    this.gotasCorpo.instanceMatrix.needsUpdate = true
+    if (this.gotasCorpo.instanceColor) this.gotasCorpo.instanceColor.needsUpdate = true
     for (let k = 0; k < F.max; k++) {
       F.vida[k] += dt
       const resto = F.duracao[k] > 0 ? Math.max(0, 1 - F.vida[k] / F.duracao[k]) : 0

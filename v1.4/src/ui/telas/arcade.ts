@@ -1,3 +1,4 @@
+import { etapaArcade } from '../../arcade/desafios'
 import { seloMaterial } from '../componentes/material'
 import {
   avaliarDesafio,
@@ -97,7 +98,7 @@ export function telaArcade(app: App): void {
             'ul',
             { class: 'regras-arcade' },
             h('li', {}, icone('coracao'), ' 3 vidas: cada desafio não concluído custa uma.'),
-            h('li', {}, icone('raio'), ' Desafios sorteados: missão, nível e uma condição extra.'),
+            h('li', {}, icone('raio'), ' Desafios progressivos: aquecimento, controle, técnica e tempo.'),
             h('li', {}, icone('estrela'), ' Acertos seguidos aumentam o combo (até ×2).'),
             h('li', {}, icone('ajuste'), ' Uma tentativa por desafio; a peça de teste da bancada é livre.'),
           ),
@@ -131,6 +132,7 @@ function apresentarDesafio(app: App, p: Partida): void {
         'section',
         { class: 'cartao-desafio', 'aria-labelledby': 'titulo-desafio' },
         h('p', { class: 'desafio-num' }, `DESAFIO ${p.desafio.numero}`),
+        h('p', { class: 'dica' }, etapaArcade(p.desafio.numero)),
         h('h2', { id: 'titulo-desafio', class: 'tela-titulo', tabindex: '-1' }, m.titulo),
         h('p', { class: 'desafio-material' }, seloMaterial(m.material, m.geometria.espessuraMm), ` ${NOME_DIFICULDADE[p.desafio.dificuldade]}`),
         h('p', {}, m.contexto),

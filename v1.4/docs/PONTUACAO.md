@@ -274,3 +274,12 @@ entram na nota:
 
 A mesma solda muda de nota, então a versão subiu para pontuacao-v6 e os
 recordes anteriores ficam separados.
+
+## pontuacao-v7 (cordões soltos)
+
+Metal de um cordão solto (H58: solda feita longe da junta e do cordão que já
+estava ali) não entra mais na seção da junta: conta como metal fora do
+trecho no aproveitamento da **Execução**. Antes ele esticava o cordão da
+junta até o lugar novo. A mesma tentativa pode mudar de nota, então a versão
+subiu para pontuacao-v7.
+

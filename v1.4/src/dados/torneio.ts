@@ -759,9 +759,8 @@ function linhaDaRodada(b: BaseTorneio, pid: string, rodada: number): LinhaClassi
 function ordenar(c: ConfigTorneio, linhas: LinhaClassificacao[], aprovadasPorId?: Map<string, number>): LinhaClassificacao[] {
   const desempate = c.desempate === 'integridade-desenho' ? (['integridade', 'desenho'] as const) : (['desenho', 'integridade'] as const)
   const automaticoPuro = c.modo === 'automatico'
-  const v = [...linhas].sort((x, y) => {
+  const comparar = (x: LinhaClassificacao, y: LinhaClassificacao): number => {
     if (automaticoPuro) {
-      // Essencial descumprido não é compensado: aprovadas primeiro.
       const ax = aprovadasPorId ? aprovadasPorId.get(x.participanteId)! : Number(x.aprovada)
       const ay = aprovadasPorId ? aprovadasPorId.get(y.participanteId)! : Number(y.aprovada)
       if (ax !== ay) return ay - ax
@@ -770,17 +769,11 @@ function ordenar(c: ConfigTorneio, linhas: LinhaClassificacao[], aprovadasPorId?
     if (!automaticoPuro && x.automatico !== y.automatico) return y.automatico - x.automatico
     for (const k of desempate) if (x[k] !== y[k]) return y[k] - x[k]
     return x.tentativasUsadas - y.tentativasUsadas
-  })
+  }
+  const v = [...linhas].sort(comparar)
   v.forEach((l, i) => {
     const anterior = v[i - 1]
-    const empate =
-      anterior &&
-      anterior.nota === l.nota &&
-      anterior.integridade === l.integridade &&
-      anterior.desenho === l.desenho &&
-      anterior.tentativasUsadas === l.tentativasUsadas &&
-      (aprovadasPorId ? aprovadasPorId.get(anterior.participanteId) === aprovadasPorId.get(l.participanteId) : anterior.aprovada === l.aprovada)
-    l.posicao = empate ? anterior.posicao : i + 1
+    l.posicao = anterior && comparar(anterior, l) === 0 ? anterior.posicao : i + 1
   })
   return v
 }

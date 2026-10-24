@@ -1,3 +1,5 @@
+import { resumoOrganizacao } from '../../dados/organizacaoTorneio'
+import { abrirPainel } from '../dialogo'
 import type { PerfilParticipante } from '../../dados/participantes'
 import {
   classificacaoGeral,
@@ -265,7 +267,7 @@ function telaConfigTorneio(app: App, inicial?: ConfigTorneio, origemId: string |
           'fieldset',
           {},
           h('legend', {}, 'Rodadas'),
-          rodadas,
+      rodadas,
           h('button', { type: 'button', on: { click: () => { c.rodadas.push({ ...c.rodadas[c.rodadas.length - 1] }); desenharRodadas() } } }, 'Adicionar rodada'),
           h('p', { class: 'nota' }, 'As tentativas são um limite máximo: o jogador pode entregar antes de esgotá-las.'),
         ),
@@ -344,6 +346,7 @@ export function painelTorneio(app: App, id: string): void {
     const b = app.baseDoTorneio(id)
     const c = b.torneio.config
     const vez = vezAtual(b)
+    const organizacao = resumoOrganizacao(b)
     const rodadas = h(
       'table',
       { class: 'tabela' },
@@ -381,6 +384,7 @@ export function painelTorneio(app: App, id: string): void {
             h('button', { type: 'button', class: 'primario grande', on: { click: () => telaVez(app, id) } }, 'Chamar a vez'),
           )
         : h('p', { class: 'selo selo-ok' }, 'Todas as entregas foram feitas.'),
+          h('button', { type: 'button', class: 'botao-secundario', on: { click: () => abrirPainel('Organização e comparação', h('section', {}, h('h3', {}, 'Pendências por rodada'), h('ul', {}, organizacao.rodadas.map(r => h('li', {}, `Rodada ${r.rodada+1}: ${r.entregues} entrega(s), ${r.faltam} pendente(s). ${r.acao}.`))), h('p', {}, organizacao.aviso), h('p', { class: 'nota' }, 'Cada rodada usa a mesma missão, dificuldade e limite de tentativas para o grupo. Notas do professor só são mostradas após publicação.'))) } }, 'Ver pendências e regras de comparação'),
       rodadas,
       h(
         'details',

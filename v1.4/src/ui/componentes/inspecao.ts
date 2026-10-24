@@ -72,6 +72,8 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
     if (width === 0) return
     if (modo === '3d' && cena3d) {
       cena3d.ajustarTamanho(width, height)
+      // A peça fica na posição em que foi soldada (gravidade preservada); só a câmera gira.
+      cena3d.definirPosicao(simAtual.posicao)
       cena3d.atualizarCordao(simAtual.cordao)
       if (simAtual.cordao !== cordaoMostrado) {
         cordaoMostrado = simAtual.cordao
@@ -151,7 +153,7 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
   const controles3d = h(
     'div',
     { class: 'linha-controles', hidden: true },
-    h('button', { type: 'button', on: { click: () => cena3d?.vistaDeCima() } }, 'Olhar de cima'),
+    h('button', { type: 'button', title: 'Câmera de frente para a face da junta (por baixo, se a peça foi soldada de cabeça para baixo)', on: { click: () => cena3d?.vistaDeCima() } }, 'Olhar a face'),
     h('button', { type: 'button', on: { click: () => cena3d?.vistaInicial() } }, 'Vista inclinada'),
     h('label', { for: exagero.id }, 'Exagero vertical ', rotuloExagero),
     exagero,
