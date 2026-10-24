@@ -389,6 +389,8 @@ export class Palco3D {
     // Ordem das faces do BoxGeometry: +x, −x, +y (teto), −y (piso), +z, −z.
     const sala = new THREE.Mesh(new THREE.BoxGeometry(2 * meia, altura, 2 * meia), [parede, parede, teto, chao, parede, parede])
     sala.position.y = piso + altura / 2
+    // A estação do treino fica junto à parede traseira, onde o painel é fixado.
+    if (this.op.oficinaTreino) sala.position.z = 420
     sala.receiveShadow = true
     this.ambienteGrupo.add(sala)
   }

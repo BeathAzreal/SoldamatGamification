@@ -45,11 +45,11 @@ export function criarOficinaTreino(piso: number): THREE.Group {
   caixa(38, 24, 10, -185, -90, -150, azul)
   caixa(45, 5, 13, -185, -76, -174, claro)
   caixa(45, 5, 11, -185, -76, -150, claro)
-  // Painel e ferramentas em silhueta: poucos detalhes, baixo contraste.
-  caixa(300, 150, 8, -45, 10, -270, estrutura)
+  // Painel encostado na parede traseira (z = -280), ferramentas presas à face.
+  caixa(300, 150, 8, -45, 10, -276, estrutura)
   for (let i = 0; i < 5; i++) {
-    caixa(5, 48, 5, -150 + i * 48, 18, -262, claro)
-    caixa(19, 7, 7, -150 + i * 48, 43, -262, claro)
+    caixa(5, 48, 5, -150 + i * 48, 18, -269.5, claro)
+    caixa(19, 7, 7, -150 + i * 48, 43, -269, claro)
   }
   caixa(70, 18, 32, 65, -100, -210, vermelho)
   caixa(34, 4, 5, 65, -88, -210, estrutura)
@@ -79,11 +79,10 @@ export function criarOficinaTreino(piso: number): THREE.Group {
   const manometro = cilindro(10, 4, xM - 14, piso + 240, -111, claro)
   manometro.rotation.x = Math.PI / 2
   cabo([[265, piso + 230, -110], [302, piso + 204, -70], [300, piso + 110, -15]], 2, borracha)
-  cabo([[252, piso + 55, 35], [215, piso + 12, 65], [150, piso + 8, 60], [120, piso + 16, 25], [100, -155, 15]], 3, borracha)
 
   // Armário baixo ao fundo; a região central fica inteiramente livre.
-  caixa(140, 210, 90, -390, piso + 105, -300, azul)
-  caixa(3, 185, 3, -390, piso + 107, -253, estrutura)
-  for (const x of [-400, -380]) caixa(3, 28, 5, x, piso + 122, -250, claro)
+  caixa(140, 210, 90, -390, piso + 105, -230, azul)
+  caixa(3, 185, 3, -390, piso + 107, -183, estrutura)
+  for (const x of [-400, -380]) caixa(3, 28, 5, x, piso + 122, -180, claro)
   return oficina
 }
