@@ -78,12 +78,13 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
 
     // Visual 3D (só desenho): o canvas 2D fica por cima, transparente, recebendo o ponteiro.
     const visual = montarVisual3D({
+      serralheria: op.oficial && op.missao.id === 'suporte-carbono',
       oficinaTreino: !op.oficial,
       app,
       area,
       canvas,
       vista,
-      peca: () => ({ contexto: op.contexto, geometria: vista.geometria, oficinaTreino: !op.oficial, missao: { inicioMm: op.missao.trecho.inicioMm, fimMm: op.missao.trecho.fimMm, alinhamentoMm: req.alinhamentoMm } }),
+      peca: () => ({ contexto: op.contexto, geometria: vista.geometria, oficinaTreino: !op.oficial, serralheria: op.oficial && op.missao.id === 'suporte-carbono', missao: { inicioMm: op.missao.trecho.inicioMm, fimMm: op.missao.trecho.fimMm, alinhamentoMm: req.alinhamentoMm } }),
       aoMudarMapa: () => reamostrarPonteiro(),
       quando: 'nesta tentativa',
     })

@@ -116,7 +116,7 @@ export function montarPreparacao(app: App, op: OpcoesPreparacao): { elemento: HT
   const req = requisitosEfetivos(m, op.dificuldade)
   // Tela em bloco: tudo cabe na altura da janela, sem rolar a página.
   app.raiz.classList.add('tela-bancada')
-  const bancada = montarBancada(app, { missao: m, dificuldade: op.dificuldade, dispositivos: op.dispositivos, inicial: op.inicial, travas: op.travas, escolherJunta: op.escolherJunta, oficinaTreino: op.oficinaTreino })
+  const bancada = montarBancada(app, { missao: m, dificuldade: op.dificuldade, dispositivos: op.dispositivos, inicial: op.inicial, travas: op.travas, escolherJunta: op.escolherJunta, oficinaTreino: op.oficinaTreino, serralheria: !op.oficinaTreino && m.id === 'suporte-carbono' })
 
   const conferido = h('input', { type: 'checkbox', id: 'prep-conferi' })
   const erros = h('p', { class: 'erro', role: 'alert' })

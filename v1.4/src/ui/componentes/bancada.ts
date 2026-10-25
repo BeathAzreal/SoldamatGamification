@@ -60,6 +60,7 @@ export interface ConfiguracaoTentativa {
 }
 
 export interface OpcoesBancada {
+  serralheria?: boolean
   oficinaTreino?: boolean
   missao: Missao
   dificuldade: Dificuldade
@@ -302,12 +303,13 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   vista.geometria = geometriaDa('reta')
   // Visual 3D da peça de teste: o mesmo da execução (preferências, qualidade, volta para o 2D).
   const visual = montarVisual3D({
+    serralheria: op.serralheria,
     oficinaTreino: op.oficinaTreino,
     app,
     area: areaPeca,
     canvas,
     vista,
-    peca: () => ({ contexto: sim.contexto, geometria: vista.geometria, oficinaTreino: op.oficinaTreino }),
+    peca: () => ({ contexto: sim.contexto, geometria: vista.geometria, oficinaTreino: op.oficinaTreino, serralheria: op.serralheria }),
     aoMudarMapa: () => {
       if (fonte instanceof FontePonteiro) fonte.reamostrar(performance.now())
     },

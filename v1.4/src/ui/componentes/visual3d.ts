@@ -21,6 +21,7 @@ import { h } from '../dom'
  */
 
 export interface OpcoesVisual3D {
+  serralheria?: boolean
   oficinaTreino?: boolean
   app: App
   /** Onde fica o canvas 3D (atrás do 2D). */
@@ -29,7 +30,7 @@ export interface OpcoesVisual3D {
   canvas: HTMLCanvasElement
   vista: Vista
   /** O que a cena 3D precisa saber da peça; relido a cada `recriar()`. */
-  peca: () => { contexto: ContextoProcesso; geometria: GeometriaJunta; oficinaTreino?: boolean; missao?: { inicioMm: number; fimMm: number; alinhamentoMm: number } }
+  peca: () => { contexto: ContextoProcesso; geometria: GeometriaJunta; oficinaTreino?: boolean; serralheria?: boolean; missao?: { inicioMm: number; fimMm: number; alinhamentoMm: number } }
   /** A mesma posição na tela pode ser outro ponto da junta (troca de vista ou inclinação). */
   aoMudarMapa: () => void
   /** Texto do aviso de queda de qualidade (ex.: "nesta tentativa"). */
@@ -120,7 +121,7 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
     const texto = `Câmera: ${NOME_BOTAO[c.botaoCamera]}${c.teclaCamera ? ` ou ${nomeTecla(c.teclaCamera)}` : ''} · Peça: ${NOME_BOTAO[c.botaoPeca]} ou ${teclas}`
     if (lembrete.textContent !== texto) lembrete.textContent = texto
   }
-  const botaoOficina = op.oficinaTreino ? h('button', { type: 'button', class: 'botao-fantasma', title: 'Afastar a câmera para conhecer a estação de treino' }, 'Ver oficina') : null
+  const botaoOficina = op.oficinaTreino || op.serralheria ? h('button', { type: 'button', class: 'botao-fantasma botao-ver-cenario', title: 'Afastar a câmera para conhecer a estação' }, op.serralheria ? 'Ver serralheria' : 'Ver oficina') : null
   const rotuloCamera = h('span', { class: 'camera-livre', hidden: true }, botaoCentralizar, botaoOficina, lembrete)
   botaoOficina?.addEventListener('click', () => {
     camera.azimute = camera.base = -0.25
