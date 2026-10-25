@@ -1,6 +1,6 @@
 import { confirmar } from '../dialogo'
 import { h } from '../dom'
-import { CHAVE_CONTROLES15, validarControles15, type Controles15, type Acao15 } from '../../dados/controles15'
+import { CHAVE_CONTROLES15, nomeTecla15, validarControles15, type Controles15, type Acao15 } from '../../dados/controles15'
 
 export async function configurarControles15(atual: Controles15): Promise<Controles15> {
   const c = structuredClone(atual)
@@ -8,13 +8,13 @@ export async function configurarControles15(atual: Controles15): Promise<Control
   const conteudo = h('div', { class: 'p15-config' }, h('p', {}, 'Câmera e ferramenta são independentes. Configurações exclusivas da bancada v1.5.'))
   const nomes: Record<Acao15, string> = { acionar: 'Habilitar soldagem', aproximar: 'Aproximar', afastar: 'Afastar', azMenos: 'Direção −', azMais: 'Direção +', inclMenos: 'Inclinação −', inclMais: 'Inclinação +', rolMenos: 'Rolamento −', rolMais: 'Rolamento +' }
   for (const acao of Object.keys(nomes) as Acao15[]) {
-    const campo = h('input', { type: 'text', value: c.teclas[acao], readonly: true, 'aria-label': nomes[acao], title: 'Clique e pressione uma tecla' })
+    const campo = h('input', { type: 'text', value: nomeTecla15(c.teclas[acao]), readonly: true, 'aria-label': nomes[acao], title: 'Clique e pressione uma tecla' })
     campo.addEventListener('keydown', e => {
       e.stopPropagation()
       if (e.code === 'Tab' || e.code === 'Escape') return
       e.preventDefault()
       c.teclas[acao] = e.code
-      campo.value = e.code
+      campo.value = nomeTecla15(e.code)
     })
     conteudo.append(h('label', {}, nomes[acao], campo))
   }

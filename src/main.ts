@@ -34,7 +34,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-rota]').forEach(botao => {
 })
 document.getElementById('botao-menu')!.addEventListener('click', () => telaMenu(app))
 document.getElementById('botao-inicio')!.addEventListener('click', () => telaMenu(app))
-document.getElementById('botao-info')!.before(h('button', { type: 'button', class: 'chip-modelo', on: { click: () => app.ir(telaPrototipo15, 'Protótipo v1.5 · controle do arco') } }, 'Protótipo 1.5'))
+document.getElementById('botao-info')!.before(h('button', { type: 'button', class: 'chip-modelo', 'data-rota': 'prototipo', on: { click: () => app.ir(telaPrototipo15, 'Protótipo v1.5 · controle do arco') } }, 'Protótipo 1.5'))
 document.getElementById('botao-info')!.addEventListener('click', () =>
   abrirPainel(
     'Sobre o modelo',
