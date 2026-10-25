@@ -4,6 +4,8 @@ import { geometriaDa } from '../modelo/junta'
 import { CONTEXTO_PADRAO } from '../modelo/processo'
 import type { Cordao } from '../modelo/cordao'
 import type { Acionamento15 } from '../modelo/acionamento15'
+import { criarSuperficieEscoria15 } from './escoriaSuperficie15'
+import { girarFerramenta15, type Vetor15 } from '../entrada/giroFerramenta15'
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
 export function criarBancada15() {
@@ -64,17 +66,20 @@ export function criarBancada15() {
   const raio = new THREE.Raycaster()
   const plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
   const ponto = new THREE.Vector3()
-  const escoria = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: 0.95 }), 1700)
-  escoria.count = 0
-  escoria.frustumCulled = false
-  palco.peca.add(escoria)
-  const transformacao = new THREE.Object3D()
-  const corFria = new THREE.Color('#51463b'), corQuente = new THREE.Color('#d87428')
+  const escoria = criarSuperficieEscoria15()
+  palco.peca.add(escoria.malha)
+  palco.guardarTexturas(escoria.textura)
   const eixo = new THREE.Vector3(), normal = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion()
   let volumeAntes = -1
   let cordaoAntes: Cordao | null = null
   return {
     canvas, enquadrar,
+    iniciarGiro(m: Acionamento15) {
+      const inicial = { azimute: m.azimuteGraus, inclinacao: m.inclinacaoGraus }
+      const direita = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).toArray() as unknown as Vetor15
+      const cima = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).toArray() as unknown as Vetor15
+      return (dx: number, dy: number, sensibilidade: number) => girarFerramenta15(inicial, direita, cima, dx, dy, sensibilidade)
+    },
     orbitar(dx: number, dy: number) {
       azimute += dx * 0.006
       polar = Math.max(0.04, Math.min(Math.PI - 0.04, polar + dy * 0.006))
@@ -123,25 +128,7 @@ export function criarBancada15() {
         cordaoAntes = c
         volumeAntes = c.volumeTotal()
       }
-      let n = 0
-      for (let i = 0; i < m.escoria.quantidade.length; i++) {
-        const cobertura = m.escoria.quantidade[i]
-        if (cobertura < 0.01) continue
-        const x = (i % 50) * 3 + 1.5, y = Math.floor(i / 50) * 3 - 48.5
-        let topo = 0
-        for (const cord of [c, ...c.soltos]) {
-          const s = cord.secao(cord.indiceEm(x))
-          if (Math.abs(s.yCentroMm - y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, s.alturaMm)
-        }
-        transformacao.position.set(x - 75, topo + 0.5, y)
-        transformacao.scale.set(1.8, 0.4 + cobertura * 0.5, 1.8)
-        transformacao.updateMatrix()
-        escoria.setMatrixAt(n, transformacao.matrix)
-        escoria.setColorAt(n++, corFria.clone().lerp(corQuente, m.escoria.calor[i]))
-      }
-      escoria.count = n
-      escoria.instanceMatrix.needsUpdate = true
-      if (escoria.instanceColor) escoria.instanceColor.needsUpdate = true
+      escoria.atualizar(m.escoria, c)
       palco.desenhar(camera)
     },
     destruir() { palco.destruir() },

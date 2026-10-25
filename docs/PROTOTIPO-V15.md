@@ -30,3 +30,7 @@ Mouse, teclado e analógicos representam gestos; não são rastreamento real de 
 - Miller, manual o264152a: fonte de corrente constante e remoção de escória antes de outro passe. https://www.millerwelds.com/files/owners-manuals/o264152a_mln.pdf
 
 As fontes sustentam relações qualitativas. Todos os limiares, taxas e coeficientes desta implementação são hipóteses sintéticas, não receitas de soldagem.
+
+### Ajuste visual e de gesto
+
+A escória agora é uma superfície fina contínua com máscara de cobertura e cor de resfriamento, em vez de esferas por célula. A física de formação/limpeza não mudou. O arraste de orientação usa a base da câmera e uma âncora no início do gesto: deslocar horizontalmente inclina a vareta mesmo na vertical, e retornar à âncora restaura a orientação. Ponta, distância e rolamento permanecem independentes; a inclinação continua limitada a 85°.

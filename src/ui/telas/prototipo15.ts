@@ -20,6 +20,8 @@ export const telaPrototipo15: Tela = (app) => {
   let limpeza = false, modal = false, foco = true
   let gesto: 'camera' | 'ferramenta' | null = null
   let ultimaTela = { x: 0, y: 0 }
+  let inicioGiro = { x: 0, y: 0 }
+  let giroNaTela: ReturnType<NonNullable<ReturnType<typeof criarBancada15>>['iniciarGiro']> | null = null
   const teclas = new Set<string>()
   const vista = criarBancada15()
   if (!vista) return app.raiz.append(h('p', {}, 'WebGL indisponível: abra o protótipo no Chrome ou Edge com aceleração gráfica.'))
@@ -111,7 +113,11 @@ export const telaPrototipo15: Tela = (app) => {
     e.preventDefault(); canvas.focus(); canvas.setPointerCapture(e.pointerId)
     ultimaTela = { x: e.clientX, y: e.clientY }
     if (e.button === cfg.camera) gesto = 'camera'
-    else if (e.button === cfg.ferramenta) gesto = 'ferramenta'
+    else if (e.button === cfg.ferramenta) {
+      gesto = 'ferramenta'
+      inicioGiro = { ...ultimaTela }
+      giroNaTela = vista.iniciarGiro(modelo)
+    }
     else if (e.button === cfg.acionar) { atualizarPosicao(e); ponteiro = true }
   })
   ouvir(canvas, 'pointermove', ev => {
@@ -119,7 +125,10 @@ export const telaPrototipo15: Tela = (app) => {
     if (pausado || modal) return
     const dx = e.clientX - ultimaTela.x, dy = e.clientY - ultimaTela.y
     if (gesto === 'camera') { if (!modelo.pressionado) vista.orbitar(dx * cfg.sensibilidade, dy * cfg.sensibilidade) }
-    else if (gesto === 'ferramenta') modelo.orientar(modelo.azimuteGraus + dx * cfg.sensibilidade, modelo.inclinacaoGraus + dy * cfg.sensibilidade, modelo.rolamentoGraus)
+    else if (gesto === 'ferramenta' && giroNaTela) {
+      const o = giroNaTela(e.clientX - inicioGiro.x, e.clientY - inicioGiro.y, cfg.sensibilidade)
+      modelo.orientar(o.azimute, o.inclinacao, modelo.rolamentoGraus)
+    }
     else {
       atualizarPosicao(e)
       if (e.pointerType === 'pen' && cfg.caneta) modelo.orientar(Math.atan2(e.tiltY, e.tiltX) * 180 / Math.PI, Math.hypot(e.tiltX, e.tiltY), modelo.rolamentoGraus)
@@ -127,8 +136,17 @@ export const telaPrototipo15: Tela = (app) => {
     ultimaTela = { x: e.clientX, y: e.clientY }
     ponteiro = (e.buttons & mascara(cfg.acionar)) !== 0
   })
-  ouvir(canvas, 'pointerup', ev => { ponteiro = ((ev as PointerEvent).buttons & mascara(cfg.acionar)) !== 0; gesto = null; if (!ponteiro) modelo.soltar() })
-  for (const tipo of ['pointercancel', 'lostpointercapture']) ouvir(canvas, tipo, () => { ponteiro = false; gesto = null; modelo.soltar() })
+  ouvir(canvas, 'pointerup', ev => {
+    ponteiro = ((ev as PointerEvent).buttons & mascara(cfg.acionar)) !== 0
+    gesto = null
+    if (!ponteiro && !painel && !teclas.has(cfg.teclas.acionar)) modelo.soltar()
+  })
+  ouvir(canvas, 'pointercancel', () => { gesto = null; soltar() })
+  ouvir(canvas, 'lostpointercapture', () => {
+    ponteiro = false; gesto = null
+    // Soltar o botão de orientação não interrompe o comando mantido no teclado.
+    if (!painel && !teclas.has(cfg.teclas.acionar)) modelo.soltar()
+  })
   ouvir(canvas, 'contextmenu', e => e.preventDefault())
   ouvir(canvas, 'pointerleave', () => { if (!ponteiro) modelo.naPeca = false })
   ouvir(canvas, 'wheel', e => {
