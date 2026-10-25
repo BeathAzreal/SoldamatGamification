@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc",
     "test": "vitest run",
-    "portatil": "npm run build && node scripts/portatil.mjs"
+    "portatil": "npm run build && node ferramentas/gerar-jogo-portatil.mjs"
   },
   "devDependencies": {
     "@types/three": "^0.186.0",
