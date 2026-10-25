@@ -762,3 +762,8 @@ Corrente, consumo dependente da corrente, aderência, escória superficial com r
 ### H67 — limpeza com ferramentas
 
 O martelinho quebra crosta fria e deixa resíduos; a escova de aço retira somente os resíduos soltos. Nenhuma etapa remove metal ou opera sobre escória quente. Limiares sintéticos e migração do padrão de altura estão em PROTOTIPO-V15.md.
+
+### H68–H70 — abertura riscando, comprimento do arco e compensação assistida
+
+Riscar a ponta reduz a chance de grudar; o arco é classificado em curto, adequado e longo pelo diâmetro da alma e muda a forma do cordão e os respingos; a compensação assistida mantém o comprimento do arco enquanto a vareta queima. Detalhes e limites em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
+
