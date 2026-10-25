@@ -1,0 +1,98 @@
+import { vezAtual } from '../../dados/torneio'
+import type { App } from '../app'
+import { anexar, h } from '../dom'
+import { telaArcade } from './arcade'
+import { telaConfiguracoes } from './configuracoes'
+import { telaHistoria } from './historia'
+import { telaRecordes } from './recordes'
+import { painelTorneio, telaTorneios } from './torneio'
+import { telaTreino } from './treino'
+import '../../menu-grafico.css'
+
+const MODOS = [
+  { titulo: 'JOGAR', descricao: 'Missões e encomendas. Cada passe, um novo desafio.', abrir: telaHistoria },
+  { titulo: 'TREINO', descricao: 'Sua bancada. Seu ritmo. Experimente e compare.', abrir: telaTreino },
+  { titulo: 'ARCADE', descricao: 'Três vidas. Faça cada cordão valer.', abrir: telaArcade },
+  { titulo: 'TORNEIO', descricao: 'Reúna a turma. Dispute rodada por rodada.', abrir: telaTorneios },
+  { titulo: 'RECORDES', descricao: 'Reveja as marcas que você deixou na oficina.', abrir: (app: App) => telaRecordes(app) },
+  { titulo: 'OPÇÕES', descricao: 'Ajuste o som, os controles e a sua bancada.', abrir: telaConfiguracoes },
+]
+
+export function telaMenu(app: App): void {
+  app.ir(() => {
+    app.raiz.classList.add('tela-inicio')
+    document.body.classList.add('menu-grafico')
+    let selecionado = 1
+    let saindo = false
+    let timer = 0
+    let frame = 0
+    let proximo = 0
+    let audio: AudioContext | null = null
+    const descricao = h('p', { class: 'grafico-descricao', 'aria-live': 'polite' })
+    const som = () => {
+      if (!app.preferencias.som) return
+      try {
+        audio ??= new AudioContext()
+        void audio.resume()
+        const o = audio.createOscillator(), g = audio.createGain()
+        o.type = 'triangle'; o.frequency.setValueAtTime(640, audio.currentTime)
+        o.frequency.exponentialRampToValueAtTime(240, audio.currentTime + .055)
+        g.gain.setValueAtTime(.035, audio.currentTime); g.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .07)
+        o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + .08)
+      } catch { /* Som opcional: navegação continua disponível. */ }
+    }
+    const abrir = (i: number) => {
+      if (saindo) return
+      saindo = true; som()
+      timer = window.setTimeout(() => MODOS[i].abrir(app), 0)
+    }
+    const botoes = MODOS.map((m, i) => h('button', {
+      type: 'button', class: 'grafico-opcao', style: `--ordem:${i}`, 'aria-keyshortcuts': String(i + 1),
+      on: { pointerenter: () => selecionar(i), focus: () => selecionar(i), click: () => abrir(i) },
+    }, h('span', {}, m.titulo), h('span', { class: 'grafico-seta', 'aria-hidden': 'true' }, '↗')))
+    function selecionar(i: number, foco = false) {
+      if (saindo) return
+      if (i !== selecionado) som()
+      selecionado = (i + MODOS.length) % MODOS.length
+      botoes.forEach((b, n) => { b.classList.toggle('selecionado', n === selecionado); b.tabIndex = n === selecionado ? 0 : -1 })
+      descricao.textContent = MODOS[selecionado].descricao
+      if (foco) botoes[selecionado].focus({ preventScroll: true })
+    }
+    const teclas = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.altKey || e.metaKey || document.querySelector('[role="dialog"]')) return
+      if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
+        e.preventDefault(); selecionar(e.key === 'Home' ? 0 : e.key === 'End' ? 5 : selecionado + (e.key === 'ArrowDown' ? 1 : -1), true)
+      } else if (/^[1-6]$/.test(e.key)) { e.preventDefault(); abrir(Number(e.key) - 1) }
+      else if (e.key === 'Enter' && e.target === app.raiz.querySelector('.tela-titulo')) { e.preventDefault(); abrir(selecionado) }
+    }
+    window.addEventListener('keydown', teclas)
+    let confirmarAntes = false
+    const controle = (agora: number) => {
+      const g = navigator.getGamepads?.()[app.preferencias.indiceControle]
+      if (g && !document.querySelector('[role="dialog"]') && document.visibilityState === 'visible') {
+        const direcao = g.buttons[13]?.pressed || g.axes[1] > .55 ? 1 : g.buttons[12]?.pressed || g.axes[1] < -.55 ? -1 : 0
+        if (direcao && agora > proximo) { selecionar(selecionado + direcao, true); proximo = agora + 210 }
+        if (g.buttons[0]?.pressed && !confirmarAntes) abrir(selecionado)
+        confirmarAntes = !!g.buttons[0]?.pressed
+      }
+      frame = requestAnimationFrame(controle)
+    }
+    const torneio = app.torneios.filter(t => t.status === 'em-andamento').sort((a,b) => b.criadoEm.localeCompare(a.criadoEm))[0]
+    const vez = torneio ? vezAtual(app.baseDoTorneio(torneio.id)) : null
+    anexar(app.raiz,
+      h('header', { class: 'grafico-titulo' }, h('h2', { class: 'tela-titulo', tabindex: '-1' }, 'OFICINA DE', h('br'), h('strong', {}, 'SOLDAGEM'))),
+      h('span', { class: 'grafico-versao' }, 'ALPHA / 1.5'),
+      h('nav', { class: 'grafico-lista', 'aria-label': 'Escolher modo de jogo' }, ...botoes),
+      h('div', { class: 'grafico-legenda' }, descricao,
+        torneio ? h('button', { class: 'grafico-retomar', type: 'button', on: { click: () => painelTorneio(app, torneio.id) } }, `↗ Retomar ${torneio.config.nome}${vez ? ' · rodada em andamento' : ''}`) : null),
+      h('footer', { class: 'grafico-rodape' }, h('span', {}, 'JOGO DIDÁTICO'), h('span', {}, '↑ ↓ ESCOLHER    ENTER CONFIRMAR    /    CONTROLE: A')),
+    )
+    selecionar(1)
+    frame = requestAnimationFrame(controle)
+    return () => {
+      window.removeEventListener('keydown', teclas); clearTimeout(timer); cancelAnimationFrame(frame)
+      document.body.classList.remove('menu-grafico'); app.raiz.classList.remove('menu-saindo')
+      void audio?.close()
+    }
+  }, '')
+}
