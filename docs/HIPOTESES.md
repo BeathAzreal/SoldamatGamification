@@ -758,3 +758,7 @@ O acionamento por botão, abertura do eletrodo por contato, consumo da vareta e 
 ### Evolução SMAW v1.5 — H63 a H66
 
 Corrente, consumo dependente da corrente, aderência, escória superficial com resfriamento/limpeza e orientação independente são descritos em [PROTOTIPO-V15.md](PROTOTIPO-V15.md). H63 substitui o consumo e depósito SMAW fixos de H61–H62, sem reutilizar a previsão de fusão MIG. Não há certificação ou qualidade interna validada.
+
+### H67 — limpeza com ferramentas
+
+O martelinho quebra crosta fria e deixa resíduos; a escova de aço retira somente os resíduos soltos. Nenhuma etapa remove metal ou opera sobre escória quente. Limiares sintéticos e migração do padrão de altura estão em PROTOTIPO-V15.md.

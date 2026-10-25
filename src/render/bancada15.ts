@@ -6,6 +6,7 @@ import type { Cordao } from '../modelo/cordao'
 import type { Acionamento15 } from '../modelo/acionamento15'
 import { criarSuperficieEscoria15 } from './escoriaSuperficie15'
 import { girarFerramenta15, type Vetor15 } from '../entrada/giroFerramenta15'
+import type { FerramentaBancada15 } from '../modelo/escoria15'
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
 export function criarBancada15() {
@@ -13,7 +14,7 @@ export function criarBancada15() {
   if (!palco) return null
   const canvas = palco.elemento
   canvas.tabIndex = 0
-  canvas.setAttribute('aria-label', 'Bancada 3D: mova sobre a chapa e segure o botão esquerdo ou Espaço para habilitar a soldagem. W aproxima, S afasta.')
+  canvas.setAttribute('aria-label', 'Bancada 3D: selecione soldagem, martelinho ou escova. W sobe e afasta, S desce e aproxima.')
   const camera = new THREE.PerspectiveCamera(40, 1, 1, 4000)
   let azimute = 0.237, polar = 1.077, zoom = 1
   const posicionarCamera = () => {
@@ -54,6 +55,24 @@ export function criarBancada15() {
   const bocal = cilindro(mig, 5, 16, 8, cobre)
   const punho = cilindro(mig, 7, 28, 30, isolante)
   const arame = cilindro(mig, 0.45, 1, 0, metal)
+  const madeira = new THREE.MeshStandardMaterial({ color: '#996d3f', roughness: 0.85 })
+  const martelo = new THREE.Group(), escova = new THREE.Group()
+  palco.peca.add(martelo, escova)
+  cilindro(martelo, 2.5, 46, 27, madeira)
+  const cabeca = new THREE.Mesh(new THREE.BoxGeometry(23, 7, 8), metal)
+  martelo.add(cabeca)
+  const ponta = new THREE.Mesh(new THREE.ConeGeometry(4, 11, 4), metal)
+  ponta.rotation.z = Math.PI / 2
+  ponta.position.x = -15
+  martelo.add(ponta)
+  const caboEscova = new THREE.Mesh(new THREE.BoxGeometry(36, 7, 14), madeira)
+  caboEscova.position.y = 10
+  escova.add(caboEscova)
+  for (let i = 0; i < 9; i++) for (let j = 0; j < 4; j++) {
+    const cerda = new THREE.Mesh(new THREE.BoxGeometry(0.8, 6, 0.8), metal)
+    cerda.position.set(-14 + i * 3.5, 3.5, -4.5 + j * 3)
+    escova.add(cerda)
+  }
   const mira = new THREE.Mesh(new THREE.RingGeometry(3, 3.5, 40), new THREE.MeshBasicMaterial({ color: '#edc167', side: THREE.DoubleSide }))
   mira.rotation.x = -Math.PI / 2
   palco.peca.add(mira)
@@ -94,8 +113,21 @@ export function criarBancada15() {
       const p = { x: ponto.x + 75, y: ponto.z }
       return p.x >= 0 && p.x <= 150 && Math.abs(p.y) <= 50 ? p : null
     },
-    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao) {
-      const ligado = m.estado === 'arco'
+    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0) {
+      const ligado = modo === 'soldar' && m.estado === 'arco'
+      ferramenta.visible = modo === 'soldar'
+      martelo.visible = modo === 'martelo' && m.naPeca
+      escova.visible = modo === 'escova' && m.naPeca
+      let topo = 0
+      for (const cord of [c, ...c.soltos]) {
+        const s = cord.secao(cord.indiceEm(p.x))
+        if (Math.abs(s.yCentroMm - p.y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, s.alturaMm)
+      }
+      const golpe = Math.max(0, 1 - desdeGolpeMs / 180)
+      martelo.position.set(p.x - 75, topo + 4 + (desdeGolpeMs < 250 ? golpe * 10 : 7), p.y)
+      martelo.rotation.z = -0.35 + golpe * 0.5
+      escova.position.set(p.x - 75 + (acionada ? Math.sin(agoraMs * 0.04) * 1.5 : 0), topo + 0.5, p.y)
+      escova.rotation.y = 0.2
       const altura = Math.max(0, m.distanciaMm)
       ferramenta.position.set(p.x - 75, altura, p.y)
       const inc = m.inclinacaoGraus * Math.PI / 180, az = m.azimuteGraus * Math.PI / 180
@@ -114,6 +146,7 @@ export function criarBancada15() {
       arame.scale.y = Math.max(0.1, altura - 2)
       arame.position.y = -(altura - 2) / 2
       mira.position.set(p.x - 75, 0.3, p.y)
+      mira.material.color.set(modo === 'soldar' ? '#edc167' : '#8ccbd4')
       mira.visible = m.naPeca
       poca.position.set(p.x - 75, 1, p.y)
       poca.visible = arco.visible = ligado

@@ -3,3 +3,4 @@
 .p15 [hidden]{display:none!important}
 .p15-instrucoes{top:auto;bottom:12px}
 .p15-painel details{border-top:1px solid #44515b;padding-top:9px}.p15-painel summary{cursor:pointer;color:#e6d7ba;margin-bottom:8px}.p15-config{display:grid;grid-template-columns:1fr 1fr;gap:10px}.p15-config label{display:flex;flex-direction:column;font-size:13px;gap:4px}.p15-config p{grid-column:1/-1}.p15-config input,.p15-config select{width:100%}.p15-config input[type=checkbox]{width:auto}.p15-config .erro{color:#f5a49a}.p15-estado:has(+p){font-size:14px}
+.p15-ferramentas{display:flex;flex-wrap:wrap;gap:5px}.p15-ferramentas button{flex:1;padding:8px;font-size:12px}.p15-ferramentas [aria-pressed=true]{background:#456477;color:white;border-color:#8db6c8}

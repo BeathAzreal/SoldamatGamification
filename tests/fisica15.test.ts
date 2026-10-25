@@ -41,10 +41,11 @@ describe('SMAW qualitativo v1.5', () => {
     const m = aberto()
     m.avancar(0.5, -m.consumoMmS)
     expect(m.escoria.cobertura).toBeGreaterThan(0)
-    expect(m.escoria.limpar(75, 0)).toBe(0)
+    expect(m.escoria.martelar(75, 0)).toBe(0)
     m.soltar(); m.avancar(5)
     const metal = m.volumeMm3
-    expect(m.escoria.limpar(75, 0)).toBeGreaterThan(0)
+    expect(m.escoria.martelar(75, 0)).toBeGreaterThan(0)
+    expect(m.escoria.escovar(75, 0)).toBeGreaterThan(0)
     expect(m.escoria.cobertura).toBe(0)
     expect(m.volumeMm3).toBe(metal)
     const mig = new Acionamento15('mig'); mig.pressionado = true; mig.avancar(1)
@@ -53,7 +54,7 @@ describe('SMAW qualitativo v1.5', () => {
   it('soldar sobre escória fria aumenta indicador; limpar antes evita incremento', () => {
     const a = new Escoria15(), b = new Escoria15()
     for (const s of [a, b]) { s.depositar(75, 0, 5); s.esfriar(5) }
-    b.limpar(75, 0)
+    b.martelar(75, 0); b.escovar(75, 0)
     a.depositar(75, 0, 5); b.depositar(75, 0, 5)
     expect(a.inclusaoMm3).toBeGreaterThan(0)
     expect(b.inclusaoMm3).toBe(0)
@@ -77,6 +78,6 @@ describe('SMAW qualitativo v1.5', () => {
     expect(validarControles15(PADRAO15)).not.toBeNull()
     expect(validarControles15({ ...PADRAO15, camera: 0 })).toBeNull()
     expect(validarControles15({ ...PADRAO15, sensibilidade: NaN })).toBeNull()
-    expect(validarControles15({ ...PADRAO15, teclas: { ...PADRAO15.teclas, afastar: 'KeyW' } })).toBeNull()
+    expect(validarControles15({ ...PADRAO15, teclas: { ...PADRAO15.teclas, afastar: PADRAO15.teclas.aproximar } })).toBeNull()
   })
 })

@@ -5,6 +5,7 @@ import type { Tela } from '../app'
 import { h, n1 } from '../dom'
 import { carregarControles15 } from '../../dados/controles15'
 import { configurarControles15 } from '../componentes/controles15'
+import type { FerramentaBancada15 } from '../../modelo/escoria15'
 
 export const telaPrototipo15: Tela = (app) => {
   app.raiz.classList.add('app-cheia')
@@ -17,7 +18,9 @@ export const telaPrototipo15: Tela = (app) => {
   let pedido = 0
   let anterior = performance.now()
   let cfg = carregarControles15()
-  let limpeza = false, modal = false, foco = true
+  let ferramentaAtual: FerramentaBancada15 = 'soldar'
+  let limpezaPressionada = false, ultimoGolpeMs = -Infinity
+  let modal = false, foco = true
   let gesto: 'camera' | 'ferramenta' | null = null
   let ultimaTela = { x: 0, y: 0 }
   let inicioGiro = { x: 0, y: 0 }
@@ -42,7 +45,17 @@ export const telaPrototipo15: Tela = (app) => {
   const desgrudar = h('button', { type: 'button', on: { click: () => { modelo.desgrudar(); canvas.focus() } } }, 'Desgrudar eletrodo')
   const infoFisica = h('p', { class: 'p15-dica' })
   const hardware = h('small', {})
-  const limparEscoria = h('button', { type: 'button', on: { click: () => { soltar(); limpeza = !limpeza; limparEscoria.textContent = limpeza ? 'Voltar a soldar' : 'Remover escória com o mouse'; canvas.focus() } } }, 'Remover escória com o mouse')
+  const botoesFerramenta = new Map<FerramentaBancada15, HTMLButtonElement>()
+  const selecionarFerramenta = (f: FerramentaBancada15) => {
+    soltar(); limpezaPressionada = false; ferramentaAtual = f
+    for (const [id, b] of botoesFerramenta) b.setAttribute('aria-pressed', String(id === f))
+    acionar.hidden = f !== 'soldar'
+    canvas.focus()
+  }
+  for (const [id, nome] of [['soldar', 'Soldagem'], ['martelo', 'Martelinho'], ['escova', 'Escova de aço']] as const) {
+    botoesFerramenta.set(id, h('button', { type: 'button', 'aria-pressed': id === 'soldar' ? 'true' : 'false', on: { click: () => selecionarFerramenta(id) } }, nome))
+  }
+  const ferramentas = h('div', { class: 'p15-ferramentas', role: 'group', 'aria-label': 'Ferramentas da bancada' }, [...botoesFerramenta.values()])
   const correnteValor = h('output')
   const corrente = h('input', { type: 'range', min: 40, max: 180, step: 5, value: 90, 'aria-label': 'Corrente do eletrodo (A)' })
   corrente.addEventListener('input', () => modelo.regular(Number(corrente.value)))
@@ -67,8 +80,7 @@ export const telaPrototipo15: Tela = (app) => {
   const escolher = (p: Processo15) => {
     soltar()
     modelo = new Acionamento15(p)
-    limpeza = false
-    limparEscoria.textContent = 'Remover escória com o mouse'
+    selecionarFerramenta('soldar')
     cordao = new Cordao()
     posicao = { x: 75, y: 0 }
     for (const [id, b] of botoes) b.setAttribute('aria-pressed', String(id === p))
@@ -77,22 +89,22 @@ export const telaPrototipo15: Tela = (app) => {
     ajuda.textContent = p === 'mig' ? 'Mova sobre a chapa e segure o botão esquerdo ou Espaço para acionar a tocha.' : 'Segure o botão esquerdo ou Espaço. Aproxime até tocar e afaste levemente para abrir o arco.'
     dica.textContent = p === 'mig' ? 'O gatilho comanda o arco. O arame é alimentado continuamente neste ensaio.' : 'Contato prolongado pode grudar. Solte antes de desgrudar. Escória esfria: remova antes de outro passe. O botão é convenção do jogo, não gatilho físico do porta-eletrodo.'
     consumo.hidden = trocar.hidden = p === 'mig'
-    fisica.hidden = limparEscoria.hidden = p === 'mig'
+    fisica.hidden = ferramentas.hidden = p === 'mig'
     corrente.value = '90'; diametro.value = '2.5'
   }
   for (const [p, texto] of [['mig', 'MIG/MAG'], ['eletrodo', 'Eletrodo revestido']] as const) {
     botoes.set(p, h('button', { type: 'button', 'aria-pressed': p === 'eletrodo' ? 'true' : 'false', on: { click: () => escolher(p) } }, texto))
   }
   const area = h('div', { class: 'p15-vista' }, canvas,
-    h('div', { class: 'p15-instrucoes' }, h('strong', {}, 'Bancada técnica · gestos livres'), h('span', {}, 'Padrão: meio gira câmera · direito orienta · I/K inclinam · J/L direção · Q/E punho · W/S distância. Ajuste em Configurar controles.')))
+    h('div', { class: 'p15-instrucoes' }, h('strong', {}, 'Bancada técnica · gestos livres'), h('span', {}, 'Padrão: W sobe/afasta · S desce/aproxima · meio gira câmera · direito orienta · I/K inclinam · J/L direção · Q/E punho.')))
   const limpar = h('button', { type: 'button', on: { click: () => escolher(modelo.processo) } }, 'Reiniciar ensaio')
   const conteudo = h('section', { class: 'p15' },
     h('header', { class: 'p15-cabecalho' }, h('div', {}, h('h2', { class: 'tela-titulo', tabindex: '-1' }, 'Bancada de soldagem'), h('p', {}, 'v1.5 · Modelo qualitativo SMAW · sem certificação')), h('div', { class: 'p15-processos' }, controles, [...botoes.values()])),
     h('div', { class: 'p15-grade' }, area,
-      h('aside', { class: 'p15-painel' }, estado, ajuda,
+      h('aside', { class: 'p15-painel' }, estado, ajuda, ferramentas,
         h('label', {}, legenda, distancia, faixa),
         h('p', { class: 'p15-teclas' }, 'Altura, direção e punho têm controles independentes.'),
-        acionar, desgrudar, consumo, trocar, fisica, limparEscoria, orientar, hardware,
+        acionar, desgrudar, consumo, trocar, fisica, orientar, hardware,
         h('p', {}, 'Tempo de arco: ', tempo), dica,
         h('div', { class: 'p15-acoes' }, pausar, limpar),
         h('small', {}, 'Consumo, aderência, energia e escória são aproximações didáticas. Não predizem qualidade interna nem definem parâmetros de procedimento.'))))
@@ -199,27 +211,32 @@ export const telaPrototipo15: Tela = (app) => {
       else if (cfg.analogico === 'ferramenta') modelo.orientar(modelo.azimuteGraus + eixo(2) * dt * 60, modelo.inclinacaoGraus + eixo(3) * dt * 60, modelo.rolamentoGraus + (Number(g.buttons[5]?.pressed ?? false) - Number(g.buttons[4]?.pressed ?? false)) * dt * 60)
     }
     hardware.textContent = `Controle: ${g ? 'conectado' : 'não conectado'} · Caneta: ${cfg.caneta ? 'inclinação habilitada' : 'manual'}`
-    modelo.pressionado = pode && !limpeza && (ponteiro || painel || teclas.has(cfg.teclas.acionar) || gatilhoControle)
+    modelo.pressionado = pode && ferramentaAtual === 'soldar' && (ponteiro || painel || teclas.has(cfg.teclas.acionar) || gatilhoControle)
     if (!modelo.pressionado) modelo.soltar()
     if (pode) {
-      modelo.orientar(modelo.azimuteGraus + (ativo('azMais') - ativo('azMenos')) * dt * 60, modelo.inclinacaoGraus + (ativo('inclMais') - ativo('inclMenos')) * dt * 45, modelo.rolamentoGraus + (ativo('rolMais') - ativo('rolMenos')) * dt * 60)
-      modelo.avancar(dt, (ativo('afastar') - ativo('aproximar') + alturaControle) * cfg.velocidade, volume => cordao.depositar(modelo.xMm, modelo.yMm, volume, agora))
-      if (limpeza && modelo.naPeca && (ponteiro || ativo('acionar'))) modelo.escoria.limpar(modelo.xMm, modelo.yMm)
+      if (ferramentaAtual === 'soldar') modelo.orientar(modelo.azimuteGraus + (ativo('azMais') - ativo('azMenos')) * dt * 60, modelo.inclinacaoGraus + (ativo('inclMais') - ativo('inclMenos')) * dt * 45, modelo.rolamentoGraus + (ativo('rolMais') - ativo('rolMenos')) * dt * 60)
+      modelo.avancar(dt, ferramentaAtual === 'soldar' ? (ativo('afastar') - ativo('aproximar') + alturaControle) * cfg.velocidade : 0, volume => cordao.depositar(modelo.xMm, modelo.yMm, volume, agora))
+      const pressionada = !!(modelo.naPeca && (ponteiro || ativo('acionar') || gatilhoControle))
+      if (ferramentaAtual === 'martelo' && pressionada && !limpezaPressionada && !modelo.grudado) {
+        modelo.escoria.martelar(modelo.xMm, modelo.yMm); ultimoGolpeMs = agora
+      }
+      if (ferramentaAtual === 'escova' && pressionada && !modelo.grudado) modelo.escoria.escovar(modelo.xMm, modelo.yMm)
+      limpezaPressionada = pressionada
     }
     posicao = { x: modelo.xMm, y: modelo.yMm }
-    const texto = pausado || modal ? 'Pausado · arco desligado' : limpeza ? 'Limpeza: arraste na escória fria' : mensagens[modelo.estado]
+    const texto = pausado || modal ? 'Pausado · arco desligado' : ferramentaAtual === 'martelo' ? 'Martelinho · clique para quebrar escória fria' : ferramentaAtual === 'escova' ? 'Escova · arraste para retirar resíduos' : mensagens[modelo.estado]
     const teclaNome = cfg.teclas.acionar === 'Space' ? 'Espaço' : cfg.teclas.acionar.replace('Key', '')
     const comando = `botão ${['esquerdo', 'do meio', 'direito'][cfg.acionar]} ou ${teclaNome}`
-    const instrucao = modelo.processo === 'mig' ? `Segure ${comando} sobre a chapa.` : `Segure ${comando}. Toque e afaste levemente para abrir o arco.`
+    const instrucao = ferramentaAtual === 'martelo' ? 'Dê um clique por golpe na crosta fria. O martelinho solta a escória e deixa resíduos para a escova.' : ferramentaAtual === 'escova' ? 'Segure e arraste sobre os resíduos soltos. Crosta intacta precisa primeiro do martelinho.' : modelo.processo === 'mig' ? `Segure ${comando} sobre a chapa.` : `Segure ${comando}. Toque e afaste levemente para abrir o arco.`
     if (ajuda.textContent !== instrucao) ajuda.textContent = instrucao
     if (estado.textContent !== texto) estado.textContent = texto
     estado.dataset.arco = String(modelo.estado === 'arco')
     distancia.value = `${n1(modelo.distanciaMm)} mm`
     faixa.value = String(modelo.distanciaMm)
-    faixa.disabled = pausado || modal || modelo.grudado
+    faixa.disabled = pausado || modal || modelo.grudado || ferramentaAtual !== 'soldar'
     corrente.disabled = diametro.disabled = modelo.pressionado || pausado || modal
     correnteValor.value = `${n1(modelo.correnteA)} A`
-    infoFisica.textContent = `Arco: ${n1(modelo.tensaoV)} V · Consumo: ${n1(modelo.consumoMmS)} mm/s · Energia: ${n1(modelo.energiaJ / 1000)} kJ · Escória: ${n1(modelo.escoria.cobertura)} · Sobreposição em escória fria: ${n1(modelo.escoria.inclusaoMm3)} mm³ (indicador)`
+    infoFisica.textContent = `Arco: ${n1(modelo.tensaoV)} V · Consumo: ${n1(modelo.consumoMmS)} mm/s · Energia: ${n1(modelo.energiaJ / 1000)} kJ · Escória: ${n1(modelo.escoria.cobertura)} · Resíduos soltos: ${n1(modelo.escoria.residuos)} · Sobreposição em escória fria: ${n1(modelo.escoria.inclusaoMm3)} mm³ (indicador)`
     orientacaoTexto.textContent = `Direção ${n1(modelo.azimuteGraus)}° · Inclinação ${n1(modelo.inclinacaoGraus)}° · Punho ${n1(modelo.rolamentoGraus)}°`
     ;[modelo.azimuteGraus, modelo.inclinacaoGraus, modelo.rolamentoGraus].forEach((v, i) => { orientacoes[i].value = String(v); orientacoes[i].disabled = modelo.grudado || pausado || modal })
     desgrudar.hidden = !modelo.grudado
@@ -228,7 +245,7 @@ export const telaPrototipo15: Tela = (app) => {
     barra.value = modelo.restanteMm
     tempo.value = `${n1(modelo.tempoArcoS)} s`
     trocar.disabled = modelo.pressionado || pausado
-    vista.desenhar(modelo, posicao, cordao)
+    vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora)
     pedido = requestAnimationFrame(quadro)
   }
   pedido = requestAnimationFrame(quadro)

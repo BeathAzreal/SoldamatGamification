@@ -4,10 +4,10 @@ Abra o HTML no Chrome ou Edge. Sem instalação ou internet.
 
 MIG: mova sobre a chapa e mantenha esquerdo ou Espaço para acionar.
 Eletrodo: habilite com o mesmo comando, aproxime até contato e afaste levemente.
-W aproxima e S afasta. A roda ajusta 0,5 mm. A barra também regula a distância.
+W sobe e afasta; S desce e aproxima. A roda ajusta 0,5 mm. A barra também regula a distância.
 A vareta encurta: compense a distância para manter o arco. Solte antes de trocar.
 Pausar, perder foco ou soltar desabilita. Nova vareta mantém o cordão.
 
-Bancada com corrente ajustável, aderência e escória que esfria. Use Remover escória e arraste sobre a região fria. Configure teclas, botões, caneta e gamepad em Configurar controles. Meio gira câmera; direito orienta; I/K inclinam, J/L mudam direção, Q/E giram punho. Modelo qualitativo sem física SMAW calibrada ou pontuação. Números didáticos.
+Bancada com corrente ajustável, aderência e escória que esfria. Selecione Martelinho e clique na crosta fria; depois use a Escova de aço arrastando sobre os resíduos. Configure teclas, botões, caneta e gamepad em Configurar controles. Meio gira câmera; direito orienta; I/K inclinam, J/L mudam direção, Q/E giram punho. Modelo qualitativo sem física SMAW calibrada ou pontuação. Números didáticos.
 O botão no eletrodo é convenção de entrada, não gatilho físico do porta-eletrodo.
 A v1.4 permanece em sua branch separada.
