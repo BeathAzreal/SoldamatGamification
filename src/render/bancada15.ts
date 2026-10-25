@@ -8,6 +8,25 @@ import { criarSuperficieEscoria15 } from './escoriaSuperficie15'
 import { girarFerramenta15, type Vetor15 } from '../entrada/giroFerramenta15'
 import type { FerramentaBancada15 } from '../modelo/escoria15'
 
+/** Ponta nua da vareta presa nas garras do alicate (mm). */
+const PONTA_NUA = 20
+const MAX_RESPINGOS = 160
+const GRAVIDADE = 9810
+
+/** Brilho radial para o arco e a poça (textura pequena gerada em código: o jogo segue offline). */
+function texturaBrilho(): THREE.CanvasTexture {
+  const c = document.createElement('canvas')
+  c.width = c.height = 64
+  const g = c.getContext('2d')!
+  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+  r.addColorStop(0, 'rgba(255,255,255,1)')
+  r.addColorStop(0.25, 'rgba(210,235,255,0.75)')
+  r.addColorStop(1, 'rgba(120,170,255,0)')
+  g.fillStyle = r
+  g.fillRect(0, 0, 64, 64)
+  return new THREE.CanvasTexture(c)
+}
+
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
 export function criarBancada15() {
   const palco = Palco3D.criar({ contexto: CONTEXTO_PADRAO, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5 })
@@ -31,27 +50,58 @@ export function criarBancada15() {
     camera.updateProjectionMatrix()
     camera.updateMatrixWorld()
   }
+  const Y = new THREE.Vector3(0, 1, 0)
   const ferramenta = new THREE.Group()
   const eletrodo = new THREE.Group()
   const mig = new THREE.Group()
   ferramenta.add(eletrodo, mig)
   palco.peca.add(ferramenta)
   const metal = new THREE.MeshStandardMaterial({ color: '#b5b9bd', metalness: 0.85, roughness: 0.4 })
-  const revestimento = new THREE.MeshStandardMaterial({ color: '#a18e73', roughness: 0.95 })
+  const revestimento = new THREE.MeshStandardMaterial({ color: '#b39a74', roughness: 0.95 })
   const isolante = new THREE.MeshStandardMaterial({ color: '#283842', roughness: 0.8 })
   const cobre = new THREE.MeshStandardMaterial({ color: '#b78552', metalness: 0.85, roughness: 0.35 })
-  const cilindro = (grupo: THREE.Group, raio: number, altura: number, y: number, mat: THREE.Material) => {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(raio, raio, altura, 16), mat)
+  const borracha = new THREE.MeshStandardMaterial({ color: '#1d1f22', roughness: 0.9 })
+  const vermelho = new THREE.MeshStandardMaterial({ color: '#9a2a22', roughness: 0.6 })
+  const cilindro = (grupo: THREE.Object3D, raio: number, altura: number, y: number, mat: THREE.Material, lados = 16) => {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(raio, raio, altura, lados), mat)
     m.position.y = y
     m.castShadow = true
     grupo.add(m)
     return m
   }
-  const alma = cilindro(eletrodo, 0.7, 1, 0, metal)
-  const capa = cilindro(eletrodo, 1.5, 1, 0, revestimento)
-  const porta = cilindro(eletrodo, 5, 25, 0, isolante)
-  const garra = new THREE.Mesh(new THREE.BoxGeometry(16, 7, 7), cobre)
-  eletrodo.add(garra)
+  /** Cilindro de comprimento `comprimento` saindo de `inicio` na direção `dir` (eixos locais do grupo). */
+  const haste = (grupo: THREE.Object3D, raio: number, comprimento: number, inicio: THREE.Vector3, dir: THREE.Vector3, mat: THREE.Material) => {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(raio, raio, comprimento, 18), mat)
+    m.quaternion.setFromUnitVectors(Y, dir)
+    m.position.copy(inicio).addScaledVector(dir, comprimento / 2)
+    m.castShadow = true
+    grupo.add(m)
+    return m
+  }
+  // Vareta: alma metálica com revestimento até a ponta; o topo fica nu para as garras (H61).
+  const alma = cilindro(eletrodo, 1, 1, 0, metal, 10)
+  const capa = cilindro(eletrodo, 1, 1, 0, revestimento, 14)
+  const brasaMat = new THREE.MeshBasicMaterial({ color: '#ff8a2a', transparent: true, opacity: 0 })
+  const brasa = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), brasaMat)
+  eletrodo.add(brasa)
+  // Alicate porta-eletrodo: garras na ponta nua e cabo inclinado. Girar o punho (rolamento) move o cabo.
+  const alicate = new THREE.Group()
+  eletrodo.add(alicate)
+  const garraA = new THREE.Mesh(new THREE.BoxGeometry(6, 14, 10), cobre)
+  garraA.position.set(-3.6, 0, 0)
+  const garraB = garraA.clone()
+  garraB.position.x = 3.6
+  alicate.add(garraA, garraB)
+  const dirCabo = new THREE.Vector3(0.82, 0.57, 0).normalize()
+  const inicioCabo = new THREE.Vector3(3, 6, 0)
+  const pescoco = haste(alicate, 4, 14, inicioCabo, dirCabo, cobre)
+  const protetor = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 3, 24), vermelho)
+  protetor.quaternion.setFromUnitVectors(Y, dirCabo)
+  protetor.position.copy(inicioCabo).addScaledVector(dirCabo, 14)
+  alicate.add(protetor)
+  const empunhadura = haste(alicate, 7, 72, inicioCabo.clone().addScaledVector(dirCabo, 15.5), dirCabo, borracha)
+  const caboEletrico = haste(alicate, 3.2, 90, inicioCabo.clone().addScaledVector(dirCabo, 87), dirCabo, borracha)
+  void pescoco; void empunhadura; void caboEletrico
   const bocal = cilindro(mig, 5, 16, 8, cobre)
   const punho = cilindro(mig, 7, 28, 30, isolante)
   const arame = cilindro(mig, 0.45, 1, 0, metal)
@@ -76,12 +126,30 @@ export function criarBancada15() {
   const mira = new THREE.Mesh(new THREE.RingGeometry(3, 3.5, 40), new THREE.MeshBasicMaterial({ color: '#edc167', side: THREE.DoubleSide }))
   mira.rotation.x = -Math.PI / 2
   palco.peca.add(mira)
-  const poca = new THREE.Mesh(new THREE.SphereGeometry(2, 16, 10), new THREE.MeshBasicMaterial({ color: '#ffdb92' }))
+  // Arco: coluna luminosa da ponta à poça, halo voltado para a câmera, poça e luz que tremulam.
+  const aditivo = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false } as const
+  const coluna = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 1.6, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#d9f0ff', opacity: 0.9, ...aditivo }))
+  palco.peca.add(coluna)
+  const textura = texturaBrilho()
+  palco.guardarTexturas(textura)
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: textura, color: '#cfe6ff', opacity: 0.95, ...aditivo }))
+  palco.peca.add(halo)
+  const poca = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12), new THREE.MeshBasicMaterial({ color: '#ffd38a', toneMapped: false }))
   palco.peca.add(poca)
-  const arco = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: '#d6f3ff' }))
-  palco.peca.add(arco)
-  const luz = new THREE.PointLight('#c9eaff', 0, 140, 2)
+  const luz = new THREE.PointLight('#c9eaff', 0, 160, 2)
   palco.peca.add(luz)
+  // Respingos: gotas balísticas que caem pela gravidade e se apagam ao esfriar.
+  const posRespingo = new Float32Array(MAX_RESPINGOS * 3)
+  const corRespingo = new Float32Array(MAX_RESPINGOS * 3)
+  const velRespingo = new Float32Array(MAX_RESPINGOS * 3)
+  const vidaRespingo = new Float32Array(MAX_RESPINGOS)
+  const geoRespingo = new THREE.BufferGeometry()
+  geoRespingo.setAttribute('position', new THREE.BufferAttribute(posRespingo, 3))
+  geoRespingo.setAttribute('color', new THREE.BufferAttribute(corRespingo, 3))
+  const respingos = new THREE.Points(geoRespingo, new THREE.PointsMaterial({ size: 1.6, vertexColors: true, sizeAttenuation: true, ...aditivo }))
+  respingos.frustumCulled = false
+  palco.peca.add(respingos)
+  let proximoRespingo = 0, acumulado = 0
   const raio = new THREE.Raycaster()
   const plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
   const ponto = new THREE.Vector3()
@@ -90,8 +158,10 @@ export function criarBancada15() {
   palco.guardarTexturas(escoria.textura)
   const eixo = new THREE.Vector3(), normal = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion()
   const pontaMartelo = new THREE.Vector3()
+  const cameraLocal = new THREE.Vector3()
   let volumeAntes = -1
   let cordaoAntes: Cordao | null = null
+  let calorPonta = 0
   return {
     canvas, enquadrar,
     iniciarGiro(m: Acionamento15) {
@@ -114,7 +184,7 @@ export function criarBancada15() {
       const p = { x: ponto.x + 75, y: ponto.z }
       return p.x >= 0 && p.x <= 150 && Math.abs(p.y) <= 50 ? p : null
     },
-    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0) {
+    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0) {
       const ligado = modo === 'soldar' && m.estado === 'arco'
       ferramenta.visible = modo === 'soldar'
       martelo.visible = modo === 'martelo' && m.naPeca
@@ -132,33 +202,76 @@ export function criarBancada15() {
       escova.position.set(p.x - 75 + (acionada ? Math.sin(agoraMs * 0.04) * 1.5 : 0), topo + 0.5, p.y)
       escova.rotation.y = 0.2
       const altura = Math.max(0, m.distanciaMm)
+      // A ponta fica sobre o cordão já depositado, não atravessa o metal.
+      const base = m.processo === 'eletrodo' ? Math.min(topo, altura) : 0
       ferramenta.position.set(p.x - 75, altura, p.y)
       const inc = m.inclinacaoGraus * Math.PI / 180, az = m.azimuteGraus * Math.PI / 180
       eixo.set(Math.sin(inc) * Math.cos(az), Math.cos(inc), Math.sin(inc) * Math.sin(az))
       ferramenta.quaternion.setFromUnitVectors(normal, eixo).multiply(q.setFromAxisAngle(normal, m.rolamentoGraus * Math.PI / 180))
       eletrodo.visible = m.processo === 'eletrodo'
       mig.visible = m.processo === 'mig'
-      alma.scale.y = m.restanteMm
+      const r = m.diametroMm / 2
+      alma.scale.set(r, m.restanteMm, r)
       alma.position.y = m.restanteMm / 2
-      capa.scale.y = Math.max(1, m.restanteMm - 7)
-      capa.position.y = 7 + (m.restanteMm - 7) / 2
-      porta.position.y = m.restanteMm + 12
-      garra.position.set(4, m.restanteMm + 1, 0)
+      const revestida = Math.max(0.5, m.restanteMm - PONTA_NUA)
+      capa.scale.set(r * 1.65, revestida, r * 1.65)
+      capa.position.y = revestida / 2 + 0.25
+      alicate.position.y = m.restanteMm - PONTA_NUA / 2 + 2
+      // Ponta incandescente: acende no arco e esfria devagar depois.
+      calorPonta = ligado ? 1 : calorPonta * Math.exp(-dt / 1.2)
+      brasa.scale.setScalar(r * 1.3)
+      brasa.position.y = 0.2
+      brasaMat.opacity = Math.min(1, calorPonta * 1.2)
+      brasaMat.color.setRGB(1, 0.35 + 0.45 * calorPonta, 0.1 + 0.4 * calorPonta * calorPonta)
+      brasa.visible = calorPonta > 0.02
       bocal.position.y = 8
       punho.position.y = 30
       arame.scale.y = Math.max(0.1, altura - 2)
       arame.position.y = -(altura - 2) / 2
       mira.position.set(p.x - 75, 0.3, p.y)
       mira.material.color.set(modo === 'soldar' ? '#edc167' : '#8ccbd4')
-      mira.visible = m.naPeca
-      poca.position.set(p.x - 75, 1, p.y)
-      poca.visible = arco.visible = ligado
-      arco.geometry.dispose()
-      arco.geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(p.x - 75, 0.7, p.y), new THREE.Vector3(p.x - 75, m.processo === 'mig' ? 2 : altura, p.y),
-      ])
-      luz.position.set(p.x - 75, 6, p.y)
-      luz.intensity = ligado ? 700 : 0
+      mira.visible = m.naPeca && !ligado
+      // Arco e poça.
+      const tremor = 0.85 + 0.3 * Math.random()
+      const instavel = ligado && m.processo === 'eletrodo' ? m.forma.instabilidade : 0
+      const comprimento = m.processo === 'mig' ? 2 : Math.max(0.3, altura - base)
+      coluna.visible = halo.visible = poca.visible = ligado
+      coluna.position.set(p.x - 75, base + comprimento / 2, p.y)
+      coluna.scale.set(tremor * (1 + instavel * 0.6), comprimento, tremor * (1 + instavel * 0.6))
+      palco.peca.worldToLocal(cameraLocal.copy(camera.position))
+      halo.position.set(p.x - 75, base + comprimento * 0.4, p.y)
+      halo.lookAt(cameraLocal)
+      halo.scale.setScalar((16 + 6 * instavel) * tremor)
+      const raioPoca = 1.3 + m.diametroMm * 0.55
+      poca.position.set(p.x - 75, base + 0.2, p.y)
+      poca.scale.set(raioPoca, 0.6, raioPoca)
+      luz.position.set(p.x - 75, base + 6, p.y)
+      luz.intensity = ligado ? 700 * tremor : 0
+      // Respingos: base pequena, muito mais com arco longo (H69).
+      if (ligado && m.processo === 'eletrodo') acumulado += dt * (4 + 70 * instavel)
+      while (acumulado >= 1) {
+        acumulado -= 1
+        const i = proximoRespingo
+        proximoRespingo = (proximoRespingo + 1) % MAX_RESPINGOS
+        const ang = Math.random() * Math.PI * 2, v = 80 + Math.random() * 220
+        posRespingo.set([p.x - 75, base + 0.5, p.y], i * 3)
+        velRespingo.set([Math.cos(ang) * v, 120 + Math.random() * 260, Math.sin(ang) * v], i * 3)
+        vidaRespingo[i] = 0.35 + Math.random() * 0.45
+      }
+      let vivos = false
+      for (let i = 0; i < MAX_RESPINGOS; i++) {
+        if (vidaRespingo[i] <= 0) { corRespingo.set([0, 0, 0], i * 3); continue }
+        vivos = true
+        vidaRespingo[i] -= dt
+        velRespingo[i * 3 + 1] -= GRAVIDADE * 0.12 * dt
+        for (let k = 0; k < 3; k++) posRespingo[i * 3 + k] += velRespingo[i * 3 + k] * dt
+        if (posRespingo[i * 3 + 1] < 0.2) { posRespingo[i * 3 + 1] = 0.2; velRespingo.fill(0, i * 3, i * 3 + 3) }
+        const t = Math.max(0, vidaRespingo[i]) / 0.8
+        corRespingo.set([1, 0.35 + 0.5 * t, 0.08 + 0.3 * t * t], i * 3)
+      }
+      respingos.visible = vivos
+      geoRespingo.attributes.position.needsUpdate = true
+      geoRespingo.attributes.color.needsUpdate = true
       if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
         palco.atualizarCordao(c)
         cordaoAntes = c

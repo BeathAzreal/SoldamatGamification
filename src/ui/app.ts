@@ -148,7 +148,8 @@ export class App {
     const rota = /torneio|julgamento|professor/.test(nome) ? 'torneio'
       : /treino/.test(nome) ? 'treino' : /arcade/.test(nome) ? 'arcade'
       : /história|historia|missão|capítulo/.test(nome) ? 'historia'
-      : /recordes/.test(nome) ? 'recordes' : /configura/.test(nome) ? 'config' : 'inicio'
+      : /recordes/.test(nome) ? 'recordes' : /configura/.test(nome) ? 'config'
+      : /protótipo/.test(nome) ? 'prototipo' : 'inicio'
     document.querySelectorAll<HTMLElement>('[data-rota]').forEach(botao => {
       if (botao.dataset.rota === rota) botao.setAttribute('aria-current', 'page')
       else botao.removeAttribute('aria-current')

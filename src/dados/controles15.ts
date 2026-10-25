@@ -1,7 +1,7 @@
 export const TECLAS15 = { acionar: 'Space', aproximar: 'KeyS', afastar: 'KeyW', azMenos: 'KeyJ', azMais: 'KeyL', inclMenos: 'KeyI', inclMais: 'KeyK', rolMenos: 'KeyQ', rolMais: 'KeyE' }
 export type Acao15 = keyof typeof TECLAS15
 export interface Controles15 { versao?: number; teclas: Record<Acao15, string>; camera: number; ferramenta: number; acionar: number; sensibilidade: number; velocidade: number; roda: 'altura' | 'zoom'; caneta: boolean; controle: boolean; gatilho: number; zona: number; analogico: 'ferramenta' | 'camera' }
-export const PADRAO15: Controles15 = { versao: 2, teclas: TECLAS15, camera: 1, ferramenta: 2, acionar: 0, sensibilidade: 0.4, velocidade: 3, roda: 'altura', caneta: true, controle: true, gatilho: 7, zona: 0.2, analogico: 'ferramenta' }
+export const PADRAO15: Controles15 = { versao: 2, teclas: TECLAS15, camera: 1, ferramenta: 2, acionar: 0, sensibilidade: 0.4, velocidade: 6, roda: 'altura', caneta: true, controle: true, gatilho: 7, zona: 0.2, analogico: 'ferramenta' }
 export function validarControles15(valor: unknown): Controles15 | null {
   if (!valor || typeof valor !== 'object') return null
   const c = valor as Controles15
@@ -12,6 +12,12 @@ export function validarControles15(valor: unknown): Controles15 | null {
   if (!Number.isInteger(c.gatilho) || c.gatilho < 0 || c.gatilho > 15 || !Number.isFinite(c.zona) || c.zona < 0.05 || c.zona > 0.5) return null
   if (!['altura', 'zoom'].includes(c.roda) || !['ferramenta', 'camera'].includes(c.analogico) || typeof c.caneta !== 'boolean' || typeof c.controle !== 'boolean') return null
   return { ...c, versao: 2, teclas: { ...c.teclas } }
+}
+/** Nome legível de um código de tecla (KeyS → S, Space → Espaço). */
+export function nomeTecla15(codigo: string): string {
+  if (codigo === 'Space') return 'Espaço'
+  const seta: Record<string, string> = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→' }
+  return seta[codigo] ?? codigo.replace(/^Key|^Digit/, '')
 }
 export const CHAVE_CONTROLES15 = 'oficina-v15-controles-smaw'
 export function migrarControles15(valor: unknown): Controles15 | null {

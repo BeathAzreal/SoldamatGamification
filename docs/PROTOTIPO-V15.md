@@ -42,3 +42,19 @@ A limpeza foi separada em ferramentas 3D selecionáveis: Soldagem, Martelinho e 
 O novo padrão de altura é W para subir/afastar e S para descer/aproximar. A configuração antiga com o par padrão W/S é migrada automaticamente; outros remapeamentos são preservados. Configurações salvas no novo formato não são reinvertidas. Os demais gestos de câmera e orientação permanecem iguais.
 
 O martelinho agora é apresentado de lado, com arco lateral do cabo e contato da ponta da cabeça com a região selecionada. A alteração é visual e mantém as regras de remoção de crosta e resíduos.
+
+## Refino do Claude — H68 a H70
+
+**H68 — abrir riscando:** com a ponta deslizando sobre a chapa acima de 8 mm/s, o contato conta 25% do tempo para grudar. Reproduz a recomendação qualitativa de "riscar como fósforo" para quem ainda não domina o toque. O limiar e o fator são números do jogo.
+
+**H69 — comprimento do arco:** a regra prática é manter o arco perto do diâmetro da alma. O jogo classifica o arco em curto (menos de 0,5 × diâmetro), adequado (até 1,3 × diâmetro) e longo (acima disso, até apagar). O arco curto deposita cordão mais alto e estreito; o longo, mais baixo, largo e irregular (razão altura/largura e instabilidade do cordão, H44), com muito mais respingos. Coeficientes sintéticos, sem medição de transferência metálica.
+
+**H70 — compensação assistida:** opção do painel que desce o porta-eletrodo na mesma taxa em que a vareta queima, mantendo o comprimento do arco. Serve para treinar o avanço antes do controle de altura; desligada (padrão), o jogador compensa com S.
+
+Outros ajustes do refino:
+
+- A escória é depositada na largura do cordão (raio de 1,5 × diâmetro), não só no ponto da ponta. A massa total de escória não muda; a crosta passa a cobrir o cordão inteiro e a limpeza percorre o mesmo caminho.
+- O passo de simulação por quadro é limitado a 0,25 s: um travamento da aba não vira vários segundos de arco de uma vez.
+- Velocidade padrão de subir/descer passou de 3 para 6 mm/s. Com 3 mm/s não era possível acompanhar o consumo em correntes acima de ~90 A. Configurações já salvas mantêm o valor escolhido.
+- Interface: leituras sobre a vista 3D (estado, medidor colorido do comprimento do arco, vareta restante, avanço e fonte), painel lateral reorganizado (ferramenta, comando, fonte e consumível, altura manual, orientação e leituras do modelo recolhíveis) e legenda de teclas com nomes legíveis.
+- 3D: alicate porta-eletrodo com garras na ponta nua da vareta (20 mm) e cabo inclinado (o rolamento do punho agora é visível), revestimento até a ponta, ponta incandescente que esfria após o arco, coluna e halo do arco que tremulam, poça e respingos balísticos.

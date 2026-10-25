@@ -1,5 +1,29 @@
 # Verificação
 
+## Alpha v1.5 — refino da bancada SMAW (branch `claude/v1.5`)
+
+Conferido no Chromium sem interface (Playwright, ~3,5 quadros/s) com o jogo em
+execução local, em 1366×768, 1166×884 e 1024×768:
+
+- Passe completo com eletrodo 2,5 mm a 90 A e compensação assistida: abertura
+  por toque e afastamento, arco "adequado" a 2,5 mm, vareta consumida até o toco
+  de 25 mm ("Fim da vareta"), cordão coberto por escória contínua (laranja perto
+  do arco, escura ao esfriar).
+- Limpeza: martelinho deixa resíduos claros; escova retira os resíduos e mostra
+  o cordão metálico. Leituras finais: escória 0 mm², resíduos 0 mm².
+- Arco longo (4,6 mm): medidor em âmbar com "arco longo", muitos respingos na
+  vista e contador de respingos alto (268 contra 10 no arco adequado).
+- Modo MIG/MAG: medidor com faixa de 5 a 25 mm; painel sem campos do eletrodo.
+- Diálogo de controles com nomes legíveis (S, Espaço).
+- Limites: com a taxa de quadros do navegador sem interface, o passe ficou lento
+  e o cordão saiu curto; o controle manual de altura (sem compensação) foi
+  verificado por testes do modelo, não por partida humana. Não testado em GPU
+  real, mesa digitalizadora ou gamepad físico.
+
+Testes: `tests/refino15.test.ts` (H68–H70, avanço medido, escória na largura do
+cordão, limpeza ao longo do passe, nomes de tecla). TypeScript e todos os
+testes aprovados; portátil regenerado.
+
 ## Alpha v1.4 — sobrecabeça: inspeção, gotas e layout (branch `claude/v1.4`)
 
 Revisão visual do GPT na v1.4 integrada (três pontos), conferida no Chromium

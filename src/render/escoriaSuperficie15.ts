@@ -38,7 +38,8 @@ export function criarSuperficieEscoria15() {
       malha.visible = escoria.cobertura > 0.001
       if (!malha.visible) return
       for (let i = 0; i < escoria.quantidade.length; i++) {
-        const alfa = Math.round(Math.min(1, escoria.quantidade[i] * 1.5) * 255)
+        // Crosta fina já é opaca: a máscara marca onde há escória, não a espessura.
+        const alfa = Math.round(Math.min(1, escoria.quantidade[i] * 6) * 255)
         pixels.set([alfa, alfa, alfa, 255], i * 4)
       }
       const cordoes = [cordao, ...cordao.soltos]
@@ -60,7 +61,7 @@ export function criarSuperficieEscoria15() {
           calor += escoria.calor[k] * escoria.quantidade[k]
           amostras++
         }
-        posicoes[n * 3 + 1] = topo + 0.15 + 0.18 * quantidade / Math.max(1, amostras)
+        posicoes[n * 3 + 1] = topo + 0.35 + 0.25 * Math.min(1, quantidade / Math.max(1, amostras) * 3)
         cor.copy(fria).lerp(quente, quantidade > 0 ? calor / quantidade : 0)
         if (quantidade > 0) cor.lerp(residuo, fragmentos / quantidade)
         cores.set([cor.r, cor.g, cor.b], n * 3)
