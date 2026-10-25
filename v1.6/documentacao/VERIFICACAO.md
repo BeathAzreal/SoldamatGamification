@@ -1,5 +1,21 @@
 # Verificação
 
+## v1.6 — reorganização do código (branch `reorganizacao`)
+
+Objetivo: mesmo jogo da v1.5, com pastas e arquivos de nomes intuitivos e
+comentários para quem não programa em JavaScript.
+
+- Pastas e arquivos renomeados por um script a partir de uma tabela
+  (`MAPA-v1.5-para-v1.6.md`); os imports foram recalculados automaticamente.
+  Nomes de funções, classes e variáveis não mudaram.
+- Prova de que o jogo não mudou: o build da v1.6 foi comparado com o da v1.5.
+  CSS e HTML idênticos byte a byte; o JavaScript difere só em 3 textos:
+  "ALPHA / 1.6" no menu, "Controles da bancada v1.6" e o caminho
+  `documentacao/HIPOTESES.md` no painel Modelo didático.
+- TypeScript e 404 testes aprovados (os mesmos da v1.5).
+- Portátil aberto direto do arquivo (Chromium sem interface): menu com
+  ALPHA / 1.6, treino de eletrodo e treino livre MIG carregando sem erros.
+
 ## Alpha v1.5 — treino de eletrodo após o teste do dono (branch `claude/v1.5`)
 
 Pedido: controle de altura ruim (o arco apagava e era preciso soldar aos poucos), menu

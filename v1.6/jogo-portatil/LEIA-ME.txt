@@ -1,4 +1,6 @@
-OFICINA DE SOLDAGEM — ALPHA v1.5
+OFICINA DE SOLDAGEM — ALPHA v1.6
+
+Mesmo jogo da v1.5, com o código reorganizado para facilitar mudanças.
 
 Abra o HTML no Chrome ou Edge. Sem instalação ou internet.
 
