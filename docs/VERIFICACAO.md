@@ -1,5 +1,26 @@
 # Verificação
 
+## Alpha v1.5 — treino de eletrodo após o teste do dono (branch `claude/v1.5`)
+
+Pedido: controle de altura ruim (o arco apagava e era preciso soldar aos poucos), menu
+organizado (sem protótipo no topo, escolha MIG/MAG ou eletrodo no Treino), sem botão para
+soldar (abrir ao tocar a peça) e peças que fazem sentido para eletrodo.
+
+- Simulação a 60 quadros/s com jogador de reação 0,2 s (tests/refino15.test.ts): com a
+  ajuda parcial, arco aceso > 97% do tempo a vareta inteira, sem grudar, ~0,4–0,7 toque/s
+  em S (80, 100 e 130 A); sem ajuda também foi possível. Toque curto desce 0,2–0,4 mm.
+- Navegador (Chromium sem interface, ~3,5 quadros/s), 1366×768: menu sem o atalho do
+  protótipo; Treino com o seletor MIG/MAG | Eletrodo revestido e as cinco peças; peça
+  "Cordões sobre chapa" com objetivos; filete em T: arco aberto ao tocar, cordão na raiz
+  (82% do trecho com uma vareta), escória quebrada e escovada; topo em V 8 mm: 100% do
+  trecho coberto, sem grudar, raiz visível após a limpeza.
+- Corrigido durante o teste: o cordão do eletrodo não conhecia a junta (no filete não
+  aparecia na raiz); o ponteiro não encontrava as paredes a 45°; curto com ajuda total
+  grudava mesmo sem empurrar.
+- Limites: a taxa de quadros do navegador sem interface não permite reproduzir o controle
+  manual por toques (o atraso de leitura é de ~0,6 s); esse controle foi verificado pela
+  simulação acima. Não testado com pessoas, GPU real, caneta ou gamepad.
+
 ## Alpha v1.5 — refino da bancada SMAW (branch `claude/v1.5`)
 
 Conferido no Chromium sem interface (Playwright, ~3,5 quadros/s) com o jogo em

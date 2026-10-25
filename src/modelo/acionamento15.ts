@@ -7,6 +7,18 @@ const PASSO = 1 / 120
 /** H68: ponta deslizando acima desta velocidade conta como "riscar" a abertura. */
 export const RISCO15 = { velocidadeMmS: 8, fatorAderencia: 0.25 }
 export type FaixaArco15 = 'curto' | 'adequado' | 'longo'
+/**
+ * H71: arco esticado e reacendimento a quente. Passar do limite não apaga na
+ * hora: até `esticadoFator` × limite o arco aguenta `esticadoS`; com a ponta
+ * ainda quente (até `quenteS` depois de apagar) ele reacende sem novo toque.
+ */
+export const ARCO15 = { esticadoFator: 1.5, esticadoS: 0.35, quenteS: 1.5, aberturaToque: 0.8 }
+/** H72: altura por teclas com rampa — toque curto move pouco, segurar acelera. */
+export function velocidadeAltura15(seguradoS: number, maximaMmS: number): number {
+  if (!(seguradoS > 0) || !(maximaMmS > 0)) return 0
+  const minima = Math.min(2, maximaMmS)
+  return minima + (maximaMmS - minima) * Math.min(1, seguradoS / 0.5)
+}
 /** H69: forma do depósito pelo comprimento do arco (razão altura/largura e instabilidade). */
 export interface FormaDeposito15 { razao: number; instabilidade: number }
 
@@ -28,12 +40,27 @@ export class Acionamento15 {
   energiaJ = 0
   grudadas = 0
   grudado = false
-  /** H70: modo assistido. Desce o porta-eletrodo na mesma taxa do consumo; o arco não encurta sozinho. */
+  /** H70: modo assistido total. Desce o porta-eletrodo na mesma taxa do consumo; o arco não muda sozinho. */
   compensar = false
+  /**
+   * H70: ajuda parcial (0–1): fração do consumo que a bancada compensa. Com 0,8
+   * o arco cresce devagar e o jogador corrige com toques; 0 é o eletrodo real.
+   */
+  assistencia = 0
   /** Avanço da ponta sobre a chapa, suavizado (mm/s). Só leitura. */
   velocidadeMmS = 0
   /** Contador sintético de respingos (H69). */
   respingos = 0
+  /** H72: a bancada abre o arco ao tocar a peça (sem botão); quem empurra contra a chapa ainda gruda. */
+  abrirAoTocar = false
+  /** Tempo de arco em cada faixa de comprimento (H69). */
+  readonly tempoFaixaS: Record<FaixaArco15, number> = { curto: 0, adequado: 0, longo: 0 }
+  /**
+   * Altura (mm) da superfície da peça a um desvio lateral n da junta. Na chapa
+   * plana é 0; no filete na posição plana as paredes sobem a 45°. A distância
+   * do arco é medida até ela, não até o plano da raiz.
+   */
+  superficie: (n: number) => number = () => 0
   readonly escoria = new Escoria15()
   private tempoContato = 0
   private contato = false
@@ -41,13 +68,15 @@ export class Acionamento15 {
   private xAntes = this.xMm
   private yAntes = this.yMm
   private riscando = false
+  private esticadoS = 0
+  private desdeArcoS = Infinity
 
   constructor(readonly processo: Processo15) {
     this.alturaMm = processo === 'eletrodo' ? this.restanteMm + 10 : 15
   }
 
   get cosInclinado(): number { return Math.cos(this.inclinacaoGraus * Math.PI / 180) }
-  get distanciaMm(): number { return this.alturaMm - (this.processo === 'eletrodo' ? this.restanteMm * this.cosInclinado : 0) }
+  get distanciaMm(): number { return this.alturaMm - (this.processo === 'eletrodo' ? this.restanteMm * this.cosInclinado : 0) - this.superficie(this.yMm) }
   get correnteRelativa(): number { return this.correnteA / (36 * this.diametroMm) }
   get consumoMmS(): number { return VARETA15.consumoMmS * this.correnteRelativa ** 1.35 }
   get tensaoV(): number { return this.estado === 'arco' ? 20 + 2 * this.distanciaMm : 0 }
@@ -60,6 +89,10 @@ export class Acionamento15 {
     const r = this.razaoArco
     return r < 0.5 ? 'curto' : r <= 1.3 ? 'adequado' : 'longo'
   }
+  /** Arco além do limite, prestes a apagar (H71). */
+  get esticado(): boolean { return this.processo === 'eletrodo' && this.estado === 'arco' && this.distanciaMm > this.arcoMaxMm }
+  /** Ponta ainda quente: reacende sem novo toque (H71). */
+  get pontaQuente(): boolean { return this.desdeArcoS < ARCO15.quenteS }
   /** H69: arco curto deixa o cordão mais alto e estreito; arco longo, mais baixo, largo e irregular. */
   get forma(): FormaDeposito15 {
     const r = this.razaoArco
@@ -95,7 +128,7 @@ export class Acionamento15 {
 
   definirDistancia(mm: number): void {
     if (!Number.isFinite(mm) || this.grudado) return
-    this.alturaMm = (this.processo === 'eletrodo' ? this.restanteMm * this.cosInclinado : 0) + Math.max(0, Math.min(35, mm))
+    this.alturaMm = (this.processo === 'eletrodo' ? this.restanteMm * this.cosInclinado : 0) + this.superficie(this.yMm) + Math.max(0, Math.min(35, mm))
   }
 
   get estado(): EstadoArco15 {
@@ -105,7 +138,10 @@ export class Acionamento15 {
     if (!this.naPeca) return 'afastado'
     if (this.processo === 'mig') return this.distanciaMm >= 5 && this.distanciaMm <= 25 ? 'arco' : 'afastado'
     if (this.distanciaMm <= VARETA15.contatoMm) return 'contato'
-    if (this.contato && this.distanciaMm <= Math.min(VARETA15.arcoMaxMm, this.diametroMm * 2) && this.correnteRelativa >= 0.55) return 'arco'
+    const max = this.arcoMaxMm, d = this.distanciaMm
+    const sustenta = d <= max || (d <= max * ARCO15.esticadoFator && this.esticadoS < ARCO15.esticadoS)
+    // Arco esticado só se mantém aceso; reacender a quente exige voltar para dentro do limite.
+    if (this.correnteRelativa >= 0.55 && ((this.contato && sustenta) || (this.pontaQuente && d <= max))) return 'arco'
     return 'pronto'
   }
 
@@ -126,19 +162,38 @@ export class Acionamento15 {
         if (!this.grudado && this.tempoContato >= (this.correnteRelativa < 0.65 ? 0.15 : 0.65)) {
           this.grudado = true
           this.grudadas++
+        } else if (!this.grudado && this.abrirAoTocar && !this.contato && this.correnteRelativa >= 0.55) {
+          // H72: o primeiro toque abre o arco (a ponta recua até um arco curto). Empurrar
+          // de novo contra a poça com o arco aberto é curto-circuito e conta para grudar.
+          this.contato = true
+          this.tempoContato = 0
+          this.definirDistancia(Math.max(VARETA15.contatoMm + 0.05, ARCO15.aberturaToque * this.diametroMm))
+        } else if (!this.grudado && this.abrirAoTocar && this.contato && velocidadeAlturaMmS >= 0) {
+          // H72: curto breve com o arco já aberto. Sem empurrar, a ponta queima de volta e o arco volta sozinho.
+          this.restanteMm = Math.max(VARETA15.reservaMm, this.restanteMm - this.consumoMmS * PASSO)
         }
       } else this.tempoContato = 0
       if (!this.pressionado || !this.naPeca) this.contato = false
       else if (this.processo === 'eletrodo' && this.distanciaMm <= VARETA15.contatoMm) this.contato = true
-      else if (this.distanciaMm > VARETA15.arcoMaxMm && this.processo === 'eletrodo') this.contato = false
-      if (this.estado !== 'arco') continue
+      else if (this.processo === 'eletrodo' && this.distanciaMm > this.arcoMaxMm * ARCO15.esticadoFator) this.contato = false
+      if (this.processo === 'eletrodo') {
+        this.esticadoS = this.estado === 'arco' && this.distanciaMm > this.arcoMaxMm ? this.esticadoS + PASSO : 0
+        if (this.esticadoS >= ARCO15.esticadoS) this.contato = false
+      }
+      if (this.estado !== 'arco') {
+        this.desdeArcoS += PASSO
+        continue
+      }
+      this.desdeArcoS = 0
+      const faixa = this.faixaArco
+      if (faixa) this.tempoFaixaS[faixa] += PASSO
       const tensaoAntes = this.tensaoV
       let dt = PASSO
       if (this.processo === 'eletrodo') {
         dt = Math.min(dt, (this.restanteMm - VARETA15.reservaMm) / this.consumoMmS)
         const gasto = this.consumoMmS * dt
         this.restanteMm = Math.max(VARETA15.reservaMm, this.restanteMm - gasto)
-        if (this.compensar) this.alturaMm -= gasto * this.cosInclinado
+        this.alturaMm -= gasto * this.cosInclinado * (this.compensar ? 1 : Math.max(0, Math.min(1, this.assistencia)))
         const lado = gasto * Math.sin(this.inclinacaoGraus * Math.PI / 180)
         this.xMm += lado * Math.cos(this.azimuteGraus * Math.PI / 180)
         this.yMm += lado * Math.sin(this.azimuteGraus * Math.PI / 180)
@@ -161,7 +216,8 @@ export class Acionamento15 {
     this.yAntes = this.yMm
   }
 
-  soltar(): void { this.pressionado = false; this.contato = false }
+  /** Desenergiza: a ponta deixa de contar como quente para reacender (H71). */
+  soltar(): void { this.pressionado = false; this.contato = false; this.desdeArcoS = Infinity; this.esticadoS = 0 }
 
   /** Reposiciona a ponta sem contar como deslocamento (troca de vareta, novo ensaio). */
   posicionar(x: number, y: number): void {
@@ -172,7 +228,7 @@ export class Acionamento15 {
   trocarVareta(): boolean {
     if (this.processo !== 'eletrodo' || this.pressionado || this.grudado) return false
     this.restanteMm = VARETA15.inicialMm
-    this.alturaMm = this.restanteMm * this.cosInclinado + 10
+    this.alturaMm = this.restanteMm * this.cosInclinado + this.superficie(this.yMm) + 10
     this.contato = false
     this.trocas++
     return true

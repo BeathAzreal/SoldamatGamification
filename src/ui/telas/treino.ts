@@ -11,6 +11,12 @@ import { telaExecucao } from './execucao'
 import { montarPreparacao, type ConfiguracaoTentativa } from './missao'
 import { botaoExplicacao, tentativaDoRegistro } from '../componentes/explicacao'
 import type { Tentativa } from '../../modelo/avaliacao'
+import { PECAS_ELETRODO } from '../../missoes/pecasEletrodo'
+import { INFO_JUNTA } from '../../modelo/juntas'
+import { telaTreinoEletrodo } from './treinoEletrodo'
+
+/** Processo escolhido no topo do Treino; lembrado enquanto o jogo está aberto. */
+let processoTreino: 'mig' | 'eletrodo' = 'mig'
 
 /*
  * Treino: nada aqui entra em ranking ou torneio.
@@ -19,10 +25,39 @@ import type { Tentativa } from '../../modelo/avaliacao'
  * - Treino de missão: qualquer missão, com o dispositivo escolhido, sem limite.
  */
 
+function seletorProcesso(app: App): HTMLElement {
+  const botao = (p: typeof processoTreino, texto: string) =>
+    h('button', { type: 'button', 'aria-pressed': String(processoTreino === p), on: { click: () => { processoTreino = p; telaTreino(app) } } }, texto)
+  return h('div', { class: 'treino-processo', role: 'group', 'aria-label': 'Processo de soldagem' },
+    h('span', {}, 'Processo'), botao('mig', 'MIG/MAG'), botao('eletrodo', 'Eletrodo revestido'))
+}
+
+function listaEletrodo(app: App): HTMLElement {
+  return h('ul', { class: 'grade-missoes' },
+    PECAS_ELETRODO.map((p) => h('li', { class: 'cartao-missao' },
+      h('p', { class: 'setor' }, `Aço carbono · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}`),
+      h('h3', {}, p.titulo),
+      h('p', {}, p.aplicacao),
+      h('p', { class: 'nota' }, `Por que eletrodo: ${p.porque}`),
+      h('p', { class: 'nota' }, `Eletrodo Ø ${n1(p.diametroMm)} mm · ${p.correnteA.min}–${p.correnteA.max} A (sugestão do modelo)`),
+      h('div', { class: 'acoes' }, h('button', { type: 'button', class: 'primario', on: { click: () => telaTreinoEletrodo(app, p, () => telaTreino(app)) } }, 'Treinar esta peça')),
+    )))
+}
+
 export function telaTreino(app: App): void {
+  if (processoTreino === 'eletrodo') {
+    app.ir((app) => {
+      anexar(app.raiz,
+        titulo('Treino', 'Eletrodo revestido: peças grossas e estruturais, onde o processo é usado. Sem pontuação nesta versão.'),
+        seletorProcesso(app),
+        listaEletrodo(app))
+    }, 'Treino')
+    return
+  }
   app.ir((app) => {
     anexar(app.raiz, 
       titulo('Treino', 'Sem limite de tentativas e sem registro oficial.'),
+      seletorProcesso(app),
       h(
         'ul',
         { class: 'grade-missoes' },

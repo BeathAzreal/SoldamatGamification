@@ -5,8 +5,8 @@ import { CHAVE_CONTROLES15, nomeTecla15, validarControles15, type Controles15, t
 export async function configurarControles15(atual: Controles15): Promise<Controles15> {
   const c = structuredClone(atual)
   const erro = h('p', { class: 'erro', role: 'alert' })
-  const conteudo = h('div', { class: 'p15-config' }, h('p', {}, 'Câmera e ferramenta são independentes. Configurações exclusivas da bancada v1.5.'))
-  const nomes: Record<Acao15, string> = { acionar: 'Habilitar soldagem', aproximar: 'Aproximar', afastar: 'Afastar', azMenos: 'Direção −', azMais: 'Direção +', inclMenos: 'Inclinação −', inclMais: 'Inclinação +', rolMenos: 'Rolamento −', rolMais: 'Rolamento +' }
+  const conteudo = h('div', { class: 'p15-config' }, h('p', {}, 'O eletrodo não tem botão: o arco abre ao tocar a peça. Câmera e orientação são independentes. Configurações exclusivas do treino de eletrodo.'))
+  const nomes: Record<Acao15, string> = { acionar: 'Golpe / escovar', aproximar: 'Descer (aproximar)', afastar: 'Subir (afastar)', azMenos: 'Direção −', azMais: 'Direção +', inclMenos: 'Inclinação −', inclMais: 'Inclinação +', rolMenos: 'Rolamento −', rolMais: 'Rolamento +' }
   for (const acao of Object.keys(nomes) as Acao15[]) {
     const campo = h('input', { type: 'text', value: nomeTecla15(c.teclas[acao]), readonly: true, 'aria-label': nomes[acao], title: 'Clique e pressione uma tecla' })
     campo.addEventListener('keydown', e => {
@@ -24,7 +24,6 @@ export async function configurarControles15(atual: Controles15): Promise<Control
     conteudo.append(h('label', {}, nome, s))
   }
   const botoes: [string, string][] = [['0', 'Esquerdo'], ['1', 'Meio'], ['2', 'Direito']]
-  selecionar('Botão de soldagem', String(c.acionar), botoes, v => c.acionar = Number(v))
   selecionar('Botão da câmera', String(c.camera), botoes, v => c.camera = Number(v))
   selecionar('Botão de orientação', String(c.ferramenta), botoes, v => c.ferramenta = Number(v))
   selecionar('Roda do mouse', c.roda, [['altura', 'Distância'], ['zoom', 'Zoom']], v => c.roda = v as Controles15['roda'])
@@ -35,8 +34,8 @@ export async function configurarControles15(atual: Controles15): Promise<Control
     conteudo.append(h('label', {}, nome, campo))
   }
   numero('Sensibilidade', c.sensibilidade, 0.1, 2, 0.1, v => c.sensibilidade = v)
-  numero('Velocidade de aproximação (mm/s)', c.velocidade, 1, 10, 0.5, v => c.velocidade = v)
-  numero('Botão do controle para soldar', c.gatilho, 0, 15, 1, v => c.gatilho = v)
+  numero('Velocidade máxima de altura (mm/s)', c.velocidade, 1, 10, 0.5, v => c.velocidade = v)
+  numero('Botão do controle (martelinho/escova)', c.gatilho, 0, 15, 1, v => c.gatilho = v)
   numero('Zona morta do controle', c.zona, 0.05, 0.5, 0.05, v => c.zona = v)
   for (const [chave, nome] of [['caneta', 'Usar inclinação real da caneta'], ['controle', 'Habilitar controle/gamepad']] as const) {
     const campo = h('input', { type: 'checkbox', checked: c[chave] })
