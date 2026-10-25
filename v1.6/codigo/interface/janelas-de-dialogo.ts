@@ -1,3 +1,12 @@
+/*
+ * █ Janelas de diálogo
+ *
+ * O que faz: Janelas que aparecem por cima da tela: confirmar (Sim/Não),
+ *    avisar, pedir um texto e o painel de informações.
+ *
+ * Onde mexer: Mude aqui o visual ou o comportamento comum a todas as janelas.
+ */
+
 import { h } from './criar-elementos'
 
 /*

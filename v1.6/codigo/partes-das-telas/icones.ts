@@ -1,4 +1,13 @@
 /*
+ * █ Ícones
+ *
+ * O que faz: Desenhos pequenos (SVG) usados no menu lateral e nos botões.
+ *
+ * Onde mexer: Cada ícone é um texto com o desenho; dá para trocar por outro
+ *    SVG.
+ */
+
+/*
  * Ícones em SVG próprios (traço simples, cor herdada do texto). Decorativos:
  * sempre acompanham um texto, então ficam fora da leitura de tela.
  */

@@ -1,3 +1,10 @@
+/*
+ * █ Lista de dispositivos
+ *
+ * O que faz: Os dispositivos aceitos (mouse, caneta, controle) e seus nomes na
+ *    tela.
+ */
+
 /** Dispositivos de entrada reconhecidos pelo jogo (documentacao/DISPOSITIVOS.md). */
 export type Dispositivo = 'mouse' | 'caneta' | 'controle'
 

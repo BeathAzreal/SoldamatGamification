@@ -1,3 +1,10 @@
+/*
+ * █ Formatar números
+ *
+ * O que faz: Escreve números no padrão brasileiro (vírgula decimal,
+ *    porcentagem) nos textos didáticos.
+ */
+
 /** Formatação de números em pt-BR para os textos didáticos. */
 
 const f0 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })

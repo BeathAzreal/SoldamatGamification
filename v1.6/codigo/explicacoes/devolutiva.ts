@@ -1,3 +1,11 @@
+/*
+ * █ Devolutiva
+ *
+ * O que faz: A orientação curta "próxima tentativa" por categoria da nota.
+ *
+ * Onde mexer: Frases em ACOES.
+ */
+
 import type { CategoriaId, ResultadoPontuacao } from '../pontuacao/regras-de-pontuacao'
 export interface Devolutiva { prioridade: string; evidencia: string; proximaAcao: string; verificar: string }
 const ACOES: Record<CategoriaId, [string, string]> = {

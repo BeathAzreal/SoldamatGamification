@@ -1,3 +1,9 @@
+/*
+ * █ Vista 3D da soldagem MIG
+ *
+ * O que faz: A cena 3D durante a solda MIG: palco + tocha + calor + gotas.
+ */
+
 import * as THREE from 'three'
 import type { Cordao } from '../simulacao-mig/cordao'
 import { analisarDefeitos, type AnaliseDefeitos } from '../simulacao-mig/defeitos'

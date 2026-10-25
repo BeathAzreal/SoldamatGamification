@@ -1,3 +1,13 @@
+/*
+ * █ Controle (gamepad)
+ *
+ * O que faz: Lê o controle de videogame: o analógico controla a velocidade da
+ *    tocha.
+ *
+ * Onde mexer: Velocidade máxima e zona morta padrão estão no começo do
+ *    arquivo.
+ */
+
 import type { Extras, FonteEntrada, Receptor } from './leitura-comum'
 
 /*

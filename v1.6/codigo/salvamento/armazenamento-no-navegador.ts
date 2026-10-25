@@ -1,4 +1,14 @@
 /*
+ * █ Salvamento no navegador
+ *
+ * O que faz: Grava e lê os dados do jogo no próprio navegador (localStorage),
+ *    com versão, e guarda à parte dados corrompidos.
+ *
+ * Onde mexer: Não mude os nomes das coleções nem o PREFIXO: os dados já salvos
+ *    pelos jogadores sumiriam.
+ */
+
+/*
  * Persistência local versionada (documentacao/DADOS.md).
  *
  * Cada coleção fica numa chave própria do localStorage, dentro de um

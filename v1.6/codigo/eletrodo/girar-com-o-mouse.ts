@@ -1,3 +1,13 @@
+/*
+ * █ Eletrodo: girar com o mouse
+ *
+ * O que faz: Conta matemática que transforma o arraste do mouse (botão
+ *    direito) em inclinação e direção do eletrodo, acompanhando a
+ *    câmera.
+ *
+ * Onde mexer: Raramente precisa mudar.
+ */
+
 /** Arraste ancorado na tela: acompanha a câmera, sem singularidade na vareta vertical. */
 export type Vetor15 = readonly [number, number, number]
 export interface Orientacao15 { azimute: number; inclinacao: number }

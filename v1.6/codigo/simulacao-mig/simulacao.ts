@@ -1,3 +1,14 @@
+/*
+ * █ Simulação MIG (o coração do jogo MIG)
+ *
+ * O que faz: A cada instante, lê a posição da tocha, deposita metal no cordão,
+ *    acumula calor e registra os eventos da tentativa. Não depende da
+ *    velocidade do computador.
+ *
+ * Onde mexer: Mexa com cuidado: a nota e o replay dependem daqui. Os números
+ *    ficam em parametros-do-modelo.ts.
+ */
+
 import { avaliar, type Tentativa } from './medidas-do-cordao'
 import { Cordao } from './cordao'
 import { efeitoPosicao, gravidade, juntaDe, POSICAO_PLANA, type GravidadeJunta, type PosicaoPeca } from './tipos-de-junta-e-posicao'

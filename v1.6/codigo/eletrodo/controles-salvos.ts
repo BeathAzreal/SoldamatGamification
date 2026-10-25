@@ -1,3 +1,14 @@
+/*
+ * █ Eletrodo: controles salvos
+ *
+ * O que faz: As teclas e botões padrão do eletrodo (W sobe, S desce, etc.), a
+ *    validação e o salvamento no navegador.
+ *
+ * Onde mexer: Mude as teclas padrão em TECLAS15 e os valores padrão em
+ *    PADRAO15. Não mude CHAVE_CONTROLES15: é onde o navegador guarda
+ *    as escolhas de cada jogador.
+ */
+
 export const TECLAS15 = { acionar: 'Space', aproximar: 'KeyS', afastar: 'KeyW', azMenos: 'KeyJ', azMais: 'KeyL', inclMenos: 'KeyI', inclMais: 'KeyK', rolMenos: 'KeyQ', rolMais: 'KeyE' }
 export type Acao15 = keyof typeof TECLAS15
 export interface Controles15 { versao?: number; teclas: Record<Acao15, string>; camera: number; ferramenta: number; acionar: number; sensibilidade: number; velocidade: number; roda: 'altura' | 'zoom'; caneta: boolean; controle: boolean; gatilho: number; zona: number; analogico: 'ferramenta' | 'camera' }

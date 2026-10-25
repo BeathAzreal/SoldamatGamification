@@ -1,3 +1,10 @@
+/*
+ * █ Corte transversal
+ *
+ * O que faz: O corte da peça na aba Corte: chapas, cordão e zona fundida
+ *    prevista.
+ */
+
 import type { SecaoLocal } from '../simulacao-mig/cordao'
 import { formaDomo, NOME_DEFEITO, type AnaliseDefeitos, type TipoDefeito } from '../simulacao-mig/defeitos'
 import { DESCRICAO_ESTADO, type PontoFusao } from '../simulacao-mig/fusao'

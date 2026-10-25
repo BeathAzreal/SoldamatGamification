@@ -1,3 +1,14 @@
+/*
+ * █ Eletrodo: peças do treino
+ *
+ * O que faz: A lista das peças do treino de eletrodo: nome, aplicação, junta,
+ *    espessura, eletrodo e corrente sugeridos, trecho e objetivo.
+ *
+ * Onde mexer: Para criar uma peça nova, copie um bloco { id: ..., titulo: ...
+ *    } da lista PECAS_ELETRODO e troque os valores. O id precisa ser
+ *    único.
+ */
+
 import type { TipoJunta } from '../simulacao-mig/tipos-de-junta-e-posicao'
 
 /**

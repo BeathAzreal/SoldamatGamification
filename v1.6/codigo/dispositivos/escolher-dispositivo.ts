@@ -1,3 +1,10 @@
+/*
+ * █ Escolher o dispositivo
+ *
+ * O que faz: Cria a leitura certa (mouse, caneta ou controle) com a calibração
+ *    salva.
+ */
+
 import type { Preferencias } from '../salvamento/preferencias'
 import { FonteControle } from './controle-gamepad'
 import type { FonteEntrada, Mapeamento } from './leitura-comum'

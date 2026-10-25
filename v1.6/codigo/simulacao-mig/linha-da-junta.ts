@@ -1,3 +1,10 @@
+/*
+ * █ Linha da junta
+ *
+ * O que faz: Converte posições na chapa para "ao longo da junta" e "desvio
+ *    lateral", e de volta.
+ */
+
 import { PECA } from './parametros-do-modelo'
 
 /*

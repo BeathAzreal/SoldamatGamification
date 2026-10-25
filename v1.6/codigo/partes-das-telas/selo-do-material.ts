@@ -1,3 +1,10 @@
+/*
+ * █ Selo do material
+ *
+ * O que faz: A etiqueta redonda com o nome do material (aço carbono, inox,
+ *    alumínio).
+ */
+
 import { MATERIAIS, type MaterialId } from '../simulacao-mig/materiais-e-gases'
 import { h } from '../interface/criar-elementos'
 

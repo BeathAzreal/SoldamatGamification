@@ -1,3 +1,10 @@
+/*
+ * █ Mouse e caneta
+ *
+ * O que faz: Lê o mouse e a mesa digitalizadora (pressão e inclinação da
+ *    caneta).
+ */
+
 import type { Amostra } from '../simulacao-mig/trajetoria'
 import type { Extras, FonteEntrada, Mapeamento, Receptor } from './leitura-comum'
 

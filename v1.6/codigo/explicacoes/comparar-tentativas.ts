@@ -1,3 +1,10 @@
+/*
+ * █ Comparar tentativas
+ *
+ * O que faz: Compara a tentativa atual com a anterior (melhor, pior, igual) só
+ *    onde o jogo tem critério.
+ */
+
 import type { Tentativa } from '../simulacao-mig/medidas-do-cordao'
 import { EXPLICACAO } from '../simulacao-mig/parametros-do-modelo'
 import { razaoAlturaLargura, taxaDeposicao, type Ajustes } from '../simulacao-mig/regulagem-da-maquina'

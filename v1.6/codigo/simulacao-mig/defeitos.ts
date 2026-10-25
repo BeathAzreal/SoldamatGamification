@@ -1,3 +1,13 @@
+/*
+ * █ Defeitos visíveis previstos
+ *
+ * O que faz: Calcula gotejamento, mordedura, sobreposição, respingos, cratera,
+ *    porosidade, escamas e empeno a partir da tentativa.
+ *
+ * Onde mexer: Os limites ficam em DEFEITOS, no arquivo parametros-do-
+ *    modelo.ts.
+ */
+
 import type { Cordao } from './cordao'
 import { analisarFusao, indiceDeformacao, suavizar, type PontoFusao } from './fusao'
 import { INFO_JUNTA, juntaDe } from './tipos-de-junta-e-posicao'

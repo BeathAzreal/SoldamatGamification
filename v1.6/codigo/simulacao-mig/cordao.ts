@@ -1,3 +1,10 @@
+/*
+ * █ Cordão de solda
+ *
+ * O que faz: Guarda o cordão em fatias ao longo da junta: quanto metal cada
+ *    fatia recebeu, largura, altura e cordões soltos fora da junta.
+ */
+
 import { secaoNaJunta, type DimensoesJunta, type TipoJunta } from './tipos-de-junta-e-posicao'
 import { MODELO, PECA } from './parametros-do-modelo'
 

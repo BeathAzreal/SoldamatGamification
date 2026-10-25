@@ -1,3 +1,13 @@
+/*
+ * █ Tela: missões (modo História)
+ *
+ * O que faz: Lista as missões em capítulos, com Aprendiz e Profissional, e
+ *    leva à preparação da missão escolhida.
+ *
+ * Onde mexer: As missões em si estão em missoes/lista-de-missoes.ts; aqui só a
+ *    apresentação.
+ */
+
 import { roteiroDaMissao } from '../missoes/roteiros-de-aprendizagem'
 import { progressoDoPerfil } from '../salvamento/participantes'
 import { registrarExecucao } from '../arcade/regras-da-sessao'

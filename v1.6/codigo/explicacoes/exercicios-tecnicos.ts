@@ -1,3 +1,10 @@
+/*
+ * █ Exercícios técnicos
+ *
+ * O que faz: Roteiros de investigação do treino (o que manter, o que variar, o
+ *    que observar).
+ */
+
 /** Roteiros de investigação: orientações, sem alterar física ou nota. */
 export interface ExercicioTecnico {
   id: string

@@ -1,3 +1,10 @@
+/*
+ * █ Cordão ao vivo
+ *
+ * O que faz: Monta a forma 3D do cordão enquanto ele é soldado, atualizando só
+ *    o que mudou.
+ */
+
 import { padraoIrregular, type FormaCordao, type SecaoLocal } from '../simulacao-mig/cordao'
 import { formaDomo, type AnaliseDefeitos } from '../simulacao-mig/defeitos'
 import type { GeometriaJunta } from '../simulacao-mig/linha-da-junta'

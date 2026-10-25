@@ -1,3 +1,10 @@
+/*
+ * █ Regulagem da máquina MIG
+ *
+ * O que faz: Como tensão, alimentação, arame, gás, técnica e distância
+ *    bico–peça mudam o cordão (largura, altura, equilíbrio do arco).
+ */
+
 import type { FormatoJunta } from './linha-da-junta'
 import type { PosicaoPeca, TipoJunta } from './tipos-de-junta-e-posicao'
 import { GASES, type GasId, type MaterialId } from './materiais-e-gases'

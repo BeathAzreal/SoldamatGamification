@@ -1,3 +1,10 @@
+/*
+ * █ Medidas do cordão
+ *
+ * O que faz: Mede largura, altura, alinhamento e regularidade do cordão no fim
+ *    da tentativa.
+ */
+
 import type { Cordao, SecaoLocal } from './cordao'
 import type { AnaliseMovimento } from './analise-do-movimento'
 import { AVALIACAO } from './parametros-do-modelo'

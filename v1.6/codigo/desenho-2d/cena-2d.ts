@@ -1,3 +1,10 @@
+/*
+ * █ Cena 2D
+ *
+ * O que faz: Desenho da peça vista de cima em 2D (usado quando o 3D não está
+ *    disponível e em sobreposições).
+ */
+
 import type { Cordao, SecaoLocal } from '../simulacao-mig/cordao'
 import { MATERIAIS, type Material } from '../simulacao-mig/materiais-e-gases'
 import { EQUILIBRIO, PECA } from '../simulacao-mig/parametros-do-modelo'

@@ -1,3 +1,12 @@
+/*
+ * █ Estilo: 2-telas-e-componentes.css
+ *
+ * O que é: Estilo das telas e das partes das telas (missões, bancada,
+ *    resultado, torneio...).
+ *
+ * Os arquivos numerados são carregados nessa ordem (1, 2, 3...): um
+ * arquivo posterior pode sobrescrever regras do anterior.
+ */
 /* =====================================================================
    Oficina de Soldagem — visual da aplicação (etapa 6).
    Oficina técnica (grafite, aço, desenho técnico) + toques de arcade

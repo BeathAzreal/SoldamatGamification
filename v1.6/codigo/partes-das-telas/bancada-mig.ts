@@ -1,3 +1,13 @@
+/*
+ * █ Bancada da máquina MIG
+ *
+ * O que faz: O painel da máquina MIG/MAG: arame, gás, técnica, distância
+ *    bico–peça, tensão e alimentação, com os mostradores.
+ *
+ * Onde mexer: Textos e limites dos botões da máquina. Os efeitos de cada
+ *    ajuste estão em simulacao-mig/regulagem-da-maquina.ts.
+ */
+
 import { abrirPainel } from '../interface/janelas-de-dialogo'
 import { montarControles } from './configurar-controles-mig'
 import { GRAUS_POR_PIXEL, Gestos } from '../dispositivos/gestos-de-camera-e-peca'

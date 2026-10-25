@@ -1,3 +1,10 @@
+/*
+ * █ Vista 3D durante a soldagem (MIG)
+ *
+ * O que faz: Liga a cena 3D à tela de soldagem: câmera, botões Centralizar e
+ *    Ver oficina, e giro da peça.
+ */
+
 import type { Mapeamento } from '../dispositivos/leitura-comum'
 import type { GeometriaJunta } from '../simulacao-mig/linha-da-junta'
 import type { ContextoProcesso } from '../simulacao-mig/regulagem-da-maquina'

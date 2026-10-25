@@ -1,3 +1,11 @@
+/*
+ * █ Torneio: regras e dados
+ *
+ * O que faz: Tudo o que define um torneio: participantes, rodadas, entregas,
+ *    avaliações do professor, classificação e desempate. Sem tela: só
+ *    regras.
+ */
+
 import type { Dispositivo } from '../dispositivos/lista-de-dispositivos'
 import type { FormatoJunta } from '../simulacao-mig/linha-da-junta'
 import { INFO_JUNTA } from '../simulacao-mig/tipos-de-junta-e-posicao'

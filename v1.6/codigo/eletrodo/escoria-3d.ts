@@ -1,3 +1,12 @@
+/*
+ * █ Eletrodo: escória em 3D
+ *
+ * O que faz: Desenha a crosta de escória sobre o cordão, com cor de quente
+ *    (laranja) a fria (marrom escuro) e os resíduos.
+ *
+ * Onde mexer: As três cores estão em fria, quente e residuo.
+ */
+
 import * as THREE from 'three'
 import type { Escoria15 } from './escoria'
 import type { Cordao } from '../simulacao-mig/cordao'

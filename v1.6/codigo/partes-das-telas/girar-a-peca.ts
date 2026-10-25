@@ -1,3 +1,10 @@
+/*
+ * █ Girar a peça
+ *
+ * O que faz: Os botões ⟲ ⟳ ▲ ▼ que giram e tombam a peça, mostrando a posição
+ *    (plana, vertical, sobrecabeça...).
+ */
+
 import type { FonteEntrada } from '../dispositivos/leitura-comum'
 import { FontePonteiro } from '../dispositivos/mouse-e-caneta'
 import { gravidade, NOME_POSICAO, POSICAO_PLANA, posicaoDe, SIGLAS_POSICAO, type FamiliaJunta, type PosicaoPeca } from '../simulacao-mig/tipos-de-junta-e-posicao'

@@ -1,3 +1,12 @@
+/*
+ * █ Gráfico de largura
+ *
+ * O que faz: O gráfico da aba Largura: largura do cordão, faixa do desenho e
+ *    faixa colorida de fusão prevista.
+ *
+ * Onde mexer: Cores de cada estado de fusão em COR_ESTADO.
+ */
+
 import type { SecaoLocal } from '../simulacao-mig/cordao'
 import { DESCRICAO_ESTADO, type EstadoFusao, type PontoFusao } from '../simulacao-mig/fusao'
 import { PECA } from '../simulacao-mig/parametros-do-modelo'

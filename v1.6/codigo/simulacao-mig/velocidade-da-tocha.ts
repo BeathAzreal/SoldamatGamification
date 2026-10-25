@@ -1,3 +1,10 @@
+/*
+ * █ Velocidade da tocha
+ *
+ * O que faz: Estima a velocidade de avanço da tocha, suavizada, para o
+ *    mostrador da tela.
+ */
+
 import { TRAJETORIA, VELOCIDADE } from './parametros-do-modelo'
 import { inicioDoDeslocamento, posicaoEntre, type Amostra } from './trajetoria'
 

@@ -1,3 +1,10 @@
+/*
+ * █ Tela: avaliação do professor
+ *
+ * O que faz: Onde o professor revê o replay de uma entrega do torneio e dá a
+ *    nota.
+ */
+
 import {
   ErroTorneio,
   evidenciaJulgamento,

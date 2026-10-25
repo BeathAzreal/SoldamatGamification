@@ -1,3 +1,10 @@
+/*
+ * █ Tela ⇄ peça
+ *
+ * O que faz: Converte um ponto da tela (pixels) para um ponto da peça (mm) e
+ *    de volta, considerando zoom e giro.
+ */
+
 import { geometriaDa, type GeometriaJunta } from '../simulacao-mig/linha-da-junta'
 import { PECA } from '../simulacao-mig/parametros-do-modelo'
 

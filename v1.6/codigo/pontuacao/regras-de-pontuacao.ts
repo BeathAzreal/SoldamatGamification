@@ -1,3 +1,15 @@
+/*
+ * █ Regras da pontuação
+ *
+ * O que faz: Transforma as medidas da tentativa em nota de 0 a 1000, com
+ *    categorias (fusão, geometria, regularidade, calor, execução) e
+ *    condições essenciais.
+ *
+ * Onde mexer: Pesos e tolerâncias estão no começo do arquivo. Se mudar a
+ *    regra, troque VERSAO_PONTUACAO (os recordes antigos ficam
+ *    separados).
+ */
+
 import type { Cordao } from '../simulacao-mig/cordao'
 import { analisarDefeitos, fatorIntegridade, notaSuperficie, respingosPor10mm } from '../simulacao-mig/defeitos'
 import type { EventoTentativa } from '../simulacao-mig/simulacao'

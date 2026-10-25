@@ -1,3 +1,10 @@
+/*
+ * █ Fusão prevista
+ *
+ * O que faz: Índice sintético que diz se faltou calor, se ficou adequado ou se
+ *    passou do ponto (perfuração), posição por posição.
+ */
+
 import type { SecaoLocal, Cordao } from './cordao'
 import { aberturaNaFaceMm, INFO_JUNTA, juntaDe } from './tipos-de-junta-e-posicao'
 import { GASES, MATERIAIS } from './materiais-e-gases'

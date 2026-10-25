@@ -1,3 +1,14 @@
+/*
+ * █ Aplicativo (o "esqueleto" do jogo)
+ *
+ * O que faz: Guarda os dados carregados do navegador (recordes, torneios,
+ *    preferências) e troca de uma tela para outra com app.ir(...).
+ *    Também marca no menu lateral qual seção está aberta.
+ *
+ * Onde mexer: Raramente precisa mudar. Para uma tela nova acender um item do
+ *    menu lateral, ajuste a lista de "rota" em ir().
+ */
+
 import { armazenamentoDoNavegador, novoId, Repositorio, type Colecao } from '../salvamento/armazenamento-no-navegador'
 import { validarPerfis, type PerfilParticipante } from '../salvamento/participantes'
 import { PREFERENCIAS_PADRAO, validarPreferencias, type Preferencias } from '../salvamento/preferencias'

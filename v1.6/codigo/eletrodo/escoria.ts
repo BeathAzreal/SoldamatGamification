@@ -1,3 +1,13 @@
+/*
+ * █ Eletrodo: escória
+ *
+ * O que faz: Guarda onde há escória sobre a peça, se está quente ou fria e o
+ *    que o martelinho e a escova removem.
+ *
+ * Onde mexer: Tempo de esfriar (2,2 s), raio do martelinho (5 mm) e da escova
+ *    (8 mm) estão nas contas deste arquivo.
+ */
+
 export type FerramentaBancada15 = 'soldar' | 'martelo' | 'escova'
 /** H63–H67: relações qualitativas SMAW; parâmetros sintéticos, sem qualificação de solda. */
 export class Escoria15 {

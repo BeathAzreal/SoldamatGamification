@@ -1,3 +1,12 @@
+/*
+ * █ Defeitos visíveis em 3D
+ *
+ * O que faz: Desenha gotas, respingos, poros, mordedura e cores de oxidação
+ *    calculados em simulacao-mig/defeitos.ts.
+ *
+ * Onde mexer: Cores de oxidação por material em OXIDACAO (começo do arquivo).
+ */
+
 import * as THREE from 'three'
 import type { AnaliseDefeitos } from '../simulacao-mig/defeitos'
 import type { GeometriaJunta } from '../simulacao-mig/linha-da-junta'

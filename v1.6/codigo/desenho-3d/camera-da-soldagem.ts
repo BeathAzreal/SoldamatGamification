@@ -1,3 +1,10 @@
+/*
+ * █ Câmera da soldagem MIG
+ *
+ * O que faz: A câmera da tela de soldagem MIG e a conversão entre tela e peça
+ *    em 3D.
+ */
+
 import * as THREE from 'three'
 import type { GeometriaJunta } from '../simulacao-mig/linha-da-junta'
 import { PECA } from '../simulacao-mig/parametros-do-modelo'

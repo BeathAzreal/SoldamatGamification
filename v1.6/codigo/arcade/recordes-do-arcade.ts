@@ -1,3 +1,10 @@
+/*
+ * █ Arcade: recordes
+ *
+ * O que faz: Ranking das partidas de Arcade, separado por dispositivo e versão
+ *    das regras.
+ */
+
 import { DISPOSITIVOS, type Dispositivo } from '../dispositivos/lista-de-dispositivos'
 import { DIFICULDADES, type Dificuldade } from '../missoes/lista-de-missoes'
 import { MATERIAIS, type MaterialId } from '../simulacao-mig/materiais-e-gases'

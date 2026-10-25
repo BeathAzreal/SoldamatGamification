@@ -1,3 +1,10 @@
+/*
+ * █ Roteiros de aprendizagem
+ *
+ * O que faz: Para cada missão, o roteiro preparar → executar → inspecionar →
+ *    experimentar mostrado na preparação.
+ */
+
 import type { Missao } from './lista-de-missoes'
 export interface RoteiroAprendizagem { habilidade: string; preparar: string; executar: string; inspecionar: string; experimento: string }
 /** Situações didáticas fictícias, sem substituir procedimento de soldagem. */

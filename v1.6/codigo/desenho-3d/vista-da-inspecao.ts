@@ -1,3 +1,10 @@
+/*
+ * █ Vista 3D da inspeção
+ *
+ * O que faz: A peça soldada no resultado, com câmera livre (girar, aproximar)
+ *    e o replay.
+ */
+
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { Cordao } from '../simulacao-mig/cordao'

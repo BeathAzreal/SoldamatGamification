@@ -1,3 +1,10 @@
+/*
+ * █ Registro compacto da tentativa
+ *
+ * O que faz: Versão compacta dos eventos de uma tentativa, para salvar sem
+ *    ocupar muito espaço; o replay e a nota usam esta forma.
+ */
+
 import type { Ajustes } from '../simulacao-mig/regulagem-da-maquina'
 import type { EventoTentativa } from '../simulacao-mig/simulacao'
 

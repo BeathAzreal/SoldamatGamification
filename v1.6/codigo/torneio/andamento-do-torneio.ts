@@ -1,3 +1,10 @@
+/*
+ * █ Torneio: andamento
+ *
+ * O que faz: Resumo de cada rodada (quem entregou, quem falta, o que foi
+ *    avaliado).
+ */
+
 import type { BaseTorneio } from './regras-e-dados-do-torneio'
 import { rodadaVisivel } from './regras-e-dados-do-torneio'
 /** Andamento e regras; não revela avaliação ainda não publicada. */

@@ -1,3 +1,9 @@
+/*
+ * █ Gráficos da inspeção
+ *
+ * O que faz: Desenha os gráficos de velocidade ao longo da junta.
+ */
+
 import type { AnaliseMovimento } from '../simulacao-mig/analise-do-movimento'
 import { PECA } from '../simulacao-mig/parametros-do-modelo'
 

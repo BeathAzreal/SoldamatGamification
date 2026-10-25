@@ -1,3 +1,10 @@
+/*
+ * █ Malha do cordão
+ *
+ * O que faz: Contas que transformam as fatias do cordão em triângulos 3D. Sem
+ *    desenho: só geometria.
+ */
+
 import type { SecaoLocal } from '../simulacao-mig/cordao'
 import type { GeometriaJunta } from '../simulacao-mig/linha-da-junta'
 import { PECA } from '../simulacao-mig/parametros-do-modelo'

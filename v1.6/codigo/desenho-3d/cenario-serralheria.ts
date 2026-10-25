@@ -1,3 +1,10 @@
+/*
+ * █ Cenário: serralheria
+ *
+ * O que faz: Cavalete de tubos, barras e suportes da missão do suporte de
+ *    prateleira. Só decoração.
+ */
+
 import * as THREE from 'three'
 import { criarOficinaTreino } from './cenario-oficina'
 

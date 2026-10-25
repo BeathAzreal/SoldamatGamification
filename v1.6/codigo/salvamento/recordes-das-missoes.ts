@@ -1,3 +1,10 @@
+/*
+ * █ Recordes das missões
+ *
+ * O que faz: Rankings por missão, dificuldade, dispositivo e versão da
+ *    pontuação.
+ */
+
 import { DISPOSITIVOS, type Dispositivo } from '../dispositivos/lista-de-dispositivos'
 import { buscarMissao, DIFICULDADES, type Dificuldade } from '../missoes/lista-de-missoes'
 import { MATERIAIS, type MaterialId } from '../simulacao-mig/materiais-e-gases'

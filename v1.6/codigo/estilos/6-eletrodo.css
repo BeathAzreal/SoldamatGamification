@@ -1,3 +1,12 @@
+/*
+ * █ Estilo: 6-eletrodo.css
+ *
+ * O que é: Estilo do treino de eletrodo: painel sobre a vista, medidor do
+ *    arco, painel lateral e seletor de processo do Treino.
+ *
+ * Os arquivos numerados são carregados nessa ordem (1, 2, 3...): um
+ * arquivo posterior pode sobrescrever regras do anterior.
+ */
 /* Bancada v1.5: vista 3D com leituras sobrepostas e painel lateral enxuto. */
 .p15{display:flex;flex-direction:column;min-height:0;height:100%;gap:12px}
 .p15 [hidden]{display:none!important}

@@ -1,3 +1,12 @@
+/*
+ * █ Tela: preparação da missão
+ *
+ * O que faz: Mostra o pedido do cliente, o desenho, a bancada da máquina (MIG)
+ *    e o botão para começar a soldar.
+ *
+ * Onde mexer: Textos do briefing e a ordem dos blocos da preparação.
+ */
+
 import { roteiroDaMissao } from '../missoes/roteiros-de-aprendizagem'
 import type { Dispositivo } from '../dispositivos/lista-de-dispositivos'
 import {

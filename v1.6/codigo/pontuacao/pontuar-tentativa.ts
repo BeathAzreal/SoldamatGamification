@@ -1,3 +1,10 @@
+/*
+ * █ Pontuar uma tentativa
+ *
+ * O que faz: Refaz a tentativa a partir do registro salvo e só então dá a
+ *    nota, para que nota e replay usem os mesmos dados.
+ */
+
 import { descompactar, type EventosCompactos } from '../salvamento/registro-compacto'
 import type { Dificuldade, Missao } from '../missoes/lista-de-missoes'
 import type { ContextoProcesso } from '../simulacao-mig/regulagem-da-maquina'

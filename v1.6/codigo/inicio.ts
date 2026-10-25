@@ -1,3 +1,15 @@
+/*
+ * █ Início do jogo
+ *
+ * O que faz: É o primeiro arquivo que roda. Carrega os estilos (cores e
+ *    layout), liga os botões do menu lateral às telas e abre o menu
+ *    inicial.
+ *
+ * Onde mexer: Para trocar qual tela abre primeiro, mude a última linha
+ *    (telaMenu). Para mudar o texto do painel "Modelo didático",
+ *    procure abrirPainel.
+ */
+
 import './estilos/1-base.css'
 import './estilos/2-telas-e-componentes.css'
 import './estilos/3-visual-v14.css'

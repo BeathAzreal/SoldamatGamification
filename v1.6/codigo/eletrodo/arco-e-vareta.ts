@@ -1,3 +1,17 @@
+/*
+ * █ Eletrodo: arco e vareta (a "física" do eletrodo)
+ *
+ * O que faz: Decide se o arco está aceso, curto, adequado ou longo; quanto a
+ *    vareta queima; quando o eletrodo gruda; e quanto metal e escória
+ *    são depositados. Hipóteses H59–H73
+ *    (documentacao/PROTOTIPO-V15.md).
+ *
+ * Onde mexer: Os números principais estão no começo: VARETA15 (tamanho da
+ *    vareta e distâncias), ARCO15 (tolerância do arco) e RISCO15
+ *    (abrir riscando). Os nomes terminados em 15 vêm da versão em que
+ *    o eletrodo foi criado (v1.5).
+ */
+
 /** H59–H62: protótipo de interação, sem calibração de processo ou pontuação. */
 export type Processo15 = 'mig' | 'eletrodo'
 import { Escoria15 } from './escoria'

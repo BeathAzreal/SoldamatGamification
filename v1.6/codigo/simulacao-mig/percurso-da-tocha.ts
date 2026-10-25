@@ -1,3 +1,10 @@
+/*
+ * █ Percurso da tocha
+ *
+ * O que faz: Registra, posição por posição, o tempo e o calor que a tocha
+ *    levou com o arco aberto.
+ */
+
 import { MODELO, PECA } from './parametros-do-modelo'
 
 /** Distância lateral até a qual a tocha conta como "sobre a junta" (eficiência, PONTUACAO.md). */

@@ -1,3 +1,12 @@
+/*
+ * █ Explicação do resultado
+ *
+ * O que faz: Gera os textos de "Por que saiu assim": o que cada ajuste e o
+ *    movimento causaram no cordão.
+ *
+ * Onde mexer: É aqui que se reescrevem as frases didáticas do resultado MIG.
+ */
+
 import type { Medidas, Tentativa } from '../simulacao-mig/medidas-do-cordao'
 import { larguraPelaArea } from '../simulacao-mig/cordao'
 import type { AnaliseMovimento, TrechoMovimento } from '../simulacao-mig/analise-do-movimento'

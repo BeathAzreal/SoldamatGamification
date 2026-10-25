@@ -1,3 +1,13 @@
+/*
+ * █ Janela de controles (MIG)
+ *
+ * O que faz: Janela para trocar botões e teclas de câmera e giro da peça no
+ *    jogo MIG.
+ *
+ * Onde mexer: Os controles do eletrodo têm janela própria: eletrodo/janela-de-
+ *    controles.ts.
+ */
+
 import { CONTROLES_PADRAO, nomeTecla, teclaValida, validarControles, type ControlesPeca } from '../dispositivos/gestos-de-camera-e-peca'
 import type { App } from '../interface/aplicativo'
 import { h } from '../interface/criar-elementos'

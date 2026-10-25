@@ -1,3 +1,14 @@
+/*
+ * █ Tela: Treino
+ *
+ * O que faz: Treino sem nota oficial. No topo, a escolha do processo: MIG/MAG
+ *    (treino livre e missões) ou Eletrodo revestido (lista das peças
+ *    de eletrodo).
+ *
+ * Onde mexer: Para mudar as peças do eletrodo, edite eletrodo/pecas-de-
+ *    treino.ts.
+ */
+
 import { EXERCICIOS_TECNICOS, type ExercicioTecnico } from '../explicacoes/exercicios-tecnicos'
 import { abrirPainel, confirmar } from '../interface/janelas-de-dialogo'
 import { DIFICULDADES, MISSOES, NOME_DIFICULDADE, PECA_PADRAO, type Dificuldade, type Missao, comJunta } from '../missoes/lista-de-missoes'

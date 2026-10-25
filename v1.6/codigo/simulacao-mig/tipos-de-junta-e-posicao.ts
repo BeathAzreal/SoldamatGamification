@@ -1,3 +1,13 @@
+/*
+ * █ Tipos de junta e posição
+ *
+ * O que faz: As juntas (topo, V, T, sobreposta, canto), a forma das chapas em
+ *    corte e a posição de soldagem (plana, vertical, sobrecabeça) com
+ *    o efeito da gravidade.
+ *
+ * Onde mexer: Nomes e descrições das juntas estão em INFO_JUNTA.
+ */
+
 import type { SecaoLocal } from './cordao'
 
 /*

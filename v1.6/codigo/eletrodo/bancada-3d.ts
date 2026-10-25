@@ -1,3 +1,14 @@
+/*
+ * █ Eletrodo: cena 3D
+ *
+ * O que faz: Desenha a peça, o alicate porta-eletrodo, a vareta, o arco, a
+ *    poça, os respingos, o martelinho e a escova, e converte a posição
+ *    do mouse em ponto da peça.
+ *
+ * Onde mexer: Cores e tamanhos dos objetos estão nos materiais
+ *    (MeshStandardMaterial) e nas geometrias do começo da função.
+ */
+
 import * as THREE from 'three'
 import { Palco3D } from '../desenho-3d/palco'
 import { geometriaDa } from '../simulacao-mig/linha-da-junta'

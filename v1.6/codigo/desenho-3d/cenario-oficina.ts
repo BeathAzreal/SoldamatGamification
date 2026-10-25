@@ -1,3 +1,10 @@
+/*
+ * █ Cenário: oficina de treino
+ *
+ * O que faz: Bancada, armário, ferramentas na parede, máquina e cilindro da
+ *    oficina pequena. Só decoração.
+ */
+
 import * as THREE from 'three'
 
 /** Cenografia estática: fora do volume de giro da chapa, sem participar da simulação. */

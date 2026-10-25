@@ -1,4 +1,11 @@
 /*
+ * █ Arcade: regras da sessão
+ *
+ * O que faz: Limite de tentativas, diferença entre treino e oficial, e o que
+ *    pode ser entregue.
+ */
+
+/*
  * Regras da sessão de Arcade, sem DOM: limite de tentativas, separação entre
  * treino e tentativas oficiais, e o que pode ser entregue.
  */

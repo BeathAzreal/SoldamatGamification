@@ -1,3 +1,10 @@
+/*
+ * █ Tela: configurações
+ *
+ * O que faz: Opções do jogo: dispositivo, calibração, controles, qualidade
+ *    gráfica e dados salvos.
+ */
+
 import { COLECOES, PREFIXO } from '../salvamento/armazenamento-no-navegador'
 import { PREFERENCIAS_PADRAO } from '../salvamento/preferencias'
 import { PECA_PADRAO } from '../missoes/lista-de-missoes'

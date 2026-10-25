@@ -1,3 +1,12 @@
+/*
+ * █ Quadro de pontuação
+ *
+ * O que faz: Mostra a nota (0 a 1000), o conceito (A, B, C...) e as barras de
+ *    cada categoria.
+ *
+ * Onde mexer: As regras da nota estão em pontuacao/regras-de-pontuacao.ts.
+ */
+
 import { devolverTentativa } from '../explicacoes/devolutiva'
 import { ESCALA_PONTUACAO, escalaDaPontuacao, FICHA_CATEGORIA, type ResultadoPontuacao } from '../pontuacao/regras-de-pontuacao'
 import { abrirPainel } from '../interface/janelas-de-dialogo'

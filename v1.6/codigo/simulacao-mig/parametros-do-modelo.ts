@@ -1,3 +1,13 @@
+/*
+ * █ Números do modelo MIG
+ *
+ * O que faz: Todos os números do modelo didático MIG reunidos num só lugar
+ *    (tamanho da peça, faixas, coeficientes). Nenhum vem de norma.
+ *
+ * Onde mexer: É o lugar certo para ajustar a "física" do MIG. Depois de mudar,
+ *    rode os testes (npm test).
+ */
+
 /**
  * Parâmetros do MODELO QUALITATIVO SIMPLIFICADO.
  *

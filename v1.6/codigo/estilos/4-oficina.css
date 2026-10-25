@@ -1,3 +1,12 @@
+/*
+ * █ Estilo: 4-oficina.css
+ *
+ * O que é: Ajustes do tema de oficina (vermelho e preto) usados a partir da
+ *    v1.4.
+ *
+ * Os arquivos numerados são carregados nessa ordem (1, 2, 3...): um
+ * arquivo posterior pode sobrescrever regras do anterior.
+ */
 /* Identidade gráfica comum: textos condensados, recortes e vermelho. */
 :root{--fundo:#0c0c0c;--fundo-2:#121212;--sup:#191817;--sup-2:#262321;--sup-3:#34302c;--borda:#47413b;--borda-forte:#a79d8e;--texto:#f4efdf;--texto-2:#d0c7b8;--texto-3:#b3a99b;--laranja:#e12629;--laranja-2:#ff494b;--painel:#191817;--texto-fraco:#d0c7b8;--raio:0px;--sombra:6px 6px 0 #000}
 body:not(.menu-grafico){background:#0c0c0c;color:var(--texto)}

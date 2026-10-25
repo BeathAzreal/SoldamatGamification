@@ -1,3 +1,10 @@
+/*
+ * █ Desenho técnico da missão
+ *
+ * O que faz: O desenho com vista de cima e corte das chapas mostrado na
+ *    preparação (esquema próprio do jogo).
+ */
+
 import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/lista-de-missoes'
 
 /*

@@ -1,4 +1,13 @@
 /*
+ * █ Estilo: 5-espacamento-e-layout.css
+ *
+ * O que é: Espaçamento e encaixe das telas em janelas menores, sem
+ *    sobreposições.
+ *
+ * Os arquivos numerados são carregados nessa ordem (1, 2, 3...): um
+ * arquivo posterior pode sobrescrever regras do anterior.
+ */
+/*
  * Espaço em telas baixas (Alpha v1.4, Claude). Carregado por último.
  * Preparação: em 1280×720 a peça de teste ficava atrás da barra de ações.
  * Inspeção: controles, abas e conteúdo se sobrepunham. Só redistribui

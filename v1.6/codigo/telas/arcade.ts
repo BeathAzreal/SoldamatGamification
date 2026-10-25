@@ -1,3 +1,11 @@
+/*
+ * █ Tela: Arcade
+ *
+ * O que faz: Partidas de desafios sorteados, com vidas e combo.
+ *
+ * Onde mexer: As regras dos desafios estão em arcade/desafios-sorteados.ts.
+ */
+
 import { etapaArcade } from '../arcade/desafios-sorteados'
 import { seloMaterial } from '../partes-das-telas/selo-do-material'
 import {

@@ -1,3 +1,10 @@
+/*
+ * █ Calor, faíscas e fumaça
+ *
+ * O que faz: Faíscas, fumaça, brilho do metal quente, gotas que caem e halo de
+ *    calor no 3D. Só aparência.
+ */
+
 import * as THREE from 'three'
 import type { GeometriaJunta } from '../simulacao-mig/linha-da-junta'
 import type { MalhaCordaoViva } from './cordao-ao-vivo'

@@ -1,4 +1,11 @@
 /*
+ * █ Qualidade gráfica
+ *
+ * O que faz: Os níveis baixa/média/alta e o monitor que reduz a qualidade se o
+ *    computador ficar lento.
+ */
+
+/*
  * Qualidade do visual 3D e o monitor que decide voltar para o 2D. Parte
  * pura (sem Three nem DOM), para poder ser testada. Nada daqui muda o
  * modelo, a pontuação ou a entrada: só o custo do desenho.

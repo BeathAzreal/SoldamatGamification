@@ -1,3 +1,12 @@
+/*
+ * █ Eletrodo: janela de controles
+ *
+ * O que faz: A janela "Controles" do treino de eletrodo, onde o jogador troca
+ *    teclas, botões e sensibilidade.
+ *
+ * Onde mexer: Os nomes das ações mostrados ao jogador estão em "nomes".
+ */
+
 import { confirmar } from '../interface/janelas-de-dialogo'
 import { h } from '../interface/criar-elementos'
 import { CHAVE_CONTROLES15, nomeTecla15, validarControles15, type Controles15, type Acao15 } from './controles-salvos'

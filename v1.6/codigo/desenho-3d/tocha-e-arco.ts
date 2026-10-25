@@ -1,3 +1,9 @@
+/*
+ * █ Tocha e arco (MIG)
+ *
+ * O que faz: A tocha MIG, o clarão do arco e a poça no 3D.
+ */
+
 import { INFO_TECNICA } from '../simulacao-mig/regulagem-da-maquina'
 import * as THREE from 'three'
 import { estiloArco } from '../desenho-2d/efeitos-visuais'

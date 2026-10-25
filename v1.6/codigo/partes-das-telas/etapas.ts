@@ -1,3 +1,10 @@
+/*
+ * █ Etapas da missão
+ *
+ * O que faz: A faixa "Preparação → Tentativa → Inspeção → Feedback" no topo
+ *    das telas da missão.
+ */
+
 import { h } from '../interface/criar-elementos'
 
 /** Indicador de etapas de um fluxo (onde estou / o que falta). */

@@ -1,3 +1,10 @@
+/*
+ * █ Leitura comum dos dispositivos
+ *
+ * O que faz: O formato único que todo dispositivo entrega à simulação: posição
+ *    em mm, instante e arco aberto/fechado.
+ */
+
 import type { Amostra } from '../simulacao-mig/trajetoria'
 import type { Dispositivo } from './lista-de-dispositivos'
 

@@ -1,3 +1,10 @@
+/*
+ * █ Trajetória
+ *
+ * O que faz: Pequenas contas sobre as leituras de posição da tocha (onde ela
+ *    estava num instante).
+ */
+
 import { TRAJETORIA } from './parametros-do-modelo'
 
 /** Uma leitura da posição da tocha: instante em ms e posição em mm da peça. */

@@ -1,3 +1,12 @@
+/*
+ * █ Arcade: desafios sorteados
+ *
+ * O que faz: Sorteia desafios (missão + dificuldade + condição extra) e avalia
+ *    se o jogador cumpriu.
+ *
+ * Onde mexer: Condições e vidas iniciais estão no começo do arquivo.
+ */
+
 import type { FormatoJunta } from '../simulacao-mig/linha-da-junta'
 import { buscarMissao, contextoDaMissao, MISSOES, requisitosEfetivos, type Dificuldade, type Missao, type Preparo } from '../missoes/lista-de-missoes'
 import { AJUSTES } from '../simulacao-mig/parametros-do-modelo'

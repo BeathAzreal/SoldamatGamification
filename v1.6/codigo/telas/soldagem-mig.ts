@@ -1,3 +1,14 @@
+/*
+ * █ Tela: soldagem MIG/MAG
+ *
+ * O que faz: A tela em que se solda com a tocha MIG: lê o
+ *    mouse/caneta/controle, roda a simulação e desenha em 3D. Ao
+ *    terminar, mostra o resultado.
+ *
+ * Onde mexer: Textos de estado durante a solda e o que acontece ao encerrar a
+ *    tentativa.
+ */
+
 import { GRAUS_POR_PIXEL, Gestos } from '../dispositivos/gestos-de-camera-e-peca'
 import { compactar, type EventosCompactos } from '../salvamento/registro-compacto'
 import { seloMaterial } from '../partes-das-telas/selo-do-material'

@@ -1,3 +1,10 @@
+/*
+ * █ Tela: recordes
+ *
+ * O que faz: Rankings das missões e do Arcade guardados neste navegador, com
+ *    exportar/importar.
+ */
+
 import { chaveRanking, ranking, type Recorde } from '../salvamento/recordes-das-missoes'
 import { chaveRankingArcade, rankingArcade } from '../arcade/recordes-do-arcade'
 import { NOME_DISPOSITIVO } from '../dispositivos/lista-de-dispositivos'

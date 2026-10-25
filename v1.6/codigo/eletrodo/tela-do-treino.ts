@@ -1,3 +1,16 @@
+/*
+ * █ Eletrodo: tela do treino
+ *
+ * O que faz: A tela inteira do treino de eletrodo: painel sobre a vista
+ *    (estado, medidor do arco, vareta, avanço), painel lateral
+ *    (objetivos, ferramentas, corrente, ajuda na altura) e o laço que
+ *    roda a cada quadro.
+ *
+ * Onde mexer: Textos de estado estão em "mensagens" e TEXTO_FAIXA; os
+ *    objetivos em itensObjetivo; as opções de ajuda na altura em
+ *    ajudaAltura.
+ */
+
 import { Acionamento15, VARETA15, velocidadeAltura15, type FaixaArco15 } from './arco-e-vareta'
 import { Cordao } from '../simulacao-mig/cordao'
 import { criarBancada15 } from './bancada-3d'

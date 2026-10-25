@@ -1,3 +1,13 @@
+/*
+ * █ Tela: menu inicial
+ *
+ * O que faz: A tela de abertura com a ilustração e a lista JOGAR, TREINO,
+ *    ARCADE, TORNEIO, RECORDES e OPÇÕES.
+ *
+ * Onde mexer: Os textos de cada item e a etiqueta de versão (ALPHA / 1.x)
+ *    estão aqui.
+ */
+
 import { vezAtual } from '../torneio/regras-e-dados-do-torneio'
 import type { App } from '../interface/aplicativo'
 import { anexar, h } from '../interface/criar-elementos'

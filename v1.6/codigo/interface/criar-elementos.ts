@@ -1,3 +1,14 @@
+/*
+ * █ Ferramentas para montar telas
+ *
+ * O que faz: Contém h(), a função usada em todo o jogo para criar botões,
+ *    textos e caixas sem escrever HTML; e funções para formatar
+ *    números (n0, n1) e datas.
+ *
+ * Onde mexer: Exemplo: h('button', { class: 'primario' }, 'Salvar') cria um
+ *    botão vermelho com o texto Salvar.
+ */
+
 /** Pequenos utilitários de DOM para montar as telas sem framework. */
 
 type Filho = Node | string | number | null | undefined | false

@@ -1,3 +1,10 @@
+/*
+ * █ Quando usar a explicação por contexto
+ *
+ * O que faz: Decide se a explicação simples (cordão sobre chapa) vale ou se é
+ *    preciso a explicação por contexto.
+ */
+
 import type { Tentativa } from '../simulacao-mig/medidas-do-cordao'
 
 /** A decomposição antiga só vale para o cordão de referência sobre chapa. */

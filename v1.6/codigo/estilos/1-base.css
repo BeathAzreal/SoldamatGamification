@@ -1,3 +1,12 @@
+/*
+ * █ Estilo: 1-base.css
+ *
+ * O que é: Estilo base: fontes, cores gerais, botões e campos. Carregado
+ *    primeiro.
+ *
+ * Os arquivos numerados são carregados nessa ordem (1, 2, 3...): um
+ * arquivo posterior pode sobrescrever regras do anterior.
+ */
 :root {
   --fundo: #111315;
   --painel: #1d2024;

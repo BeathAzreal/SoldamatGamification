@@ -1,3 +1,10 @@
+/*
+ * █ Participantes
+ *
+ * O que faz: Perfis de jogadores do Arcade e dos torneios, e o progresso nas
+ *    missões.
+ */
+
 import { MISSOES, type Dificuldade } from '../missoes/lista-de-missoes'
 import { normalizarNome } from './recordes-das-missoes'
 import type { Participante } from '../torneio/regras-e-dados-do-torneio'

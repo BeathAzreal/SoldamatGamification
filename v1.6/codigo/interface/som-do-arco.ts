@@ -1,4 +1,14 @@
 /*
+ * █ Som do arco
+ *
+ * O que faz: Gera o chiado do arco elétrico no próprio navegador (sem arquivo
+ *    de áudio). Fica mais forte ou instável conforme o arco.
+ *
+ * Onde mexer: Volume (VOLUME) e duração do trecho de ruído (DURACAO_S) estão
+ *    no início do arquivo.
+ */
+
+/*
  * Som do arco (H45): só sensorial, não entra no modelo nem na nota.
  * Três vozes sintetizadas com ruído filtrado, misturadas pelo desvio da
  * tensão em relação ao equilíbrio (H10):

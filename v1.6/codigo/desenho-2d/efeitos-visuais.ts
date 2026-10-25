@@ -1,3 +1,10 @@
+/*
+ * █ Efeitos visuais (2D)
+ *
+ * O que faz: Regras de brilho, halo de calor, faíscas e escamas usadas também
+ *    no 3D. Só aparência.
+ */
+
 import type { Cordao } from '../simulacao-mig/cordao'
 import { aporteNecessario } from '../simulacao-mig/fusao'
 import type { Percurso } from '../simulacao-mig/percurso-da-tocha'

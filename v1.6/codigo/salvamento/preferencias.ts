@@ -1,3 +1,10 @@
+/*
+ * █ Preferências
+ *
+ * O que faz: Escolhas deste navegador: dispositivo, calibração, controles, som
+ *    e último nome usado.
+ */
+
 import { CONFIG_CONTROLE_PADRAO, type ConfigControle } from '../dispositivos/controle-gamepad'
 import { CONTROLES_PADRAO, validarControles, type ControlesPeca } from '../dispositivos/gestos-de-camera-e-peca'
 import { OPCOES_CANETA_PADRAO, type OpcoesCaneta } from '../dispositivos/mouse-e-caneta'

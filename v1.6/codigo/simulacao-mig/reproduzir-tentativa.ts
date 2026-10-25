@@ -1,3 +1,10 @@
+/*
+ * █ Reproduzir tentativa (replay)
+ *
+ * O que faz: Refaz uma tentativa a partir do registro salvo; o resultado é
+ *    idêntico ao original.
+ */
+
 import type { ContextoProcesso } from './regulagem-da-maquina'
 import { Simulacao, type EventoTentativa } from './simulacao'
 

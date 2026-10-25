@@ -1,3 +1,10 @@
+/*
+ * █ Abas
+ *
+ * O que faz: Cria um conjunto de abas (como Largura | Corte | Defeitos) e
+ *    troca o conteúdo ao clicar.
+ */
+
 import { h } from '../interface/criar-elementos'
 
 /*

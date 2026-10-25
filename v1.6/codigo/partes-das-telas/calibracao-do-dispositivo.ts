@@ -1,3 +1,9 @@
+/*
+ * █ Calibração do dispositivo
+ *
+ * O que faz: Painel para calibrar caneta e controle (gamepad) antes de soldar.
+ */
+
 import { aplicarZonaMorta, descreverControle, FonteControle, type LeituraGamepad } from '../dispositivos/controle-gamepad'
 import type { FonteEntrada } from '../dispositivos/leitura-comum'
 import { FontePonteiro } from '../dispositivos/mouse-e-caneta'

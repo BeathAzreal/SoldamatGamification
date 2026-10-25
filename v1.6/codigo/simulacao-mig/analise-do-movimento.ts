@@ -1,3 +1,10 @@
+/*
+ * █ Análise do movimento
+ *
+ * O que faz: Divide a junta em trechos de 5 mm e calcula quanto tempo a tocha
+ *    passou em cada um e com que velocidade.
+ */
+
 import type { Avaliacao, Estatistica } from './medidas-do-cordao'
 import { EXPLICACAO } from './parametros-do-modelo'
 import type { Percurso } from './percurso-da-tocha'

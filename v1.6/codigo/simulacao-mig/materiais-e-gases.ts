@@ -1,3 +1,13 @@
+/*
+ * █ Materiais e gases
+ *
+ * O que faz: Aço carbono, inox e alumínio; os gases de proteção; e quais
+ *    combinações são compatíveis.
+ *
+ * Onde mexer: Nomes, cores e propriedades relativas de cada material estão em
+ *    MATERIAIS.
+ */
+
 /**
  * Materiais e gases do jogo (H27, H35). Todos os números são relativos e do
  * jogo; o que vem de fora é só a ORDEM das propriedades (ver documentacao/HIPOTESES.md).

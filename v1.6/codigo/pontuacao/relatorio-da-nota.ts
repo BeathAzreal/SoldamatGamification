@@ -1,3 +1,10 @@
+/*
+ * █ Relatório técnico
+ *
+ * O que faz: Monta o relatório que explica a nota trecho a trecho (regulagem
+ *    usada, ocorrências).
+ */
+
 import type { Cordao } from '../simulacao-mig/cordao'
 import { analisarDefeitos, type OcorrenciaDefeito } from '../simulacao-mig/defeitos'
 import { analisarFusao, aporteNecessario, margemCoberturaBordas, type EstadoFusao, type PontoFusao } from '../simulacao-mig/fusao'

@@ -1,3 +1,10 @@
+/*
+ * █ Tela: torneios
+ *
+ * O que faz: Criar e acompanhar torneios locais (por turnos, com professor).
+ *    Só a parte visual: as regras ficam em torneio/.
+ */
+
 import { resumoOrganizacao } from '../torneio/andamento-do-torneio'
 import { abrirPainel } from '../interface/janelas-de-dialogo'
 import type { PerfilParticipante } from '../salvamento/participantes'

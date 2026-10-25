@@ -1,3 +1,13 @@
+/*
+ * █ Palco 3D
+ *
+ * O que faz: A base de toda cena 3D: sala, luz, chapas da junta, cordão,
+ *    marcas INÍCIO/FIM e régua.
+ *
+ * Onde mexer: Cores da sala e das chapas, e o tamanho da sala, estão neste
+ *    arquivo.
+ */
+
 import { OBB } from 'three/addons/math/OBB.js'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'

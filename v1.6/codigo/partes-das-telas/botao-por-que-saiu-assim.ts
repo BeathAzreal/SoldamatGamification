@@ -1,3 +1,12 @@
+/*
+ * █ Botão "Por que saiu assim"
+ *
+ * O que faz: Abre a explicação do resultado de uma tentativa.
+ *
+ * Onde mexer: Os textos das explicações estão em explicacoes/explicacao-do-
+ *    resultado.ts.
+ */
+
 import { descompactar, type EventosCompactos } from '../salvamento/registro-compacto'
 import { comparar, type Juizo } from '../explicacoes/comparar-tentativas'
 import { explicar } from '../explicacoes/explicacao-do-resultado'

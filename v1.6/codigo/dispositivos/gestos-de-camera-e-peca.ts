@@ -1,4 +1,11 @@
 /*
+ * █ Gestos de câmera e peça (MIG)
+ *
+ * O que faz: Arrastar para girar a câmera ou a peça, roda para aproximar, e as
+ *    teclas configuráveis desses gestos.
+ */
+
+/*
  * Gestos de posicionamento sobre a área da peça (H42, H47): mover a câmera
  * em volta da peça e girar/tombar a peça, sempre com o arco FECHADO. Assim
  * ninguém gira a peça (nem a câmera) e solda ao mesmo tempo.

@@ -1,3 +1,11 @@
+/*
+ * █ Inspeção do resultado
+ *
+ * O que faz: A área do resultado: peça soldada em 3D, botões de vista, exagero
+ *    vertical e as abas Largura, Corte, Defeitos, Velocidade e
+ *    Parâmetros.
+ */
+
 import { descompactar, type EventosCompactos } from '../salvamento/registro-compacto'
 import { NOME_DISPOSITIVO, type Dispositivo } from '../dispositivos/lista-de-dispositivos'
 import { requisitosEfetivos, type Dificuldade, type Missao, type Preparo } from '../missoes/lista-de-missoes'

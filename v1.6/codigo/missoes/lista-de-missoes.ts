@@ -1,3 +1,13 @@
+/*
+ * █ Lista de missões (MIG)
+ *
+ * O que faz: Todas as missões do modo História: cliente, material, junta,
+ *    requisitos e consumíveis.
+ *
+ * Onde mexer: Para criar uma missão, copie um bloco da lista MISSOES e ajuste.
+ *    Requisitos são didáticos, não de norma.
+ */
+
 import { ARAMES, GASES, MATERIAIS, gasCompativel, type GasId, type MaterialId } from '../simulacao-mig/materiais-e-gases'
 import { DBCP, PECA } from '../simulacao-mig/parametros-do-modelo'
 import type { FormatoJunta } from '../simulacao-mig/linha-da-junta'
