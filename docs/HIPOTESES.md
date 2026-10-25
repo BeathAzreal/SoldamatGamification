@@ -750,3 +750,7 @@ da área total. As explicações históricas sobre chapa sem fresta permanecem.
 ### Visualização e fixação — revisão do menu Alpha v1.4
 
 O palco gira a peça em X em torno da orelha presa na garra, sem girar a sala. A câmera é independente, com arco horizontal de 180° e elevação de 0° a 180°. O limite de movimento é calculado por volumes simplificados de colisão das chapas com o suporte; não é uma simulação mecânica da garra. As equações de gravidade e pontuação permanecem as mesmas. Consulte `CAMERA-E-PECA.md` para as limitações.
+
+## Protótipo v1.5 — H59 a H62
+
+O acionamento por botão, abertura do eletrodo por contato, consumo da vareta e integração em passo fixo estão documentados em [PROTOTIPO-V15.md](PROTOTIPO-V15.md). São hipóteses de interação com números sintéticos, sem pontuação ou física SMAW calibrada. As hipóteses anteriores continuam descrevendo somente o jogo MIG/MAG herdado.
