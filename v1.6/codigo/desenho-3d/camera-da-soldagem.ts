@@ -140,7 +140,7 @@ export class Vista3D {
     const c = this.camera
     c.aspect = w / h
     c.near = d * 0.2
-    // A sala da oficina (palco3d.ts) fica a até ~3 m: o fundo tem de caber.
+    // A sala da oficina (palco.ts) fica a até ~3 m: o fundo tem de caber.
     c.far = d * 4 + 4500
     // Com azimute 0 inclina para o lado de baixo da tela (+z): o jogador vê a peça "de frente".
     const p = this.elevacao

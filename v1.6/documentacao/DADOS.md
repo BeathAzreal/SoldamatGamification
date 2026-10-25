@@ -18,7 +18,7 @@ Cada coleção tem a sua chave, sempre com o prefixo `soldagem-mig/`:
 | `recordes` | Recordes do Arcade |
 | `preferencias` | Dispositivo padrão, calibração do controle e da caneta, último nome usado |
 
-As **missões** não são salvas: ficam no código (`src/missoes/catalogo.ts`), com
+As **missões** não são salvas: ficam no código (`codigo/missoes/lista-de-missoes.ts`), com
 número de versão. A versão da missão entra na chave dos rankings.
 
 ## Versão e migração
@@ -30,7 +30,7 @@ Cada chave guarda um envelope:
 ```
 
 - Dados **sem envelope** são tratados como esquema 0 e migrados para o 1
-  (`MIGRACOES` em `src/dados/armazenamento.ts`); a coleção é regravada.
+  (`MIGRACOES` em `codigo/salvamento/armazenamento-no-navegador.ts`); a coleção é regravada.
 - **Esquema mais novo** que o do jogo, **JSON inválido** ou **estrutura
   inválida**: o conteúdo original é guardado em
   `soldagem-mig/corrompido/<coleção>/<instante>`, a coleção recomeça vazia e o

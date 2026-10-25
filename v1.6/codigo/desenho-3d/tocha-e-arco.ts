@@ -4,7 +4,7 @@ import { estiloArco } from '../desenho-2d/efeitos-visuais'
 
 /*
  * Tocha, arco e poça da execução em 3D. EFEITOS PURAMENTE VISUAIS (H8, H43,
- * H45), como em efeitos.ts: nada daqui volta para o modelo. O clarão usa a
+ * H45), como em efeitos-visuais.ts: nada daqui volta para o modelo. O clarão usa a
  * mesma regra do 2D (estiloArco), ligada ao desvio do equilíbrio (H10).
  * Coordenadas: as do grupo "peça" do palco (mm, y para cima, sem exagero).
  */

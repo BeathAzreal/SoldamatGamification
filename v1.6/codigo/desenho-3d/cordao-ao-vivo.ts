@@ -238,7 +238,7 @@ export class MalhaCordaoViva {
     return Math.max(0, f)
   }
 
-  /** Domo do topo reto, o mesmo de perfilSecao (malha3d.ts), sem criar listas; com os defeitos na forma. */
+  /** Domo do topo reto, o mesmo de perfilSecao (malha-do-cordao.ts), sem criar listas; com os defeitos na forma. */
   private escreverDomo(v: number, s: number, sec: SecaoLocal, i: number): void {
     const esq = sec.yCentroMm - sec.larguraMm / 2
     const a = this.defeitos

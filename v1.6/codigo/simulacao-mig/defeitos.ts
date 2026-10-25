@@ -13,7 +13,7 @@ import type { EventoTentativa, PontoRegistro } from './simulacao'
  * percurso, registro e eventos): o mesmo registro dá sempre os mesmos
  * defeitos, no replay e em qualquer taxa de quadros. Não há simulação de
  * metal líquido: são regras simples, com a DIREÇÃO que a prática ensina
- * (o que piora o quê); os números são do jogo (DEFEITOS em parametros.ts).
+ * (o que piora o quê); os números são do jogo (DEFEITOS em parametros-do-modelo.ts).
  *
  * As posições de gotas, respingos e poros vêm de um sorteio FIXO por
  * fatia (hash), não de Math.random: repetir a tentativa repete o desenho.

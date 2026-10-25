@@ -10,7 +10,7 @@
  *   não). Padrão: E ou B giram a peça; Espaço move a câmera.
  *
  * Enquanto um gesto está ativo, os eventos do ponteiro não chegam à fonte de
- * entrada (ponteiro.ts): a caneta encostada não abre o arco.
+ * entrada (mouse-e-caneta.ts): a caneta encostada não abre o arco.
  */
 
 export type BotaoMouse = 'direito' | 'meio'

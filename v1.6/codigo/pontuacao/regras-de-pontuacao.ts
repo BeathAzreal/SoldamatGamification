@@ -9,7 +9,7 @@ import type { ContextoProcesso } from '../simulacao-mig/regulagem-da-maquina'
 import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/lista-de-missoes'
 
 /*
- * Pontuação automática — regras da versão pontuacao-v3 (docs/PONTUACAO.md).
+ * Pontuação automática — regras da versão pontuacao-v3 (documentacao/PONTUACAO.md).
  * Só usa grandezas do modelo; nada é medido pela imagem.
  *
  * v3 (Alpha v1.3): escala de 0 a 1000 e notas GRADUADAS pela distância ao
@@ -389,7 +389,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     },
   ]
 
-  // Essencial descumprida: economia e rapidez não podem compensar (docs/PONTUACAO.md).
+  // Essencial descumprida: economia e rapidez não podem compensar (documentacao/PONTUACAO.md).
   const penalidades: Penalidade[] = []
   if (!aprovada) {
     for (const c of categorias.filter((c) => c.id === 'deformacao' || c.id === 'eficiencia')) {

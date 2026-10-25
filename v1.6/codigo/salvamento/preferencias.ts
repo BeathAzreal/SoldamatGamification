@@ -15,7 +15,7 @@ export interface Preferencias {
   som: boolean
   /** Qualidade do visual 3D (o jogo é só 3D; o 2D fica de reserva sem WebGL). */
   qualidade3d: Qualidade3D
-  /** Câmera e giro da peça: botões do mouse, roda e teclas da caneta (gestos.ts). */
+  /** Câmera e giro da peça: botões do mouse, roda e teclas da caneta (gestos-de-camera-e-peca.ts). */
   controles: ControlesPeca
 }
 

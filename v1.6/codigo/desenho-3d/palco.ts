@@ -19,7 +19,7 @@ import { criarSerralheria } from './cenario-serralheria'
  * cordão, marcas da missão e régua. Só LÊ o modelo (H3, H41); brilho,
  * riscos e luz são aparência (H8, H40).
  *
- * Grupos: cena → giro (no pivô de vista.ts, H42) → peça (desfaz o pivô)
+ * Grupos: cena → giro (no pivô de tela-para-peca.ts, H42) → peça (desfaz o pivô)
  * → relevo (exagero vertical: escala só o y).
  */
 
@@ -70,7 +70,7 @@ export function webglDisponivel(): boolean {
   }
 }
 
-/** Riscos de chapa escovada ao longo de X (sorteio fixo, como em cena.ts). */
+/** Riscos de chapa escovada ao longo de X (sorteio fixo, como em cena-2d.ts). */
 function texturaEscovada(): THREE.CanvasTexture {
   const c = document.createElement('canvas')
   c.width = 1024
@@ -215,9 +215,9 @@ export class Palco3D {
   readonly renderer: THREE.WebGLRenderer
   readonly elemento: HTMLCanvasElement
   readonly cena = new THREE.Scene()
-  /** Gira em torno do pivô de vista.ts (H42). */
+  /** Gira em torno do pivô de tela-para-peca.ts (H42). */
   readonly giro = new THREE.Group()
-  /** Coordenadas do mundo de malha3d.ts (sem giro). Tocha e efeitos entram aqui. */
+  /** Coordenadas do mundo de malha-do-cordao.ts (sem giro). Tocha e efeitos entram aqui. */
   readonly peca = new THREE.Group()
   /** Tudo que tem relevo: o exagero escala só o y. */
   readonly relevo = new THREE.Group()
@@ -242,7 +242,7 @@ export class Palco3D {
   private readonly ambiente: THREE.Texture
   private cordaoAtual: Cordao | null = null
   private volumeAtual = -1
-  /** Buffers fixos do cordão (cordaoVivo.ts); refeitos só quando o cordão é outro. */
+  /** Buffers fixos do cordão (cordao-ao-vivo.ts); refeitos só quando o cordão é outro. */
   private viva: MalhaCordaoViva | null = null
   private exagero = EXAGERO_PADRAO
   /** Cordões soltos (H58): outro ponto de solda longe da junta, cada um com a sua malha. */
@@ -302,7 +302,7 @@ export class Palco3D {
     this.ambienteGrupo.add(sol)
     this.sol = sol
 
-    // Pivô do giro: o mesmo de vista.ts (centro da chapa ou da junta circular).
+    // Pivô do giro: o mesmo de tela-para-peca.ts (centro da chapa ou da junta circular).
     const pivo = op.geometria.centro ?? { x: PECA.comprimentoMm / 2, y: 0 }
     const [px, , pz] = paraMundo(pivo.x, pivo.y, 0)
     this.giro.position.set(px, 0, pz)
@@ -405,7 +405,7 @@ export class Palco3D {
     this.ambienteGrupo.add(sala)
   }
 
-  /** Marcas da missão (INÍCIO/FIM, tolerância) e régua, como em cena.ts. */
+  /** Marcas da missão (INÍCIO/FIM, tolerância) e régua, como em cena-2d.ts. */
   private montarMarcas(): void {
     const { geometria: geo, missao, regua, contexto } = this.op
     const junta = juntaDe(contexto)

@@ -5,7 +5,7 @@ import { INFO_JUNTA, TIPOS_JUNTA, type TipoJunta } from '../simulacao-mig/tipos-
 import type { ContextoProcesso, Movimento, Tecnica } from '../simulacao-mig/regulagem-da-maquina'
 
 /*
- * Catálogo de missões (docs/MISSOES.md). Situações e requisitos FICTÍCIOS,
+ * Catálogo de missões (documentacao/MISSOES.md). Situações e requisitos FICTÍCIOS,
  * criados como objetivos didáticos — não são requisitos de norma.
  */
 
@@ -234,7 +234,7 @@ export function buscarMissao(id: string): Missao | undefined {
   return MISSOES.find((m) => m.id === id)
 }
 
-/** Requisitos ajustados à dificuldade (docs/MISSOES.md). */
+/** Requisitos ajustados à dificuldade (documentacao/MISSOES.md). */
 export function requisitosEfetivos(m: Missao, d: Dificuldade) {
   const folga = d === 'aprendiz' ? 0.5 : 0
   return {

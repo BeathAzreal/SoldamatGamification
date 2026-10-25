@@ -26,7 +26,7 @@ padrão. Cada resultado guarda os pesos e a versão das regras.
 ganha de 0 a 1 conforme a distância ao critério, e a categoria usa a média.
 Assim duas soldas que estariam empatadas na v1 (as duas "fora da faixa")
 se separam: quem errou por 0,2 mm perde pouco; quem errou por 2 mm perde
-tudo. As distâncias de corte (`TOLERANCIAS` em `src/pontuacao/regras.ts`)
+tudo. As distâncias de corte (`TOLERANCIAS` em `codigo/pontuacao/regras-de-pontuacao.ts`)
 são **critérios do jogo**, inspirados na ideia de níveis de aceitação por
 desvio (ex.: ISO 5817), sem reproduzir os limites de nenhuma norma.
 
@@ -161,7 +161,7 @@ No modo Arcade, cada desafio usa a pontuação atual (v3, 0–1000) da missão s
 pré-definidos sem alteração). Pontos do desafio = nota × multiplicador do
 combo (1 + 0,25 por acerto seguido, até ×2). Desafio não concluído: zero
 pontos, perde uma vida, combo zera. Regras: `arcade-v1`
-(`src/arcade/desafios.ts`); um teste garante que toda condição sorteável tem
+(`codigo/arcade/desafios-sorteados.ts`); um teste garante que toda condição sorteável tem
 solução.
 
 ## Versão das regras
@@ -213,9 +213,9 @@ continuam guardados, mas não se misturam com os da v3 (0–1000).
 
 ## Dados técnicos para a didática (`relatorio-tecnico-v1`)
 
-`src/pontuacao/relatorio.ts` monta, a partir do **mesmo registro** que gera
+`codigo/pontuacao/relatorio-da-nota.ts` monta, a partir do **mesmo registro** que gera
 a nota, um relatório estruturado (`RelatorioTecnico`, sem frases prontas).
-Use `relatorioDoRegistro(...)` em `src/pontuacao/oficial.ts` (replay + nota +
+Use `relatorioDoRegistro(...)` em `codigo/pontuacao/pontuar-tentativa.ts` (replay + nota +
 relatório) ou `relatorioTecnico(...)` com o cordão e o percurso já
 calculados. Campos:
 
@@ -256,7 +256,7 @@ versão subiu para pontuacao-v5, e os recordes anteriores ficam separados.
 
 ## pontuacao-v6 (defeitos visíveis, Alpha v1.4)
 
-Os defeitos visíveis previstos (H50–H57 em HIPOTESES.md, `src/modelo/defeitos.ts`)
+Os defeitos visíveis previstos (H50–H57 em HIPOTESES.md, `codigo/simulacao-mig/defeitos.ts`)
 entram na nota:
 
 - **Geometria do cordão** ganha um quinto item, **superfície**: extensão 7/30,

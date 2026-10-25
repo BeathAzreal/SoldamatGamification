@@ -1,6 +1,6 @@
 # Torneio local por turnos
 
-As regras ficam num motor puro (`src/dados/torneio.ts`), testado sem
+As regras ficam num motor puro (`codigo/torneio/regras-e-dados-do-torneio.ts`), testado sem
 navegador; as telas só chamam as ações e gravam o resultado.
 
 ## Configuração (antes de começar)

@@ -3,7 +3,7 @@ import type { App } from '../interface/aplicativo'
 import { h } from '../interface/criar-elementos'
 
 /*
- * Controles da câmera e da peça (gestos.ts): que botão do mouse move a
+ * Controles da câmera e da peça (gestos-de-camera-e-peca.ts): que botão do mouse move a
  * câmera e qual gira a peça, o que a roda faz e quais teclas a caneta usa.
  * Abre da bancada (antes de cada tentativa) e vale na hora.
  */

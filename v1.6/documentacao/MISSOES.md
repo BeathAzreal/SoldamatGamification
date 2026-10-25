@@ -61,7 +61,7 @@ deformação, limpeza do óxido), que mudam a física do jogo. Ver
 [HIPOTESES.md](HIPOTESES.md).
 
 Cada missão tem ao menos uma configuração viável — um teste automático
-(`tests/missoes.test.ts`) procura ajustes e velocidade constante que aprovam
+(`testes/missoes.test.ts`) procura ajustes e velocidade constante que aprovam
 cada missão em cada dificuldade.
 
 ## Combinações que o jogo não oferece
@@ -111,6 +111,6 @@ deve ser acompanhada de revisão desses roteiros.
 
 ## Roteiros de aprendizado — Alpha v1.4
 
-As seis encomendas agora têm habilidade principal, preparação, execução, inspeção e um experimento de treino em `src/missoes/aprendizagem.ts`. O roteiro aparece na ficha comum e pode ser consultado antes do desbloqueio. Não muda limites, tentativas ou requisitos físicos.
+As seis encomendas agora têm habilidade principal, preparação, execução, inspeção e um experimento de treino em `codigo/missoes/roteiros-de-aprendizagem.ts`. O roteiro aparece na ficha comum e pode ser consultado antes do desbloqueio. Não muda limites, tentativas ou requisitos físicos.
 
 O resumo de progressão deriva as contagens das aprovações existentes e recomenda a próxima missão Aprendiz liberada. Depois recomenda os níveis Profissional pendentes. Missões inexistentes não são liberadas; dados antigos e chaves desconhecidas são preservados e não contam como capítulo concluído. Completar todas as etapas permite repetir o catálogo. Aprovação não equivale a certificação.

@@ -4,7 +4,7 @@
  * Atenção: nenhum número deste arquivo vem de norma, catálogo de fabricante
  * ou medição. Eles foram escolhidos para o jogo ficar jogável e para as
  * TENDÊNCIAS ficarem visíveis. As hipóteses estão numeradas (H1, H2, ...)
- * e explicadas em docs/HIPOTESES.md.
+ * e explicadas em documentacao/HIPOTESES.md.
  */
 
 /** Geometria da peça virtual, em "mm do jogo". Junta de topo ao longo de x, em y = 0. */

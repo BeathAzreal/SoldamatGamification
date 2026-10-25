@@ -6,7 +6,7 @@ import { AJUSTES, DBCP, EQUILIBRIO, MODELO, MOVIMENTO, VELOCIDADE } from './para
 /**
  * Relações entre os ajustes da máquina e o modelo do cordão.
  * Funções puras: mesmos ajustes → mesmo resultado. Veja H1, H9, H10 e H11
- * em docs/HIPOTESES.md.
+ * em documentacao/HIPOTESES.md.
  */
 
 /** Posições dos botões da máquina (1 a 10, unidades do jogo). */

@@ -32,7 +32,7 @@ export interface DadosQuadro3D {
   /** Posição da tocha em (s, n), ou null fora da área. */
   posicao: { x: number; y: number } | null
   arcoAberto: boolean
-  /** Desenhar a mira (ponteiro dentro e sem pausa), como em cena.ts. */
+  /** Desenhar a mira (ponteiro dentro e sem pausa), como em cena-2d.ts. */
   ponteiroDentro: boolean
   /** Giro da peça (radianos, como Vista.angulo). */
   angulo: number
@@ -201,7 +201,7 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
       mira.visible = ver
       if (d.posicao) {
         const p = d.posicao
-        // H39: o vaivém da tocha é só desenho (mesma regra de cena.ts).
+        // H39: o vaivém da tocha é só desenho (mesma regra de cena-2d.ts).
         const osc = d.arcoAberto && movimento !== 'reto' ? oscilacaoVisual(movimento, d.agoraMs) : SEM_OSCILACAO
         const q = op.geometria.pontoEm(p.x + osc.dx, p.y + osc.dy)
         const [x, , z] = paraMundo(q.x, q.y, 0)

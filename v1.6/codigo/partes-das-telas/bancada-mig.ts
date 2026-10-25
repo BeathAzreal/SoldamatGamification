@@ -316,7 +316,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   })
   // Câmera junto do giro: um só painel no canto, nada por cima da peça.
   sobreGiro.append(visual.elemento)
-  // Câmera livre e giro da peça por gestos (gestos.ts), só com o arco fechado.
+  // Câmera livre e giro da peça por gestos (gestos-de-camera-e-peca.ts), só com o arco fechado.
   const gestos = new Gestos({
     alvo: canvas,
     controles: () => app.preferencias.controles,
@@ -562,7 +562,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       const p = pos ?? estado.posicao
       const desvio = equilibrioArco(estado.ajustes, sim.contexto).desvio
       visual.desenhar({ cordao: sim.cordao, registro: sim.registro, eventos: sim.eventos, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: agora, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: pos !== null, angulo: vista.angulo })
-      // Som do arco (H45) com a mesma regra de cena.ts.
+      // Som do arco (H45) com a mesma regra de cena-2d.ts.
       somArco.atualizar(!!(p && estado.arcoAberto && estado.sobreAPeca), desvio, EQUILIBRIO.tolerancia)
     } else desenharCena(ctx2d, vista, {
       cordao: sim.cordao,

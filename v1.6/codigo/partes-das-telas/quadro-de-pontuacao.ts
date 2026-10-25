@@ -7,7 +7,7 @@ import { montarAbas } from './abas'
 /**
  * Conceito estilo arcade (S, A, B, C, D) — só APRESENTAÇÃO da nota total.
  * Entrega não aprovada fica no máximo com C, para o conceito não esconder um
- * requisito essencial descumprido (docs/PONTUACAO.md).
+ * requisito essencial descumprido (documentacao/PONTUACAO.md).
  */
 export function conceito(total: number, aprovada: boolean, escala = ESCALA_PONTUACAO): string {
   // Limites em fração da escala (S ≥ 95 %, A ≥ 85 %, B ≥ 70 %, C ≥ 50 %).

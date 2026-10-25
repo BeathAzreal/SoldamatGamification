@@ -16,7 +16,7 @@ import { h } from '../interface/criar-elementos'
  * Vista3D com o 3D ligado e a Vista 2D no resto (o mesmo resultado sem
  * inclinação). O jogo é só 3D: o desenho 2D é só o plano B sem WebGL.
  * Se ficar lento, a qualidade baixa sozinha. A câmera é livre em volta da
- * peça (vista3d.ts), mexida pelos gestos (gestos.ts) ou pelo analógico
+ * peça (camera-da-soldagem.ts), mexida pelos gestos (gestos-de-camera-e-peca.ts) ou pelo analógico
  * direito do controle, sempre com o arco fechado.
  */
 
@@ -85,7 +85,7 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
 
   /**
    * Vista de frente para a face da junta: a peça tomba em torno do eixo X
-   * (palco3d.ts), e a normal da face fica a `rolagem` graus da vertical; a
+   * (palco.ts), e a normal da face fica a `rolagem` graus da vertical; a
    * câmera sobe a mesma elevação. Peça de pé (corrimão, vertical) → câmera
    * de lado, olhando a junta, e não as bordas de cima.
    */

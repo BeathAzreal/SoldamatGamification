@@ -25,7 +25,7 @@ export function paraMundo(X: number, Y: number, Z: number): [number, number, num
 }
 
 /**
- * Perfil transversal do domo de H3, o mesmo de corte.ts:
+ * Perfil transversal do domo de H3, o mesmo de corte-transversal.ts:
  * z = h·(1 − r²), r = 2(u − yCentro)/largura, com u de uma borda à outra.
  */
 export function perfilSecao(s: Pick<SecaoLocal, 'larguraMm' | 'alturaMm' | 'yCentroMm'>, divisoes = DIVISOES_PERFIL): { u: number; z: number; r: number }[] {

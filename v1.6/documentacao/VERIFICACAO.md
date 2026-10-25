@@ -6,7 +6,7 @@ Pedido: controle de altura ruim (o arco apagava e era preciso soldar aos poucos)
 organizado (sem protótipo no topo, escolha MIG/MAG ou eletrodo no Treino), sem botão para
 soldar (abrir ao tocar a peça) e peças que fazem sentido para eletrodo.
 
-- Simulação a 60 quadros/s com jogador de reação 0,2 s (tests/refino15.test.ts): com a
+- Simulação a 60 quadros/s com jogador de reação 0,2 s (testes/eletrodo-refino-e-jogabilidade.test.ts): com a
   ajuda parcial, arco aceso > 97% do tempo a vareta inteira, sem grudar, ~0,4–0,7 toque/s
   em S (80, 100 e 130 A); sem ajuda também foi possível. Toque curto desce 0,2–0,4 mm.
 - Navegador (Chromium sem interface, ~3,5 quadros/s), 1366×768: menu sem o atalho do
@@ -41,7 +41,7 @@ execução local, em 1366×768, 1166×884 e 1024×768:
   verificado por testes do modelo, não por partida humana. Não testado em GPU
   real, mesa digitalizadora ou gamepad físico.
 
-Testes: `tests/refino15.test.ts` (H68–H70, avanço medido, escória na largura do
+Testes: `testes/eletrodo-refino-e-jogabilidade.test.ts` (H68–H70, avanço medido, escória na largura do
 cordão, limpeza ao longo do passe, nomes de tecla). TypeScript e todos os
 testes aprovados; portátil regenerado.
 
@@ -80,7 +80,7 @@ produção e portátil regenerados.
 ## Alpha v1.4 — correções da revisão visual do GPT (branch `claude/v1.4`)
 
 - Preparação em 1280×720: a peça de teste ficava atrás da barra de ações.
-  Novo `src/estilo-espaco.css` (carregado por último): em telas baixas, título
+  Novo `codigo/estilos/5-espacamento-e-layout.css` (carregado por último): em telas baixas, título
   menor, cabeçalho da peça numa faixa, descrição da junta escondida (está na
   ficha), giro/posição/Centralizar numa linha só (o "Rotação somente X" some e
   fica a posição), altura mínima da peça 150 px e o resumo do passe rolando
@@ -99,7 +99,7 @@ produção e portátil regenerados.
   dono, junta em T na horizontal): o segundo passe entrava na mesma fatia e o
   modelo usava um centro médio com espalhamento enorme. Agora vira um cordão
   solto (H58), com malha própria sobre a chapa ou a parede. Testes novos em
-  `tests/soltos.test.ts`; conferido em 3D (T com passes na raiz, na alma e na
+  `testes/soltos.test.ts`; conferido em 3D (T com passes na raiz, na alma e na
   base; topo com um passe a 22 mm). Pontuação `pontuacao-v7`.
 - Conferido no navegador em 1280×720 e 1366×768: preparação → tentativa →
   resultado (abas Largura, Corte e Defeitos) → Treinar de novo; corrimão na
@@ -107,7 +107,7 @@ produção e portátil regenerados.
 
 ## Alpha v1.4 — defeitos visíveis (branch `claude/v1.4`)
 
-- Novo `tests/defeitos.test.ts` (19 testes): referência sem defeitos;
+- Novo `testes/defeitos.test.ts` (19 testes): referência sem defeitos;
   cratera ao fechar andando, cheia parando 400 ms e coberta por outro passe;
   gotas na sobrecabeça (e não na plana); escorrimento e sobreposição na
   vertical descendente; caimento, mordedura em cima e sobreposição embaixo na
@@ -138,14 +138,14 @@ produção e portátil regenerados.
 
 - `npm run typecheck` e `npm test` antes de cada commit; o resultado final
   está no fim desta seção.
-- Novo `tests/referencia.test.ts` (caso de referência de HIPOTESES.md):
+- Novo `testes/referencia.test.ts` (caso de referência de HIPOTESES.md):
   metal, corrente e potência na referência; alimentação, tensão, DBCP,
   diâmetro, velocidade e técnica (cada um mexendo só no que deve);
   conservação de metal; tocha parada depositando e aquecendo; pausa sem
   salto (H49); arco fora da peça sem aquecer; 30, 60 e 144 quadros/s;
   limites da DBCP e preparo antigo sem DBCP; nota e relatório iguais no
   replay e ao vivo; buraco no cordão na pontuação v2.
-- `tests/arcade.test.ts`: o teste "técnicas puxando e empurrando" passa a
+- `testes/arcade.test.ts`: o teste "técnicas puxando e empurrando" passa a
   experimentar os diâmetros de arame da missão (o desafio só trava a
   técnica). Com a corrente revista, arame de 1,2 mm no inox de 2 mm perfura
   em qualquer alimentação; com 0,8 mm há solução.
@@ -155,19 +155,19 @@ produção e portátil regenerados.
 - Fresta do topo reto (H18 revista): o metal enche a fresta antes do
   reforço. `CONTEXTO_PADRAO` passou a ter abertura 0 (modelo das etapas
   1–4, cordão sobre chapa), então os testes daquelas etapas seguem iguais;
-  testes novos em `tests/juntas.test.ts`. A didática (área do GPT) usa
+  testes novos em `testes/juntas.test.ts`. A didática (área do GPT) usa
   largura ∝ √área e fica aproximada no topo com abertura: ver
-  `docs/NOTAS-PARA-GPT.md`.
+  `documentacao/NOTAS-PARA-GPT.md`.
 - Cordão "dentro da chapa" com listras no 3D (relato do dono): na junta de
   topo com abertura, o modelo mandava o metal para a fresta mesmo com o
   cordão longe dela e desenhava o metal abaixo da face. Agora só o trecho
   da fresta embaixo do cordão é enchido; fora dela o cordão fica sobre a
-  chapa. Teste novo em `tests/juntas.test.ts` (falhava antes da correção);
+  chapa. Teste novo em `testes/juntas.test.ts` (falhava antes da correção);
   no navegador, passe em zigue-zague fora da fresta sem listras e com a
   previsão "borda".
 - Pontuação `pontuacao-v3` (0–1000, notas graduadas): testes novos em
-  `tests/referencia.test.ts` (escala, nota graduada da largura, reinícios
-  e metal fora do trecho); `tests/torneio.test.ts` e `tests/dados.test.ts`
+  `testes/referencia.test.ts` (escala, nota graduada da largura, reinícios
+  e metal fora do trecho); `testes/torneio.test.ts` e `testes/dados.test.ts`
   ajustados à escala de 1000. No navegador: placar "/ 1000" com notas
   inteiras, nomes novos das categorias e a aba "Execução" da explicação,
   em 1366×768 e 1280×720, sem rolagem.
@@ -284,14 +284,14 @@ desenhar com raio negativo quando o gráfico ainda não tinha largura.
 
 ## Correções da revisão técnica pelo GPT (2026-10-23)
 
-- Regressões adicionadas em tests/revisao-gpt.test.ts: pausa longa e
+- Regressões adicionadas em testes/revisao-gpt.test.ts: pausa longa e
   repetida sem alteração térmica, temporal ou de metal; replay compacto;
   média de torneio antigo; bloqueio de mistura de versões sem mutar dados;
   magnitude de borda no topo e margem de filete; aberturas planejadas;
   explicação e comparação de juntas com fresta.
-- Os objetos simulados em tests/torneio.test.ts agora usam a versão atual
+- Os objetos simulados em testes/torneio.test.ts agora usam a versão atual
   ao representar tentativas de torneios novos. O caso legado tem teste próprio.
-- Atualizadas as asserções de versão de tests/referencia.test.ts para v4.
+- Atualizadas as asserções de versão de testes/referencia.test.ts para v4.
 - A revisão visual em 1280×720 e 1366×768 permanece pendente: o navegador
   integrado não acessa o servidor local deste ambiente.
 - Esta entrega atualiza código e documentação. O portátil e o ZIP

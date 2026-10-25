@@ -10,7 +10,7 @@ import type { SecaoLocal } from './cordao'
  * (filete: T, sobreposta, canto) a junta é um entalhe de 90° e w é a
  * bissetriz; w = 0 passa pela raiz (o canto). A tocha mira no plano w = 0.
  *
- * Os números são do jogo (docs/HIPOTESES.md). As formas (entalhe de 90°,
+ * Os números são do jogo (documentacao/HIPOTESES.md). As formas (entalhe de 90°,
  * chanfro de 60°, convexidade pela tensão) seguem a prática; nada aqui é
  * norma nem medida.
  */

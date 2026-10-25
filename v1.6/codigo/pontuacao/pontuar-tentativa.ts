@@ -39,7 +39,7 @@ export function pontuarRegistro(
 
 /**
  * O mesmo que pontuarRegistro, mais o relatório técnico estruturado
- * (relatorio.ts) para a didática. Mesmo registro → mesma nota e mesmo relatório.
+ * (relatorio-da-nota.ts) para a didática. Mesmo registro → mesma nota e mesmo relatório.
  */
 export function relatorioDoRegistro(
   missao: Missao,

@@ -1,6 +1,6 @@
 # Dispositivos de entrada
 
-Uma camada comum (`src/entrada/fonte.ts`) entrega à simulação sempre a mesma
+Uma camada comum (`codigo/dispositivos/leitura-comum.ts`) entrega à simulação sempre a mesma
 coisa: leituras `{ t, x, y }` em **milímetros da peça** e em **milissegundos
 do relógio de alto desempenho**, mais abrir e fechar o arco. A simulação não
 sabe qual dispositivo está em uso.
@@ -19,7 +19,7 @@ sabe qual dispositivo está em uso.
 - **Controle:** a Gamepad API só pode ser consultada (não gera eventos de
   movimento). A posição é integrada em **passos fixos de 8 ms** do relógio
   real. Com o analógico estável, a trajetória é a mesma a 25 ou a 125 quadros
-  por segundo (teste em `tests/entrada.test.ts`). Mudanças entre duas
+  por segundo (teste em `testes/entrada.test.ts`). Mudanças entre duas
   consultas são atribuídas ao instante da consulta — erro de no máximo um
   quadro, inevitável quando se consulta o controle.
 

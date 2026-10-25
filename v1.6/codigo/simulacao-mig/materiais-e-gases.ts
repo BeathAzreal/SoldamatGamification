@@ -1,6 +1,6 @@
 /**
  * Materiais e gases do jogo (H27, H35). Todos os números são relativos e do
- * jogo; o que vem de fora é só a ORDEM das propriedades (ver docs/HIPOTESES.md).
+ * jogo; o que vem de fora é só a ORDEM das propriedades (ver documentacao/HIPOTESES.md).
  */
 
 export type MaterialId = 'aco-carbono' | 'inox-austenitico' | 'aluminio'

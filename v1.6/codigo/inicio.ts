@@ -42,7 +42,7 @@ document.getElementById('botao-info')!.addEventListener('click', () =>
       h('p', {}, 'Este é um jogo didático com um modelo qualitativo simplificado de MIG/MAG. Os números são do jogo, não valores de processo.'),
       h('p', {}, 'A aparência do cordão não indica qualidade interna. A "integridade prevista" e o corte transversal são resultados sintéticos do modelo, não ensaios.'),
       h('p', {}, 'Requisitos das missões são objetivos didáticos fictícios; o jogo não segue norma nem concede certificação.'),
-      h('p', {}, 'As hipóteses e as fontes consultadas estão em docs/HIPOTESES.md, no projeto.'),
+      h('p', {}, 'As hipóteses e as fontes consultadas estão em documentacao/HIPOTESES.md, no projeto.'),
     ),
   ),
 )

@@ -18,7 +18,7 @@ const secao = (larguraMm: number, alturaMm: number, yCentroMm = 0): SecaoLocal =
 })
 
 describe('vista 3D: seção → vértices (H3)', () => {
-  it('o perfil é o domo de corte.ts: zero nas bordas, altura no centro, área (2/3)·w·h', () => {
+  it('o perfil é o domo de corte-transversal.ts: zero nas bordas, altura no centro, área (2/3)·w·h', () => {
     const s = secao(8, 2.8, 0.6)
     const p = perfilSecao(s, 400)
     expect(p[0].u).toBeCloseTo(0.6 - 4, 9)

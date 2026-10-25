@@ -1,5 +1,5 @@
 /*
- * Persistência local versionada (docs/DADOS.md).
+ * Persistência local versionada (documentacao/DADOS.md).
  *
  * Cada coleção fica numa chave própria do localStorage, dentro de um
  * envelope com a versão do esquema. Nada sai do computador: não há conta

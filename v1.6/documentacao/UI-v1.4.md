@@ -22,7 +22,7 @@ não interceptam campos de formulário nem diálogos.
 - Linguagem visual para missões, treino, bancada, controles, execução,
   resultados, recordes, torneios, formulários e diálogos.
 - Estados de seleção e foco, redução de movimento e adaptação para notebook.
-- Camada de estilos em src/estilo-v14.css, carregada após os estilos existentes.
+- Camada de estilos em codigo/estilos/3-visual-v14.css, carregada após os estilos existentes.
 - Física, pontuação, registros e controles de entrada preservados.
 
 Não há fontes remotas nem bibliotecas novas. Os dados mantêm as chaves da

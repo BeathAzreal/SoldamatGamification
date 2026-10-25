@@ -21,7 +21,7 @@ import { pontuar } from '../codigo/pontuacao/regras-de-pontuacao'
 import { relatorioTecnico } from '../codigo/pontuacao/relatorio-da-nota'
 
 /*
- * CASO DE REFERÊNCIA (docs/HIPOTESES.md, "Caso de referência"):
+ * CASO DE REFERÊNCIA (documentacao/HIPOTESES.md, "Caso de referência"):
  * MIG/MAG, aço de baixo carbono 3,0 mm, junta de topo reto com abertura de
  * 1,0 mm, posição plana; arame de 1,0 mm, argônio + CO₂, técnica neutra,
  * DBCP 15 mm; tensão 5,5 e alimentação 5 (botões); passe reto de 10 a

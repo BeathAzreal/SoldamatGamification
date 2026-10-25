@@ -13,7 +13,7 @@ export { EXAGERO_MAX, EXAGERO_MIN, EXAGERO_PADRAO, webglDisponivel }
 
 /*
  * Vista 3D da peça soldada na INSPEÇÃO e no replay: o palco comum
- * (palco3d.ts) com câmera orbital livre e uma tocha simples. Só LÊ o modelo.
+ * (palco.ts) com câmera orbital livre e uma tocha simples. Só LÊ o modelo.
  */
 
 export interface Cena3D {
@@ -59,7 +59,7 @@ export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
   controles.screenSpacePanning = true
   controles.minDistance = 25
   controles.maxDistance = 900
-  // Não deixa a câmera passar para baixo do piso da sala (palco3d.ts).
+  // Não deixa a câmera passar para baixo do piso da sala (palco.ts).
   controles.maxPolarAngle = Math.PI * 0.6
 
   // Tocha simplificada (bocal) e o clarão do arco: só durante o replay.

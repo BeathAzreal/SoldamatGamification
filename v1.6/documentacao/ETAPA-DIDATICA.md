@@ -13,4 +13,4 @@ Roteiros das seis missões ensinam uma habilidade por capítulo sem alterar requ
 
 ## Validação e limites
 
-Testes cobrem roteiros, desbloqueios, dados antigos, feedback determinístico, prioridades, etapas do Arcade, separação dos rankings, anonimato e desempate. A suíte existente verifica a viabilidade das condições de Arcade e missões. Não houve edição em `src/render`, `src/entrada`, `src/modelo` ou `src/pontuacao`. Falta conferência visual completa de todas as telas e dispositivos.
+Testes cobrem roteiros, desbloqueios, dados antigos, feedback determinístico, prioridades, etapas do Arcade, separação dos rankings, anonimato e desempate. A suíte existente verifica a viabilidade das condições de Arcade e missões. Não houve edição em `codigo/render`, `codigo/entrada`, `codigo/modelo` ou `codigo/pontuacao`. Falta conferência visual completa de todas as telas e dispositivos.

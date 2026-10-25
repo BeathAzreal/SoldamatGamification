@@ -48,7 +48,7 @@ import { telaJulgamento } from './avaliacao-do-professor'
 
 /*
  * Torneio local por turnos. As regras (vez, limite, entrega, publicação)
- * ficam no motor puro (dados/torneio.ts); aqui só montamos as telas e
+ * ficam no motor puro (torneio/regras-e-dados-do-torneio.ts); aqui só montamos as telas e
  * gravamos depois de cada ação relevante.
  */
 

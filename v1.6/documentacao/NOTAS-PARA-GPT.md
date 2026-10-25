@@ -8,7 +8,7 @@ foi mexido pelo Claude além do mínimo listado em "Já ajustado".
 
 - `ResultadoPontuacao.total` vai de **0 a 1000** (inteiro); cada categoria
   vai até `peso × 10` (`categoria.maximo` já traz o valor certo). Use
-  `ESCALA_PONTUACAO` (`src/pontuacao/regras.ts`) em vez de 100 fixo.
+  `ESCALA_PONTUACAO` (`codigo/pontuacao/regras-de-pontuacao.ts`) em vez de 100 fixo.
 - Nomes novos das categorias (`NOME_CATEGORIA`; os ids não mudaram):
   integridade → "Fusão prevista (integridade)", desenho → "Geometria do
   cordão", regularidade → "Regularidade da largura", deformacao →
@@ -19,7 +19,7 @@ foi mexido pelo Claude além do mínimo listado em "Já ajustado".
 - `EntradaPontuacao.aberturasDeArco` (opcional) entra na Execução;
   `pontuarRegistro` já calcula a partir dos eventos.
 - `medidas` ganhou `notaFusao`, `reiniciosArco` e `aproveitamentoMetal`.
-- Detalhes e justificativas: `docs/PONTUACAO.md`.
+- Detalhes e justificativas: `documentacao/PONTUACAO.md`.
 
 **Precisa de ajuste (GPT):**
 1. Textos que falam em "nota de 0 a 100", "pontos de 100" ou nos nomes
@@ -41,12 +41,12 @@ menores. O contexto padrão `CONTEXTO_PADRAO` passou a ter abertura 0 (cordão
 sobre chapa, o modelo das etapas 1–4), então os testes daquelas etapas não
 mudaram.
 
-**Precisa de ajuste (GPT), em `src/didatica/`:**
-- `explicacao.ts` (largura prevista por `larguraPelaArea(area, razao)`) e
-  `comparacao.ts` (`decomporLargura` com `√(taxa)`, `√(velocidade)`,
+**Precisa de ajuste (GPT), em `codigo/explicacoes/`:**
+- `codigo/explicacoes/explicacao-do-resultado.ts` (largura prevista por `larguraPelaArea(area, razao)`) e
+  `comparar-tentativas.ts` (`decomporLargura` com `√(taxa)`, `√(velocidade)`,
   `√(razão)`) supõem largura ∝ √área. Com fresta isso vira aproximação. O
   certo é usar a área de **reforço**: `areaParaLargura(junta, dimensões,
-  largura, razão)` em `src/modelo/juntas.ts` faz a conta inversa, e
+  largura, razão)` em `codigo/simulacao-mig/tipos-de-junta-e-posicao.ts` faz a conta inversa, e
   `SecaoLocal.areaReforcoMm2` traz a área acima da face.
 - O estado de fusão `enchimento` agora também aparece no topo reto (metal
   abaixo da face) e se chama "junta não preenchida".
@@ -57,25 +57,25 @@ mudaram.
   de fusão do arame (H28 revista, H48), ângulo de avanço em
   `INFO_TECNICA[t].anguloAvancoGraus`.
 - Relatório técnico estruturado: `relatorioDoRegistro(...)` em
-  `src/pontuacao/oficial.ts` (observação × fatores × limitações por trecho);
-  campos em `docs/PONTUACAO.md`.
+  `codigo/pontuacao/pontuar-tentativa.ts` (observação × fatores × limitações por trecho);
+  campos em `documentacao/PONTUACAO.md`.
 
 ## Já ajustado pelo Claude (mínimo necessário)
 
-- `src/dados/recordes.ts`: validação do total aceita até `ESCALA_PONTUACAO`.
-- `src/dados/torneio.ts`: nota do professor (0–10) convertida para a escala
+- `codigo/salvamento/recordes-das-missoes.ts`: validação do total aceita até `ESCALA_PONTUACAO`.
+- `codigo/torneio/regras-e-dados-do-torneio.ts`: nota do professor (0–10) convertida para a escala
   de 1000 na média ponderada.
-- `src/ui/componentes/pontuacao.ts`: conceito S–D por fração da escala e
+- `codigo/partes-das-telas/quadro-de-pontuacao.ts`: conceito S–D por fração da escala e
   placar "/ 1000".
-- `src/ui/telas/historia.ts`: recorde buscado na versão atual da pontuação.
-- Testes: `tests/torneio.test.ts` (média ponderada na escala nova),
-  `tests/dados.test.ts` (nota inválida agora é 5000).
+- `codigo/telas/missoes.ts`: recorde buscado na versão atual da pontuação.
+- Testes: `testes/torneio.test.ts` (média ponderada na escala nova),
+  `testes/dados.test.ts` (nota inválida agora é 5000).
 
 ## Alpha v1.4 — defeitos visíveis (Claude, `claude/v1.4`)
 
 O modelo agora prevê defeitos visíveis (H50–H57 em HIPOTESES.md): gravidade
 (escorrimento, gotas, caimento), mordedura, sobreposição, respingos,
-cratera, porosidade e empeno. Tudo em `src/modelo/defeitos.ts`, função pura
+cratera, porosidade e empeno. Tudo em `codigo/simulacao-mig/defeitos.ts`, função pura
 `analisarDefeitos(...)`.
 
 **O que a didática pode usar:**
@@ -95,7 +95,7 @@ na fusão). Recordes e torneios com versões antigas ficam separados, como
 antes. Textos que citem "4 itens da geometria" precisam virar 5.
 
 **Telas comuns que o Claude mexeu (mínimo):**
-- `src/ui/componentes/inspecao.ts`: aba "Defeitos", defeitos no 3D e no corte.
-- `src/ui/componentes/bancada.ts`: linha "Defeitos visíveis" no resumo do passe.
-- `src/ui/telas/execucao.ts` e `bancada.ts`: passam `eventos` para o 3D.
+- `codigo/partes-das-telas/inspecao-do-resultado.ts`: aba "Defeitos", defeitos no 3D e no corte.
+- `codigo/partes-das-telas/bancada-mig.ts`: linha "Defeitos visíveis" no resumo do passe.
+- `codigo/telas/soldagem-mig.ts` e `bancada-mig.ts`: passam `eventos` para o 3D.
 

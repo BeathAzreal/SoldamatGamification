@@ -20,7 +20,7 @@ import type { EventosCompactos } from '../salvamento/registro-compacto'
 import { normalizarNome } from '../salvamento/recordes-das-missoes'
 
 /*
- * Motor do torneio local por turnos (docs/TORNEIO.md).
+ * Motor do torneio local por turnos (documentacao/TORNEIO.md).
  *
  * Funções puras sobre um retrato dos dados (BaseTorneio): cada ação devolve
  * uma cópia nova ou lança ErroTorneio. A interface só chama estas ações e

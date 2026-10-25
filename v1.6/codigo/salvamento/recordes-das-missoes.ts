@@ -5,7 +5,7 @@ import { CATEGORIAS, ESCALA_PONTUACAO, type CategoriaId } from '../pontuacao/reg
 import { novoId } from './armazenamento-no-navegador'
 
 /*
- * Recordes do Arcade (docs/DADOS.md). Ficam só neste navegador.
+ * Recordes do Arcade (documentacao/DADOS.md). Ficam só neste navegador.
  * Rankings separados por missão (e versão da missão), dificuldade,
  * dispositivo e versão da pontuação: desafios diferentes não se comparam.
  */

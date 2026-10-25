@@ -2,7 +2,7 @@ import type { Amostra } from '../simulacao-mig/trajetoria'
 import type { Dispositivo } from './lista-de-dispositivos'
 
 /*
- * Camada comum de entrada (docs/DISPOSITIVOS.md).
+ * Camada comum de entrada (documentacao/DISPOSITIVOS.md).
  *
  * Toda fonte entrega a mesma coisa à simulação: leituras { t, x, y } em
  * milímetros da peça e em milissegundos do relógio de alto desempenho, mais

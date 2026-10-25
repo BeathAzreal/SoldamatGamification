@@ -8,7 +8,7 @@ import { h } from '../interface/criar-elementos'
  * Posicionar a peça (H42, H47), sempre com o arco FECHADO:
  * - arrastando com o botão de girar a peça (padrão: direito) ou com a tecla
  *   da caneta segurada (padrão: E ou B): para os lados gira no próprio
- *   plano, para cima e para baixo tomba (gestos.ts);
+ *   plano, para cima e para baixo tomba (gestos-de-camera-e-peca.ts);
  * - ou segurando os botões ⟲ ⟳ ▲ ▼, ou o direcional do controle.
  * Apenas rotação em X, em torno da garra, limitada pelo suporte.
  * As duas juntas decidem a posição de soldagem (plana, horizontal, vertical
@@ -161,7 +161,7 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
       leituraRolagem.textContent = `${Math.round(((rolagem % 360) + 360) % 360)}°`
       pecaLado.setAttribute('transform', `rotate(${-rolagem.toFixed(1)} 20 21)`)
       const pos = posicaoDe(gravidade({ rolagemGraus: rolagem, giroGraus: giro }))
-      // Duas partes: em telas baixas o modo de fixação some e fica só a posição (estilo-espaco.css).
+      // Duas partes: em telas baixas o modo de fixação some e fica só a posição (5-espacamento-e-layout.css).
       const modo = fixa ? 'Presa na garra · ' : 'Rotação somente X · '
       const nome = `${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[familia][pos]})`
       if (leituraPosicao.textContent !== modo + nome) leituraPosicao.replaceChildren(h('span', { class: 'giro-modo' }, modo), nome)

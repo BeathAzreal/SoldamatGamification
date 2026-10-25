@@ -8,7 +8,7 @@ import { PECA } from '../simulacao-mig/parametros-do-modelo'
 /*
  * Faíscas, fumaça, brilho do metal quente, halo de calor e tinta térmica da
  * execução em 3D. EFEITOS PURAMENTE VISUAIS (H8, H43), com as mesmas regras
- * de efeitos.ts (taxa de faíscas, τ do brilho, alcance do halo, faixa da
+ * de efeitos-visuais.ts (taxa de faíscas, τ do brilho, alcance do halo, faixa da
  * tinta). Nada daqui é campo de temperatura nem volta para o modelo.
  * Tudo é alocado uma vez; a cada quadro só se reescrevem os buffers.
  */
@@ -160,7 +160,7 @@ export class Calor3D {
 
     this.halo = this.faixa(3, new THREE.MeshBasicMaterial({ vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false }), 0.02)
     if (comTinta) {
-      // Mesmas cores e opacidades da vista de cima (cena.ts): faixa externa azulada, interna dourada.
+      // Mesmas cores e opacidades da vista de cima (cena-2d.ts): faixa externa azulada, interna dourada.
       // Uma faixa de cada lado do cordão (no filete, cada uma na sua parede).
       this.tintas.push(
         this.faixa(4, new THREE.MeshBasicMaterial({ color: '#5a60aa', transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide }), 0.008, 1),
@@ -221,7 +221,7 @@ export class Calor3D {
 
   /**
    * Faíscas e fumaça (H43). `emissor`: ponto do arco (coordenadas da peça)
-   * ou null com o arco fechado; `taxa` vem de taxaFaiscas (efeitos.ts).
+   * ou null com o arco fechado; `taxa` vem de taxaFaiscas (efeitos-visuais.ts).
    */
   atualizarParticulas(agoraMs: number, emissor: { x: number; y: number; z: number } | null, taxa: number, g: { x: number; y: number; z: number } = { x: 0, y: -1, z: 0 }, gotejamento = 0): void {
     const dt = this.tAnterior === null ? 0 : Math.min(0.05, (agoraMs - this.tAnterior) / 1000)
