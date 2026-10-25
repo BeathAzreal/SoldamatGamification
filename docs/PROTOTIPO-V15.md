@@ -40,3 +40,5 @@ A escória agora é uma superfície fina contínua com máscara de cobertura e c
 A limpeza foi separada em ferramentas 3D selecionáveis: Soldagem, Martelinho e Escova de aço. Martelinho usa um clique por golpe na escória fria: remove 80% da crosta atingida e converte os 20% restantes em resíduos soltos. Repetir o golpe não apaga esses resíduos. A escova remove somente resíduos já soltos, ao segurar e arrastar. Nenhuma ferramenta limpa escória quente nem remove metal. Frações e raios de ação são números sintéticos de interação, não previsão de fratura ou abrasão.
 
 O novo padrão de altura é W para subir/afastar e S para descer/aproximar. A configuração antiga com o par padrão W/S é migrada automaticamente; outros remapeamentos são preservados. Configurações salvas no novo formato não são reinvertidas. Os demais gestos de câmera e orientação permanecem iguais.
+
+O martelinho agora é apresentado de lado, com arco lateral do cabo e contato da ponta da cabeça com a região selecionada. A alteração é visual e mantém as regras de remoção de crosta e resíduos.

@@ -89,6 +89,7 @@ export function criarBancada15() {
   palco.peca.add(escoria.malha)
   palco.guardarTexturas(escoria.textura)
   const eixo = new THREE.Vector3(), normal = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion()
+  const pontaMartelo = new THREE.Vector3()
   let volumeAntes = -1
   let cordaoAntes: Cordao | null = null
   return {
@@ -123,9 +124,11 @@ export function criarBancada15() {
         const s = cord.secao(cord.indiceEm(p.x))
         if (Math.abs(s.yCentroMm - p.y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, s.alturaMm)
       }
-      const golpe = Math.max(0, 1 - desdeGolpeMs / 180)
-      martelo.position.set(p.x - 75, topo + 4 + (desdeGolpeMs < 250 ? golpe * 10 : 7), p.y)
-      martelo.rotation.z = -0.35 + golpe * 0.5
+      // Cabo de lado: a cabeça chega em arco lateral e a ponta toca a crosta.
+      const golpe = desdeGolpeMs >= 0 && desdeGolpeMs < 260 ? Math.sin(Math.PI * desdeGolpeMs / 260) : 0
+      martelo.rotation.set(0, -0.6 + golpe * 0.22, 1.1 + golpe * 0.35)
+      pontaMartelo.set(-20.5, 0, 0).applyEuler(martelo.rotation)
+      martelo.position.set(p.x - 75 - (1 - golpe) * 10, topo + 0.8 + (1 - golpe) * 5, p.y + (1 - golpe) * 4).sub(pontaMartelo)
       escova.position.set(p.x - 75 + (acionada ? Math.sin(agoraMs * 0.04) * 1.5 : 0), topo + 0.5, p.y)
       escova.rotation.y = 0.2
       const altura = Math.max(0, m.distanciaMm)
