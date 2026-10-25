@@ -1,49 +1,67 @@
 # Oficina de Soldagem — versões e downloads
 
-## Alpha v1.4 disponível para teste
+## Alpha v1.5 disponível para teste — eletrodo revestido
 
-**[BAIXAR ALPHA v1.4 — jogo pronto em ZIP](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip)**
+**[BAIXAR ALPHA v1.5 — jogo pronto em ZIP](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip)**
 
 Extraia o ZIP inteiro e abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html**
 no Chrome ou Edge. Não precisa instalar nada nem ter internet para jogar.
 Entre na sua conta do GitHub para baixar os arquivos deste repositório privado.
 
-O jogo deve mostrar **ALPHA v1.4** no topo e uma navegação lateral.
-Esta é a versão de teste: interface nova e **solda mais realista** (gravidade
-escorrendo, pingando e derrubando o metal; mordedura, sobreposição, respingos,
-cratera, porosidade, escamas, cores de calor e empeno). Os defeitos aparecem na
-peça 3D, no corte e na aba **Defeitos** do resultado.
-MIG/MAG está disponível. Eletrodo revestido aparece somente como planejado.
+O jogo abre direto na **Bancada de soldagem** e mostra **ALPHA v1.5** no topo.
+É um **protótipo de eletrodo revestido** (SMAW), ainda sem pontuação:
+
+- **Abrir o arco:** segure o botão esquerdo ou Espaço, toque a ponta na chapa e
+  afaste um pouco, ou risque a ponta como um fósforo. Contato demorado gruda o
+  eletrodo (use **Desgrudar**).
+- **Manter o arco:** a vareta queima e encurta; desça com **S** para manter o
+  arco perto do diâmetro da alma. O medidor sobre a vista mostra se o arco está
+  curto, adequado ou longo. Arco longo deixa o cordão largo e irregular e solta
+  muitos respingos. Para treinar só o avanço, ligue **Compensar consumo (assistido)**.
+- **Escória:** o cordão sai coberto de escória, que esfria com o tempo. Fria,
+  quebre com o **Martelinho** (clique) e retire os resíduos com a **Escova de aço**
+  (arraste).
+- **Corrente e eletrodo:** 40 a 180 A, com 2,5 ou 3,2 mm. Mais corrente queima a
+  vareta mais depressa; corrente baixa gruda com facilidade.
+- **Controles:** W sobe, S desce, botão do meio gira a câmera, botão direito
+  orienta o eletrodo, I/K inclinam, J/L mudam a direção e Q/E giram o punho.
+  Tudo pode ser trocado em **Configurar controles** (também caneta e controle).
+
+O jogo MIG/MAG completo da v1.4 continua disponível pelo menu lateral.
 
 | Versão | Estado | Download |
 |---|---|---|
-| **Alpha v1.4** | **Em teste** | [ZIP da v1.4](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
+| **Alpha v1.5** | **Em teste — protótipo de eletrodo revestido** | [ZIP da v1.5](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip) |
+| Alpha v1.4 | Anterior — MIG/MAG com solda realista | [ZIP da v1.4](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
 | Alpha v1.3 | Aprovada | [ZIP da v1.3](v1.3/Oficina%20de%20Soldagem%203D%20Alpha%20v1.3.zip) |
 | Alpha v1.2 | Anterior | [Pasta portátil](v1.2/jogo-portatil/) |
 | Alpha v1.1 | Anterior | [Pasta do jogo](v1.1/) |
 
 Se o GitHub abrir a página do ZIP em vez de baixar, clique em **Download raw file**.
-**Code → Download ZIP** nesta página baixa o histórico; use o link específico
-acima para receber somente o jogo v1.4 pronto.
+**Code → Download ZIP** nesta página baixa o histórico inteiro; use os links
+acima para receber somente o jogo pronto.
 
-## Onde está a v1.4?
+## Onde está cada versão?
 
-Na pasta [`v1.4/`](v1.4/) desta página (código e ZIP), copiada da branch de
-entrega [`alpha-v1.4`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.4),
-que junta o trabalho do GPT (`gpt/v1.4`) e do Claude (`claude/v1.4`).
+Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
+entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
-Para baixar o código-fonte, selecione `alpha-v1.4` e use **Code → Download ZIP**.
-[Leia as instruções da v1.4](https://github.com/BeathAzreal/SoldamatGamification/blob/alpha-v1.4/README.md).
+- [`v1.5/`](v1.5/) ← [`alpha-v1.5`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.5) (`gpt/v1.5` + `claude/v1.5`)
+- [`v1.4/`](v1.4/) ← [`alpha-v1.4`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.4) (`gpt/v1.4` + `claude/v1.4`)
 
-## O que mudou?
+Detalhes e limites do modelo do eletrodo (hipóteses H59–H70):
+[`v1.5/docs/PROTOTIPO-V15.md`](v1.5/docs/PROTOTIPO-V15.md).
 
-- Início e navegação lateral em estilo laboratório industrial.
-- Apresentação comum para missões, treino, bancada, execução, resultados e competição.
-- Defeitos visíveis previstos pelo modelo (hipóteses H50–H57) e pontuação `pontuacao-v6`.
-- Portátil autossuficiente, com atalho e instruções.
+## O que mudou na v1.5?
 
-TypeScript, **344 testes** e build aprovados. Teste visual e de dispositivos
-ainda pendente. A v1.3 aprovada continua preservada.
+- Bancada nova de eletrodo revestido: abertura por toque, consumo da vareta,
+  aderência, troca de vareta, escória que esfria e limpeza com martelinho e escova.
+- Medidor do comprimento do arco, respingos com arco longo e modo assistido.
+- Alicate porta-eletrodo em 3D, arco luminoso e ponta incandescente.
+- Controles configuráveis para teclado, mouse, caneta e gamepad.
+
+TypeScript, **394 testes** e build aprovados. Testado em navegador automatizado;
+teste em aparelhos reais (placa de vídeo, caneta, controle) ainda pendente.
 
 ## Dados e versões
 
