@@ -754,3 +754,7 @@ O palco gira a peça em X em torno da orelha presa na garra, sem girar a sala. A
 ## Protótipo v1.5 — H59 a H62
 
 O acionamento por botão, abertura do eletrodo por contato, consumo da vareta e integração em passo fixo estão documentados em [PROTOTIPO-V15.md](PROTOTIPO-V15.md). São hipóteses de interação com números sintéticos, sem pontuação ou física SMAW calibrada. As hipóteses anteriores continuam descrevendo somente o jogo MIG/MAG herdado.
+
+### Evolução SMAW v1.5 — H63 a H66
+
+Corrente, consumo dependente da corrente, aderência, escória superficial com resfriamento/limpeza e orientação independente são descritos em [PROTOTIPO-V15.md](PROTOTIPO-V15.md). H63 substitui o consumo e depósito SMAW fixos de H61–H62, sem reutilizar a previsão de fusão MIG. Não há certificação ou qualidade interna validada.

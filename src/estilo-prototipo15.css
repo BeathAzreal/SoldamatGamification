@@ -2,3 +2,4 @@
 .app.app-cheia:has(.p15){height:calc(100dvh - 62px);box-sizing:border-box;overflow:hidden}.app.app-cheia>.p15{flex:1;height:0;overflow:hidden}.p15-grade{grid-template-rows:minmax(0,1fr)}.p15-vista canvas{position:absolute;inset:0}
 .p15 [hidden]{display:none!important}
 .p15-instrucoes{top:auto;bottom:12px}
+.p15-painel details{border-top:1px solid #44515b;padding-top:9px}.p15-painel summary{cursor:pointer;color:#e6d7ba;margin-bottom:8px}.p15-config{display:grid;grid-template-columns:1fr 1fr;gap:10px}.p15-config label{display:flex;flex-direction:column;font-size:13px;gap:4px}.p15-config p{grid-column:1/-1}.p15-config input,.p15-config select{width:100%}.p15-config input[type=checkbox]{width:auto}.p15-config .erro{color:#f5a49a}.p15-estado:has(+p){font-size:14px}

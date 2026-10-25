@@ -1,23 +1,32 @@
-# v1.5 — distância e consumo da vareta
+# v1.5 — bancada técnica SMAW
 
-Protótipo em `gpt/v1.5`, derivado da v1.4 integrada, em checkout separado. Não altera a v1.4 nem grava pontos, tentativas ou recordes. O restante do jogo continua como base MIG/MAG.
+Esta etapa evolui exclusivamente `gpt/v1.5`. A v1.4 e suas branches permanecem intactas. Não há pontuação, certificação ou previsão validada de qualidade interna. MIG mantém seu modelo anterior no jogo base; a bancada experimental tem acionamento e distância próprios.
 
-## Hipóteses e limites
+## Hipóteses H59–H66 e limites
 
-- **H59:** manter botão esquerdo, Espaço ou botão da interface habilita. Soltar, perder captura, sair da janela ou pausar desabilita. No MIG equivale ao gatilho. No eletrodo é uma convenção do jogo: o porta-eletrodo real não tem gatilho.
-- **H60:** aproximar até contato e afastar levemente abre o arco do eletrodo, com comando habilitado. Contato não deposita. Até 0,35 mm é contato; após contato, até 5 mm mantém arco. Afastar demais exige nova abertura. Limiares inventados para testar interação.
-- **H61:** vareta didática de 120 mm, consumo de 3 mm/s de arco e reserva de 25 mm. Encurtar aumenta a distância da ponta à peça, exigindo aproximar o porta-eletrodo. Troca só com comando solto, sem apagar o depósito. Não há reposição automática. São números de jogo, sem associação com classificação comercial de eletrodo.
-- **H62:** passo fixo de 1/120 s, independente do desenho. Depósitos de 64 mm³/s no MIG e 35 mm³/s no eletrodo servem somente ao traço visual. Não se usam as regras de fusão ou pontuação MIG como física SMAW. Corrente, tensão, escória, aderência, classificação E6013/E7018 e qualidade interna ficam fora desta etapa.
+H59 mantém o comando pressionado para habilitar, com desarme ao soltar, pausar, abrir controles ou perder foco. No eletrodo o botão é convenção de entrada, não gatilho físico. H60 exige contato e afastamento para abrir. Contato até 0,35 mm e limite de arco de min(5 mm, 2 × diâmetro) são limiares do jogo.
 
-## Controles
+H61 mantém vareta didática de 120 mm e reserva de 25 mm, com troca explícita e preservação do metal. H62 integra a 120 passos/s; o tempo de simulação e os efeitos não dependem dos quadros de desenho. Os antigos valores fixos de consumo e depósito do eletrodo são substituídos por H63.
 
-Mouse posiciona sobre a chapa; esquerdo ou Espaço habilita. W aproxima e S afasta a 3 mm/s. Roda muda a altura em passos de 0,5 mm; barra ajusta a distância diretamente. Câmera parada, sem disputar os controles da mão. O botão do painel habilita sobre a posição selecionada, com W/S para regular altura. Nova vareta mantém o depósito. Reiniciar ensaio limpa o teste. Trocar processo reinicia o ensaio.
+**H63 — corrente e consumo:** fonte SMAW de corrente constante simplificada. O ajuste permitido é 40–180 A, com diâmetro didático de 2,5 ou 3,2 mm. A referência interna é Iref = 36 × diâmetro; não é uma corrente recomendada. A taxa de fusão é 3 × (I/Iref)^1,35 mm/s. O volume depositado usa a seção circular da alma e rendimento sintético de 0,7. A tensão estimada do arco é 20 + 2 × distância em mm; a energia acumula I × U × dt. Esses coeficientes não foram calibrados para eletrodo comercial, espessura ou polaridade. Não existe cálculo de temperatura, penetração ou resistência mecânica validado.
 
-Modelo puro: `src/modelo/acionamento15.ts`. Visual: `src/render/bancada15.ts`. Eventos e indicadores: `src/ui/telas/prototipo15.ts`. A interface mostra distância ponta–peça (eletrodo) ou bico–peça (MIG), estado do arco, comprimento restante e tempo de arco. Não oferece receitas técnicas.
+**H64 — aderência:** contato energizado contínuo por 0,15 s se I/Iref < 0,65, ou 0,65 s nos demais casos, prende a ponta. Abaixo de I/Iref = 0,55 o arco não se sustenta. Enquanto grudado não há consumo ou depósito, nem deslocamento da ponta. Soltar desenergiza, mas não desfaz a aderência; o jogador deve usar Desgrudar, com comando solto. O botão representa uma operação de recuperação, não cálculo de força de alavanca. Não modelamos anti-stick, hot-start ou arc-force de máquinas comerciais.
+
+**H65 — escória:** grade superficial de 3 mm acumula cobertura conforme o volume depositado. O calor relativo decai exponencialmente com constante de 2,2 s. A escória muda de cor e só pode ser removida abaixo de calor relativo 0,15. O jogador deve arrastar sobre a região fria no modo de limpeza. Limpeza não remove metal. Um novo depósito em célula coberta e fria aumenta um indicador cumulativo de sobreposição em escória; não equivale a um diagnóstico de inclusão interna. Não há fluido de escória, química do revestimento ou solidificação metalúrgica detalhada.
+
+**H66 — movimentos:** câmera pode orbitar continuamente em 360° sem girar a peça; os polos têm pequeno afastamento numérico e a câmera fica acima do piso. A direção da ferramenta e o rolamento axial envolvem 360°. A inclinação é 0–85°, mantendo a ferramenta no hemisfério da face superior da chapa. Orientar pivota em torno da ponta selecionada, preservando a distância instantânea; durante consumo a ponta recua ao longo da vareta, inclusive lateralmente na inclinação. A peça permanece fixa na garra: não há giro irrestrito que a solte do suporte. Não são implementados soldagem pela face inferior, colisão completa do corpo do porta-eletrodo com mobiliário, rastreamento espacial de mão ou resistência tátil.
+
+## Controles e persistência
+
+Configurar controles permite remapear nove teclas, três botões do mouse, sensibilidade, velocidade de altura, função da roda, uso da inclinação da caneta, controle/gamepad, gatilho, zona morta e função do analógico direito. A validação rejeita teclas e botões conflitantes ou valores inválidos. Somente após Salvar, os dados são gravados na chave exclusiva `oficina-v15-controles-smaw`; se o armazenamento for bloqueado, a configuração vale nesta sessão. Nenhum dado antigo é migrado ou apagado.
+
+Padrão: esquerdo/Espaço habilitam, W/S aproximam e afastam, botão do meio orbita a câmera (arco fechado), direito arrastado orienta a ferramenta, I/K inclinam, J/L mudam direção, Q/E giram o punho. A roda regula distância em 0,5 mm ou zoom conforme a configuração. A câmera e a orientação não movimentam o ponto selecionado. Caneta usa tiltX/tiltY reais quando o dispositivo os fornece; pressão não modifica corrente. Gamepad: analógico esquerdo desloca ponta, direito orienta ou orbita; direcional altera altura, LB/RB giram o punho, gatilho configurado habilita.
+
+Mouse, teclado e analógicos representam gestos; não são rastreamento real de seis graus de liberdade. Diâmetro e corrente mudam com arco desabilitado; configurações pausam a bancada. Trocar processo ou Reiniciar ensaio limpa o ensaio inteiro; trocar a vareta preserva o depósito.
 
 ## Referências qualitativas
 
-- Miller, *Five Steps to Improving Your Stick Welding Technique*: comprimento do arco, extinção e aderência. https://www.millerwelds.com/en-us/resources/knowledge-hub/stick-welding/five-steps-to-improving-your-stick-welding-technique
-- Miller, manual o264152a, diretrizes SMAW: corrente constante, comprimento do arco e escória entre passes. https://www.millerwelds.com/files/owners-manuals/o264152a_mln.pdf
+- Miller, Five Steps to Improving Your Stick Welding Technique: ajuste de corrente, arco curto/aderência, orientação e manipulação. https://www.millerwelds.com/en-us/resources/knowledge-hub/stick-welding/five-steps-to-improving-your-stick-welding-technique
+- Miller, manual o264152a: fonte de corrente constante e remoção de escória antes de outro passe. https://www.millerwelds.com/files/owners-manuals/o264152a_mln.pdf
 
-As fontes sustentam relações qualitativas, não os números H59–H62 do protótipo.
+As fontes sustentam relações qualitativas. Todos os limiares, taxas e coeficientes desta implementação são hipóteses sintéticas, não receitas de soldagem.

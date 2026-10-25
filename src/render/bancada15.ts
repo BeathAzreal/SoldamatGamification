@@ -13,12 +13,18 @@ export function criarBancada15() {
   canvas.tabIndex = 0
   canvas.setAttribute('aria-label', 'Bancada 3D: mova sobre a chapa e segure o botão esquerdo ou Espaço para habilitar a soldagem. W aproxima, S afasta.')
   const camera = new THREE.PerspectiveCamera(40, 1, 1, 4000)
+  let azimute = 0.237, polar = 1.077, zoom = 1
+  const posicionarCamera = () => {
+    const d = 338 * Math.max(1, 1 / camera.aspect) * zoom
+    camera.position.setFromSphericalCoords(d, polar, azimute).add(new THREE.Vector3(0, 40, 0))
+    camera.position.y = Math.max(-350, camera.position.y)
+    camera.lookAt(0, 40, 0)
+    camera.updateMatrixWorld()
+  }
   const enquadrar = (l: number, a: number) => {
     palco.ajustarTamanho(l, a)
     camera.aspect = l / a
-    const afastamento = Math.max(1, 1 / camera.aspect)
-    camera.position.set(70 * afastamento, 40 + 160 * afastamento, 290 * afastamento)
-    camera.lookAt(0, 40, 0)
+    posicionarCamera()
     camera.updateProjectionMatrix()
     camera.updateMatrixWorld()
   }
@@ -41,6 +47,8 @@ export function criarBancada15() {
   const alma = cilindro(eletrodo, 0.7, 1, 0, metal)
   const capa = cilindro(eletrodo, 1.5, 1, 0, revestimento)
   const porta = cilindro(eletrodo, 5, 25, 0, isolante)
+  const garra = new THREE.Mesh(new THREE.BoxGeometry(16, 7, 7), cobre)
+  eletrodo.add(garra)
   const bocal = cilindro(mig, 5, 16, 8, cobre)
   const punho = cilindro(mig, 7, 28, 30, isolante)
   const arame = cilindro(mig, 0.45, 1, 0, metal)
@@ -56,10 +64,24 @@ export function criarBancada15() {
   const raio = new THREE.Raycaster()
   const plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
   const ponto = new THREE.Vector3()
+  const escoria = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: 0.95 }), 1700)
+  escoria.count = 0
+  escoria.frustumCulled = false
+  palco.peca.add(escoria)
+  const transformacao = new THREE.Object3D()
+  const corFria = new THREE.Color('#51463b'), corQuente = new THREE.Color('#d87428')
+  const eixo = new THREE.Vector3(), normal = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion()
   let volumeAntes = -1
   let cordaoAntes: Cordao | null = null
   return {
     canvas, enquadrar,
+    orbitar(dx: number, dy: number) {
+      azimute += dx * 0.006
+      polar = Math.max(0.04, Math.min(Math.PI - 0.04, polar + dy * 0.006))
+      posicionarCamera()
+    },
+    aproximar(delta: number) { zoom = Math.max(0.5, Math.min(2, zoom * Math.exp(delta * 0.001))); posicionarCamera() },
+    centralizar() { azimute = 0.237; polar = 1.077; zoom = 1; posicionarCamera() },
     pontoNaTela(x: number, y: number) {
       const r = canvas.getBoundingClientRect()
       raio.setFromCamera(new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, 1 - ((y - r.top) / r.height) * 2), camera)
@@ -70,18 +92,22 @@ export function criarBancada15() {
     desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao) {
       const ligado = m.estado === 'arco'
       const altura = Math.max(0, m.distanciaMm)
-      ferramenta.position.set(p.x - 75, 0, p.y)
+      ferramenta.position.set(p.x - 75, altura, p.y)
+      const inc = m.inclinacaoGraus * Math.PI / 180, az = m.azimuteGraus * Math.PI / 180
+      eixo.set(Math.sin(inc) * Math.cos(az), Math.cos(inc), Math.sin(inc) * Math.sin(az))
+      ferramenta.quaternion.setFromUnitVectors(normal, eixo).multiply(q.setFromAxisAngle(normal, m.rolamentoGraus * Math.PI / 180))
       eletrodo.visible = m.processo === 'eletrodo'
       mig.visible = m.processo === 'mig'
       alma.scale.y = m.restanteMm
-      alma.position.y = altura + m.restanteMm / 2
+      alma.position.y = m.restanteMm / 2
       capa.scale.y = Math.max(1, m.restanteMm - 7)
-      capa.position.y = altura + 7 + (m.restanteMm - 7) / 2
-      porta.position.y = m.alturaMm + 12
-      bocal.position.y = altura + 8
-      punho.position.y = altura + 30
+      capa.position.y = 7 + (m.restanteMm - 7) / 2
+      porta.position.y = m.restanteMm + 12
+      garra.position.set(4, m.restanteMm + 1, 0)
+      bocal.position.y = 8
+      punho.position.y = 30
       arame.scale.y = Math.max(0.1, altura - 2)
-      arame.position.y = (altura + 2) / 2
+      arame.position.y = -(altura - 2) / 2
       mira.position.set(p.x - 75, 0.3, p.y)
       mira.visible = m.naPeca
       poca.position.set(p.x - 75, 1, p.y)
@@ -97,6 +123,25 @@ export function criarBancada15() {
         cordaoAntes = c
         volumeAntes = c.volumeTotal()
       }
+      let n = 0
+      for (let i = 0; i < m.escoria.quantidade.length; i++) {
+        const cobertura = m.escoria.quantidade[i]
+        if (cobertura < 0.01) continue
+        const x = (i % 50) * 3 + 1.5, y = Math.floor(i / 50) * 3 - 48.5
+        let topo = 0
+        for (const cord of [c, ...c.soltos]) {
+          const s = cord.secao(cord.indiceEm(x))
+          if (Math.abs(s.yCentroMm - y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, s.alturaMm)
+        }
+        transformacao.position.set(x - 75, topo + 0.5, y)
+        transformacao.scale.set(1.8, 0.4 + cobertura * 0.5, 1.8)
+        transformacao.updateMatrix()
+        escoria.setMatrixAt(n, transformacao.matrix)
+        escoria.setColorAt(n++, corFria.clone().lerp(corQuente, m.escoria.calor[i]))
+      }
+      escoria.count = n
+      escoria.instanceMatrix.needsUpdate = true
+      if (escoria.instanceColor) escoria.instanceColor.needsUpdate = true
       palco.desenhar(camera)
     },
     destruir() { palco.destruir() },
