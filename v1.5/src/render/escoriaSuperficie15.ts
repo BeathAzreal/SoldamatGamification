@@ -1,9 +1,10 @@
 import * as THREE from 'three'
 import type { Escoria15 } from '../modelo/escoria15'
 import type { Cordao } from '../modelo/cordao'
+import { cristaMm, type TipoJunta } from '../modelo/juntas'
 
 /** Crosta superficial contínua. A grade física é a máscara; não são grãos depositados. */
-export function criarSuperficieEscoria15() {
+export function criarSuperficieEscoria15(superficie: (n: number) => number = () => 0, junta: TipoJunta = 'topo') {
   const colunas = 50, linhas = 34
   const vertices = (colunas + 1) * (linhas + 1)
   const posicoes = new Float32Array(vertices * 3), cores = new Float32Array(vertices * 3), uvs = new Float32Array(vertices * 2)
@@ -46,11 +47,11 @@ export function criarSuperficieEscoria15() {
       for (let j = 0; j <= linhas; j++) for (let i = 0; i <= colunas; i++) {
         const n = j * (colunas + 1) + i
         const x = i * 3, y = Math.min(50, j * 3 - 50)
-        let topo = 0, calor = 0, quantidade = 0, fragmentos = 0, amostras = 0
+        let topo = superficie(y), calor = 0, quantidade = 0, fragmentos = 0, amostras = 0
         for (const c of cordoes) {
           const s = c.secao(c.indiceEm(x))
           const r = Math.abs(s.yCentroMm - y) / Math.max(0.2, s.larguraMm / 2)
-          if (r < 1) topo = Math.max(topo, s.alturaMm * (1 - r * r))
+          if (r < 1) topo = Math.max(topo, cristaMm(s, junta) * (1 - r * r))
         }
         for (const dj of [-1, 0]) for (const di of [-1, 0]) {
           const a = j + dj, b = i + di

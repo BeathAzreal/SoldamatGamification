@@ -4,7 +4,6 @@ import './estilo-v14.css'
 import './estilo-oficina.css'
 import './estilo-espaco.css'
 import './estilo-prototipo15.css'
-import { telaPrototipo15 } from './ui/telas/prototipo15'
 import { App } from './ui/app'
 import { icone } from './ui/componentes/icones'
 import { telaHistoria } from './ui/telas/historia'
@@ -34,7 +33,6 @@ document.querySelectorAll<HTMLButtonElement>('[data-rota]').forEach(botao => {
 })
 document.getElementById('botao-menu')!.addEventListener('click', () => telaMenu(app))
 document.getElementById('botao-inicio')!.addEventListener('click', () => telaMenu(app))
-document.getElementById('botao-info')!.before(h('button', { type: 'button', class: 'chip-modelo', 'data-rota': 'prototipo', on: { click: () => app.ir(telaPrototipo15, 'Protótipo v1.5 · controle do arco') } }, 'Protótipo 1.5'))
 document.getElementById('botao-info')!.addEventListener('click', () =>
   abrirPainel(
     'Sobre o modelo',
@@ -62,4 +60,4 @@ botaoSom.addEventListener('click', () => {
   mostrarSom()
 })
 mostrarSom()
-app.ir(telaPrototipo15, 'Protótipo v1.5 · controle do arco')
+telaMenu(app)

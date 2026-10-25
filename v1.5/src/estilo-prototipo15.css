@@ -97,4 +97,20 @@
   .p15-hud-grade>:first-child{grid-column:1/-1}
   .p15-instrucoes{display:none}
 }
-.chip-modelo[aria-current=page]{border-color:#da665a;color:#fff;background:#3a1d1a}
+
+/* Treino: escolha do processo e objetivo da peça de eletrodo. */
+.treino-processo{display:flex;align-items:center;gap:0;margin:0 0 18px}
+.treino-processo span{margin-right:12px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9fb2bd}
+.treino-processo button{border-radius:0}
+.treino-processo button:nth-of-type(1){border-radius:4px 0 0 4px}
+.treino-processo button:nth-of-type(2){border-radius:0 4px 4px 0;margin-left:-1px}
+.treino-processo button[aria-pressed=true]{background:#ad312a;color:#fff;border-color:#da665a;position:relative}
+.p15-objetivo{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid #3d4c56;border-radius:6px;background:#1d2b35}
+.p15-objetivo p{font-size:13px;color:#e6d7ba}
+.p15-objetivo ul{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:12px}
+.p15-objetivo li{display:flex;justify-content:space-between;gap:8px;color:#b9c8d1}
+.p15-objetivo li::before{content:'○';margin-right:6px;color:#6f808a}
+.p15-objetivo li>span:first-child{flex:1}
+.p15-objetivo li[data-ok=true]{color:#bfe8d4}
+.p15-objetivo li[data-ok=true]::before{content:'✓';color:#6fd3a5}
+.p15-obj-valor{font-variant-numeric:tabular-nums;color:#e9dcc4}
