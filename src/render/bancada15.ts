@@ -7,9 +7,12 @@ import type { Acionamento15 } from '../modelo/acionamento15'
 import { criarSuperficieEscoria15 } from './escoriaSuperficie15'
 import { girarFerramenta15, type Vetor15 } from '../entrada/giroFerramenta15'
 import type { FerramentaBancada15 } from '../modelo/escoria15'
+import { cristaMm, INFO_JUNTA, juntaDe, pontoNaSuperficie, type TipoJunta } from '../modelo/juntas'
 
 /** Ponta nua da vareta presa nas garras do alicate (mm). */
 const PONTA_NUA = 20
+/** H73: faixa (mm) em que a ponta assenta na raiz do filete. */
+const ASSENTO_FILETE_MM = 4
 const MAX_RESPINGOS = 160
 const GRAVIDADE = 9810
 
@@ -28,19 +31,27 @@ function texturaBrilho(): THREE.CanvasTexture {
 }
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
-export function criarBancada15() {
-  const palco = Palco3D.criar({ contexto: CONTEXTO_PADRAO, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5 })
+export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number }) {
+  // A peça chega na posição plana (rolagem 0): no filete, o canto fica voltado para cima.
+  const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } : CONTEXTO_PADRAO
+  const palco = Palco3D.criar({
+    contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
+    missao: peca ? { inicioMm: peca.inicioMm, fimMm: peca.fimMm } : undefined, regua: !!peca,
+  })
   if (!palco) return null
   const canvas = palco.elemento
   canvas.tabIndex = 0
   canvas.setAttribute('aria-label', 'Bancada 3D: selecione soldagem, martelinho ou escova. W sobe e afasta, S desce e aproxima.')
   const camera = new THREE.PerspectiveCamera(40, 1, 1, 4000)
-  let azimute = 0.237, polar = 1.077, zoom = 1
+  // Filete na posição plana: câmera mais alta para enxergar as duas paredes e a raiz no fundo do V.
+  const filete = !!peca && INFO_JUNTA[peca.junta].familia === 'filete'
+  const AZIMUTE0 = 0.237, POLAR0 = filete ? 0.62 : 1.077, ZOOM0 = filete ? 0.75 : 1, ALVO_Y = filete ? 12 : 40
+  let azimute = AZIMUTE0, polar = POLAR0, zoom = ZOOM0
   const posicionarCamera = () => {
     const d = 338 * Math.max(1, 1 / camera.aspect) * zoom
-    camera.position.setFromSphericalCoords(d, polar, azimute).add(new THREE.Vector3(0, 40, 0))
+    camera.position.setFromSphericalCoords(d, polar, azimute).add(new THREE.Vector3(0, ALVO_Y, 0))
     camera.position.y = Math.max(-350, camera.position.y)
-    camera.lookAt(0, 40, 0)
+    camera.lookAt(0, ALVO_Y, 0)
     camera.updateMatrixWorld()
   }
   const enquadrar = (l: number, a: number) => {
@@ -151,9 +162,19 @@ export function criarBancada15() {
   palco.peca.add(respingos)
   let proximoRespingo = 0, acumulado = 0
   const raio = new THREE.Raycaster()
-  const plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
   const ponto = new THREE.Vector3()
-  const escoria = criarSuperficieEscoria15()
+  const junta = juntaDe(contexto)
+  /** Altura da superfície das chapas a um desvio lateral n (filete na posição plana: paredes a 45°). */
+  const superficie = (n: number) => pontoNaSuperficie(junta, contexto, n)[1]
+  /** Até onde vão as chapas de cada lado da junta (no filete, 50 mm de parede a 45°). */
+  const alcanceLateral = INFO_JUNTA[junta].familia === 'filete' ? 50 / Math.SQRT2 : 50
+  const escoria = criarSuperficieEscoria15(superficie, junta)
+  // Risco de pedra-sabão na raiz do filete, do INÍCIO ao FIM: mostra onde o cordão deve correr.
+  if (peca && filete) {
+    const giz = new THREE.Mesh(new THREE.BoxGeometry(peca.fimMm - peca.inicioMm, 0.12, 0.6), new THREE.MeshBasicMaterial({ color: '#e9e4d4', transparent: true, opacity: 0.8 }))
+    giz.position.set((peca.inicioMm + peca.fimMm) / 2 - 75, superficie(0) + 0.45, 0)
+    palco.peca.add(giz)
+  }
   palco.peca.add(escoria.malha)
   palco.guardarTexturas(escoria.textura)
   const eixo = new THREE.Vector3(), normal = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion()
@@ -163,7 +184,7 @@ export function criarBancada15() {
   let cordaoAntes: Cordao | null = null
   let calorPonta = 0
   return {
-    canvas, enquadrar,
+    canvas, enquadrar, superficie,
     iniciarGiro(m: Acionamento15) {
       const inicial = { azimute: m.azimuteGraus, inclinacao: m.inclinacaoGraus }
       const direita = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).toArray() as unknown as Vetor15
@@ -176,23 +197,46 @@ export function criarBancada15() {
       posicionarCamera()
     },
     aproximar(delta: number) { zoom = Math.max(0.5, Math.min(2, zoom * Math.exp(delta * 0.001))); posicionarCamera() },
-    centralizar() { azimute = 0.237; polar = 1.077; zoom = 1; posicionarCamera() },
+    centralizar() { azimute = AZIMUTE0; polar = POLAR0; zoom = ZOOM0; posicionarCamera() },
     pontoNaTela(x: number, y: number) {
       const r = canvas.getBoundingClientRect()
       raio.setFromCamera(new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, 1 - ((y - r.top) / r.height) * 2), camera)
-      if (!raio.ray.intersectPlane(plano, ponto)) return null
+      // Anda pelo raio até cruzar a superfície das chapas e refina por bissecção.
+      const o = raio.ray.origin, d = raio.ray.direction
+      const acima = (t: number) => {
+        const n = o.z + d.z * t, x = o.x + d.x * t + 75
+        if (Math.abs(n) > alcanceLateral || x < 0 || x > 150) return true
+        return o.y + d.y * t > superficie(n)
+      }
+      let t0 = 0, t1 = -1
+      for (let t = 0; t < 3000; t += 2) {
+        if (!acima(t)) { t1 = t; break }
+        t0 = t
+      }
+      if (t1 < 0) return null
+      for (let i = 0; i < 30; i++) {
+        const tm = (t0 + t1) / 2
+        if (acima(tm)) t0 = tm
+        else t1 = tm
+      }
+      raio.ray.at((t0 + t1) / 2, ponto)
       const p = { x: ponto.x + 75, y: ponto.z }
-      return p.x >= 0 && p.x <= 150 && Math.abs(p.y) <= 50 ? p : null
+      if (!(p.x >= 0 && p.x <= 150 && Math.abs(p.y) <= alcanceLateral)) return null
+      // H73: no filete a ponta apoiada desliza para o fundo do canto; perto da raiz ela assenta ali.
+      if (filete) p.y = Math.sign(p.y) * Math.max(0, Math.abs(p.y) - ASSENTO_FILETE_MM)
+      return p
     },
     desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0) {
       const ligado = modo === 'soldar' && m.estado === 'arco'
       ferramenta.visible = modo === 'soldar'
       martelo.visible = modo === 'martelo' && m.naPeca
       escova.visible = modo === 'escova' && m.naPeca
-      let topo = 0
+      // Alturas absolutas (acima da raiz): chão sob a ponta e crista do cordão, se houver.
+      const chao = superficie(p.y)
+      let topo = chao
       for (const cord of [c, ...c.soltos]) {
         const s = cord.secao(cord.indiceEm(p.x))
-        if (Math.abs(s.yCentroMm - p.y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, s.alturaMm)
+        if (s.larguraMm > 0 && Math.abs(s.yCentroMm - p.y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, cristaMm(s, junta))
       }
       // Cabo de lado: a cabeça chega em arco lateral e a ponta toca a crosta.
       const golpe = desdeGolpeMs >= 0 && desdeGolpeMs < 260 ? Math.sin(Math.PI * desdeGolpeMs / 260) : 0
@@ -202,9 +246,9 @@ export function criarBancada15() {
       escova.position.set(p.x - 75 + (acionada ? Math.sin(agoraMs * 0.04) * 1.5 : 0), topo + 0.5, p.y)
       escova.rotation.y = 0.2
       const altura = Math.max(0, m.distanciaMm)
-      // A ponta fica sobre o cordão já depositado, não atravessa o metal.
-      const base = m.processo === 'eletrodo' ? Math.min(topo, altura) : 0
-      ferramenta.position.set(p.x - 75, altura, p.y)
+      // O arco nasce no cordão já depositado (ou na chapa), nunca acima da ponta.
+      const base = m.processo === 'eletrodo' ? Math.min(topo, chao + altura) : 0
+      ferramenta.position.set(p.x - 75, chao + altura, p.y)
       const inc = m.inclinacaoGraus * Math.PI / 180, az = m.azimuteGraus * Math.PI / 180
       eixo.set(Math.sin(inc) * Math.cos(az), Math.cos(inc), Math.sin(inc) * Math.sin(az))
       ferramenta.quaternion.setFromUnitVectors(normal, eixo).multiply(q.setFromAxisAngle(normal, m.rolamentoGraus * Math.PI / 180))
@@ -228,13 +272,13 @@ export function criarBancada15() {
       punho.position.y = 30
       arame.scale.y = Math.max(0.1, altura - 2)
       arame.position.y = -(altura - 2) / 2
-      mira.position.set(p.x - 75, 0.3, p.y)
+      mira.position.set(p.x - 75, chao + 0.3, p.y)
       mira.material.color.set(modo === 'soldar' ? '#edc167' : '#8ccbd4')
       mira.visible = m.naPeca && !ligado
       // Arco e poça.
       const tremor = 0.85 + 0.3 * Math.random()
       const instavel = ligado && m.processo === 'eletrodo' ? m.forma.instabilidade : 0
-      const comprimento = m.processo === 'mig' ? 2 : Math.max(0.3, altura - base)
+      const comprimento = m.processo === 'mig' ? 2 : Math.max(0.3, chao + altura - base)
       coluna.visible = halo.visible = poca.visible = ligado
       coluna.position.set(p.x - 75, base + comprimento / 2, p.y)
       coluna.scale.set(tremor * (1 + instavel * 0.6), comprimento, tremor * (1 + instavel * 0.6))
