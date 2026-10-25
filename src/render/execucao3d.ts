@@ -6,7 +6,7 @@ import type { GeometriaJunta } from '../modelo/junta'
 import { MATERIAIS } from '../modelo/material'
 import { MODELO, PECA } from '../modelo/parametros'
 import type { Percurso } from '../modelo/percurso'
-import { gravidade, juntaDe } from '../modelo/juntas'
+import { juntaDe } from '../modelo/juntas'
 import { dbcpDe, movimentoDe, oscilacaoVisual, tecnicaDe, type ContextoProcesso } from '../modelo/processo'
 import { sobreAPeca, type EventoTentativa, type PontoRegistro } from '../modelo/simulacao'
 import { Calor3D } from './calor3d'
@@ -130,6 +130,8 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
   let defeitosPendentes = false
   let arcoAntes = false
   const gPeca = { x: 0, y: -1, z: 0 }
+  const inversa = new THREE.Matrix4()
+  const baixo = new THREE.Vector3()
   // H38: empurrando, o topo da tocha fica atrás do avanço; puxando, à frente.
   const tecnica = tecnicaDe(op.contexto)
   const sinalTecnica = tecnica === 'empurrando' ? 1 : tecnica === 'puxando' ? -1 : 0
@@ -157,11 +159,13 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
       vista.definirRolagem(d.rolagemGraus)
       palco.cena.updateMatrixWorld(true)
       vista.definirMatrizPeca(palco.peca.matrixWorld)
-      // Gravidade nos eixos da peça (x ao longo da junta, y para fora da face, z lateral), H47.
-      const g = gravidade({ rolagemGraus: d.rolagemGraus, giroGraus: (d.angulo * 180) / Math.PI })
-      gPeca.x = g.t
-      gPeca.y = g.w
-      gPeca.z = g.n
+      // Gravidade do MUNDO (para baixo, −y) levada aos eixos da peça como ela está de fato
+      // posicionada no palco: partículas e gotas caem para o chão em qualquer posição e câmera.
+      inversa.copy(palco.peca.matrixWorld).invert()
+      baixo.set(0, -1, 0).transformDirection(inversa)
+      gPeca.x = baixo.x
+      gPeca.y = baixo.y
+      gPeca.z = baixo.z
       if (d.registro !== registroAtual) {
         registroAtual = d.registro
         lidos = 0
@@ -238,8 +242,14 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
           }
         } else tocha.esconder()
       } else tocha.esconder()
-      // Na sobrecabeça, com poça grande, gotas de metal caem do arco (H50).
-      const gotejando = emite && analise && d.posicao ? analise.gotejamento[d.cordao.indiceEm(d.posicao.x)] : 0
+      // Na sobrecabeça, com poça grande, gotas de metal se soltam da poça e caem (H50). A poça
+      // ocupa alguns milímetros atrás do arco: vale o maior gotejamento ali.
+      let gotejando = 0
+      if (emite && analise && d.posicao) {
+        const i = d.cordao.indiceEm(d.posicao.x)
+        const r = Math.round(4 / MODELO.passoMm)
+        for (let k = Math.max(0, i - r); k <= Math.min(analise.n - 1, i + r); k++) gotejando = Math.max(gotejando, analise.gotejamento[k])
+      }
       calor.atualizarParticulas(d.agoraMs, emite ? emissor : null, taxaFaiscas(op.contexto, d.desvio), gPeca, gotejando)
       palco.desenhar(vista.camera)
     },

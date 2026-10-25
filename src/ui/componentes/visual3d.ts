@@ -89,14 +89,21 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
    * câmera sobe a mesma elevação. Peça de pé (corrimão, vertical) → câmera
    * de lado, olhando a junta, e não as bordas de cima.
    */
-  const elevacaoDeFrente = (rolagemGraus: number) => (Math.min(180, Math.max(0, rolagemGraus)) * Math.PI) / 180
+  const deFrente = (rolagemGraus: number): { azimute: number; elevacao: number } => {
+    // Ângulo entre −180° e 180°: o ▲ tomba para o lado negativo (182° na tela = −178°).
+    const f = ((((rolagemGraus + 180) % 360) + 360) % 360) - 180
+    const r = (Math.abs(f) * Math.PI) / 180
+    // Normal da face (0, cos f, sin f): de lado positivo, azimute 0; negativo, do outro lado (π).
+    // Perto da sobrecabeça (|f| > 150°) os dois lados quase coincidem: azimute 0 deixa as marcas legíveis.
+    return f >= 0 || f <= -150 ? { azimute: 0, elevacao: r } : { azimute: Math.PI, elevacao: r }
+  }
   let rolagemAtual = 0
   // Câmera livre: guardada aqui para sobreviver quando a cena é refeita (troca de peça ou de qualidade).
   // A elevação inicial sai da peça na primeira cena (a peça ainda não existe aqui).
-  const camera = { azimute: 0, elevacao: 0, zoom: 1 }
+  const camera = { azimute: 0, elevacao: 0, zoom: 1, base: 0 }
   let cameraIniciada = false
   const aplicarCamera = () => {
-    cena?.vista.definirCamera(camera.azimute, camera.elevacao, camera.zoom)
+    cena?.vista.definirCamera(camera.azimute, camera.elevacao, camera.zoom, camera.base)
     op.aoMudarMapa()
   }
   const guardarCamera = () => {
@@ -104,6 +111,7 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
     camera.azimute = cena.vista.azimute
     camera.elevacao = cena.vista.elevacao
     camera.zoom = cena.vista.zoom
+    camera.base = cena.vista.azimuteBase
   }
   const botaoCentralizar = h('button', { type: 'button', class: 'botao-fantasma botao-centralizar', title: 'Câmera de volta à vista de frente' }, '⌖ Centralizar')
   const lembrete = h('span', { class: 'lembrete-controles' })
@@ -116,15 +124,16 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
   const botaoOficina = op.oficinaTreino || op.serralheria ? h('button', { type: 'button', class: 'botao-fantasma botao-ver-cenario', title: 'Afastar a câmera para conhecer a estação' }, op.serralheria ? 'Ver serralheria' : 'Ver oficina') : null
   const rotuloCamera = h('span', { class: 'camera-livre', hidden: true }, botaoCentralizar, botaoOficina, lembrete)
   botaoOficina?.addEventListener('click', () => {
-    camera.azimute = -0.25
+    camera.azimute = camera.base = -0.25
     camera.elevacao = 0.8
     camera.zoom = 2.5
     aplicarCamera()
     canvas.focus()
   })
   botaoCentralizar.addEventListener('click', () => {
-    camera.azimute = 0
-    camera.elevacao = elevacaoDeFrente(rolagemAtual)
+    const f = deFrente(rolagemAtual)
+    camera.azimute = camera.base = f.azimute
+    camera.elevacao = f.elevacao
     camera.zoom = 1
     aplicarCamera()
     canvas.focus()
@@ -138,11 +147,13 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
     if (!cameraIniciada) {
       cameraIniciada = true
       rolagemAtual = peca.contexto.posicaoInicial?.rolagemGraus ?? 0
-      camera.elevacao = elevacaoDeFrente(rolagemAtual)
+      const f = deFrente(rolagemAtual)
+      camera.azimute = camera.base = f.azimute
+      camera.elevacao = f.elevacao
     }
     chaveAtual = chave()
     area.prepend(cena.elemento)
-    cena.vista.definirCamera(camera.azimute, camera.elevacao, camera.zoom)
+    cena.vista.definirCamera(camera.azimute, camera.elevacao, camera.zoom, camera.base)
     const r = area.getBoundingClientRect()
     largura = r.width
     altura = r.height
