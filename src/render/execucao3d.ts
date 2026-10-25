@@ -61,6 +61,7 @@ export interface CenaExecucao3D {
 }
 
 export interface OpcoesExecucao3D {
+  serralheria?: boolean
   oficinaTreino?: boolean
   contexto: ContextoProcesso
   geometria: GeometriaJunta
@@ -75,6 +76,7 @@ export interface OpcoesExecucao3D {
 export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null {
   const perfil = PERFIS[op.qualidade]
   const palco = Palco3D.criar({
+    serralheria: op.serralheria,
     oficinaTreino: op.oficinaTreino,
     contexto: op.contexto,
     geometria: op.geometria,
