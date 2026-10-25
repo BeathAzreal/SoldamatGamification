@@ -767,3 +767,7 @@ O martelinho quebra crosta fria e deixa resíduos; a escova de aço retira somen
 
 Riscar a ponta reduz a chance de grudar; o arco é classificado em curto, adequado e longo pelo diâmetro da alma e muda a forma do cordão e os respingos; a compensação assistida mantém o comprimento do arco enquanto a vareta queima. Detalhes e limites em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
 
+### H71–H73 — arco tolerante, abertura ao tocar e ponta no canto do filete
+
+Arco esticado aguenta um instante e reacende a quente; o primeiro toque abre o arco sem botão, e curto breve sem empurrar se desfaz; a distância é medida até a superfície real da junta e a ponta assenta na raiz do filete. Detalhes em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
+

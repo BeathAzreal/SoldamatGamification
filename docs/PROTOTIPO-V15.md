@@ -58,3 +58,17 @@ Outros ajustes do refino:
 - Velocidade padrão de subir/descer passou de 3 para 6 mm/s. Com 3 mm/s não era possível acompanhar o consumo em correntes acima de ~90 A. Configurações já salvas mantêm o valor escolhido.
 - Interface: leituras sobre a vista 3D (estado, medidor colorido do comprimento do arco, vareta restante, avanço e fonte), painel lateral reorganizado (ferramenta, comando, fonte e consumível, altura manual, orientação e leituras do modelo recolhíveis) e legenda de teclas com nomes legíveis.
 - 3D: alicate porta-eletrodo com garras na ponta nua da vareta (20 mm) e cabo inclinado (o rolamento do punho agora é visível), revestimento até a ponta, ponta incandescente que esfria após o arco, coluna e halo do arco que tremulam, poça e respingos balísticos.
+
+## Treino de eletrodo — H71 a H73 (após o teste do dono)
+
+O protótipo deixou de ser uma tela separada no topo. O eletrodo agora fica em **Treino → Processo: Eletrodo revestido**, com peças em que o processo é usado de verdade (aço carbono de 4,75 a 8 mm, estrutura e serviço de campo): cordões sobre chapa 6,3 mm, filete em T, topo em V 8 mm (raiz), canto externo de portão e sobreposta de reforço. Cada peça tem trecho INÍCIO/FIM, eletrodo e faixa de corrente sugeridos (do modelo, H63) e uma lista de objetivos sem pontuação: trecho coberto, tempo com arco adequado, sem grudar e escória removida. O jogo volta a abrir no menu.
+
+**Sem botão para soldar (H72):** o porta-eletrodo fica energizado enquanto o eletrodo está na mão. O primeiro toque da ponta na peça abre o arco (a ponta recua até um arco curto, 0,8 × diâmetro). Empurrar de novo contra a poça com o arco aberto é curto-circuito: sem empurrar, a ponta queima de volta e o arco volta; continuar empurrando por 0,65 s gruda.
+
+**Altura por toques (H72):** W/S têm rampa — começam a 2 mm/s e chegam à velocidade configurada (padrão 6 mm/s) em 0,5 s segurados. Um toque curto desce 0,2–0,4 mm.
+
+**Ajuda na altura (H70, revisada):** Parcial (padrão) compensa 80% do consumo: o arco cresce ~0,6 mm/s e o jogador corrige com um toque a cada um ou dois segundos. Total mantém o arco; Desligada é o eletrodo real. Em simulação a 60 quadros/s com tempo de reação de 0,2 s, a ajuda parcial manteve o arco aceso em mais de 97% do tempo, a vareta inteira, sem grudar, com cerca de 0,4–0,7 toque/s (80–130 A); sem ajuda também foi possível, com o arco no comprimento adequado em 40–65% do tempo.
+
+**H71 — arco esticado e reacendimento a quente:** passar do limite do arco não apaga na hora; até 1,5 × o limite ele aguenta 0,35 s ("arco esticado · desça"). Até 1,5 s depois de apagar, a ponta ainda quente reacende ao voltar para dentro do limite, sem novo toque. Números do jogo.
+
+**H73 — ponta no canto do filete:** a distância do arco é medida até a superfície real da junta (paredes a 45° no filete na posição plana), e a ponta apoiada a até 4 mm da raiz assenta no fundo do canto, como acontece com o eletrodo encostado no V. Um risco de pedra-sabão marca a raiz do INÍCIO ao FIM.
