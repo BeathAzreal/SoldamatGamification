@@ -31,7 +31,7 @@ portão e sobreposta de reforço).
 
 | Versão | Estado | Download |
 |---|---|---|
-| Alpha v1.6 | Mesmo jogo da v1.5 com o código organizado para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
+| Alpha v1.6 | Código organizado para editar + eletrodo com nota (inspeção visual) e preenchimento realista | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
 | **Alpha v1.5** | **Em teste — MIG/MAG + treino de eletrodo revestido** | [ZIP da v1.5](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip) |
 | Alpha v1.4 | Anterior — MIG/MAG com solda realista | [ZIP da v1.4](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
 | Alpha v1.3 | Aprovada | [ZIP da v1.3](v1.3/Oficina%20de%20Soldagem%203D%20Alpha%20v1.3.zip) |
@@ -44,12 +44,16 @@ acima para receber somente o jogo pronto.
 
 ## Quer mexer no código? Use a v1.6
 
-A pasta [`v1.6/`](v1.6/) tem **o mesmo jogo da v1.5** (comparado byte a byte),
-com o código reorganizado para quem não programa em JavaScript: pastas e
+A pasta [`v1.6/`](v1.6/) tem o jogo da v1.5 com o código reorganizado para quem não programa em JavaScript: pastas e
 arquivos com nomes em português (por exemplo, tudo do eletrodo em
 `v1.6/codigo/eletrodo/`), um quadro "O que faz / Onde mexer" no começo de
 cada arquivo, um `LEIA-ME.md` em cada pasta e um guia com receitas de
 mudanças comuns e glossário: [**v1.6/README.md**](v1.6/README.md).
+
+No treino de eletrodo da v1.6, o botão **Inspecionar a peça** dá uma nota de 0 a
+100 com aprovação, defeitos (mordedura, poros, cratera, falta de fusão, inclusão
+de escória...) e como corrigir; o calor do arco aparece ao vivo, e o V de 8 mm se
+enche em vários passes.
 
 ## Onde está cada versão?
 
