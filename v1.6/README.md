@@ -118,6 +118,18 @@ Arquivo [`codigo/eletrodo/arco-e-vareta.ts`](codigo/eletrodo/arco-e-vareta.ts), 
 Depois rode `npm test`: alguns testes conferem essas regras e podem precisar
 de ajuste se a mudança for intencional.
 
+### Mudar a nota do eletrodo
+Arquivo [`codigo/eletrodo/nota-do-eletrodo.ts`](codigo/eletrodo/nota-do-eletrodo.ts):
+- `PESOS`: quanto vale cada parte (continuidade, geometria, fusão, defeitos, limpeza; soma 100);
+- `REPROVA`: o que reprova a peça (ex.: `faltaDeFusaoMm: 10`);
+- `TEXTO`: o nome de cada defeito, a causa e o "como corrigir" que aparecem na tela.
+
+Os limites dos defeitos (quanto calor é falta de fusão, arco longo que dá poro...)
+estão em `LIMITES`, no arquivo [`codigo/eletrodo/analise-do-cordao.ts`](codigo/eletrodo/analise-do-cordao.ts).
+O que cada peça pede (perna do filete, reforço, chanfro cheio) está no campo `medida`
+de cada peça em `pecas-de-treino.ts`. Mudou a regra? Troque `VERSAO_NOTA_ELETRODO`
+e rode `npm test` (os testes `eletrodo-inspecao` conferem a calibração).
+
 ### Mudar as teclas padrão do eletrodo
 Arquivo [`codigo/eletrodo/controles-salvos.ts`](codigo/eletrodo/controles-salvos.ts),
 em `TECLAS15` (ex.: `aproximar: 'KeyS'`). Os nomes seguem o padrão do

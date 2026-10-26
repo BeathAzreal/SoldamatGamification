@@ -72,3 +72,24 @@ O protótipo deixou de ser uma tela separada no topo. O eletrodo agora fica em *
 **H71 — arco esticado e reacendimento a quente:** passar do limite do arco não apaga na hora; até 1,5 × o limite ele aguenta 0,35 s ("arco esticado · desça"). Até 1,5 s depois de apagar, a ponta ainda quente reacende ao voltar para dentro do limite, sem novo toque. Números do jogo.
 
 **H73 — ponta no canto do filete:** a distância do arco é medida até a superfície real da junta (paredes a 45° no filete na posição plana), e a ponta apoiada a até 4 mm da raiz assenta no fundo do canto, como acontece com o eletrodo encostado no V. Um risco de pedra-sabão marca a raiz do INÍCIO ao FIM.
+
+## v1.6 — preenchimento e nota do eletrodo (H74 a H77)
+
+**H74 — calor (aporte) e fusão:** a energia que entra na peça é 0,8 × corrente × tensão do arco (20 + 2 × comprimento do arco, em V), espalhada ±2 mm ao longo da junta. Dividida pelo comprimento, dá o aporte de calor em kJ/mm, como na prática. Cada peça tem um aporte de referência que cresce com a espessura (0,12 kJ/mm por mm de chapa) e depende da junta: o filete precisa de mais (o calor escapa por três lados: T × 1,4; sobreposta × 1,3), o V um pouco menos (× 0,9), o canto × 1,1. A fusão de cada fatia é o aporte do passe mais quente ÷ referência: abaixo de 0,6, falta de fusão (colagem); 0,6–0,8, fusão fraca; 0,8–1,7, adequada; acima de 1,7, calor em excesso; acima de 2,3 no primeiro passe de raiz aberta ou na quina do canto, perfuração. O jogador vê ao vivo o calor e a faixa de avanço que dá o calor certo.
+
+**Depósito e forma do cordão:** a vareta passou a queimar 4 mm/s na corrente de referência (era 3; o eletrodo real queima por volta de 5 mm/s). O metal depositado é 0,95 do volume da alma consumida (o revestimento tem pó de ferro). Corrente alta abre e achata o cordão; corrente baixa deixa-o alto e estreito (razão altura/largura, H44). Com isso, o cordão sobre chapa com 2,5 mm a 90 A e 2,5 mm/s sai com cerca de 6–7 mm de largura e 1,5–2 mm de reforço, e o filete em T com 3,2 mm a 115 A e 2,5 mm/s, com perna de cerca de 5 mm.
+
+**H75 — o que a peça pede:** cada peça mede uma coisa: reforço acima da chapa (cordão sobre chapa, 1–3 mm), perna do filete (T e sobreposta, 4–6,5 mm; canto, 3–5 mm) ou enchimento do chanfro (V: cheio até a face, com reforço de até 3 mm). O V de 8 mm se enche em vários passes (raiz com 2,5 mm, enchimento com 3,2 mm): um passe sozinho não enche.
+
+**H76 — defeitos do eletrodo**, calculados a partir do registro do passe e desenhados no 3D com o mesmo desenho dos defeitos do MIG:
+- mordedura: arco longo (acima de 1,3 diâmetro) e calor em excesso;
+- sobreposição: passe frio e lento;
+- porosidade: arco longo (acima de 1,5 diâmetro) tira a proteção do revestimento; abrir o arco a frio e seguir em frente deixa poros no começo, a menos que a ponta volte por cima do ponto de abertura;
+- cratera: apagar o arco sem parar 0,3 s sobre a poça, a não ser que outro passe cubra depois;
+- inclusão de escória: metal posto sobre escória fria (soldar sem limpar entre passes);
+- respingos presos (alguns sempre; muitos com arco longo), marca de abertura de arco fora da junta e marca de eletrodo grudado;
+- escamas: espaçadas pelo avanço a cada 190 ms de arco.
+
+**H77 — inspeção visual e nota (0 a 100):** continuidade 20, geometria 25 (medida da peça e regularidade da largura), fusão 25, defeitos de superfície 20 e limpeza 10. Reprova (como numa inspeção visual de teste de soldador, critério do jogo): menos de 90% do trecho com cordão; falta de fusão em 10 mm ou mais; perfuração de 2 mm ou mais; 3 ou mais poros abertos; inclusão de escória de 3 mm ou mais; sobreposição de 10 mm ou mais; perna ou enchimento abaixo do pedido em 10 mm ou mais; ou nota abaixo de 70. Cada defeito aparece com a posição em mm (a régua da peça), a causa provável e como corrigir. A nota está em `codigo/eletrodo/nota-do-eletrodo.ts` (versão `eletrodo-v1`) e não entra em recordes.
+
+Calibração (testes/eletrodo-inspecao.test.ts, soldador simulado): técnica boa (arco ≈ diâmetro, avanço na faixa, parada no fim, recuo na abertura, limpeza) dá 93–100 e aprova nas cinco peças; avanço rápido demais dá falta de fusão e reprova; lento demais dá calor em excesso e cordão alto; arco longo dá mordedura, poros e respingos e reprova; não parar no fim deixa cratera; um passe no V não enche e reprova; seis passes limpando enchem; sem limpar entre passes há inclusão e reprova; calor demais no canto derrete a quina.

@@ -1,5 +1,22 @@
 # Verificação
 
+## v1.6 — preenchimento e nota do eletrodo (branch `claude/v1.6`)
+
+Pedido: o eletrodo precisava ficar mais realista na forma de pontuar e no preenchimento da solda.
+
+- Novo: registro do passe, análise do cordão (H74–H76) e inspeção visual com nota de 0 a 100 (H77).
+- Calibração com soldador simulado (testes/eletrodo-inspecao.test.ts, 13 casos): técnica boa
+  aprova com 93–100 nas cinco peças; os erros típicos aparecem como o defeito certo (veja
+  PROTOTIPO-V15.md). Ajustes nos testes antigos: o teste de "fim da vareta" passou a mostrar
+  um resíduo de arredondamento (corrigido no modelo); o teste de esforço sem ajuda passou a
+  medir o tempo com S apertado em vez do número de toques, porque a vareta queima mais rápido.
+- Navegador (Chromium sem interface, 1366×768): cordão sobre chapa soldado, limpo e
+  inspecionado; escamas visíveis no cordão limpo; painel de inspeção com nota, veredito,
+  categorias e defeitos com posição, causa e correção. Com a taxa de quadros baixa do
+  navegador de teste, o avanço do roteiro não é controlável, por isso a nota exata desse
+  teste não serve de referência; a calibração vale pelos testes automáticos.
+- Não testado com pessoas nem em GPU real.
+
 ## v1.6 — reorganização do código (branch `reorganizacao`)
 
 Objetivo: mesmo jogo da v1.5, com pastas e arquivos de nomes intuitivos e

@@ -771,3 +771,7 @@ Riscar a ponta reduz a chance de grudar; o arco é classificado em curto, adequa
 
 Arco esticado aguenta um instante e reacende a quente; o primeiro toque abre o arco sem botão, e curto breve sem empurrar se desfaz; a distância é medida até a superfície real da junta e a ponta assenta na raiz do filete. Detalhes em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
 
+### H74–H77 — calor, preenchimento, defeitos e nota do eletrodo
+
+Aporte de calor por passe (kJ/mm) e fusão relativa à espessura da peça; depósito e forma do cordão pela corrente e pelo comprimento do arco; medida de cada peça (reforço, perna ou enchimento); defeitos do eletrodo (mordedura, sobreposição, poros, cratera, inclusão de escória, respingos, aberturas) e a inspeção visual com nota de 0 a 100. Detalhes e calibração em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
+
