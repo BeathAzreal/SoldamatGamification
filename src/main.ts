@@ -1,3 +1,4 @@
+import { telaRede } from './ui/rede/tela'
 import { instalarPause } from './ui/componentes/pause'
 import './estilo.css'
 import './estilo-app.css'
@@ -64,4 +65,5 @@ botaoSom.addEventListener('click', () => {
   mostrarSom()
 })
 mostrarSom()
-telaMenu(app)
+if (new URLSearchParams(location.search).get('rede') === '1') telaRede(app)
+else telaMenu(app)
