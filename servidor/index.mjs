@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { resolve,dirname } from 'node:path'
 import { criarServidor,enderecos } from './http.mjs'
@@ -10,6 +11,11 @@ app.servidor.listen(porta,host,()=>{
  console.log('\nOFICINA DE SOLDAGEM v1.7 — X1 EM REDE\n')
  console.log('Mantenha esta janela aberta. Nos dois PCs, abra um dos endereços abaixo no navegador:')
  for(const url of enderecos(porta))console.log('  '+url)
+ if(process.env.ABRIR_NAVEGADOR==='1' && process.platform==='win32'){
+  const navegador=spawn('rundll32.exe',['url.dll,FileProtocolHandler',`http://localhost:${porta}/?rede=1`],{windowsHide:true,detached:true,stdio:'ignore'})
+  navegador.on('error',()=>console.log('Abra o endereço acima no seu navegador.'))
+  navegador.unref()
+ }
  console.log('\nArcade → X1 em rede → Criar sala / Entrar por código.')
  console.log('No segundo PC, use o endereço com o IP do anfitrião; localhost só funciona neste PC.\nCtrl+C encerra o servidor e as salas.\n')
 })

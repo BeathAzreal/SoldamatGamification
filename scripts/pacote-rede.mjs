@@ -1,38 +1,43 @@
+import {createHash} from 'node:crypto'
 import {mkdirSync,cpSync,readFileSync,writeFileSync,existsSync,rmSync} from 'node:fs'
 import {resolve,join,dirname,sep} from 'node:path'
+const manifesto=JSON.parse(readFileSync('licencas/node-runtime.json','utf8').replace(/^\uFEFF/,''))
+const executavel=resolve(process.env.NODE_PORTATIL??process.execPath)
+const hash=createHash('sha256').update(readFileSync(executavel)).digest('hex')
+if(hash!==manifesto.sha256)throw Error('Para gerar o pacote Windows x64, NODE_PORTATIL deve apontar ao node.exe oficial '+manifesto.versao+'. O jogo entregue já inclui esse runtime.')
 const raiz=resolve('pacote-rede'),saida=join(raiz,'Oficina-de-Soldagem-v1.7-Rede')
 if(dirname(saida)!==raiz || !saida.startsWith(resolve(process.cwd())+sep))throw Error('Destino do pacote fora do projeto.')
 if(existsSync(saida))rmSync(saida,{recursive:true,force:true})
 mkdirSync(join(saida,'servidor'),{recursive:true})
 cpSync('dist',join(saida,'dist'),{recursive:true})
 cpSync('dist-servidor/index.js',join(saida,'servidor/index.js'))
+mkdirSync(join(saida,'runtime'),{recursive:true})
+cpSync(executavel,join(saida,'runtime/node.exe'))
+cpSync(join('licencas',manifesto.licenca),join(saida,'runtime/LICENSE.txt'))
+writeFileSync(join(saida,'runtime/ORIGEM.json'),JSON.stringify(manifesto,null,2))
 writeFileSync(join(saida,'package.json'),JSON.stringify({private:true,type:'module',version:'1.7.0',engines:{node:'>=22'}},null,2))
 const bat=`@echo off
 setlocal DisableDelayedExpansion
 cd /d "%~dp0"
-where node >nul 2>&1
-if errorlevel 1 (
- echo Instale o Node.js LTS em https://nodejs.org/ e abra este arquivo novamente.
+if not exist "%~dp0runtime\\node.exe" (
+ echo Extraia o pacote completo antes de abrir o jogo. A pasta runtime deve ficar junto do lancador.
  pause
  exit /b 1
 )
-node -e "if(Number(process.versions.node.split('.')[0])<22)process.exit(1)"
-if errorlevel 1 (
- echo Este servidor precisa do Node.js 22 ou mais recente.
- pause
- exit /b 1
-)
-node servidor\\index.js
+set ABRIR_NAVEGADOR=1
+if "%SEM_ABRIR_NAVEGADOR%"=="1" set ABRIR_NAVEGADOR=0
+"%~dp0runtime\\node.exe" servidor\\index.js
 pause
 `
 writeFileSync(join(saida,'INICIAR-REDE.bat'),bat.replace(/\n/g,'\r\n'))
+writeFileSync(join(saida,'ABRIR-OFICINA.bat'),bat.replace(/\n/g,'\r\n'))
 writeFileSync(join(saida,'ABRIR-NESTE-PC.url'),'[InternetShortcut]\r\nURL=http://localhost:5197/?rede=1\r\n')
 const leia=`OFICINA DE SOLDAGEM v1.7 — X1 EM REDE LOCAL
 
 1. Extraia esta pasta inteira no PC que hospedará a sala.
-2. Esse PC precisa de Node.js 22 ou mais recente (https://nodejs.org/). O outro PC só precisa de Chrome ou Edge.
-3. Execute INICIAR-REDE.bat e mantenha a janela aberta.
-4. No anfitrião, abra ABRIR-NESTE-PC.url ou http://localhost:5197/?rede=1.
+2. Não é preciso instalar Node.js ou outros programas. Este pacote Windows x64 já inclui o servidor e o runtime necessário. O outro PC só precisa do navegador.
+3. Execute ABRIR-OFICINA.bat. O jogo abre no navegador e inicia o servidor automaticamente. Mantenha a janela do servidor aberta. INICIAR-REDE.bat continua disponível como alternativa.
+4. Se o navegador não abrir automaticamente, use ABRIR-NESTE-PC.url ou http://localhost:5197/?rede=1.
 5. No segundo PC, use um dos endereços com IP mostrados na janela do servidor, acrescentando ?rede=1. Exemplo ilustrativo: http://192.168.0.10:5197/?rede=1. Localhost não serve para acessar o outro computador.
 6. Os dois PCs precisam se alcançar pela rede. Se a rede da faculdade isolar os aparelhos ou bloquear a porta, peça à TI para liberar o acesso local ao servidor na porta 5197. Não é preciso abrir portas do roteador para a internet.
 
@@ -48,6 +53,9 @@ Os outros modos continuam no mesmo jogo. O pacote HTML portátil separado pode s
 
 INTERNET NO FUTURO
 A interface já usa um contrato versionado e uma API de mesma origem. O mesmo servidor pode ser colocado atrás de HTTPS; o cliente usa o endereço de onde o jogo foi aberto. PORT muda a porta (padrão 5197) e HOST a interface (padrão 0.0.0.0). Contas, matchmaking, persistência e proteção antifraude pública não fazem parte deste primeiro protótipo.
+
+RUNTIME INCLUÍDO
+A pasta runtime contém o executável oficial do Node.js para Windows x64, a licença integral e a origem com hash SHA-256 conferido. Não é necessário instalar ou configurar o runtime no computador.
 
 VALIDAÇÃO
 Consulte docs/REDE-V17.md no código-fonte para testes e limitações. Dois clientes automatizados na mesma máquina não substituem o teste físico na rede da faculdade.
