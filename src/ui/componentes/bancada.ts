@@ -1,3 +1,4 @@
+import { painelMaquina } from './painelMaquina'
 import { abrirPainel } from '../dialogo'
 import { montarControles } from './controles'
 import { GRAUS_POR_PIXEL, Gestos } from '../../entrada/gestos'
@@ -400,6 +401,9 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       tiposDefeito.length ? h('p', { class: 'dica dica-defeitos' }, `Defeitos visíveis: ${tiposDefeito.map((t) => NOME_DEFEITO[t].toLowerCase()).join('; ')}. ${CONSELHO_DEFEITO[tiposDefeito[0]]}`) : null,
       principal !== 'adequada' ? h('p', { class: 'dica' }, `Previsão predominante: ${DESCRICAO_ESTADO[principal]}. ${principal === 'falta' ? `Mais calor por mm: mais tensão, mais alimentação, andar mais devagar ou puxar a tocha${sim.contexto.posicaoFixa ? '' : '; ou posicione a peça na plana ou subindo'}.` : principal === 'excessiva' || principal === 'perfuracao' ? 'Menos calor por mm: reduza alimentação ou tensão, ande mais rápido ou empurre a tocha.' : principal === 'borda' ? (INFO_JUNTA[m.geometria.junta].familia === 'filete' ? 'Mire na raiz (o canto): fora dela uma perna fica curta.' : 'Mantenha a tocha sobre a linha da junta ou alargue o cordão (mais devagar).') : principal === 'enchimento' ? 'O V não encheu: ande mais devagar ou faça outro passe por cima.' : ''}`) : null,
     )
+    const detalhesPasse = resumoPasse.cloneNode(true) as HTMLElement
+    detalhesPasse.className = 'resultado-passe-painel'
+    resumoPasse.replaceChildren(h('button', { type: 'button', class: 'botao-fantasma', on: { click: () => { app.abrirPausa(); void abrirPainel('Análise do último passe', detalhesPasse.cloneNode(true) as HTMLElement) } } }, 'Consultar análise do último passe'))
   }
 
   // ------------------------------------------------------------ dispositivo
@@ -512,6 +516,9 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     resumoPasse,
   )
 
+  const fontePainel = h('div', {}, maquina.querySelector('.mostradores'))
+  const preparoPainel = h('div', {}, maquina.querySelector('.maquina-grade'), maquina.querySelector('.aviso-trava'))
+  maquina.append(painelMaquina([['FONTE', fontePainel], ['PREPARO', preparoPainel], ['LEITURAS', h('div', {}, maquina.querySelector('.leituras'))]]))
   bancada.elemento = h('div', { class: 'bancada' }, maquina, pecaTeste)
 
   // ------------------------------------------------------------ laço da peça de teste
