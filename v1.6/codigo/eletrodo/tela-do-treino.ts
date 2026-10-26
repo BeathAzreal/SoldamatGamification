@@ -7,11 +7,11 @@
  *    roda a cada quadro.
  *
  * Onde mexer: Textos de estado estão em "mensagens" e TEXTO_FAIXA; os
- *    objetivos em itensObjetivo; as opções de ajuda na altura em
+ *    leituras do objetivo em itensObjetivo e o painel da nota em painelResultado; as opções de ajuda na altura em
  *    ajudaAltura.
  */
 
-import { Acionamento15, VARETA15, velocidadeAltura15, type FaixaArco15 } from './arco-e-vareta'
+import { Acionamento15, RENDIMENTO15, VARETA15, velocidadeAltura15, type FaixaArco15 } from './arco-e-vareta'
 import { Cordao } from '../simulacao-mig/cordao'
 import { criarBancada15 } from './bancada-3d'
 import type { App } from '../interface/aplicativo'
@@ -20,7 +20,11 @@ import { carregarControles15, nomeTecla15 as nomeTecla } from './controles-salvo
 import { configurarControles15 } from './janela-de-controles'
 import type { FerramentaBancada15 } from './escoria'
 import { INFO_JUNTA } from '../simulacao-mig/tipos-de-junta-e-posicao'
-import type { PecaEletrodo } from './pecas-de-treino'
+import { aporteAlvoKJmm, type PecaEletrodo } from './pecas-de-treino'
+import { RegistroPasse } from './registro-do-passe'
+import { analisarEletrodo, LIMITES, type AnaliseEletrodo } from './analise-do-cordao'
+import { inspecionarEletrodo, type ResultadoEletrodo } from './nota-do-eletrodo'
+import { abrirPainel } from '../interface/janelas-de-dialogo'
 
 /** Quadro muito longo (aba travada, depurador) não vira um salto de vários segundos de arco. */
 const DT_MAX = 0.25
@@ -45,6 +49,10 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     // O cordão conhece a junta (filete com pernas, V que enche o chanfro), como no jogo MIG.
     const novoCordao = () => new Cordao(undefined, undefined, undefined, { junta: peca.junta, dimensoes: { espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } })
     let cordao = novoCordao()
+    let registro = new RegistroPasse(cordao.nPosicoes, cordao.passoMm)
+    let analise: AnaliseEletrodo | null = null
+    let analiseMs = 0, inclusaoAntes = 0
+    const alvo = aporteAlvoKJmm(peca)
     let posicao = { x: 75, y: 0 }
     let ponteiro = false
     let pausado = false
@@ -75,12 +83,15 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const restante = h('output')
     const barra = h('progress', { max: VARETA15.inicialMm, value: VARETA15.inicialMm, 'aria-label': 'Comprimento restante da vareta' })
     const avanco = h('output')
+    const faixaAvanco = h('small', { class: 'p15-sub' })
+    const calorHud = h('output')
     const fonteHud = h('output')
     const hud = h('div', { class: 'p15-hud' }, estado,
       h('div', { class: 'p15-hud-arco' }, h('div', { class: 'p15-hud-linha' }, h('span', { class: 'p15-rotulo' }, 'Comprimento do arco'), distanciaHud), medidor, medidorTexto),
       h('div', { class: 'p15-hud-grade' },
         h('div', { class: 'p15-hud-item p15-consumo' }, h('span', { class: 'p15-rotulo' }, 'Vareta'), restante, barra),
-        h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Avanço'), avanco),
+        h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Avanço'), avanco, faixaAvanco),
+        h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo', title: 'Aporte de calor: energia do arco por milímetro de cordão' }, 'Calor'), calorHud),
         h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Fonte'), fonteHud)))
 
     // Painel lateral.
@@ -134,14 +145,16 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     }
     const detalhes = h('details', {}, h('summary', {}, 'Leituras do modelo'), leituras,
       h('small', { class: 'p15-dica' }, 'Consumo, aderência, energia e escória são aproximações didáticas. Não predizem qualidade interna nem definem parâmetros de procedimento.'))
-    // Objetivo da peça: checagens simples, sem pontuação (a v1.5 ainda não pontua o eletrodo).
-    const itensObjetivo = ['Trecho do INÍCIO ao FIM coberto', 'Arco no comprimento adequado', 'Sem grudar o eletrodo', 'Escória removida'].map(t => {
+    // Leituras ao vivo do que a inspeção vai medir (H75); a nota sai em "Inspecionar a peça" (H77).
+    const nomeMedida = peca.medida.tipo === 'perna' ? `Perna do filete (${n1(peca.medida.min)}–${n1(peca.medida.max)} mm)` : peca.medida.tipo === 'enchimento' ? 'Chanfro cheio até a face' : `Reforço (${n1(peca.medida.min)}–${n1(peca.medida.max)} mm)`
+    const itensObjetivo = ['Trecho do INÍCIO ao FIM coberto', nomeMedida, `Calor por passe (${n1(LIMITES.fusaoFracaAbaixo * alvo)}–${n1(LIMITES.fusaoExcessoAcima * alvo)} kJ/mm)`, 'Escória removida'].map(t => {
       const valor = h('span', { class: 'p15-obj-valor' })
       const li = h('li', {}, h('span', {}, t), valor)
       return { li, valor }
     })
+    const inspecionar = h('button', { type: 'button', class: 'primario', on: { click: () => mostrarInspecao() } }, 'Inspecionar a peça')
     const objetivo = h('section', { class: 'p15-objetivo', 'aria-label': 'Objetivo da peça' },
-      h('p', {}, peca.objetivo), h('ul', {}, itensObjetivo.map(i => i.li)))
+      h('p', {}, peca.objetivo), h('ul', {}, itensObjetivo.map(i => i.li)), inspecionar)
     const controles = h('button', { type: 'button', on: { click: async () => {
       soltar(); modal = true
       try { cfg = await configurarControles15(cfg) } finally { modal = false; anterior = performance.now(); canvas.focus() }
@@ -156,6 +169,10 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       modelo.regular(Number(corrente.value), Number(diametro.value))
       modelo.posicionar(peca.inicioMm, 0)
       cordao = novoCordao()
+      registro = new RegistroPasse(cordao.nPosicoes, cordao.passoMm)
+      analise = null
+      inclusaoAntes = 0
+      vista.atualizarDefeitos(null)
       posicao = { x: peca.inicioMm, y: 0 }
       selecionarFerramenta('soldar')
     }
@@ -270,13 +287,24 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       if (agora - objetivoMs < 250) return
       objetivoMs = agora
       const cob = coberto()
-      const t = modelo.tempoFaixaS, total = t.curto + t.adequado + t.longo
-      const adequado = total > 0 ? t.adequado / total : 0
+      // Média da medida e do calor no trecho com cordão.
+      let somaMedida = 0, somaCalor = 0, nMedida = 0, dentro = 0
+      for (let x = peca.inicioMm; x <= peca.fimMm; x += 2) {
+        const i = cordao.indiceEm(x), s = cordao.secao(i)
+        if (s.larguraMm < LARGURA_COBERTA_MM) continue
+        const v = peca.medida.tipo === 'perna' ? (s.pernasMm ? Math.min(...s.pernasMm) : 0) : peca.medida.tipo === 'enchimento' ? (s.enchimento ?? 0) : s.alturaMm
+        somaMedida += v; somaCalor += registro.aportePorPasse(i).max; nMedida++
+        const ok = peca.medida.tipo === 'enchimento' ? v >= peca.medida.min && s.alturaMm <= peca.medida.max : v >= peca.medida.min && v <= peca.medida.max
+        if (ok) dentro++
+      }
+      const medida = nMedida ? somaMedida / nMedida : 0, calor = nMedida ? somaCalor / nMedida : 0
+      const textoMedida = !nMedida ? '—' : peca.medida.tipo === 'enchimento' ? `${n0(medida * 100)}% cheio` : `${n1(medida)} mm`
+      const calorOk = calor >= LIMITES.fusaoFracaAbaixo * alvo && calor <= LIMITES.fusaoExcessoAcima * alvo
       const escoriaFeita = modelo.escoria.areaMm2 < 5 && cob > 0.05
       const itens: [boolean, string][] = [
         [cob >= 0.95, `${n0(cob * 100)}%`],
-        [total > 1 && adequado >= 0.7, total > 0 ? `${n0(adequado * 100)}% do tempo` : '—'],
-        [modelo.grudadas === 0 && total > 0, `${modelo.grudadas}×`],
+        [nMedida > 0 && dentro / nMedida >= 0.9, textoMedida],
+        [nMedida > 0 && calorOk, nMedida ? `${n1(calor)} kJ/mm` : '—'],
         [escoriaFeita, cob > 0.05 ? (escoriaFeita ? 'limpa' : `${n0(modelo.escoria.areaMm2)} mm²`) : '—'],
       ]
       itens.forEach(([ok, texto], i) => {
@@ -284,6 +312,35 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
         li.dataset.ok = String(ok)
         if (valor.textContent !== texto) valor.textContent = texto
       })
+    }
+    /** Inspeção visual (H77): nota, aprovação e defeitos com causa e correção. */
+    const mostrarInspecao = async () => {
+      soltar(); modal = true
+      try {
+        analise = analisarEletrodo(peca, cordao, registro)
+        vista.atualizarDefeitos(analise.defeitos)
+        await abrirPainel('Inspeção visual da peça', painelResultado(inspecionarEletrodo(peca, cordao, registro, analise, modelo.escoria)))
+      } finally { modal = false; anterior = performance.now(); canvas.focus() }
+    }
+    const painelResultado = (r: ResultadoEletrodo) => {
+      const m = r.medidas
+      const medida = peca.medida.tipo === 'enchimento' ? `${n0(m.geometriaMedia * 100)}% do chanfro` : `${n1(m.geometriaMedia)} mm`
+      return h('div', { class: 'p15-resultado' },
+        h('div', { class: 'p15-res-topo' },
+          h('div', { class: 'p15-res-nota', 'data-conceito': r.conceito }, h('strong', {}, String(r.nota)), h('span', {}, '/ 100'), h('em', {}, r.conceito)),
+          h('div', {},
+            h('p', { class: 'p15-res-veredito', 'data-aprovado': String(r.aprovado) }, r.aprovado ? 'Aprovada na inspeção visual' : 'Reprovada na inspeção visual'),
+            h('p', { class: 'p15-dica' }, `${n0(m.coberturaPct)}% do trecho · largura ${n1(m.larguraMediaMm)} mm (varia ${n0(m.variacaoLarguraPct)}%) · ${peca.medida.tipo === 'perna' ? 'perna' : peca.medida.tipo === 'enchimento' ? 'enchimento' : 'reforço'} ${medida} · calor ${n1(m.aporteMedioKJmm)} kJ/mm (ref. ${n1(m.aporteAlvoKJmm)}) · ${m.passes} passe(s)`))),
+        h('ul', { class: 'p15-res-categorias' }, r.categorias.map((c) => h('li', {},
+          h('span', {}, c.nome), h('meter', { min: 0, max: c.maximo, value: c.pontos, low: c.maximo * 0.5, high: c.maximo * 0.8, optimum: c.maximo }), h('b', {}, `${c.pontos}/${c.maximo}`), h('small', {}, c.detalhe)))),
+        r.defeitos.length
+          ? h('ul', { class: 'p15-res-defeitos' }, r.defeitos.map((d) => h('li', { 'data-reprova': String(d.reprova) },
+            h('strong', {}, `${d.nome}${d.quantidade > 1 ? ` (${d.quantidade})` : ''}`),
+            h('span', { class: 'p15-res-onde' }, d.fimMm - d.inicioMm < 0.5 ? `em ${n0(d.inicioMm)} mm` : `de ${n0(d.inicioMm)} a ${n0(d.fimMm)} mm`),
+            d.reprova ? h('span', { class: 'p15-res-reprova' }, 'reprova') : null,
+            h('p', {}, d.causa), h('p', { class: 'p15-res-corrigir' }, `Como corrigir: ${d.corrigir}`))))
+          : h('p', {}, 'Nenhum defeito encontrado no trecho.'),
+        h('p', { class: 'p15-dica' }, 'Critérios didáticos do jogo, inspirados em inspeção visual de soldagem. Não é norma nem certificação. A régua na peça mostra as posições em mm.'))
     }
     const quadro = (agora: number) => {
       const dt = Math.min(DT_MAX, (agora - anterior) / 1000)
@@ -314,8 +371,19 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       const vAltura = velocidadeAltura15(seguraSobe, cfg.velocidade) - velocidadeAltura15(seguraDesce, cfg.velocidade)
       if (pode) {
         if (ferramentaAtual === 'soldar') modelo.orientar(modelo.azimuteGraus + (ativo('azMais') - ativo('azMenos')) * dt * 60, modelo.inclinacaoGraus + (ativo('inclMais') - ativo('inclMenos')) * dt * 45, modelo.rolamentoGraus + (ativo('rolMais') - ativo('rolMenos')) * dt * 60)
-        modelo.avancar(dt, ferramentaAtual === 'soldar' ? vAltura : 0,
-          (volume, forma) => cordao.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0))
+        const estadoAntes = modelo.estado, quenteAntes = modelo.pontaQuente
+        modelo.avancar(dt, ferramentaAtual === 'soldar' ? vAltura : 0, (volume, forma) => {
+          cordao.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0)
+          // Registro do passe (H74–H76): calor, arco e metal posto sobre escória fria.
+          if (forma) registro.depositar(modelo.xMm, forma, agora, modelo.escoria.inclusaoMm3 - inclusaoAntes)
+          inclusaoAntes = modelo.escoria.inclusaoMm3
+        })
+        const estadoDepois = modelo.estado
+        if (estadoAntes !== 'arco' && estadoDepois === 'arco') registro.inicioArco(modelo.xMm, modelo.yMm, agora, quenteAntes)
+        if (estadoAntes === 'arco' && estadoDepois !== 'arco') {
+          registro.fimArco(modelo.xMm, modelo.yMm, agora, estadoDepois === 'fim' ? 'fim-da-vareta' : estadoDepois === 'grudado' ? 'grudou' : !modelo.pressionado ? 'soltou' : 'afastou')
+        }
+        if (estadoAntes !== 'grudado' && estadoDepois === 'grudado') registro.grudou(modelo.xMm, modelo.yMm)
         const pressionada = !!(modelo.naPeca && (ponteiro || ativo('acionar') || gatilhoControle))
         if (ferramentaAtual === 'martelo' && pressionada && !limpezaPressionada) {
           modelo.escoria.martelar(modelo.xMm, modelo.yMm); ultimoGolpeMs = agora
@@ -344,7 +412,17 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       const textoMedidor = modelo.esticado ? 'arco esticado · apaga em instantes' : faixaArco ? TEXTO_FAIXA[faixaArco] : `abre ao tocar; sustenta até ${n1(modelo.arcoMaxMm)} mm`
       if (medidorTexto.textContent !== textoMedidor) medidorTexto.textContent = textoMedidor
       medidorTexto.dataset.faixa = modelo.esticado ? 'longo' : faixaArco ?? ''
-      avanco.value = `${n1(modelo.estado === 'arco' ? modelo.velocidadeMmS : 0)} mm/s`
+      // Calor do arco agora (H74): potência que entra na peça ÷ velocidade de avanço; e a faixa de avanço que dá o calor certo.
+      const potenciaW = RENDIMENTO15.termico * modelo.correnteA * (20 + 2 * Math.max(0.5, Math.min(modelo.arcoMaxMm, modelo.distanciaMm)))
+      const vMin = potenciaW / (LIMITES.fusaoExcessoAcima * alvo * 1000), vMax = potenciaW / (LIMITES.fusaoFracaAbaixo * alvo * 1000)
+      const arcoAceso = modelo.estado === 'arco'
+      avanco.value = `${n1(arcoAceso ? modelo.velocidadeMmS : 0)} mm/s`
+      const textoFaixa = `faixa ${n1(vMin)}–${n1(vMax)}`
+      if (faixaAvanco.textContent !== textoFaixa) faixaAvanco.textContent = textoFaixa
+      const calorAgora = arcoAceso && modelo.velocidadeMmS > 0.3 ? potenciaW / modelo.velocidadeMmS / 1000 : 0
+      calorHud.value = calorAgora ? `${n1(calorAgora)} kJ/mm` : '—'
+      calorHud.dataset.faixa = !calorAgora ? '' : calorAgora < LIMITES.fusaoFracaAbaixo * alvo ? 'frio' : calorAgora > LIMITES.fusaoExcessoAcima * alvo ? 'quente' : 'bom'
+      avanco.dataset.faixa = calorHud.dataset.faixa
       fonteHud.value = `${n0(modelo.correnteA)} A · Ø ${n1(modelo.diametroMm)}`
       const chaveTeclas = JSON.stringify(cfg.teclas)
       if (chaveTeclas !== teclasChave) {
@@ -385,6 +463,12 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       trocar.disabled = pausado || modelo.estado === 'arco' || modelo.grudado
       trocar.classList.toggle('primario', modelo.estado === 'fim')
       atualizarObjetivo(agora)
+      // A análise (escamas, poros, crateras, respingos, cor de calor) acompanha o cordão a cada meio segundo.
+      if (agora - analiseMs > 500 && registro.aberturas.length) {
+        analiseMs = agora
+        analise = analisarEletrodo(peca, cordao, registro)
+        vista.atualizarDefeitos(analise.defeitos)
+      }
       vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0)
       pedido = requestAnimationFrame(quadro)
     }
