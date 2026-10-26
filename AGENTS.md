@@ -7,17 +7,17 @@
 
 | Branch | Dono | Pode fazer commit/push? |
 |---|---|---|
-| `gpt/v1.6` | **GPT (OpenAI Codex / ChatGPT)** | só o GPT |
-| `claude/v1.6` | **Claude (Anthropic Claude Code)** | só o Claude |
-| `alpha-v1.6` | dono do projeto (versão entregue) | **ninguém**, só por pull request aprovado pelo dono |
+| `gpt/v1.7` | **GPT (OpenAI Codex / ChatGPT)** | só o GPT |
+| `claude/v1.7` | **Claude (Anthropic Claude Code)** | só o Claude |
+| `alpha-v1.7` | dono do projeto (versão entregue) | **ninguém**, só por pull request aprovado pelo dono |
 | `claude/epic-allen-8rmum9` | histórico de todas as versões (v1.1, v1.2, v1.3) | **ninguém** |
 
 Antes de começar, rode `git branch --show-current`:
 
-- Se você é o **GPT** e não está em `gpt/v1.6`: rode `git checkout gpt/v1.6`. Nunca faça commit ou push em `claude/v1.6`.
-- Se você é o **Claude** e não está em `claude/v1.6`: rode `git checkout claude/v1.6`. Nunca faça commit ou push em `gpt/v1.6`.
+- Se você é o **GPT** e não está em `gpt/v1.7`: rode `git checkout gpt/v1.7`. Nunca faça commit ou push em `claude/v1.7`.
+- Se você é o **Claude** e não está em `claude/v1.7`: rode `git checkout claude/v1.7`. Nunca faça commit ou push em `gpt/v1.7`.
 - **Nunca** use `git push --force`, `git rebase` ou reescreva o histórico da branch do outro agente.
-- Para trazer o trabalho do outro agente, **não** faça merge direto entre as duas branches. O dono junta tudo em `alpha-v1.6` por pull request, e depois cada agente atualiza a sua com `git merge origin/alpha-v1.6`.
+- Para trazer o trabalho do outro agente, **não** faça merge direto entre as duas branches. O dono junta tudo em `alpha-v1.7` por pull request, e depois cada agente atualiza a sua com `git merge origin/alpha-v1.7`.
 - Se o pedido do dono parecer exigir trabalhar na branch do outro, **pare e pergunte**.
 
 ## 2. O projeto
@@ -89,7 +89,7 @@ ficam em `scripts/portatil.mjs` (viram o `LEIA-ME.txt`).
    - tudo só com o arco fechado, e configurável em "Controles" (`src/ui/componentes/controles.ts`).
    Não quebre isso.
 7. **Dados salvos:** mudou o formato de algo em `src/dados/`? Mantenha a leitura de dados antigos (veja `validarPreferencias`).
-8. **Versões:** esta branch é a **Alpha v1.6**. Não crie pastas de outras versões aqui. Versões posteriores são decididas pelo dono.
+8. **Versões:** esta branch é a **Alpha v1.7**. Não crie pastas de outras versões aqui. Versões posteriores são decididas pelo dono.
 9. **Sem dependências novas** sem o dono pedir. O jogo tem de continuar funcionando offline, num HTML único.
 10. Commits pequenos, um assunto por commit, mensagem em português dizendo o que mudou e por quê.
 
@@ -116,3 +116,7 @@ Arquivos que os dois podem precisar tocar (`src/estilo-app.css`, `docs/*.md`,
 2. Se mexeu em algo visível, abra o jogo (`npm run dev`) e confira.
 3. Commit e push **na sua branch** (seção 1).
 4. Escreva ao dono o que mudou, o que testou e o que ficou pendente.
+
+
+## Escopo autorizado da v1.7
+X1 em rede local: salas, cliente/servidor e integração por adaptadores novos. Não alterar física, renderização e regras de pontuação do Claude. O modo offline continua disponível; somente o x1 requer o servidor. As versões anteriores permanecem nas próprias branches.
