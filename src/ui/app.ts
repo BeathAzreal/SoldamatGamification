@@ -145,9 +145,9 @@ export class App {
     this.raiz.classList.remove('app-cheia', 'tela-bancada', 'tela-resultado', 'tela-julgamento', 'tela-inicio')
     document.getElementById('topo-contexto')!.textContent = contexto
     const nome = contexto.toLocaleLowerCase('pt-BR')
-    const rota = /torneio|julgamento|professor/.test(nome) ? 'torneio'
+    const rota = /torneio|versus|julgamento|professor/.test(nome) ? 'arcade'
       : /treino/.test(nome) ? 'treino' : /arcade/.test(nome) ? 'arcade'
-      : /história|historia|missão|capítulo/.test(nome) ? 'historia'
+      : /história|historia|missão|capítulo/.test(nome) ? 'arcade'
       : /recordes/.test(nome) ? 'recordes' : /configura/.test(nome) ? 'config' : 'inicio'
     document.querySelectorAll<HTMLElement>('[data-rota]').forEach(botao => {
       if (botao.dataset.rota === rota) botao.setAttribute('aria-current', 'page')

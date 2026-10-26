@@ -7,7 +7,7 @@ import './estilo-prototipo15.css'
 import { App } from './ui/app'
 import { icone } from './ui/componentes/icones'
 import { telaHistoria } from './ui/telas/historia'
-import { telaArcade } from './ui/telas/arcade'
+import { telaCentralArcade } from './ui/telas/centralArcade'
 import { telaTreino } from './ui/telas/treino'
 import { telaTorneios } from './ui/telas/torneio'
 import { telaRecordes } from './ui/telas/recordes'
@@ -23,7 +23,7 @@ import { somArco } from './ui/som'
  */
 const app = new App()
 const rotas: Record<string, (app: App) => void> = {
-  inicio: telaMenu, historia: telaHistoria, arcade: telaArcade, treino: telaTreino,
+  inicio: telaMenu, historia: telaHistoria, arcade: telaCentralArcade, treino: telaTreino,
   torneio: telaTorneios, recordes: (app) => telaRecordes(app), config: telaConfiguracoes,
 }
 document.querySelectorAll<HTMLButtonElement>('[data-rota]').forEach(botao => {

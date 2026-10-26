@@ -3212,3 +3212,9 @@ canvas.tela-solda-3d[hidden] {
     margin: 0;
   }
 }
+
+/* Configurações: rolagem apenas dentro da tela. */
+.config-paineis { flex: 1; min-height: 0; overflow-y: auto; display: grid; gap: 16px; padding-bottom: 16px; }
+
+.app.app-cheia:has(.config-paineis) { padding: 18px clamp(14px, 3.5vw, 40px) 16px; }
+.navegacao-lateral [data-rota="config"] .nav-texto { font-size: 17px; }
