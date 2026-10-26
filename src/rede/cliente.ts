@@ -21,6 +21,7 @@ export class ClienteRede {
   if(anterior && (s.rodada<anterior.rodada || s.agora<anterior.agora || (s.rodada===anterior.rodada && ordem[s.fase]<ordem[anterior.fase])))return
   if(s.protocolo!==PROTOCOLO_REDE||s.modelo!==MODELO_REDE){this.aoConexao?.(false,'O servidor mudou de versão. Recarregue o jogo.');this.fechar();return}this.estado=s;this.aoEstado?.(s)}
  async conectar(){
+  if(this.credencial.transporte==='consulta'){await this.consultar();return}
   while(!this.parado){
    try{
     const r=await fetch(new URL(`/api/salas/${this.credencial.codigo}/eventos`,this.base),{headers:{Authorization:`Bearer ${this.credencial.token}`},signal:this.abortar.signal,cache:'no-store'})
@@ -32,6 +33,17 @@ export class ClienteRede {
     }
     if(!this.parado)throw Error('Conexão interrompida.')
    }catch(e){if(this.parado)return;this.aoConexao?.(false,`Reconectando… ${(e as Error).message}`);await new Promise(ok=>setTimeout(ok,1500))}
+  }
+ }
+ private async consultar(){
+  while(!this.parado){
+   try{
+    const r=await fetch(new URL(`/api/salas/${this.credencial.codigo}/estado`,this.base),{headers:{Authorization:`Bearer ${this.credencial.token}`},signal:AbortSignal.any([this.abortar.signal,AbortSignal.timeout(15000)]),cache:'no-store'})
+    const d=await r.json()
+    if(!r.ok){if([403,404,409].includes(r.status)){this.aoConexao?.(false,d.erro);this.fechar();return}throw Error(d.erro)}
+    this.receber(d);if(!this.parado)this.aoConexao?.(true,'Conectado ao servidor online')
+   }catch(e){if(this.parado)return;this.aoConexao?.(false,`Reconectando… ${(e as Error).message}`)}
+   if(!this.parado)await new Promise(ok=>setTimeout(ok,1000))
   }
  }
  fechar(){this.parado=true;this.abortar.abort()}

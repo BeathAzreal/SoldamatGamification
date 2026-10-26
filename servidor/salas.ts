@@ -4,7 +4,7 @@ import { avaliarRegistroRede } from './avaliar'
 import { PROTOCOLO_REDE,MODELO_REDE,configuracaoRede,type ConfigRede,type ComandoRede,type CredencialRede,type SalaRede,type JogadorRede,type FaseRede } from '../src/rede/contrato'
 
 export class ErroSala extends Error {constructor(mensagem:string,readonly status=400){super(mensagem)}}
-interface JogadorInterno extends JogadorRede {token:string;desconectadoEm:number|null}
+interface JogadorInterno extends JogadorRede {token:string;desconectadoEm:number|null;ultimoPulso?:number}
 interface SalaInterna {codigo:string;config:ConfigRede;fase:FaseRede;rodada:number;jogadores:JogadorInterno[];criadaEm:number;inicioEm:number|null;fimEm:number|null;motivo:string;vencedorId:string|null}
 export class Salas {
  private salas=new Map<string,SalaInterna>()
@@ -85,4 +85,20 @@ export class Salas {
   }
  }
  codigos(){return [...this.salas.keys()]}
+ // Somente o adaptador de armazenamento do servidor lê este formato, que contém tokens.
+ guardar(codigo:string){return JSON.stringify({protocolo:PROTOCOLO_REDE,sala:this.obter(codigo)})}
+ restaurar(dados:string){
+  const registro=JSON.parse(dados) as {protocolo:string;sala:SalaInterna}
+  if(registro.protocolo!==PROTOCOLO_REDE)throw new ErroSala('Esta sala usa outra versão. Crie uma nova sala.',409)
+  this.salas.set(registro.sala.codigo,registro.sala)
+ }
+ pulso(codigo:string,token:string){
+  const s=this.obter(codigo);this.autenticar(s,token)
+  for(const j of s.jogadores)if(j.conectado&&j.ultimoPulso!==undefined&&this.agora()-j.ultimoPulso>10000){j.conectado=false;j.desconectadoEm=j.ultimoPulso}
+  this.atualizar()
+  const j=this.autenticar(this.obter(codigo),token)
+  // Um retorno depois do W/O não reabre a partida.
+  if(j.estado==='abandonou')return
+  j.ultimoPulso=this.agora();this.conectar(codigo,token,true)
+ }
 }

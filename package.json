@@ -13,7 +13,9 @@
     "portatil": "npm run build && node scripts/portatil.mjs",
     "build:servidor": "vite build --ssr servidor/index.mjs --outDir dist-servidor",
     "rede": "npm run build && npm run build:servidor && node dist-servidor/index.js",
-    "pacote:rede": "npm run build && npm run build:servidor && node scripts/pacote-rede.mjs"
+    "pacote:rede": "npm run build && npm run build:servidor && node scripts/pacote-rede.mjs",
+    "build:hospedado": "npm run portatil && node scripts/hospedado.mjs",
+    "preview:hospedado": "node scripts/preview-hospedado.mjs"
   },
   "devDependencies": {
     "@types/three": "^0.186.0",

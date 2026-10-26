@@ -9,7 +9,7 @@ export const MISSOES_REDE=MISSOES.filter(m=>m.material==='aco-carbono')
 export type FaseRede='espera'|'contagem'|'partida'|'resultado'|'encerrada'
 export type EstadoJogador='preparando'|'pronto'|'soldando'|'entregou'|'abandonou'|'tempo-esgotado'
 export interface ConfigRede {processo:'mig';missaoId:string;dificuldade:Dificuldade}
-export interface CredencialRede {codigo:string;jogadorId:string;token:string;protocolo:string}
+export interface CredencialRede {codigo:string;jogadorId:string;token:string;protocolo:string;transporte?:'consulta'}
 export interface EntregaRede {eventos:EventosCompactos;resultado:ResultadoPontuacao}
 export interface JogadorRede {id:string;nome:string;anfitriao:boolean;conectado:boolean;estado:EstadoJogador;revanche:boolean;entrega:EntregaRede|null}
 export interface SalaRede {

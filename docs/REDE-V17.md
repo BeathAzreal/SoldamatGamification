@@ -1,6 +1,6 @@
 # X1 em rede — v1.7
 
-Escopo: dois navegadores em PCs da mesma rede, criando uma sala por código. Primeiro processo: MIG/MAG, reutilizando a execução e o replay existentes. A física, a renderização e o eletrodo do Claude não são modificados. Sem bibliotecas novas.
+Escopo: dois navegadores em PCs pela mesma rede ou pela hospedagem online, criando uma sala por código. Primeiro processo: MIG/MAG, reutilizando a execução e o replay existentes. A física, a renderização e o eletrodo do Claude não são modificados. Sem bibliotecas novas.
 
 ## Partida
 
@@ -34,3 +34,19 @@ Foi conferida também a recarga da página durante uma partida: ela interrompe a
 ABRIR-OFICINA.bat usa exclusivamente runtime/node.exe por caminho relativo e abre o jogo após o servidor começar a escutar. Não procura Node.js no PATH nem instala componentes. O runtime oficial v24.19.0 foi conferido contra o SHA-256 publicado pelo Node.js; a licença integral e os metadados de origem acompanham o executável. O binário entra apenas no pacote gerado, não no Git. A geração usa o processo Node atual ou NODE_PORTATIL e exige o hash do manifesto em licencas/node-runtime.json. SEM_ABRIR_NAVEGADOR=1 serve ao teste sem lançar uma janela de navegador por fora das ferramentas de UI.
 
 Teste do pacote integrado: ABRIR-OFICINA.bat iniciou o servidor com o PATH reduzido a pastas do Windows; where node não localizou Node.js instalado. O jogo foi acessado no navegador e os 450 testes existentes passaram. A abertura automática do navegador foi desabilitada apenas nesse teste para usar a ferramenta de UI.
+
+## Hospedagem online, sem instalação
+
+`npm run build:hospedado` gera `dist-hospedado/index.js`: um Worker ESM contendo o HTML completo e a API. O adaptador `servidor/hospedado.ts` reutiliza Salas e o replay existente, com banco D1 compartilhado. A migração inicial está em `servidor/migracoes/0000_salas.sql`. O site usa o binding `DB`; as migrações são aplicadas na publicação, nunca em uma requisição de jogador.
+
+Os navegadores consultam o estado a cada segundo, com token no cabeçalho. O servidor verifica o relógio e detecta ausência prolongada pelos pulsos. Cada mudança usa revisão e repetição em caso de concorrência, para não perder prontidão ou entrega de outro jogador. O modo LAN continua usando SSE e salas em memória.
+
+Na versão online, os dois PCs abrem o mesmo link HTTPS, entram em Arcade → X1 em rede e compartilham somente o código de seis caracteres. Não há lançador ou runtime no computador do jogador. O acesso ao jogo é público, sem login, por escolha do dono. Isso não permite consultar salas sem credencial. Salas expiram após 30 minutos; recordes individuais ficam no navegador. Criação e entrada têm limite de solicitações. O servidor guarda apenas um hash temporário do IP para esse limite.
+
+Validação adicional: persistência entre instâncias, prontidão concorrente, replay e ocultação de entregas, saída de visitante, autenticação, origem HTTP, expiração, W/O e limite de criação em SQLite real executando o SQL do D1. Cliente de consulta também testado. Total: 455 testes em 45 arquivos, typecheck e builds aprovados. Na prévia do Worker, dois clientes de navegador entraram por código e iniciaram a mesma partida. Ainda é necessário testar em dois PCs físicos; não há matchmaking ou proteção antifraude para torneio público.
+
+Endereço publicado: https://oficina-soldagem-x1.yummycamel20.chatgpt.site
+
+O checkout de publicação é separado do repositório do jogo e contém o Worker autocontido. Para atualizar: gerar novamente o Worker nesta branch, atualizar worker/index.js no checkout de hospedagem e publicar pelo fluxo Sites. Não copiar credenciais ou dados de salas para o código-fonte.
+
+Validação no endereço público: dois clientes criaram/entraram na sala, iniciaram a rodada, soldaram pela interface e entregaram as tentativas. O servidor online calculou 261 e 337 pontos e os dois clientes mostraram vitória do segundo. Prova visual no arquivo de entrega v17-online-resultado.png.

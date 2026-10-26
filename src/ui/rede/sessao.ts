@@ -66,7 +66,7 @@ export class SessaoRede {
   const status=h('p',{class:'rede-conexao',role:'status'}),jogadores=h('div',{class:'rede-jogadores'}),contagem=h('p',{class:'rede-contagem','aria-live':'polite'})
   const codigo=h('input',{readOnly:true,'aria-label':'Código da sala',value:this.credencial.codigo,on:{focus:e=>(e.target as HTMLInputElement).select()}})
   const pronto=botaoRede('Pronto para soldar',()=>{const s=this.ultima,eu=s?.jogadores.find(j=>j.id===this.credencial.jogadorId);if(s&&eu)void this.comando({tipo:'pronto',rodada:s.rodada,pronto:eu.estado!=='pronto'})},true)
-  const caixa=h('section',{class:'rede-caixa'},h('div',{class:'rede-codigo'},h('label',{},'CÓDIGO DA SALA',codigo)),h('p',{class:'rede-endereco'},'No segundo PC, abra o endereço de rede mostrado no servidor e entre com este código.'),jogadores,contagem,status,pronto,botaoRede('Sair da sala',()=>void this.sair()))
+  const caixa=h('section',{class:'rede-caixa'},h('div',{class:'rede-codigo'},h('label',{},'CÓDIGO DA SALA',codigo)),h('p',{class:'rede-endereco'},this.credencial.transporte==='consulta'?`No segundo PC, abra ${location.origin} e entre com este código em Arcade → X1 em rede.`:'No segundo PC, abra o endereço de rede mostrado no servidor e entre com este código.'),jogadores,contagem,status,pronto,botaoRede('Sair da sala',()=>void this.sair()))
   this.trocar('sala',paginaRede('SALA DO X1','MIG/MAG / DOIS COMPUTADORES',caixa))
   const atualizar=()=>{
    const s=this.ultima;if(!s)return

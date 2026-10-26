@@ -3,6 +3,12 @@ import {ClienteRede} from '../src/rede/cliente'
 import {PROTOCOLO_REDE,MODELO_REDE,type SalaRede} from '../src/rede/contrato'
 function estado(fase:SalaRede['fase'],agora:number):SalaRede{return{codigo:'ABC234',protocolo:PROTOCOLO_REDE,modelo:MODELO_REDE,config:{processo:'mig',missaoId:'suporte-carbono',dificuldade:'aprendiz'},fase,rodada:1,jogadores:[],agora,inicioEm:100,fimEm:180100,vencedorId:null,motivo:''}}
 describe('cliente de rede',()=>{
+ it('consulta o estado hospedado usando token no cabeçalho e para ao fechar',async()=>{
+  const c=new ClienteRede({codigo:'ABC234',jogadorId:'A',token:'credencial',protocolo:PROTOCOLO_REDE,transporte:'consulta'},'https://oficina.test')
+  const pedir=vi.fn(async(_url:RequestInfo|URL,_opcoes?:RequestInit)=>new Response(JSON.stringify(estado('contagem',20))))
+  vi.stubGlobal('fetch',pedir);c.aoEstado=()=>c.fechar()
+  try{await c.conectar();expect(pedir).toHaveBeenCalledOnce();expect(String(pedir.mock.calls[0]?.[0])).toBe('https://oficina.test/api/salas/ABC234/estado');expect(c.estado?.fase).toBe('contagem')}finally{c.fechar();vi.unstubAllGlobals()}
+ })
  it('não volta do jogo à sala por uma resposta atrasada',async()=>{
   const recebidos:string[]=[],c=new ClienteRede({codigo:'ABC234',jogadorId:'A',token:'credencial',protocolo:PROTOCOLO_REDE},'http://servidor.test')
   const estados=[estado('partida',20),estado('espera',10),estado('contagem',21),estado('resultado',30)]
