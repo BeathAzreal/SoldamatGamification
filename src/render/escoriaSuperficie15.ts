@@ -5,14 +5,15 @@ import { cristaMm, type TipoJunta } from '../modelo/juntas'
 
 /** Crosta superficial contínua. A grade física é a máscara; não são grãos depositados. */
 export function criarSuperficieEscoria15(superficie: (n: number) => number = () => 0, junta: TipoJunta = 'topo') {
-  const colunas = 50, linhas = 34
+  const colunas = 100, linhas = 68
+  const passoX = 150 / colunas, passoY = 100 / linhas
   const vertices = (colunas + 1) * (linhas + 1)
   const posicoes = new Float32Array(vertices * 3), cores = new Float32Array(vertices * 3), uvs = new Float32Array(vertices * 2)
   const indices: number[] = []
   for (let j = 0; j <= linhas; j++) for (let i = 0; i <= colunas; i++) {
     const n = j * (colunas + 1) + i
-    posicoes[n * 3] = i * 3 - 75
-    posicoes[n * 3 + 2] = Math.min(50, j * 3 - 50)
+    posicoes[n * 3] = i * passoX - 75
+    posicoes[n * 3 + 2] = j * passoY - 50
     uvs[n * 2] = i / colunas
     uvs[n * 2 + 1] = j / linhas
     if (i < colunas && j < linhas) {
@@ -27,42 +28,64 @@ export function criarSuperficieEscoria15(superficie: (n: number) => number = () 
   const pixels = new Uint8Array(colunas * linhas * 4)
   const textura = new THREE.DataTexture(pixels, colunas, linhas, THREE.RGBAFormat)
   textura.magFilter = textura.minFilter = THREE.LinearFilter
-  const material = new THREE.MeshStandardMaterial({ color: '#ffffff', vertexColors: true, roughness: 0.98, metalness: 0.03, alphaMap: textura, alphaTest: 0.12, side: THREE.DoubleSide })
+  // H75: crosta vítrea fissurada, em placas; não uma fileira de esferas.
+  const imagem = document.createElement('canvas')
+  imagem.width = 512; imagem.height = 256
+  const ctx = imagem.getContext('2d')!
+  const dados = ctx.createImageData(512, 256)
+  const ruido = (x: number, y: number) => { const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return n - Math.floor(n) }
+  for (let y = 0; y < 256; y++) for (let x = 0; x < 512; x++) {
+    const u = x / 22, v = y / 18, a = Math.floor(u), b = Math.floor(v)
+    let d1 = Infinity, d2 = Infinity
+    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+      const dx = a + i + ruido(a+i,b+j) - u, dy = b+j + ruido(b+j+83,a+i) - v
+      const d = dx*dx+dy*dy
+      if (d < d1) { d2 = d1; d1 = d } else if (d < d2) d2 = d
+    }
+    const fissura = Math.min(1, (Math.sqrt(d2)-Math.sqrt(d1)) / 0.06)
+    const tom = 95 + fissura * 115 + ruido(x,y) * 28
+    const k = (y*512+x)*4
+    dados.data.set([tom, tom * 0.98, tom * 0.94, 255],k)
+  }
+  ctx.putImageData(dados,0,0)
+  const crosta = new THREE.CanvasTexture(imagem)
+  const material = new THREE.MeshStandardMaterial({ color: '#ffffff', vertexColors: true, map: crosta, bumpMap: crosta, bumpScale: 0.24, roughness: 0.78, metalness: 0.16, alphaMap: textura, alphaTest: 0.12, side: THREE.DoubleSide })
   const malha = new THREE.Mesh(geometria, material)
   malha.frustumCulled = false
   malha.receiveShadow = true
-  const fria = new THREE.Color('#3c342c'), quente = new THREE.Color('#c46b2c'), cor = new THREE.Color()
-  const residuo = new THREE.Color('#9b9385')
+  const fria = new THREE.Color('#393b37'), quente = new THREE.Color('#c46b2c'), cor = new THREE.Color()
+  const residuo = new THREE.Color('#6c6860')
   return {
-    malha, textura,
+    malha, textura, crosta,
     atualizar(escoria: Escoria15, cordao: Cordao) {
       malha.visible = escoria.cobertura > 0.001
       if (!malha.visible) return
-      for (let i = 0; i < escoria.quantidade.length; i++) {
-        // Crosta fina já é opaca: a máscara marca onde há escória, não a espessura.
-        const alfa = Math.round(Math.min(1, escoria.quantidade[i] * 6) * 255)
-        pixels.set([alfa, alfa, alfa, 255], i * 4)
+      const amostrar = (dados: Float64Array, x: number, y: number) => {
+        const u = Math.max(0, Math.min(49, x / 3 - 0.5)), v = Math.max(0, Math.min(33, (y + 50) / 3 - 0.5))
+        const i = Math.floor(u), j = Math.floor(v), a = u-i, b = v-j
+        const q = (c: number, l: number) => dados[Math.min(33,l)*50+Math.min(49,c)]
+        return q(i,j)*(1-a)*(1-b)+q(i+1,j)*a*(1-b)+q(i,j+1)*(1-a)*b+q(i+1,j+1)*a*b
+      }
+      for (let j = 0; j < linhas; j++) for (let i = 0; i < colunas; i++) {
+        const q = amostrar(escoria.quantidade, (i+0.5)*passoX, (j+0.5)*passoY-50)
+        const alfa = Math.round(Math.min(1, q * 6) * 255)
+        pixels.set([alfa, alfa, alfa, 255], (j*colunas+i)*4)
       }
       const cordoes = [cordao, ...cordao.soltos]
       for (let j = 0; j <= linhas; j++) for (let i = 0; i <= colunas; i++) {
         const n = j * (colunas + 1) + i
-        const x = i * 3, y = Math.min(50, j * 3 - 50)
+        const x = i * passoX, y = j * passoY - 50
         let topo = superficie(y), calor = 0, quantidade = 0, fragmentos = 0, amostras = 0
         for (const c of cordoes) {
           const s = c.secao(c.indiceEm(x))
           const r = Math.abs(s.yCentroMm - y) / Math.max(0.2, s.larguraMm / 2)
           if (r < 1) topo = Math.max(topo, cristaMm(s, junta) * (1 - r * r))
         }
-        for (const dj of [-1, 0]) for (const di of [-1, 0]) {
-          const a = j + dj, b = i + di
-          if (a < 0 || a >= linhas || b < 0 || b >= colunas) continue
-          const k = a * colunas + b
-          quantidade += escoria.quantidade[k]
-          fragmentos += escoria.fragmentos[k]
-          calor += escoria.calor[k] * escoria.quantidade[k]
-          amostras++
-        }
-        posicoes[n * 3 + 1] = topo + 0.35 + 0.25 * Math.min(1, quantidade / Math.max(1, amostras) * 3)
+        quantidade = amostrar(escoria.quantidade,x,y)
+        fragmentos = amostrar(escoria.fragmentos,x,y)
+        calor = amostrar(escoria.calor,x,y) * quantidade
+        amostras = 1
+        posicoes[n * 3 + 1] = topo + 0.25 + 0.5 * Math.min(1, quantidade / Math.max(1, amostras) * 3)
         cor.copy(fria).lerp(quente, quantidade > 0 ? calor / quantidade : 0)
         if (quantidade > 0) cor.lerp(residuo, fragmentos / quantidade)
         cores.set([cor.r, cor.g, cor.b], n * 3)

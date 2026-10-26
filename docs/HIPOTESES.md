@@ -771,3 +771,10 @@ Riscar a ponta reduz a chance de grudar; o arco é classificado em curto, adequa
 
 Arco esticado aguenta um instante e reacende a quente; o primeiro toque abre o arco sem botão, e curto breve sem empurrar se desfaz; a distância é medida até a superfície real da junta e a ponta assenta na raiz do filete. Detalhes em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
 
+
+
+### H74 — Acompanhamento manual do consumo no eletrodo (v1.6)
+Ao segurar a descida, o comando compensa a componente vertical do consumo que a assistência ainda não cobre, e acrescenta a correção pedida pelo jogador. A compensação só existe com comando ativo e arco aberto. A velocidade configurada continua sendo a velocidade de correção, com mínimo jogável de 3 mm/s. A corrente, o consumo, o volume depositado, o limite do arco e a aderência permanecem no modelo anterior. É uma assistência de interação, não resposta calibrada de uma mão humana. Testes cobrem corrente alta, preferências antigas lentas, ausência de comando e taxas de quadros.
+
+### H75 — Apresentação industrial e limpeza do SMAW (v1.6)
+As peças representam trechos simplificados de conjuntos industriais em aço carbono (8–12 mm): emenda, sapata, longarina, caixão e reforço. Orelhas furadas e travessas fora do trecho acessível são acabamento visual; não qualificam uma junta real nem acrescentam regiões soldáveis. A fonte SMAW é uma inversora CC sem cilindro de gás. Correntes são parâmetros didáticos, não recomendações de procedimento. Ondulações foscas do metal, crosta fissurada, relevo e lascas são visuais e não alteram pontuação ou volume. Direções lateral, diagonal e superior mudam o movimento do martelo; a remoção continua condicionada à posição, resfriamento e uso posterior da escova, pela mesma máscara física anterior.

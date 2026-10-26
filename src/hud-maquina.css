@@ -86,3 +86,5 @@
 
 .jogo-imersivo:has(.execucao) .atalho-pause { left: 20px; right: auto; }
 .jogo-imersivo .resumo-passe > button { padding: 4px 8px; font-size: 11px; }
+
+.jogo-imersivo .p15-fonte { min-width: 0; max-width: 100%; }

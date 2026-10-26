@@ -72,3 +72,7 @@ O protótipo deixou de ser uma tela separada no topo. O eletrodo agora fica em *
 **H71 — arco esticado e reacendimento a quente:** passar do limite do arco não apaga na hora; até 1,5 × o limite ele aguenta 0,35 s ("arco esticado · desça"). Até 1,5 s depois de apagar, a ponta ainda quente reacende ao voltar para dentro do limite, sem novo toque. Números do jogo.
 
 **H73 — ponta no canto do filete:** a distância do arco é medida até a superfície real da junta (paredes a 45° no filete na posição plana), e a ponta apoiada a até 4 mm da raiz assenta no fundo do canto, como acontece com o eletrodo encostado no V. Um risco de pedra-sabão marca a raiz do INÍCIO ao FIM.
+
+
+## Revisão SMAW da v1.6
+H74 acrescenta acompanhamento do consumo ao comando de descida, inclusive com preferências antigas lentas. Teste de vareta inteira cobre 75, 130 e 180 A, assistência 0 e 0,8, a 30 e 144 quadros/s, sem interromper para recuperar altura. H75 diferencia o aspecto do cordão, crosta e equipamento SMAW. Os três sentidos do martelo têm o mesmo raio e regra de remoção; lascas são visuais. O catálogo passou a representar trechos de conjuntos industriais, preservando a modelagem simplificada das juntas.

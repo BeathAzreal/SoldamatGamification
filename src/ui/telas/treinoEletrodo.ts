@@ -1,5 +1,5 @@
 import { painelMaquina } from '../componentes/painelMaquina'
-import { Acionamento15, VARETA15, velocidadeAltura15, type FaixaArco15 } from '../../modelo/acionamento15'
+import { Acionamento15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from '../../modelo/acionamento15'
 import { Cordao } from '../../modelo/cordao'
 import { criarBancada15 } from '../../render/bancada15'
 import type { App } from '../app'
@@ -75,9 +75,13 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const ajuda = h('p', { class: 'p15-ajuda' })
     const trocar = h('button', { type: 'button', on: { click: () => { modelo.soltar(); modelo.trocarVareta(); canvas.focus() } } }, 'Nova vareta')
     const desgrudar = h('button', { type: 'button', class: 'p15-alerta', on: { click: () => { modelo.soltar(); modelo.desgrudar(); canvas.focus() } } }, 'Desgrudar eletrodo')
+    const direcaoGolpe = h('select', { 'aria-label': 'Direção do golpe do martelo' }, h('option', { value: 'lateral' }, 'Golpe lateral'), h('option', { value: 'diagonal' }, 'Golpe diagonal'), h('option', { value: 'cima' }, 'Golpe por cima'))
+    const escolhaGolpe = h('label', { class: 'p15-linha', hidden: true }, 'Martelo', direcaoGolpe)
     const botoesFerramenta = new Map<FerramentaBancada15, HTMLButtonElement>()
     const selecionarFerramenta = (f: FerramentaBancada15) => {
       soltar(); limpezaPressionada = false; ferramentaAtual = f
+      escolhaGolpe.hidden = f !== 'martelo'
+      trocar.hidden = f !== 'soldar'
       for (const [id, b] of botoesFerramenta) b.setAttribute('aria-pressed', String(id === f))
       canvas.focus()
     }
@@ -92,7 +96,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     diametro.addEventListener('change', () => { modelo.soltar(); modelo.regular(modelo.correnteA, Number(diametro.value)); canvas.focus() })
     // H70: quanto do consumo a bancada compensa. Parcial é o padrão: o arco cresce devagar e o jogador corrige.
     const ajudaAltura = h('select', { 'aria-label': 'Ajuda na altura' },
-      ([['0.8', 'Parcial (recomendada)'], ['1', 'Total (arco não cresce)'], ['0', 'Desligada (eletrodo real)']] as const).map(([v, t]) => h('option', { value: v }, t)))
+      ([['0.8', 'Parcial (recomendada)'], ['1', 'Total (arco não cresce)'], ['0', 'Manual (sem ajuda automática)']] as const).map(([v, t]) => h('option', { value: v }, t)))
     const aplicarAjuda = () => { modelo.assistencia = Number(ajudaAltura.value); modelo.compensar = false }
     ajudaAltura.addEventListener('change', () => { aplicarAjuda(); canvas.focus() })
     const referencia = h('small', { class: 'p15-dica' })
@@ -100,7 +104,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       h('label', {}, h('span', { class: 'p15-linha' }, 'Corrente', correnteValor), corrente),
       h('label', { class: 'p15-linha' }, 'Eletrodo didático', diametro),
       referencia,
-      h('label', { class: 'p15-linha', title: 'A vareta queima e o arco cresce. Parcial: a bancada desce o alicate 80% do consumo e você corrige com toques em S. Desligada: você compensa tudo.' }, 'Ajuda na altura', ajudaAltura))
+      h('label', { class: 'p15-linha', title: 'A vareta queima e o arco cresce. Parcial: a bancada desce o alicate 80% do consumo e segurar S acompanha o consumo e reduz a distância. Manual: o acompanhamento só ocorre enquanto você segura a descida.' }, 'Ajuda na altura', ajudaAltura))
     const faixa = h('input', { type: 'range', min: 0, max: 35, step: 0.1, value: 10, 'aria-label': 'Distância da ponta à peça' })
     const altura = h('label', {}, h('span', { class: 'p15-linha' }, 'Altura manual', h('small', {}, 'W / S ou roda')), faixa)
     const orientacoes = [
@@ -112,7 +116,8 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const orientar = h('details', {}, h('summary', {}, 'Orientação e câmera 360°'),
       ...orientacoes.map((c, i) => h('label', {}, h('span', { class: 'p15-linha' }, ['Direção', 'Inclinação (máx. 85°)', 'Punho'][i], orientacaoValores[i]), c)),
       h('p', { class: 'p15-dica' }, 'Arraste com o botão direito para orientar; I/K inclinam, J/L mudam a direção, Q/E giram o punho.'),
-      h('button', { type: 'button', on: { click: () => { vista.centralizar(); canvas.focus() } } }, 'Centralizar câmera'))
+      h('button', { type: 'button', on: { click: () => { vista.centralizar(); canvas.focus() } } }, 'Centralizar câmera'),
+      h('button', { type: 'button', on: { click: () => { vista.verEstacao(); canvas.focus() } } }, 'Ver estação SMAW'))
     const leituras = h('dl', { class: 'p15-leituras' })
     const valoresLeitura = new Map<string, HTMLElement>()
     for (const nome of ['Tensão do arco', 'Consumo', 'Tempo de arco', 'Energia', 'Escória', 'Resíduos soltos', 'Sobre escória fria', 'Respingos']) {
@@ -167,7 +172,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       h('div', { class: 'p15-grade' }, area,
         h('aside', { class: 'p15-painel' },
           h('div', { class: 'maquina-identificacao' }, 'SMAW / CC', h('span', {}, '● FONTE ENERGIZADA')),
-          ferramentas, h('div', { class: 'p15-comandos' }, desgrudar, trocar),
+          ferramentas, escolhaGolpe, h('div', { class: 'p15-comandos' }, desgrudar, trocar),
           instrumentos,
           h('div', { class: 'p15-acoes' }, pausar, h('button', { type: 'button', on: { click: recomecar } }, 'Recomeçar peça')))))
     app.raiz.append(conteudo)
@@ -309,14 +314,16 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       const sobe = ativo('afastar') || alturaControle > 0, desce = ativo('aproximar') || alturaControle < 0
       seguraSobe = sobe && pode ? seguraSobe + dt : 0
       seguraDesce = desce && pode ? seguraDesce + dt : 0
-      const vAltura = velocidadeAltura15(seguraSobe, cfg.velocidade) - velocidadeAltura15(seguraDesce, cfg.velocidade)
+      const vAltura = velocidadeAltura15(seguraSobe, cfg.velocidade) - velocidadeDescida15(seguraDesce, cfg.velocidade, modelo.consumoMmS, modelo.compensar ? 1 : modelo.assistencia, modelo.cosInclinado, modelo.estado === 'arco')
       if (pode) {
         if (ferramentaAtual === 'soldar') modelo.orientar(modelo.azimuteGraus + (ativo('azMais') - ativo('azMenos')) * dt * 60, modelo.inclinacaoGraus + (ativo('inclMais') - ativo('inclMenos')) * dt * 45, modelo.rolamentoGraus + (ativo('rolMais') - ativo('rolMenos')) * dt * 60)
         modelo.avancar(dt, ferramentaAtual === 'soldar' ? vAltura : 0,
           (volume, forma) => cordao.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0))
         const pressionada = !!(modelo.naPeca && (ponteiro || ativo('acionar') || gatilhoControle))
         if (ferramentaAtual === 'martelo' && pressionada && !limpezaPressionada) {
-          modelo.escoria.martelar(modelo.xMm, modelo.yMm); ultimoGolpeMs = agora
+          const removido = modelo.escoria.martelar(modelo.xMm, modelo.yMm)
+          vista.soltarEscoria(modelo.xMm, modelo.yMm, removido)
+          ultimoGolpeMs = agora
         }
         if (ferramentaAtual === 'escova' && pressionada) modelo.escoria.escovar(modelo.xMm, modelo.yMm)
         limpezaPressionada = pressionada
@@ -349,7 +356,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
         teclasChave = chaveTeclas
         const t = cfg.teclas
         teclasVista.replaceChildren(...([
-          ['mouse', 'leva a ponta'], [`${nomeTecla(t.aproximar)}/${nomeTecla(t.afastar)}`, 'desce/sobe (toques curtos)'],
+          ['mouse', 'leva a ponta'], [`${nomeTecla(t.aproximar)}/${nomeTecla(t.afastar)}`, 'acompanha/afasta'],
           ['meio', 'câmera'], ['direito', 'orienta'], [`${nomeTecla(t.inclMenos)}/${nomeTecla(t.inclMais)}`, 'inclina'],
           [`${nomeTecla(t.azMenos)}/${nomeTecla(t.azMais)}`, 'direção'], [`${nomeTecla(t.rolMenos)}/${nomeTecla(t.rolMais)}`, 'punho'],
         ] as const).map(([k, o]) => h('span', {}, h('kbd', {}, k), o)))
@@ -383,7 +390,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       trocar.disabled = pausado || modelo.estado === 'arco' || modelo.grudado
       trocar.classList.toggle('primario', modelo.estado === 'fim')
       atualizarObjetivo(agora)
-      vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0)
+      vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe.value as 'lateral' | 'diagonal' | 'cima')
       pedido = requestAnimationFrame(quadro)
     }
     pedido = requestAnimationFrame(quadro)

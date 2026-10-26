@@ -19,6 +19,12 @@ export function velocidadeAltura15(seguradoS: number, maximaMmS: number): number
   const minima = Math.min(2, maximaMmS)
   return minima + (maximaMmS - minima) * Math.min(1, seguradoS / 0.5)
 }
+/** H74: descida inclui o consumo vertical restante, além da correção pedida pelo jogador. */
+export function velocidadeDescida15(seguradoS: number, maximaMmS: number, consumoMmS: number, assistencia: number, cosInclinado: number, arcoAberto: boolean): number {
+  if (!(seguradoS > 0)) return 0
+  const compensacao = arcoAberto ? Math.max(0, consumoMmS) * Math.max(0, Math.min(1, cosInclinado)) * (1 - Math.max(0, Math.min(1, assistencia))) : 0
+  return velocidadeAltura15(seguradoS, Math.max(3, maximaMmS)) + compensacao
+}
 /** H69: forma do depósito pelo comprimento do arco (razão altura/largura e instabilidade). */
 export interface FormaDeposito15 { razao: number; instabilidade: number }
 
