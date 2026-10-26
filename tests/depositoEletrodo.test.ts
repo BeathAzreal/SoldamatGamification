@@ -27,6 +27,12 @@ describe('depósito SMAW local H79',()=>{
   expect(baseEletrodo(p,3)).toBe(0)
   expect(baseEletrodo(PECAS_ELETRODO[2],0)).toBe(-12)
  })
+ it('forma coroa convexa depois de preencher, em vez de espalhar uma película plana',()=>{
+  const c=new DepositoEletrodo({...p,aberturaMm:0})
+  for(let n=0;n<30;n++)c.depositar(75,0,1)
+  expect(c.altura(75,0)).toBeGreaterThan(c.altura(75,1.5)+.4)
+  expect(c.altura(75,0)).toBeGreaterThan(1)
+ })
  it('a altura entre células acompanha a malha sem abrir uma depressão falsa na borda',()=>{
   const c=new DepositoEletrodo(p)
   for(let x=70;x<=80;x+=.5)c.depositar(x,0,8)

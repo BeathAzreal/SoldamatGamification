@@ -104,3 +104,21 @@
 
 .p15-avaliacao select { width:78px; }
 .p15-avaliacao button:last-child { flex:0 0 32px; }
+
+.p15-painel[hidden] { display:none !important; }
+.jogo-imersivo .p15-resultado { gap:10px; }
+.p15-resultado h2 { font-size:16px;margin:0; }
+.p15-resultado .placar { gap:10px; }
+.p15-resultado .placar-numero { font-size:42px; }
+.p15-resultado .conceito { font-size:34px;min-width:44px; }
+.p15-resultado .placar-rotulo { font-size:9px; }
+.p15-resultado .barras-categorias { margin:0;padding:0;display:grid;gap:10px; }
+.p15-resultado .barra-cabeca { font-size:11px;gap:6px; }
+.p15-resultado .selo { margin:0;font-size:11px;padding:7px; }
+.p15-resultado .p15-descontos { margin:0;font-size:11px; }
+.p15-resultado > button,.p15-proxima button { padding:9px 6px;min-height:34px;font-size:12px; }
+.p15-resultado small { font-size:11px;line-height:1.35; }
+.p15-proxima { display:grid;gap:6px;margin-top:auto; }
+.p15-avaliacao:has(button:first-child) button:first-child { font-size:12px; }
+
+.p15-hud[hidden],.p15-instrucoes[hidden] { display:none !important; }

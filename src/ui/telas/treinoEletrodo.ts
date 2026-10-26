@@ -1,5 +1,5 @@
 import { avaliarEletrodo, type NivelISO } from '../../pontuacao/eletrodo'
-import { confirmar } from '../dialogo'
+import { resultadoEletrodo } from '../componentes/resultadoEletrodo'
 import { painelMaquina } from '../componentes/painelMaquina'
 import { Acionamento15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from '../../modelo/acionamento15'
 import { DepositoEletrodo, alvoEletrodo, trechoEletrodo } from '../../modelo/depositoEletrodo'
@@ -44,6 +44,8 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     let ferramentaAtual: FerramentaBancada15 = 'soldar'
     let limpezaPressionada = false, ultimoGolpeMs = -Infinity
     let modal = false, foco = true
+    let encerrada = false, ocultarEscoria = false
+    let painelResultado: HTMLElement | null = null
     let gesto: 'camera' | 'ferramenta' | null = null
     let ultimaTela = { x: 0, y: 0 }
     let inicioGiro = { x: 0, y: 0 }
@@ -143,6 +145,11 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const pausar = h('button', { type: 'button', class: 'navegacao-de-partida', on: { click: () => { pausado = !pausado; soltar(); pausar.textContent = pausado ? 'Continuar' : 'Pausar'; anterior = performance.now() } } }, 'Pausar')
     const recomecar = () => {
       soltar()
+      encerrada = false; ocultarEscoria = false
+      hud.hidden = false; teclasVista.hidden = false
+      painelResultado?.remove(); painelResultado = null
+      const painel = app.raiz.querySelector<HTMLElement>('.p15-painel')
+      if (painel) painel.hidden = false
       cordao = novoCordao()
       modelo = new Acionamento15('eletrodo')
       modelo.limitesX = limitesX
@@ -161,20 +168,21 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const zoomMenos=h('button',{type:'button','aria-label':'Afastar câmera',on:{click:()=>{vista.aproximar(150);canvas.focus()}}},'−')
     const area = h('div', { class: 'p15-vista' }, canvas, hud, teclasVista,
       h('div',{class:'zoom-bancada',role:'group','aria-label':'Zoom da câmera'},h('span',{title:'Teclas + e −'},'ZOOM'),zoomMenos,zoomValor,zoomMais))
-    const nivel=h('select',{'aria-label':'Nível de referência ISO 5817'},...(['B','C','D'] as const).map(n=>h('option',{value:n,selected:n==='C'},`Nível ${n}`)))
-    const avaliar=h('button',{type:'button',class:'primario',disabled:true,on:{click:async()=>{
-      soltar();modal=true
-      const r=avaliarEletrodo(peca,cordao,modelo,nivel.value as NivelISO)
-      const corpo=h('div',{class:'resultado-smaw'},
-        h('p',{class:'nota-smaw'},r.nota===null?'INSPEÇÃO PENDENTE':`${r.nota} / 1000`),
-        h('p',{},'Nota didática do treino. ISO 5817:2023: verificação dimensional parcial. ISO 17637:2016: referência de inspeção visual.'),
-        h('p',{},r.criterioISO),
-        h('ul',{},...r.itens.map(i=>h('li',{},h('strong',{},`${i.nome}: ${r.inspecaoPendente?'—':i.pontos+'/'+i.maximo}`),h('small',{},i.explicacao)))),
-        r.fator<1?h('p',{},'A nota é reduzida proporcionalmente enquanto o preenchimento do objetivo estiver abaixo de 80%. Regra didática, não ISO.'):null,
-        h('p',{},r.dicas),h('small',{},r.limites))
-      try {if(await confirmar('Avaliação · eletrodo revestido',corpo,{sim:'Nova tentativa',nao:'Continuar na bancada'}))recomecar()}finally{modal=false;anterior=performance.now();canvas.focus()}
-    }}},'Avaliar solda')
-    const avaliacao=h('div',{class:'p15-avaliacao'},nivel,avaliar,pausar,h('button',{type:'button','aria-label':'Recomeçar peça',on:{click:recomecar}},'↺'))
+    const nivelISO: NivelISO = 'C' // Referência fixa do exercício; detalhes aparecem depois da tentativa.
+    const encerrar = () => {
+      if (encerrada || pausado || modal || modelo.tempoArcoS < .1) return
+      soltar(); encerrada = true
+      hud.hidden = true; teclasVista.hidden = true
+      const r = avaliarEletrodo(peca,cordao,modelo,nivelISO)
+      const resultado = resultadoEletrodo(r, {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta}})
+      const painel = conteudo.querySelector<HTMLElement>('.p15-painel')!
+      painel.hidden = true
+      painelResultado = resultado.painel
+      painel.parentElement!.append(painelResultado)
+      resultado.focar()
+    }
+    const avaliar=h('button',{type:'button',class:'primario',disabled:true,on:{click:encerrar}},'Encerrar tentativa ↵')
+    const avaliacao=h('div',{class:'p15-avaliacao'},avaliar,pausar,h('button',{type:'button','aria-label':'Recomeçar peça',on:{click:recomecar}},'↺'))
     orientar.open = true
     detalhes.open = true
     const instrumentos = painelMaquina([
@@ -214,11 +222,11 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       e.preventDefault(); canvas.focus(); canvas.setPointerCapture(e.pointerId)
       ultimaTela = { x: e.clientX, y: e.clientY }
       if (e.button === cfg.camera) gesto = 'camera'
-      else if (e.button === cfg.ferramenta) {
+      else if (e.button === cfg.ferramenta && !encerrada) {
         gesto = 'ferramenta'
         inicioGiro = { ...ultimaTela }
         giroNaTela = vista.iniciarGiro(modelo)
-      } else { atualizarPosicao(e); ponteiro = true }
+      } else if (!encerrada) { atualizarPosicao(e); ponteiro = true }
     })
     ouvir(canvas, 'pointermove', ev => {
       const e = ev as PointerEvent
@@ -228,7 +236,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       else if (gesto === 'ferramenta' && giroNaTela) {
         const o = giroNaTela(e.clientX - inicioGiro.x, e.clientY - inicioGiro.y, cfg.sensibilidade)
         modelo.orientar(o.azimute, o.inclinacao, modelo.rolamentoGraus)
-      } else {
+      } else if (!encerrada) {
         // O eletrodo segue o ponteiro sobre a peça: mover a mão é avançar o cordão.
         atualizarPosicao(e)
         if (e.pointerType === 'pen' && cfg.caneta) modelo.orientar(Math.atan2(e.tiltY, e.tiltX) * 180 / Math.PI, Math.hypot(e.tiltX, e.tiltY), modelo.rolamentoGraus)
@@ -243,6 +251,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     ouvir(canvas, 'wheel', e => {
       e.preventDefault()
       if (!pausado && !modal) {
+        if (encerrada) { vista.aproximar((e as WheelEvent).deltaY); return }
         if (cfg.roda === 'zoom') vista.aproximar((e as WheelEvent).deltaY)
         else modelo.definirDistancia(modelo.distanciaMm + Math.sign((e as WheelEvent).deltaY) * 0.3)
       }
@@ -251,6 +260,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     ouvir(window, 'keydown', ev => {
       const e = ev as KeyboardEvent
       if (modal || (e.target as HTMLElement)?.matches('input,select,textarea')) return
+      if (e.key === 'Enter' && !encerrada) { e.preventDefault(); encerrar(); return }
       if (['+','-','='].includes(e.key) || ['NumpadAdd','NumpadSubtract'].includes(e.code)) {
         e.preventDefault()
         if (!pausado && modelo.estado !== 'arco') vista.aproximar(e.key === '-' || e.code === 'NumpadSubtract' ? 150 : -150)
@@ -258,7 +268,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       }
       if (!Object.values(cfg.teclas).includes(e.code)) return
       e.preventDefault()
-      if (!pausado) teclas.add(e.code)
+      if (!pausado && !encerrada) teclas.add(e.code)
     })
     ouvir(window, 'keyup', ev => { teclas.delete((ev as KeyboardEvent).code) })
     ouvir(window, 'blur', () => { foco = false; soltar() })
@@ -319,7 +329,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const quadro = (agora: number) => {
       const dt = Math.min(DT_MAX, (agora - anterior) / 1000)
       anterior = agora
-      const pode = !pausado && !modal && foco && !document.hidden
+      const pode = !encerrada && !pausado && !modal && foco && !document.hidden
       const ativo = (a: keyof typeof cfg.teclas) => Number(teclas.has(cfg.teclas[a]))
       let alturaControle = 0, gatilhoControle = false
       const g = cfg.controle && pode ? [...navigator.getGamepads()].find(Boolean) : null
@@ -361,7 +371,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       }
       posicao = { x: modelo.xMm, y: modelo.yMm }
       const quente = modelo.escoria.fracaoQuente
-      const texto = pausado || modal ? 'Pausado · porta-eletrodo desenergizado'
+      const texto = encerrada ? 'Tentativa encerrada · inspecione e veja a nota ao lado' : pausado || modal ? 'Pausado · porta-eletrodo desenergizado'
         : ferramentaAtual === 'martelo' ? (quente > 0.5 ? 'Martelinho · escória ainda quente, espere esfriar' : 'Martelinho · clique para quebrar escória fria')
         : ferramentaAtual === 'escova' ? 'Escova · arraste com o botão esquerdo'
         : modelo.esticado ? 'Arco esticado · desça já ou ele apaga'
@@ -420,11 +430,11 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       barra.dataset.fim = String(modelo.restanteMm < VARETA15.reservaMm + 10)
       trocar.disabled = pausado || modelo.estado === 'arco' || modelo.grudado
       trocar.classList.toggle('primario', modelo.estado === 'fim')
-      avaliar.disabled = modelo.tempoArcoS < 0.1 || pausado || modal
+      avaliar.disabled = encerrada || modelo.tempoArcoS < 0.1 || pausado || modal
       zoomValor.value = `${vista.zoomPercentual()}%`
       zoomMais.disabled = zoomMenos.disabled = modelo.estado === 'arco'
       atualizarObjetivo(agora)
-      vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe)
+      vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe, ocultarEscoria, encerrada)
       pedido = requestAnimationFrame(quadro)
     }
     pedido = requestAnimationFrame(quadro)

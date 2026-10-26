@@ -62,7 +62,9 @@ export class DepositoEletrodo {
       }
     // Só o metal novo molha o entorno imediato; não move cordões frios nem salta para a raiz.
     let soma=0
-    for(const c of celulas){c.peso/=1+2*Math.max(0,c.altura-minimo);soma+=c.peso}
+    // Após preencher o perfil-alvo, a distribuição local mantém a coroa convexa.
+    const nivel=alvoEletrodo(this.peca).altura+1.2
+    for(const c of celulas){c.peso/=1+2*Math.max(0,Math.min(nivel,c.altura)-Math.min(nivel,minimo));soma+=c.peso}
     if(!soma)return
     for(const c of celulas)this.metal[c.k]+=volume*c.peso/soma/(this.dx*this.dy)
     this.volume+=volume;this.versao++

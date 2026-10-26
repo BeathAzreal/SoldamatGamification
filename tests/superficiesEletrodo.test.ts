@@ -2,11 +2,11 @@ import {describe,it,expect} from 'vitest'
 import {DepositoEletrodo} from '../src/modelo/depositoEletrodo'
 import {PECAS_ELETRODO} from '../src/missoes/pecasEletrodo'
 import {alturaCrostaEletrodo} from '../src/render/escoriaSuperficie15'
-import {criarMetalEletrodo} from '../src/render/metalEletrodo'
+import {criarMetalEletrodo,alturaMetalEletrodo} from '../src/render/metalEletrodo'
 describe('superfícies SMAW coerentes H79',()=>{
  it('a crosta acompanha o metal abaixo da face sem ficar suspensa na chapa',()=>{
   const c=new DepositoEletrodo(PECAS_ELETRODO[2]);c.depositar(75,0,10)
-  const h=c.altura(75,0),crosta=alturaCrostaEletrodo(c,75,0,1)
+  const h=alturaMetalEletrodo(c,75,0),crosta=alturaCrostaEletrodo(c,75,0,1)
   expect(h).toBeLessThan(-5);expect(crosta).toBeLessThan(0)
   expect(crosta-h).toBeCloseTo(.28,8)
  })
@@ -16,7 +16,7 @@ describe('superfícies SMAW coerentes H79',()=>{
   const pos=v.malha.geometry.getAttribute('position')
   for(const j of [99,100,127,128]){
    const k=j*c.nx+75
-   expect(pos.getY(k)).toBeCloseTo(c.altura(c.x(75),c.y(j))+.015,5)
+   expect(pos.getY(k)).toBeCloseTo(alturaMetalEletrodo(c,c.x(75),c.y(j)),5)
   }
   expect(v.malha.geometry.index!.count).toBeGreaterThan(0)
   v.malha.geometry.dispose();v.malha.material.dispose()

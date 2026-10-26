@@ -243,11 +243,11 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       const p = { x: ponto.x + 75, y: ponto.z }
       return { ...p, naPeca: p.x >= limitesX.min && p.x <= limitesX.max && Math.abs(p.y) <= alcanceLateral }
     },
-    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao | DepositoEletrodo, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0, direcaoGolpe: 'lateral' | 'diagonal' | 'cima' = 'lateral') {
+    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao | DepositoEletrodo, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0, direcaoGolpe: 'lateral' | 'diagonal' | 'cima' = 'lateral', ocultarEscoria = false, inspecionando = false) {
       const ligado = modo === 'soldar' && m.estado === 'arco'
-      ferramenta.visible = modo === 'soldar'
-      martelo.visible = modo === 'martelo' && m.naPeca
-      escova.visible = modo === 'escova' && m.naPeca
+      ferramenta.visible = modo === 'soldar' && !inspecionando
+      martelo.visible = modo === 'martelo' && m.naPeca && !inspecionando
+      escova.visible = modo === 'escova' && m.naPeca && !inspecionando
       // Alturas absolutas (acima da raiz): chão sob a ponta e crista do cordão, se houver.
       const chao = c instanceof DepositoEletrodo ? c.altura(p.x,p.y) : superficie(p.y)
       let topo = chao
@@ -329,7 +329,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         const t = Math.max(0, vidaRespingo[i]) / 0.8
         corRespingo.set([1, 0.35 + 0.5 * t, 0.08 + 0.3 * t * t], i * 3)
       }
-      respingos.visible = vivos
+      respingos.visible = vivos && !inspecionando
       geoRespingo.attributes.position.needsUpdate = true
       geoRespingo.attributes.color.needsUpdate = true
       if (c instanceof DepositoEletrodo) {
@@ -340,6 +340,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         cordaoAntes = c
         volumeAntes = c.volumeTotal()
       }
+      lascas.visible = !inspecionando
       for (const p of particulasEscoria) {
         if (p.vida <= 0) { p.malha.visible = false; continue }
         p.vida -= dt
@@ -348,6 +349,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         p.malha.rotation.x += dt * 8; p.malha.rotation.z += dt * 5
       }
       escoria.atualizar(m.escoria, c)
+      if (ocultarEscoria) escoria.malha.visible = false
       palco.desenhar(camera)
     },
     destruir() { palco.destruir() },

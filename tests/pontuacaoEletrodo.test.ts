@@ -11,11 +11,18 @@ describe('avaliação SMAW e limites ISO parciais',()=>{
   expect(limiteReforcoISO(100,false,'C')).toBe(7);expect(limiteReforcoISO(100,true,'C')).toBe(4)
  })
  it('não pontua sem soldagem e não dá pontos por superfície vazia limpa',()=>{expect(avaliarEletrodo(p,new DepositoEletrodo(p),new Acionamento15('eletrodo')).nota).toBe(0)})
- it('bloqueia a inspeção até quebrar e escovar a escória',()=>{
+ it('sempre entrega nota numérica e desconta escória sem declarar inspeção ISO liberada',()=>{
   const {c,m}=amostra();m.escoria.depositar(75,0,5)
-  expect(avaliarEletrodo(p,c,m).nota).toBeNull();m.escoria.esfriar(10);m.escoria.martelar(75,0)
-  expect(avaliarEletrodo(p,c,m).nota).toBeNull();m.escoria.escovar(75,0)
-  expect(avaliarEletrodo(p,c,m).nota).not.toBeNull()
+  const suja=avaliarEletrodo(p,c,m)
+  expect(typeof suja.nota).toBe('number');expect(suja.penalidadeEscoria).toBe(200)
+  expect(suja.inspecaoPendente).toBe(true)
+  m.escoria.esfriar(10);m.escoria.martelar(75,0)
+  const quebrada=avaliarEletrodo(p,c,m)
+  expect(quebrada.nota).toBeGreaterThan(suja.nota)
+  m.escoria.escovar(75,0)
+  const limpa=avaliarEletrodo(p,c,m)
+  expect(limpa.nota).toBeGreaterThan(quebrada.nota)
+  expect(limpa.penalidadeEscoria).toBe(0);expect(limpa.inspecaoPendente).toBe(false)
  })
  it('penaliza um ponto parado e metal fora da junta',()=>{
   const boa=amostra(),curta=amostra(0,24),fora=amostra(15)

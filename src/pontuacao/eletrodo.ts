@@ -51,14 +51,15 @@ export function avaliarEletrodo(p:PecaEletrodo,c:DepositoEletrodo,m:Acionamento1
   const inspecaoPendente=executado && m.escoria.cobertura>.01
   const itens=[
     {nome:'União das duas bordas',maximo:300,fracao:cobertura,explicacao:`${Math.round(cobertura*100)}% dos ${p.fimMm-p.inicioMm} mm solicitados atingem o perfil-alvo nas duas bordas e no centro.`},
-    {nome:'Preenchimento e perfil',maximo:400,fracao:.5*preenchimento+.5*(total?dentro/total:0),explicacao:inspecaoPendente?'Remova a escória para inspecionar.':`${Math.round(preenchimento*100)}% do preenchimento-alvo. `+(alvo.raiz?'Passe de raiz: camada-alvo 2 mm, teto didático 4 mm; não é o reforço final ISO.':medidas?`Comparação parcial ISO 5817 · ${alvo.filete?'503':'502'} · ${nivel}: h=${pior.h.toFixed(2)} mm, b=${pior.b.toFixed(2)} mm, limite h=${pior.limite.toFixed(2)} mm.`:'A face ainda não foi preenchida para comparar o reforço ISO.')},
+    {nome:'Preenchimento e perfil',maximo:400,fracao:.5*preenchimento+.5*(total?dentro/total:0),explicacao:inspecaoPendente?'Perfil estimado pelo jogo. Há escória: a inspeção visual ISO não está liberada.':`${Math.round(preenchimento*100)}% do preenchimento-alvo. `+(alvo.raiz?'Passe de raiz: camada-alvo 2 mm, teto didático 4 mm; não é o reforço final ISO.':medidas?`Comparação parcial ISO 5817 · ${alvo.filete?'503':'502'} · ${nivel}: h=${pior.h.toFixed(2)} mm, b=${pior.b.toFixed(2)} mm, limite h=${pior.limite.toFixed(2)} mm.`:'A face ainda não foi preenchida para comparar o reforço ISO.')},
     {nome:'Metal na região solicitada',maximo:150,fracao:metal?alinhado/metal:0,explicacao:'Metal entre INÍCIO e FIM, próximo à emenda. Depósitos fora desse trecho não preenchem o objetivo.'},
     {nome:'Continuidade da união',maximo:150,fracao:total?maior/total:0,explicacao:'Maior trecho unido sem lacunas, medido sobre a mesma superfície 3D.'},
   ].map(i=>({...i,pontos:executado?Math.round(i.fracao*i.maximo):0}))
   const fator=Math.min(1,preenchimento/.8)
-  const nota=inspecaoPendente?null:executado?Math.min(1000,Math.round(itens.reduce((a,i)=>a+i.pontos,0)*fator)):0
+  const penalidadeEscoria=inspecaoPendente?Math.round(200*(1-limpeza)):0
+  const nota=executado?Math.max(0,Math.min(1000,Math.round(itens.reduce((a,i)=>a+i.pontos,0)*fator)-penalidadeEscoria)):0
   const arco=m.tempoFaixaS,tempo=arco.curto+arco.adequado+arco.longo
-  return {nota,nivel,itens,cobertura,preenchimento,limpeza,inspecaoPendente,fator,medidas,dentro,pior,
+  return {nota,penalidadeEscoria,nivel,itens,cobertura,preenchimento,limpeza,inspecaoPendente,fator,medidas,dentro,pior,
     criterioISO:inspecaoPendente?'Remova a escória antes da inspeção.':alvo.raiz?'Avaliação do passe de raiz; não exige encher todo o chanfro nem declara aprovação ISO.':!medidas?'Complete a união das bordas e o preenchimento da face; o reforço ainda não pode ser comparado.':dentro===medidas?'Dimensão h/b dentro do limite selecionado, nas seções preenchidas.':'Há seções fora do limite dimensional selecionado.',
     dicas:`${alvo.descricao}. Arco adequado: ${tempo?Math.round(arco.adequado/tempo*100):0}% do tempo. Eletrodo grudou ${m.grudadas} vez(es). Técnica e metas de preenchimento são critérios didáticos.`,
     limites:'Verificação parcial: não avalia transição suave, trincas, porosidade, fusão, penetração ou inclusões internas. Não declara conformidade global nem qualifica soldador.'}

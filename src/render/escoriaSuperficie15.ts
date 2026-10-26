@@ -1,3 +1,4 @@
+import { alturaMetalEletrodo } from './metalEletrodo'
 import { DepositoEletrodo } from '../modelo/depositoEletrodo'
 import * as THREE from 'three'
 import type { Escoria15 } from '../modelo/escoria15'
@@ -5,7 +6,7 @@ import type { Cordao } from '../modelo/cordao'
 import { cristaMm, type TipoJunta } from '../modelo/juntas'
 
 export function alturaCrostaEletrodo(c:DepositoEletrodo,x:number,y:number,quantidade:number){
-  return c.altura(x,y)+.10+.18*Math.min(1,quantidade*3)
+  return alturaMetalEletrodo(c,x,y)+.10+.18*Math.min(1,quantidade*3)
 }
 
 /** Crosta superficial contínua. A grade física é a máscara; não são grãos depositados. */
