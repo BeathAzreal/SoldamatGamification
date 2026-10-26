@@ -1,16 +1,16 @@
 import {describe,it,expect} from 'vitest'
 import {avaliarEletrodo,limiteReforcoISO} from '../src/pontuacao/eletrodo'
-import {Cordao} from '../src/modelo/cordao'
+import {DepositoEletrodo} from '../src/modelo/depositoEletrodo'
 import {Acionamento15} from '../src/modelo/acionamento15'
 import {PECAS_ELETRODO} from '../src/missoes/pecasEletrodo'
 const p={...PECAS_ELETRODO[0],aberturaMm:0,inicioMm:20,fimMm:130}
-function amostra(y=0,ate=130){const c=new Cordao(),m=new Acionamento15('eletrodo');for(let x=20;x<=ate;x+=.5)c.depositar(x,y,8,0,.25);m.tempoArcoS=20;return{c,m}}
+function amostra(y=0,ate=130){const c=new DepositoEletrodo(p),m=new Acionamento15('eletrodo');for(let x=20;x<=ate;x+=.5)c.depositar(x,y,8,0,.25);m.tempoArcoS=20;return{c,m}}
 describe('avaliação SMAW e limites ISO parciais',()=>{
  it('confere B/C/D e tetos diferentes para 502 e 503',()=>{
   expect(limiteReforcoISO(10,false,'B')).toBe(2);expect(limiteReforcoISO(10,false,'C')).toBe(2.5);expect(limiteReforcoISO(10,false,'D')).toBe(3.5)
   expect(limiteReforcoISO(100,false,'C')).toBe(7);expect(limiteReforcoISO(100,true,'C')).toBe(4)
  })
- it('não pontua sem soldagem e não dá pontos por superfície vazia limpa',()=>{expect(avaliarEletrodo(p,new Cordao(),new Acionamento15('eletrodo')).nota).toBe(0)})
+ it('não pontua sem soldagem e não dá pontos por superfície vazia limpa',()=>{expect(avaliarEletrodo(p,new DepositoEletrodo(p),new Acionamento15('eletrodo')).nota).toBe(0)})
  it('bloqueia a inspeção até quebrar e escovar a escória',()=>{
   const {c,m}=amostra();m.escoria.depositar(75,0,5)
   expect(avaliarEletrodo(p,c,m).nota).toBeNull();m.escoria.esfriar(10);m.escoria.martelar(75,0)

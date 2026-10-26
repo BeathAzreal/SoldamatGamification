@@ -35,7 +35,7 @@ export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
     porque: 'Montagem de chapas de aço carbono: unir as bordas pela abertura central.',
     junta: 'topo', espessuraMm: 8, aberturaMm: 2, diametroMm: 2.5, correnteA: { min: 80, max: 100 },
     inicioMm: 20, fimMm: 130,
-    objetivo: 'Unir as duas bordas ao longo da abertura, do INÍCIO ao FIM; retirar a escória para inspecionar a emenda.',
+    objetivo: 'Preencher a abertura até a face das chapas, unindo as duas bordas do INÍCIO ao FIM. Faça mais de um passe, trocando a vareta e limpando entre eles.',
   },
   {
     id: 't-estrutural',

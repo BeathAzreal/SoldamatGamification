@@ -1,19 +1,25 @@
+import { DepositoEletrodo } from '../modelo/depositoEletrodo'
 import * as THREE from 'three'
 import type { Escoria15 } from '../modelo/escoria15'
 import type { Cordao } from '../modelo/cordao'
 import { cristaMm, type TipoJunta } from '../modelo/juntas'
 
+export function alturaCrostaEletrodo(c:DepositoEletrodo,x:number,y:number,quantidade:number){
+  return c.altura(x,y)+.10+.18*Math.min(1,quantidade*3)
+}
+
 /** Crosta superficial contínua. A grade física é a máscara; não são grãos depositados. */
 export function criarSuperficieEscoria15(superficie: (n: number) => number = () => 0, junta: TipoJunta = 'topo') {
-  const colunas = 100, linhas = 68
-  const passoX = 150 / colunas, passoY = 100 / linhas
+  const colunas = 149, linhas = 199
+  const passoX = 1, passoY = .5
+  const inicioX = .5, inicioY = -49.75
   const vertices = (colunas + 1) * (linhas + 1)
   const posicoes = new Float32Array(vertices * 3), cores = new Float32Array(vertices * 3), uvs = new Float32Array(vertices * 2)
   const indices: number[] = []
   for (let j = 0; j <= linhas; j++) for (let i = 0; i <= colunas; i++) {
     const n = j * (colunas + 1) + i
-    posicoes[n * 3] = i * passoX - 75
-    posicoes[n * 3 + 2] = j * passoY - 50
+    posicoes[n * 3] = inicioX + i * passoX - 75
+    posicoes[n * 3 + 2] = inicioY + j * passoY
     uvs[n * 2] = i / colunas
     uvs[n * 2 + 1] = j / linhas
     if (i < colunas && j < linhas) {
@@ -57,7 +63,7 @@ export function criarSuperficieEscoria15(superficie: (n: number) => number = () 
   const residuo = new THREE.Color('#6c6860')
   return {
     malha, textura, crosta,
-    atualizar(escoria: Escoria15, cordao: Cordao) {
+    atualizar(escoria: Escoria15, cordao: Cordao | DepositoEletrodo) {
       malha.visible = escoria.cobertura > 0.001
       if (!malha.visible) return
       const amostrar = (dados: Float64Array, x: number, y: number) => {
@@ -67,15 +73,16 @@ export function criarSuperficieEscoria15(superficie: (n: number) => number = () 
         return q(i,j)*(1-a)*(1-b)+q(i+1,j)*a*(1-b)+q(i,j+1)*(1-a)*b+q(i+1,j+1)*a*b
       }
       for (let j = 0; j < linhas; j++) for (let i = 0; i < colunas; i++) {
-        const q = amostrar(escoria.quantidade, (i+0.5)*passoX, (j+0.5)*passoY-50)
+        const q = amostrar(escoria.quantidade, inicioX+(i+0.5)*passoX, inicioY+(j+0.5)*passoY)
         const alfa = Math.round(Math.min(1, q * 6) * 255)
         pixels.set([alfa, alfa, alfa, 255], (j*colunas+i)*4)
       }
-      const cordoes = [cordao, ...cordao.soltos]
+      const local = cordao instanceof DepositoEletrodo ? cordao : null
+      const cordoes = cordao instanceof DepositoEletrodo ? [] : [cordao, ...cordao.soltos]
       for (let j = 0; j <= linhas; j++) for (let i = 0; i <= colunas; i++) {
         const n = j * (colunas + 1) + i
-        const x = i * passoX, y = j * passoY - 50
-        let topo = superficie(y), calor = 0, quantidade = 0, fragmentos = 0, amostras = 0
+        const x = inicioX + i * passoX, y = inicioY + j * passoY
+        let topo = local ? local.altura(x,y) : superficie(y), calor = 0, quantidade = 0, fragmentos = 0, amostras = 0
         for (const c of cordoes) {
           const s = c.secao(c.indiceEm(x))
           const r = Math.abs(s.yCentroMm - y) / Math.max(0.2, s.larguraMm / 2)
@@ -85,7 +92,7 @@ export function criarSuperficieEscoria15(superficie: (n: number) => number = () 
         fragmentos = amostrar(escoria.fragmentos,x,y)
         calor = amostrar(escoria.calor,x,y) * quantidade
         amostras = 1
-        posicoes[n * 3 + 1] = topo + 0.25 + 0.5 * Math.min(1, quantidade / Math.max(1, amostras) * 3)
+        posicoes[n * 3 + 1] = local ? alturaCrostaEletrodo(local,x,y,quantidade) : topo + 0.10 + 0.18 * Math.min(1, quantidade / Math.max(1, amostras) * 3)
         cor.copy(fria).lerp(quente, quantidade > 0 ? calor / quantidade : 0)
         if (quantidade > 0) cor.lerp(residuo, fragmentos / quantidade)
         cores.set([cor.r, cor.g, cor.b], n * 3)

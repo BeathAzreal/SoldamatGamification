@@ -1,3 +1,6 @@
+import { DepositoEletrodo, baseEletrodo } from '../modelo/depositoEletrodo'
+import { criarMetalEletrodo } from './metalEletrodo'
+import type { PecaEletrodo } from '../missoes/pecasEletrodo'
 import { limitesPecaEletrodo } from '../missoes/pecasEletrodo'
 import { criarDetalhesIndustriais15 } from './pecaIndustrial15'
 import * as THREE from 'three'
@@ -163,7 +166,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   const limitesX = limitesPecaEletrodo(peca ?? {})
   const junta = juntaDe(contexto)
   /** Altura da superfície das chapas a um desvio lateral n (filete na posição plana: paredes a 45°). */
-  const superficie = (n: number) => pontoNaSuperficie(junta, contexto, n)[1]
+  const superficie = (n: number) => peca ? baseEletrodo(peca as PecaEletrodo,n) : pontoNaSuperficie(junta, contexto, n)[1]
   /** Até onde vão as chapas de cada lado da junta (no filete, 50 mm de parede a 45°). */
   const alcanceLateral = INFO_JUNTA[junta].familia === 'filete' ? 50 / Math.SQRT2 : 50
   const escoria = criarSuperficieEscoria15(superficie, junta)
@@ -174,7 +177,9 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   const pontaMartelo = new THREE.Vector3()
   const cameraLocal = new THREE.Vector3()
   let volumeAntes = -1
-  let cordaoAntes: Cordao | null = null
+  let cordaoAntes: Cordao | DepositoEletrodo | null = null
+  const metalLocal = criarMetalEletrodo()
+  palco.peca.add(metalLocal.malha)
   const lascas = new THREE.Group()
   palco.peca.add(lascas)
   const particulasEscoria: { malha: THREE.Mesh; velocidade: THREE.Vector3; vida: number }[] = []
@@ -220,7 +225,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       const o = raio.ray.origin, d = raio.ray.direction
       const acima = (t: number) => {
         const n = o.z + d.z * t
-        return o.y + d.y * t > superficie(n)
+        return o.y + d.y * t > (cordaoAntes instanceof DepositoEletrodo ? cordaoAntes.altura(o.x+d.x*t+75,n) : superficie(n))
       }
       let t0 = 0, t1 = -1
       for (let t = 0; t < 3000; t += 2) {
@@ -238,15 +243,15 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       const p = { x: ponto.x + 75, y: ponto.z }
       return { ...p, naPeca: p.x >= limitesX.min && p.x <= limitesX.max && Math.abs(p.y) <= alcanceLateral }
     },
-    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0, direcaoGolpe: 'lateral' | 'diagonal' | 'cima' = 'lateral') {
+    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao | DepositoEletrodo, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0, direcaoGolpe: 'lateral' | 'diagonal' | 'cima' = 'lateral') {
       const ligado = modo === 'soldar' && m.estado === 'arco'
       ferramenta.visible = modo === 'soldar'
       martelo.visible = modo === 'martelo' && m.naPeca
       escova.visible = modo === 'escova' && m.naPeca
       // Alturas absolutas (acima da raiz): chão sob a ponta e crista do cordão, se houver.
-      const chao = superficie(p.y)
+      const chao = c instanceof DepositoEletrodo ? c.altura(p.x,p.y) : superficie(p.y)
       let topo = chao
-      for (const cord of [c, ...c.soltos]) {
+      if (!(c instanceof DepositoEletrodo)) for (const cord of [c, ...c.soltos]) {
         const s = cord.secao(cord.indiceEm(p.x))
         if (s.larguraMm > 0 && Math.abs(s.yCentroMm - p.y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, cristaMm(s, junta))
       }
@@ -327,7 +332,10 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       respingos.visible = vivos
       geoRespingo.attributes.position.needsUpdate = true
       geoRespingo.attributes.color.needsUpdate = true
-      if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
+      if (c instanceof DepositoEletrodo) {
+        metalLocal.atualizar(c)
+        cordaoAntes = c
+      } else if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
         palco.atualizarCordao(c)
         cordaoAntes = c
         volumeAntes = c.volumeTotal()

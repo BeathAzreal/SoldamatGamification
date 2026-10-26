@@ -2,7 +2,7 @@ import { avaliarEletrodo, type NivelISO } from '../../pontuacao/eletrodo'
 import { confirmar } from '../dialogo'
 import { painelMaquina } from '../componentes/painelMaquina'
 import { Acionamento15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from '../../modelo/acionamento15'
-import { Cordao } from '../../modelo/cordao'
+import { DepositoEletrodo, alvoEletrodo, trechoEletrodo } from '../../modelo/depositoEletrodo'
 import { criarBancada15 } from '../../render/bancada15'
 import type { App } from '../app'
 import { h, n0, n1 } from '../dom'
@@ -14,8 +14,6 @@ import { limitesPecaEletrodo, type PecaEletrodo } from '../../missoes/pecasEletr
 
 /** Quadro muito longo (aba travada, depurador) não vira um salto de vários segundos de arco. */
 const DT_MAX = 0.25
-/** Largura mínima (mm) para contar um trecho como coberto pelo cordão. */
-const LARGURA_COBERTA_MM = 2
 
 const TEXTO_FAIXA: Record<FaixaArco15, string> = {
   curto: 'arco curto · risco de grudar',
@@ -35,8 +33,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const limitesX = limitesPecaEletrodo(peca)
     let modelo = new Acionamento15('eletrodo')
     modelo.limitesX = limitesX
-    // O cordão conhece a junta (filete com pernas, V que enche o chanfro), como no jogo MIG.
-    const novoCordao = () => new Cordao(undefined, undefined, undefined, { junta: peca.junta, dimensoes: { espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } })
+    const novoCordao = () => new DepositoEletrodo(peca)
     let cordao = novoCordao()
     let posicao = { x: 75, y: 0 }
     let ponteiro = false
@@ -130,14 +127,14 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     }
     const detalhes = h('details', {}, h('summary', {}, 'Leituras do modelo'), leituras,
       h('small', { class: 'p15-dica' }, 'Consumo, aderência, energia e escória são aproximações didáticas. Não predizem qualidade interna nem definem parâmetros de procedimento.'))
-    // Objetivo da peça: checagens simples, sem pontuação (a v1.5 ainda não pontua o eletrodo).
-    const itensObjetivo = ['Trecho do INÍCIO ao FIM coberto', 'Arco no comprimento adequado', 'Sem grudar o eletrodo', 'Escória removida'].map(t => {
+    // Mesmas amostras locais na missão e na avaliação final.
+    const itensObjetivo = ['União e preenchimento do trecho', 'Arco no comprimento adequado', 'Sem grudar o eletrodo', 'Escória removida'].map(t => {
       const valor = h('span', { class: 'p15-obj-valor' })
       const li = h('li', {}, h('span', {}, t), valor)
       return { li, valor }
     })
     const objetivo = h('section', { class: 'p15-objetivo', 'aria-label': 'Objetivo da peça' },
-      h('p', {}, peca.objetivo), h('ul', {}, itensObjetivo.map(i => i.li)))
+      h('p', {}, peca.objetivo), h('p', {}, `${alvoEletrodo(peca).descricao}. Trecho: ${peca.inicioMm}–${peca.fimMm} mm, na emenda central.`), h('ul', {}, itensObjetivo.map(i => i.li)))
     const controles = h('button', { type: 'button', on: { click: async () => {
       soltar(); modal = true
       try { cfg = await configurarControles15(cfg) } finally { modal = false; anterior = performance.now(); canvas.focus() }
@@ -146,14 +143,15 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const pausar = h('button', { type: 'button', class: 'navegacao-de-partida', on: { click: () => { pausado = !pausado; soltar(); pausar.textContent = pausado ? 'Continuar' : 'Pausar'; anterior = performance.now() } } }, 'Pausar')
     const recomecar = () => {
       soltar()
+      cordao = novoCordao()
       modelo = new Acionamento15('eletrodo')
       modelo.limitesX = limitesX
-      modelo.superficie = vista.superficie
+      modelo.superficie = y => cordao.altura(modelo.xMm,y)
       modelo.abrirAoTocar = true
       aplicarAjuda()
       modelo.regular(Number(corrente.value), Number(diametro.value))
       modelo.posicionar(peca.inicioMm, 0)
-      cordao = novoCordao()
+      modelo.definirDistancia(10)
       posicao = { x: peca.inicioMm, y: 0 }
       selecionarFerramenta('soldar')
     }
@@ -172,7 +170,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
         h('p',{},'Nota didática do treino. ISO 5817:2023: verificação dimensional parcial. ISO 17637:2016: referência de inspeção visual.'),
         h('p',{},r.criterioISO),
         h('ul',{},...r.itens.map(i=>h('li',{},h('strong',{},`${i.nome}: ${r.inspecaoPendente?'—':i.pontos+'/'+i.maximo}`),h('small',{},i.explicacao)))),
-        r.fator<1?h('p',{},'A nota é reduzida proporcionalmente enquanto menos de 80% do trecho estiver unido. Regra didática, não ISO.'):null,
+        r.fator<1?h('p',{},'A nota é reduzida proporcionalmente enquanto o preenchimento do objetivo estiver abaixo de 80%. Regra didática, não ISO.'):null,
         h('p',{},r.dicas),h('small',{},r.limites))
       try {if(await confirmar('Avaliação · eletrodo revestido',corpo,{sim:'Nova tentativa',nao:'Continuar na bancada'}))recomecar()}finally{modal=false;anterior=performance.now();canvas.focus()}
     }}},'Avaliar solda')
@@ -289,23 +287,25 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       marcador.style.left = `${Math.min(100, Math.max(0, modelo.distanciaMm / escala * 100))}%`
     }
     const coberto = () => {
-      let n = 0, total = 0
+      let n = 0, total = 0, preenchimento = 0
       for (let x = peca.inicioMm; x <= peca.fimMm; x += 2) {
         total++
-        if (cordao.secao(cordao.indiceEm(x)).larguraMm >= LARGURA_COBERTA_MM) n++
+        const trecho = trechoEletrodo(cordao,x)
+        preenchimento += trecho.progresso
+        if (trecho.coberto) n++
       }
-      return total ? n / total : 0
+      return {unido: total ? n / total : 0, preenchimento: total ? preenchimento / total : 0}
     }
     let objetivoMs = 0
     const atualizarObjetivo = (agora: number) => {
       if (agora - objetivoMs < 250) return
       objetivoMs = agora
-      const cob = coberto()
+      const progresso = coberto(), cob = progresso.unido
       const t = modelo.tempoFaixaS, total = t.curto + t.adequado + t.longo
       const adequado = total > 0 ? t.adequado / total : 0
       const escoriaFeita = modelo.escoria.areaMm2 < 5 && cob > 0.05
       const itens: [boolean, string][] = [
-        [cob >= 0.95, `${n0(cob * 100)}%`],
+        [cob >= 0.95, `${n0(cob * 100)}% unido · ${n0(progresso.preenchimento * 100)}% preenchido`],
         [total > 1 && adequado >= 0.7, total > 0 ? `${n0(adequado * 100)}% do tempo` : '—'],
         [modelo.grudadas === 0 && total > 0, `${modelo.grudadas}×`],
         [escoriaFeita, cob > 0.05 ? (escoriaFeita ? 'limpa' : `${n0(modelo.escoria.areaMm2)} mm²`) : '—'],

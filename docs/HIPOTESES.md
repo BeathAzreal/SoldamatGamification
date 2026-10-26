@@ -790,3 +790,9 @@ A avaliação separa a nota didática de 0 a 1000 dos limites dimensionais 502/5
 
 ### H78 — movimento livre do eletrodo na borda
 Removidos o assento automático na raiz do filete, a mira e o risco guia. O ponteiro continua fora dos limites, mas deixa de gerar contato: a borda não conta como interseção com a face. A aderência física por arco curto permanece. Zoom por +/− (inclusive teclado numérico), com arco fechado.
+
+
+### H79 — depósito local e avaliação SMAW sobre a mesma superfície
+O eletrodo passa a usar `DepositoEletrodo`: células de 1 × 0,5 mm, com volume conservado e distribuição gaussiana limitada ao entorno da ponta (três sigmas). O metal novo favorece pontos mais baixos dessa poça local; metal frio não é movido. Não se usa a seção pré-formada do MIG nem se transporta metal para a raiz por proximidade. A base considera o fundo da abertura e as paredes do chanfro. É um modelo de altura, sem fluido 3D, diluição, fusão das bordas, gravidade ou perfuração. Uma raiz retentora didática mantém metal em frestas abertas: não representa penetração real ou suporte de cobre especificado. A acumulação usa os subpassos fixos do acionamento, sem depender da frequência de renderização.
+
+Metal, escória, martelo, escova, ponta, arco e avaliação leem a mesma altura local, inclusive negativa dentro da junta. A crosta fica 0,10–0,28 mm acima do metal; não é presa ao topo da chapa. O 3D usa a malha real do depósito e a escória tem resolução compatível. O MIG e suas regras permanecem com o modelo anterior. Metas e pesos didáticos por peça, escopo ISO e limites estão em AVALIACAO-SMAW.md. A raiz do V é avaliada como raiz; não como enchimento completo do chanfro.

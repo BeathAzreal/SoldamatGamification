@@ -12,6 +12,16 @@ A remoção de escória segue a preparação para inspeção visual descrita na 
 
 O exame fica pendente enquanto a máscara ainda contém escória. Não há estimativa de porosidade, trincas, penetração, fusão ou inclusões internas. O indicador de deposição sobre escória não é usado como prova de inclusão interna. Não se empregam limites de uma norma de inspeção visual como se fossem limites de aceitação de defeitos.
 
-A nota de 0 a 1000 é uma regra do jogo, e não uma nota ISO: cobertura da junta 300, comparação dimensional 400, alinhamento 150, continuidade 150. Para a cobertura, o jogo amostra a cada 1 mm, exige largura de pelo menos 2 mm, altura não negativa e distância do centro à junta de até o maior entre 2 mm e o diâmetro da alma. Estes cortes são didáticos, não limites ISO. Abaixo de 80% de cobertura aplica-se um fator proporcional para impedir nota alta com um ponto de solda. Arco adequado e aderência aparecem apenas como feedback de técnica, não como critérios ISO. Sem arco e metal depositado a nota é zero. Limpeza é condição para medir; não rende pontos grátis.
+A nota de 0 a 1000 é uma regra do jogo, não uma nota ISO: união das bordas 300, preenchimento e perfil 400 (200 de preenchimento + 200 de perfil), metal na região solicitada 150 e continuidade 150. A avaliação usa a malha local do eletrodo, a mesma do 3D e do contato. Não usa mais o centro médio de uma fatia como substituto para a união real.
+
+A cada 1 mm entre INÍCIO e FIM, nove pontos transversais precisam atingir o perfil-alvo, com pelo menos 0,1 mm de metal e tolerância de altura de 0,2 mm. Isso evita contar dois cordões separados como uma união. O progresso mede o preenchimento local mesmo antes de completar a face. Abaixo de 80% do preenchimento-alvo, aplica-se um fator proporcional para impedir nota alta com um ponto isolado. Todos esses cortes e pesos são didáticos, não limites ISO.
+
+Objetivos por peça:
+- Topo reto e reparo da grade: preencher a abertura até a face; chapa grossa pode exigir várias varetas e limpeza entre passes.
+- Filetes: unir o canto com perna-alvo de aproximadamente 4 mm. A convexidade é medida acima da reta entre os pés do perfil conectado, sem usar a altura absoluta da raiz como reforço.
+- Chanfro em V: o exercício solicita apenas um passe de raiz, com camada-alvo de 2 mm no fundo. Não se exige encher os 12 mm da chapa para pontuar. O teto didático de 4 mm para esse passe não é apresentado como limite ISO 5817 de reforço final. A verificação dimensional 502 na face final não se aplica ao passe de raiz isolado.
+
+A comparação 502/503 só usa seções que completaram o objetivo. Metal fora do intervalo solicitado ou distante da emenda fica visível onde foi depositado, mas não preenche a região avaliada. Arco adequado e aderência aparecem como feedback de técnica. Sem arco e metal depositado a nota é zero; limpeza não rende pontos grátis.
+
 
 No treino a avaliação não entra no ranking de MIG/MAG. Reavaliar a mesma bancada permite observar o efeito da limpeza e das correções; nova tentativa reinicia apenas a peça atual.
