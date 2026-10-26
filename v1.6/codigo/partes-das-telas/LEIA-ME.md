@@ -13,6 +13,9 @@ Pedaços reaproveitados em mais de uma tela (bancada MIG, abas, quadro de nota, 
 | [`girar-a-peca.ts`](girar-a-peca.ts) | Girar a peça — Os botões ⟲ ⟳ ▲ ▼ que giram e tombam a peça, mostrando a posição (plana, vertical, sobrecabeça...). |
 | [`icones.ts`](icones.ts) | Ícones — Desenhos pequenos (SVG) usados no menu lateral e nos botões. |
 | [`inspecao-do-resultado.ts`](inspecao-do-resultado.ts) | Inspeção do resultado — A área do resultado: peça soldada em 3D, botões de vista, exagero vertical e as abas Largura, Corte, Defeitos, Velocidade e Parâmetros. |
+| [`menu-da-oficina.ts`](menu-da-oficina.ts) | Menu da oficina — A lista de opções com a cena da oficina ao fundo, usada pelo Treino, Arcade, Recordes e Configurações. |
+| [`menu-de-pausa.ts`](menu-de-pausa.ts) | Menu de pausa — A janela da tecla Esc: continuar, configurações, escolher outra peça e voltar ao menu, sem perder a tentativa. |
+| [`painel-da-maquina.ts`](painel-da-maquina.ts) | Painel da máquina — As abas do painel lateral (FONTE, TOCHA, LEITURAS...): uma página de cada vez, sem rolar a tela. |
 | [`quadro-de-pontuacao.ts`](quadro-de-pontuacao.ts) | Quadro de pontuação — Mostra a nota (0 a 1000), o conceito (A, B, C...) e as barras de cada categoria. |
 | [`selo-do-material.ts`](selo-do-material.ts) | Selo do material — A etiqueta redonda com o nome do material (aço carbono, inox, alumínio). |
 | [`vista-3d-da-soldagem.ts`](vista-3d-da-soldagem.ts) | Vista 3D durante a soldagem (MIG) — Liga a cena 3D à tela de soldagem: câmera, botões Centralizar e Ver oficina, e giro da peça. |

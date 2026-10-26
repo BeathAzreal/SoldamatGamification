@@ -1,16 +1,19 @@
 # Oficina de Soldagem — v1.6 (código organizado)
 
-A v1.6 é **o mesmo jogo da v1.5**, com o código reorganizado para quem não
-programa em JavaScript conseguir encontrar, entender e reescrever partes.
-Nada do jogo mudou: o arquivo final do jogo foi comparado byte a byte com o
-da v1.5 e é idêntico. As únicas diferenças são a etiqueta de versão e um
-caminho de documentação citado no painel "Modelo didático".
+A v1.6 é **o jogo da alpha-v1.6** (a interface nova de máquina, o menu da
+oficina, a pausa, o Arcade com História/Desafios/Versus e o eletrodo com
+depósito real e nota de 0 a 1000, feitos pelo GPT), com o código
+reorganizado para quem não programa em JavaScript conseguir encontrar,
+entender e reescrever partes. Por cima disso, o eletrodo ganhou a **lista
+de defeitos** (falta de fusão, mordedura, poros, cratera, inclusão de
+escória...) com o lugar, a causa e como corrigir, desenhados no cordão; ela
+não muda a nota.
 
 - Pastas e arquivos com nomes em português que dizem o que há dentro.
 - Tudo do **eletrodo revestido** numa pasta só: [`codigo/eletrodo/`](codigo/eletrodo/).
 - Cada arquivo começa com um quadro **"O que faz / Onde mexer"**.
 - Cada pasta tem um `LEIA-ME.md` curto.
-- Tabela de onde foi parar cada arquivo da v1.5:
+- Tabela de onde foi parar cada arquivo da v1.5 e da alpha-v1.6:
   [`documentacao/MAPA-v1.5-para-v1.6.md`](documentacao/MAPA-v1.5-para-v1.6.md).
 
 ---
@@ -119,16 +122,20 @@ Depois rode `npm test`: alguns testes conferem essas regras e podem precisar
 de ajuste se a mudança for intencional.
 
 ### Mudar a nota do eletrodo
-Arquivo [`codigo/eletrodo/nota-do-eletrodo.ts`](codigo/eletrodo/nota-do-eletrodo.ts):
-- `PESOS`: quanto vale cada parte (continuidade, geometria, fusão, defeitos, limpeza; soma 100);
-- `REPROVA`: o que reprova a peça (ex.: `faltaDeFusaoMm: 10`);
-- `TEXTO`: o nome de cada defeito, a causa e o "como corrigir" que aparecem na tela.
+Arquivo [`codigo/eletrodo/placar-do-eletrodo.ts`](codigo/eletrodo/placar-do-eletrodo.ts):
+a lista `itens` dentro de `avaliarEletrodo` tem o máximo de cada critério
+(união 300, preenchimento e perfil 400, metal na região 150, continuidade 150;
+soma 1000) e `penalidadeEscoria` o desconto pela escória. Explicação em
+[`documentacao/AVALIACAO-SMAW.md`](documentacao/AVALIACAO-SMAW.md).
 
-Os limites dos defeitos (quanto calor é falta de fusão, arco longo que dá poro...)
-estão em `LIMITES`, no arquivo [`codigo/eletrodo/analise-do-cordao.ts`](codigo/eletrodo/analise-do-cordao.ts).
-O que cada peça pede (perna do filete, reforço, chanfro cheio) está no campo `medida`
-de cada peça em `pecas-de-treino.ts`. Mudou a regra? Troque `VERSAO_NOTA_ELETRODO`
-e rode `npm test` (os testes `eletrodo-inspecao` conferem a calibração).
+### Mudar a lista de defeitos do eletrodo
+- Textos (nome, causa, "como corrigir"): `TEXTO` em
+  [`codigo/eletrodo/defeitos-do-eletrodo.ts`](codigo/eletrodo/defeitos-do-eletrodo.ts).
+- Limites (quanto calor é falta de fusão, arco longo que dá poro...): `LIMITES` em
+  [`codigo/eletrodo/analise-do-cordao.ts`](codigo/eletrodo/analise-do-cordao.ts).
+- Calor de referência de cada peça: `aporteAlvoKJmm` em `pecas-de-treino.ts`.
+
+Depois rode `npm test` (os testes `eletrodo-defeitos` conferem a calibração).
 
 ### Mudar as teclas padrão do eletrodo
 Arquivo [`codigo/eletrodo/controles-salvos.ts`](codigo/eletrodo/controles-salvos.ts),

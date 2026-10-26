@@ -54,7 +54,7 @@ export async function configurarControles15(atual: Controles15): Promise<Control
   conteudo.append(h('p', {}, 'Controle padrão: esquerdo move a ponta; direito orienta; direcional regula altura; LB/RB giram o punho. Caneta usa tiltX/tiltY, se disponíveis. Sem hardware de rastreamento, mouse e gamepad são aproximações dos gestos reais.'),
     erro)
   for (;;) {
-    if (!await confirmar('Controles da bancada v1.6', conteudo, { sim: 'Salvar controles' })) return atual
+    if (!await confirmar('Controles do eletrodo', conteudo, { sim: 'Salvar controles' })) return atual
     const validado = validarControles15(c)
     if (!validado) { erro.textContent = 'Use teclas e botões diferentes para cada ação e valores dentro dos limites.'; continue }
     try { localStorage.setItem(CHAVE_CONTROLES15, JSON.stringify(validado)) } catch { /* Preferência segue válida nesta sessão. */ }

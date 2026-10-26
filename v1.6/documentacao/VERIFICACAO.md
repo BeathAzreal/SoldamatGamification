@@ -1,21 +1,17 @@
 # Verificação
 
-## v1.6 — preenchimento e nota do eletrodo (branch `claude/v1.6`)
+## v1.6 — interface e eletrodo da alpha-v1.6 + lista de defeitos (branch `claude/v1.6-ui-gpt`)
 
-Pedido: o eletrodo precisava ficar mais realista na forma de pontuar e no preenchimento da solda.
+A pasta v1.6 tinha sido reorganizada a partir da alpha-v1.5 e não trazia o que o GPT fez na alpha-v1.6 (interface de máquina, menu da oficina, pausa, central do Arcade, depósito real do eletrodo e nota de 0 a 1000). Agora traz.
 
-- Novo: registro do passe, análise do cordão (H74–H76) e inspeção visual com nota de 0 a 100 (H77).
-- Calibração com soldador simulado (testes/eletrodo-inspecao.test.ts, 13 casos): técnica boa
-  aprova com 93–100 nas cinco peças; os erros típicos aparecem como o defeito certo (veja
-  PROTOTIPO-V15.md). Ajustes nos testes antigos: o teste de "fim da vareta" passou a mostrar
-  um resíduo de arredondamento (corrigido no modelo); o teste de esforço sem ajuda passou a
-  medir o tempo com S apertado em vez do número de toques, porque a vareta queima mais rápido.
-- Navegador (Chromium sem interface, 1366×768): cordão sobre chapa soldado, limpo e
-  inspecionado; escamas visíveis no cordão limpo; painel de inspeção com nota, veredito,
-  categorias e defeitos com posição, causa e correção. Com a taxa de quadros baixa do
-  navegador de teste, o avanço do roteiro não é controlável, por isso a nota exata desse
-  teste não serve de referência; a calibração vale pelos testes automáticos.
-- Não testado com pessoas nem em GPU real.
+- Como foi feito: merge da alpha-v1.6 sobre a v1.6 reorganizada, com o git seguindo os arquivos renomeados. Os arquivos novos do GPT ganharam nomes em português e cabeçalho "O que faz / Onde mexer" (tabela em MAPA-v1.5-para-v1.6.md); os imports foram recalculados pelo mapa.
+- O código do GPT ficou igual: comparando arquivo por arquivo (sem cabeçalhos e imports), as únicas diferenças são nomes de arquivo citados em comentários e os acréscimos da lista de defeitos (tela do treino, resultado, peças, cena 3D, metal 3D e a passagem da energia do arco em arco-e-vareta.ts, que não muda o depósito).
+- Minhas mudanças anteriores que alteravam o eletrodo do GPT foram desfeitas: consumo da vareta (voltou a 3 mm/s), volume depositado (0,7), forma do cordão pela corrente, a nota de 0 a 100 e a medida por peça.
+- CSS do build: idêntico ao da alpha-v1.6, mais 7 regras da lista de defeitos (cor do avanço e botão/lista de defeitos).
+- Telas comparadas pixel a pixel com a build da alpha-v1.6 (Chromium headless, 1366×768): menu, Arcade, Treino, escolha da peça do eletrodo, bancada do eletrodo, bancada MIG, Recordes, Configurações e pausa: 0% de pixels diferentes.
+- Soldagem no navegador (bancada do eletrodo, soldador automático): arco abre ao tocar, Enter encerra, o resultado mostra a nota de 0 a 1000 do GPT e o botão "Defeitos (N)" na mesma linha de "Detalhes da avaliação" (o painel não cresce); a lista abre com lugar, causa e correção; sem a escória, aparecem respingos, cratera e cor de calor sobre o metal. Sem erros no console.
+- Testes: `npm test` com 43 arquivos; `testes/eletrodo-defeitos.test.ts` (10 casos, soldador simulado a 60 quadros/s) calibra a lista: técnica boa sem defeitos nas cinco peças; rápido demais → falta de fusão; lento demais → perfuração na raiz aberta ou calor em excesso no filete; arco longo → poros e respingos; sem parar no fim → cratera; vários passes sem limpar a escória fria → inclusão; a lista não muda a nota nem o metal.
+- Não testado em aparelhos físicos (mesa digitalizadora, controle, celular).
 
 ## v1.6 — reorganização do código (branch `reorganizacao`)
 

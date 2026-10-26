@@ -9,6 +9,7 @@
  *    único.
  */
 
+import { RENDIMENTO15 } from './arco-e-vareta'
 import type { TipoJunta } from '../simulacao-mig/tipos-de-junta-e-posicao'
 
 /**
@@ -25,6 +26,8 @@ export interface PecaEletrodo {
   aplicacao: string
   /** Por que eletrodo revestido aqui. */
   porque: string
+  larguraMm?: number
+  conjunto?: 'grade'
   junta: TipoJunta
   espessuraMm: number
   aberturaMm: number
@@ -34,78 +37,79 @@ export interface PecaEletrodo {
   inicioMm: number
   fimMm: number
   objetivo: string
-  /**
-   * O que a inspeção mede para saber se o cordão encheu o que devia (H75):
-   * reforço acima da chapa (mm), perna do filete (mm) ou enchimento do
-   * chanfro (min = 1 é cheio até a face; max = reforço máximo em mm).
-   */
-  medida: { tipo: 'reforco' | 'perna' | 'enchimento'; min: number; max: number }
 }
 
-/** H74: quanto cada junta precisa de calor por mm de espessura. No filete o calor escapa por três lados (T, sobreposta). */
-const FATOR_APORTE: Record<TipoJunta, number> = { topo: 1, v: 0.9, t: 1.4, sobreposta: 1.3, canto: 1.1 }
+/** Tensão do arco com o comprimento igual ao diâmetro da alma (mesma regra de arco-e-vareta.ts). */
+const tensaoNominalV = (diametroMm: number) => 20 + 2 * diametroMm
+/** Avanço de referência do eletrodo revestido no treino (mm/s), cerca de 15 cm por minuto. */
+export const AVANCO_REFERENCIA_MMS = 2.5
 
 /**
- * H74: aporte de calor de referência da peça (kJ/mm). Cresce com a espessura;
- * a faixa adequada da inspeção vai de 0,8 a 1,7 vez este valor.
+ * H82: aporte de calor de referência da peça (kJ/mm): o calor que o arco põe
+ * na junta com a corrente no meio da faixa sugerida, arco do tamanho do
+ * diâmetro e o avanço de referência. A análise compara o calor de cada passe
+ * com este valor: de 0,8 a 1,7 vez é a faixa adequada (analise-do-cordao.ts).
  */
 export function aporteAlvoKJmm(p: PecaEletrodo): number {
-  return 0.12 * p.espessuraMm * FATOR_APORTE[p.junta]
+  const corrente = (p.correnteA.min + p.correnteA.max) / 2
+  return RENDIMENTO15.termico * corrente * tensaoNominalV(p.diametroMm) / AVANCO_REFERENCIA_MMS / 1000
 }
 
 export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
   {
     id: 'cordao-chapa',
-    titulo: 'Cordões sobre chapa 6,3 mm',
-    aplicacao: 'Primeiro exercício de todo curso de eletrodo.',
-    porque: 'Chapa grossa e parada: só abrir o arco, manter o comprimento e avançar em linha.',
-    junta: 'topo', espessuraMm: 6.3, aberturaMm: 0, diametroMm: 2.5, correnteA: { min: 80, max: 100 },
+    titulo: 'Unir duas chapas — junta de topo',
+    aplicacao: 'Duas chapas separadas e alinhadas para formar uma única peça.',
+    porque: 'Montagem de chapas de aço carbono: unir as bordas pela abertura central.',
+    junta: 'topo', espessuraMm: 8, aberturaMm: 2, diametroMm: 2.5, correnteA: { min: 80, max: 100 },
     inicioMm: 20, fimMm: 130,
-    objetivo: 'Um cordão contínuo do INÍCIO ao FIM, com o arco perto do diâmetro da alma e reforço de 1 a 3 mm.',
-    medida: { tipo: 'reforco', min: 1, max: 3 },
+    objetivo: 'Preencher a abertura até a face das chapas, unindo as duas bordas do INÍCIO ao FIM. Faça mais de um passe, trocando a vareta e limpando entre eles.',
   },
   {
     id: 't-estrutural',
-    titulo: 'Filete em T — base de máquina',
+    titulo: 'Nervura de sapata — base de equipamento',
     aplicacao: 'Nervuras, suportes e bases de estrutura metálica.',
     porque: 'Aço estrutural grosso soldado na oficina ou no campo, sem cilindro de gás.',
-    junta: 't', espessuraMm: 6.3, aberturaMm: 0, diametroMm: 3.2, correnteA: { min: 100, max: 130 },
+    junta: 't', espessuraMm: 10, aberturaMm: 0, diametroMm: 3.2, correnteA: { min: 100, max: 130 },
     inicioMm: 10, fimMm: 140,
-    objetivo: 'Filete contínuo no canto, com perna de 4 a 6,5 mm; limpe a escória no fim.',
-    medida: { tipo: 'perna', min: 4, max: 6.5 },
+    objetivo: 'Filete contínuo no canto, sem grudar o eletrodo; limpe a escória no fim.',
   },
   {
     id: 'v-raiz',
-    titulo: 'Topo em V 8 mm — raiz e enchimento',
-    aplicacao: 'Chapa grossa, tanques e tubulação.',
-    porque: 'Chapa grossa chanfrada se enche em vários passes de eletrodo: raiz, enchimento e acabamento.',
-    junta: 'v', espessuraMm: 8, aberturaMm: 2.5, diametroMm: 2.5, correnteA: { min: 75, max: 95 },
-    inicioMm: 30, fimMm: 120,
-    objetivo: 'Encha o chanfro em vários passes até a face, com reforço de até 3 mm: raiz com 2,5 mm e enchimento com 3,2 mm. Limpe a escória entre um passe e outro.',
-    medida: { tipo: 'enchimento', min: 1, max: 3 },
+    titulo: 'Emenda chanfrada — longarina de ponte rolante',
+    aplicacao: 'Emenda de chapas grossas de uma longarina de equipamento.',
+    porque: 'O passe de raiz com eletrodo fino é clássico em chapa grossa chanfrada.',
+    junta: 'v', espessuraMm: 12, aberturaMm: 2.5, diametroMm: 2.5, correnteA: { min: 75, max: 95 },
+    inicioMm: 10, fimMm: 140,
+    objetivo: 'Raiz contínua no fundo do chanfro com arco curto; limpe a escória antes de outro passe.',
   },
   {
     id: 'canto-portao',
-    titulo: 'Canto externo — quadro de portão',
-    aplicacao: 'Serralheria: quadros, grades e portões de cantoneira.',
-    porque: 'Serviço de serralheria e de campo, muitas vezes ao ar livre.',
-    junta: 'canto', espessuraMm: 4.75, aberturaMm: 0, diametroMm: 2.5, correnteA: { min: 75, max: 95 },
-    inicioMm: 15, fimMm: 135,
-    objetivo: 'Cordão na quina com perna de 3 a 5 mm, sem derreter a borda: arco curto e avanço constante.',
-    medida: { tipo: 'perna', min: 3, max: 5 },
+    titulo: 'Conserto de grade — emenda da barra',
+    aplicacao: 'Grade de aço com uma barra chata cortada em duas partes, alinhadas para o reparo.',
+    porque: 'Serviço de manutenção: recompor a continuidade da barra dentro do quadro da grade.',
+    conjunto: 'grade', larguraMm: 40,
+    junta: 'topo', espessuraMm: 6.3, aberturaMm: 1.5, diametroMm: 2.5, correnteA: { min: 75, max: 95 },
+    inicioMm: 57, fimMm: 93,
+    objetivo: 'Soldar a abertura entre as duas metades da barra de 40 mm, limpar e inspecionar a união.',
   },
   {
     id: 'sobreposta-reforco',
-    titulo: 'Sobreposta — reforço de chapa no campo',
+    titulo: 'Chapa de reforço — manutenção de estrutura',
     aplicacao: 'Manutenção: reforços e remendos em estruturas já montadas.',
     porque: 'Com vento, o gás de proteção do MIG seria soprado; o revestimento do eletrodo protege.',
-    junta: 'sobreposta', espessuraMm: 6.3, aberturaMm: 0, diametroMm: 3.2, correnteA: { min: 105, max: 130 },
+    junta: 'sobreposta', espessuraMm: 10, aberturaMm: 0, diametroMm: 3.2, correnteA: { min: 105, max: 130 },
     inicioMm: 10, fimMm: 140,
-    objetivo: 'Filete contínuo na borda da chapa de cima, com perna de 4 a 6,5 mm; limpe toda a escória.',
-    medida: { tipo: 'perna', min: 4, max: 6.5 },
+    objetivo: 'Filete contínuo na borda da chapa de cima; limpe toda a escória.',
   },
 ]
 
 export function pecaEletrodo(id: string): PecaEletrodo {
   return PECAS_ELETRODO.find(p => p.id === id) ?? PECAS_ELETRODO[0]
+}
+
+/** Coordenadas da largura real da peça no domínio de 150 mm da bancada. */
+export function limitesPecaEletrodo(p: { larguraMm?: number }): { min: number; max: number } {
+  const meia = (p.larguraMm ?? 150) / 2
+  return { min: 75 - meia, max: 75 + meia }
 }

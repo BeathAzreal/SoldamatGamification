@@ -124,31 +124,11 @@
 .p15-objetivo li[data-ok=true]::before{content:'✓';color:#6fd3a5}
 .p15-obj-valor{font-variant-numeric:tabular-nums;color:#e9dcc4}
 
-/* Inspeção do eletrodo (H77): leituras de calor e painel do resultado. */
-.p15-hud-grade{grid-template-columns:1fr 1fr}
-.p15-sub{font-size:10.5px;color:#93a6b1}
+/* Defeitos do eletrodo (H82–H85): cor do avanço pelo calor e lista no resultado. */
 .p15-hud-item output[data-faixa=bom]{color:#9fe0c4}
 .p15-hud-item output[data-faixa=frio]{color:#9cc6f0}
 .p15-hud-item output[data-faixa=quente]{color:#f0b07a}
-.p15-objetivo>button{margin-top:4px}
-.p15-resultado{display:flex;flex-direction:column;gap:12px;max-width:640px}
-.p15-res-topo{display:flex;gap:16px;align-items:center}
-.p15-res-nota{display:grid;grid-template-columns:auto auto;align-items:baseline;gap:0 4px;padding:10px 14px;border-radius:6px;background:#22313b;min-width:110px}
-.p15-res-nota strong{font-size:40px;line-height:1;color:#f2e6cf}
-.p15-res-nota span{color:#9fb2bd}
-.p15-res-nota em{grid-column:1/-1;font-style:normal;font-weight:700;color:#eed3a1}
-.p15-res-veredito{font-weight:700;font-size:17px;margin:0 0 4px}
-.p15-res-veredito[data-aprovado=true]{color:#8fdcb8}
-.p15-res-veredito[data-aprovado=false]{color:#f29a8d}
-.p15-res-categorias{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.p15-res-categorias li{display:grid;grid-template-columns:170px 1fr 52px;gap:2px 10px;align-items:center;font-size:13px}
-.p15-res-categorias meter{width:100%;height:10px}
-.p15-res-categorias b{text-align:right;font-variant-numeric:tabular-nums}
-.p15-res-categorias small{grid-column:1/-1;color:#9fb2bd;font-size:11.5px}
-.p15-res-defeitos{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:38vh;overflow:auto}
-.p15-res-defeitos li{padding:8px 10px;border-left:3px solid #d0a96a;background:#1d2b35;font-size:13px}
-.p15-res-defeitos li[data-reprova=true]{border-color:#f08a7c;background:#2e2023}
-.p15-res-defeitos li p{margin:4px 0 0;line-height:1.4}
-.p15-res-onde{margin-left:8px;color:#9fb2bd;font-size:12px}
-.p15-res-reprova{margin-left:8px;padding:1px 6px;border-radius:3px;background:#a83a2e;color:#fff;font-size:11px;font-weight:700;text-transform:uppercase}
-.p15-res-corrigir{color:#bfe8d4}
+.p15-botoes-resultado{display:grid;grid-template-columns:1fr auto;gap:8px}
+.p15-botao-defeitos:not([data-graves="0"]){border-color:#f08a7c;color:#f6c2b8}
+.p15-defeitos li{border-left:3px solid #d0a96a;padding-left:8px}
+.p15-defeitos li[data-grave=true]{border-left-color:#f08a7c}

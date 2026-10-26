@@ -83,7 +83,12 @@ Não apague nem desligue testes para eles passarem.
 6. **Dados salvos:** não mude chaves do localStorage (`PREFIXO`, coleções,
    `CHAVE_CONTROLES15`) e mantenha a leitura de dados antigos.
 7. **Sem dependências novas** sem o dono pedir. Offline, num HTML único.
-8. Commits pequenos, um assunto por commit, mensagem em português dizendo o
+8. **Controles:** mouse — botão do meio move a câmera e o direito orienta a
+   ferramenta; caneta — Espaço move a câmera; controle — o analógico direito
+   move a câmera. Tudo só com o arco fechado, e configurável em "Controles"
+   (`codigo/partes-das-telas/configurar-controles-mig.ts` e
+   `codigo/eletrodo/janela-de-controles.ts`). Não quebre isso.
+9. Commits pequenos, um assunto por commit, mensagem em português dizendo o
    que mudou e por quê.
 
 ## 5. Ao terminar uma tarefa

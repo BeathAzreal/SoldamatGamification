@@ -3221,3 +3221,25 @@ canvas.tela-solda-3d[hidden] {
     margin: 0;
   }
 }
+
+/* Configurações: rolagem apenas dentro da tela. */
+.config-paineis { flex: 1; min-height: 0; overflow-y: auto; display: grid; gap: 16px; padding-bottom: 16px; }
+
+.app.app-cheia:has(.config-paineis) { padding: 18px clamp(14px, 3.5vw, 40px) 16px; }
+.navegacao-lateral [data-rota="config"] .nav-texto { font-size: 17px; }
+
+/* O jogo ocupa a janela; navegação só pelo pause. */
+.jogo-imersivo .topo, .jogo-imersivo .navegacao-lateral { display: none; }
+.jogo-imersivo .estrutura { height: 100svh; display: flex; max-width: none; padding: 0; }
+.jogo-imersivo #app { position: relative; }
+.atalho-pause { position: fixed; top: 10px; right: 16px; z-index: 30; font-size: 12px; background: #111d; color: #eee; border: 0; }
+.pause-fundo { position: fixed; inset: 0; z-index: 200; background: #030303b8; backdrop-filter: blur(7px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.pause-painel { width: min(560px, 100%); max-height: 90svh; padding: 32px; background: #111f; border-left: 5px solid #e12629; overflow-y: auto; color: #f4efdf; }
+.pause-painel h2 { font: 700 48px BarlowMenu, sans-serif; margin: 0 0 24px; }
+.pause-opcoes { display: flex; flex-direction: column; gap: 15px; }
+.pause-painel .grafico-opcao { font-size: 28px; }
+.pause-painel .grafico-opcao:hover, .pause-painel .grafico-opcao:focus-visible { background: #e12629!important; }
+.pause-config { width: min(900px, 100%); }
+.pause-config .config-paineis { max-height: 58svh; padding: 8px; }
+
+.jogo-imersivo .navegacao-de-partida, .jogo-imersivo [data-ajuste-partida] { display: none!important; }

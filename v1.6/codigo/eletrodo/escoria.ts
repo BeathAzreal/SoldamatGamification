@@ -17,6 +17,7 @@ export class Escoria15 {
   readonly calor = new Float64Array(1700)
   readonly fragmentos = new Float64Array(1700)
   inclusaoMm3 = 0
+  gerada = 0
   private indice(x: number, y: number): number {
     return Math.max(0, Math.min(33, Math.floor((y + 50) / 3))) * 50 + Math.max(0, Math.min(49, Math.floor(x / 3)))
   }
@@ -27,7 +28,9 @@ export class Escoria15 {
     const parte = volume / alvos.length
     for (const i of alvos) {
       if (this.calor[i] < 0.15) this.inclusaoMm3 += this.quantidade[i] * parte
+      const antes = this.quantidade[i]
       this.quantidade[i] = Math.min(1, this.quantidade[i] + parte / 5)
+      this.gerada += this.quantidade[i] - antes
       this.fragmentos[i] = 0
       this.calor[i] = 1
     }

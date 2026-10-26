@@ -141,6 +141,8 @@ export class RegistroPasse {
   }
 
   inicioArco(xMm: number, yMm: number, tMs: number, aQuente: boolean): void {
+    // Reabrir o arco começa outro passe: voltar por cima da emenda depois da troca de vareta é um retoque, não soma calor ao passe anterior.
+    for (let j = 0; j < this.nPosicoes; j++) if (this.eVisita[j] > 0) { this.fecharPassagem(j); this.tVisitaMs[j] = -Infinity }
     this.aberturas.push({ xMm, yMm, tMs, aQuente })
     this.xAnterior = xMm
   }

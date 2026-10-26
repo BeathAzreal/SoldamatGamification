@@ -8,6 +8,7 @@
  *    ajuste estão em simulacao-mig/regulagem-da-maquina.ts.
  */
 
+import { painelMaquina } from './painel-da-maquina'
 import { abrirPainel } from '../interface/janelas-de-dialogo'
 import { montarControles } from './configurar-controles-mig'
 import { GRAUS_POR_PIXEL, Gestos } from '../dispositivos/gestos-de-camera-e-peca'
@@ -410,12 +411,15 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       tiposDefeito.length ? h('p', { class: 'dica dica-defeitos' }, `Defeitos visíveis: ${tiposDefeito.map((t) => NOME_DEFEITO[t].toLowerCase()).join('; ')}. ${CONSELHO_DEFEITO[tiposDefeito[0]]}`) : null,
       principal !== 'adequada' ? h('p', { class: 'dica' }, `Previsão predominante: ${DESCRICAO_ESTADO[principal]}. ${principal === 'falta' ? `Mais calor por mm: mais tensão, mais alimentação, andar mais devagar ou puxar a tocha${sim.contexto.posicaoFixa ? '' : '; ou posicione a peça na plana ou subindo'}.` : principal === 'excessiva' || principal === 'perfuracao' ? 'Menos calor por mm: reduza alimentação ou tensão, ande mais rápido ou empurre a tocha.' : principal === 'borda' ? (INFO_JUNTA[m.geometria.junta].familia === 'filete' ? 'Mire na raiz (o canto): fora dela uma perna fica curta.' : 'Mantenha a tocha sobre a linha da junta ou alargue o cordão (mais devagar).') : principal === 'enchimento' ? 'O V não encheu: ande mais devagar ou faça outro passe por cima.' : ''}`) : null,
     )
+    const detalhesPasse = resumoPasse.cloneNode(true) as HTMLElement
+    detalhesPasse.className = 'resultado-passe-painel'
+    resumoPasse.replaceChildren(h('button', { type: 'button', class: 'botao-fantasma', on: { click: () => { app.abrirPausa(); void abrirPainel('Análise do último passe', detalhesPasse.cloneNode(true) as HTMLElement) } } }, 'Consultar análise do último passe'))
   }
 
   // ------------------------------------------------------------ dispositivo
   const statusDispositivo = h('span', { class: 'status-dispositivo' })
   const gaveta = h('div', { class: 'gaveta', hidden: true })
-  const botaoCalibrar = h('button', { type: 'button', class: 'botao-fantasma', 'aria-expanded': 'false' }, icone('ajuste'), ' Calibrar')
+  const botaoCalibrar = h('button', { type: 'button', class: 'botao-fantasma navegacao-de-partida', 'aria-expanded': 'false' }, icone('ajuste'), ' Calibrar')
   const segmentos = h('div', { class: 'segmentado', role: 'radiogroup', 'aria-label': 'Dispositivo de entrada' })
   const desenharSegmentos = () => {
     const temControle = controlesConectados().length > 0
@@ -511,7 +515,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
         { class: 'barra-dispositivo' },
         segmentos,
         botaoCalibrar,
-        h('button', { type: 'button', class: 'botao-fantasma', title: 'Botões e teclas da câmera e do giro da peça', on: { click: () => abrirPainel('Controles da câmera e da peça', montarControles(app)) } }, icone('ajuste'), ' Controles'),
+        h('button', { type: 'button', class: 'botao-fantasma', 'data-ajuste-partida': true, title: 'Botões e teclas da câmera e do giro da peça', on: { click: () => abrirPainel('Controles da câmera e da peça', montarControles(app)) } }, icone('ajuste'), ' Controles'),
         h('button', { type: 'button', class: 'botao-fantasma', on: { click: reiniciarPeca } }, icone('limpar'), ' Limpar'),
       ),
     ),
@@ -522,6 +526,9 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     resumoPasse,
   )
 
+  const fontePainel = h('div', {}, maquina.querySelector('.mostradores'))
+  const preparoPainel = h('div', {}, maquina.querySelector('.maquina-grade'), maquina.querySelector('.aviso-trava'))
+  maquina.append(painelMaquina([['FONTE', fontePainel], ['PREPARO', preparoPainel], ['LEITURAS', h('div', {}, maquina.querySelector('.leituras'))]]))
   bancada.elemento = h('div', { class: 'bancada' }, maquina, pecaTeste)
 
   // ------------------------------------------------------------ laço da peça de teste
@@ -538,12 +545,14 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   const observador = new ResizeObserver(redimensionar)
   observador.observe(areaPeca)
 
+  app.controlePausa = { pausar: () => { sim.pausar(performance.now()); fonte?.desligar(); somArco.calar() }, retomar: () => { sim.retomar(performance.now()); ligarFonte() } }
   let pedido = 0
   // Alguns navegadores não avisam a conexão do controle: confere periodicamente.
   let controlesVistos = controlesConectados().length
   let ultimaChecagem = 0
   const quadro = () => {
     const agora = performance.now()
+    if (app.jogoPausado) { pedido = requestAnimationFrame(quadro); return }
     if (agora - ultimaChecagem > 500) {
       ultimaChecagem = agora
       const n = controlesConectados().length
