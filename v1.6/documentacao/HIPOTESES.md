@@ -771,7 +771,40 @@ Riscar a ponta reduz a chance de grudar; o arco é classificado em curto, adequa
 
 Arco esticado aguenta um instante e reacende a quente; o primeiro toque abre o arco sem botão, e curto breve sem empurrar se desfaz; a distância é medida até a superfície real da junta e a ponta assenta na raiz do filete. Detalhes em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
 
-### H74–H77 — calor, preenchimento, defeitos e nota do eletrodo
 
-Aporte de calor por passe (kJ/mm) e fusão relativa à espessura da peça; depósito e forma do cordão pela corrente e pelo comprimento do arco; medida de cada peça (reforço, perna ou enchimento); defeitos do eletrodo (mordedura, sobreposição, poros, cratera, inclusão de escória, respingos, aberturas) e a inspeção visual com nota de 0 a 100. Detalhes e calibração em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
+
+### H74 — Acompanhamento manual do consumo no eletrodo (v1.6)
+Ao segurar a descida, o comando compensa a componente vertical do consumo que a assistência ainda não cobre, e acrescenta a correção pedida pelo jogador. A compensação só existe com comando ativo e arco aberto. A velocidade configurada continua sendo a velocidade de correção, com mínimo jogável de 3 mm/s. A corrente, o consumo, o volume depositado, o limite do arco e a aderência permanecem no modelo anterior. É uma assistência de interação, não resposta calibrada de uma mão humana. Testes cobrem corrente alta, preferências antigas lentas, ausência de comando e taxas de quadros.
+
+### H75 — Apresentação industrial e limpeza do SMAW (v1.6)
+As peças representam trechos simplificados de conjuntos industriais em aço carbono (8–12 mm): emenda, sapata, longarina, caixão e reforço. Orelhas furadas e travessas fora do trecho acessível são acabamento visual; não qualificam uma junta real nem acrescentam regiões soldáveis. A fonte SMAW é uma inversora CC sem cilindro de gás. Correntes são parâmetros didáticos, não recomendações de procedimento. Ondulações foscas do metal, crosta fissurada, relevo e lascas são visuais e não alteram pontuação ou volume. Direções lateral, diagonal e superior mudam o movimento do martelo; a remoção continua condicionada à posição, resfriamento e uso posterior da escova, pela mesma máscara física anterior.
+
+
+### H76 — União de duas peças e golpe automático (v1.6)
+A direção do martelo é sorteada a cada clique, entre as duas direções diferentes da anterior. É somente animação; o resultado da limpeza não depende do sorteio. O primeiro trabalho começa com duas chapas e abertura de 2 mm, sem reforço transversal anterior à solda. O conserto de grade representa uma barra chata de 40 × 6,3 mm separada em duas metades com abertura de 1,5 mm, dentro de um quadro com outras barras. A geometria, a fixação, o limite do ponteiro e do controle usam essa largura; somente o trecho da barra quebrada recebe solda. O domínio interno de 150 mm é preservado para os buffers do cordão, com trecho acessível central de 40 mm. Os acabamentos dos dois componentes diferem para tornar visível a união. O modelo de processo permanece qualitativo.
+
+
+### H77 — Avaliação visual parcial do treino SMAW
+A avaliação separa a nota didática de 0 a 1000 dos limites dimensionais 502/503 da ISO 5817:2023 (B/C/D). A ISO 17637:2016 orienta a preparação e a consulta visual; escória remanescente impede a nota final. Não se atribui conformidade global, integridade interna ou qualificação de soldador. Pesos e fator de cobertura são do jogo e aparecem explicados na interface. Dados do arco e aderência servem como dicas, sem falsa equivalência com critérios ISO. Fontes, escopo e limitações estão em AVALIACAO-SMAW.md.
+
+
+### H78 — movimento livre do eletrodo na borda
+Removidos o assento automático na raiz do filete, a mira e o risco guia. O ponteiro continua fora dos limites, mas deixa de gerar contato: a borda não conta como interseção com a face. A aderência física por arco curto permanece. Zoom por +/− (inclusive teclado numérico), com arco fechado.
+
+
+### H79 — depósito local e avaliação SMAW sobre a mesma superfície
+O eletrodo passa a usar `DepositoEletrodo`: células de 1 × 0,5 mm, com volume conservado e distribuição gaussiana limitada ao entorno da ponta (três sigmas). O metal novo favorece pontos mais baixos dessa poça local; metal frio não é movido. Não se usa a seção pré-formada do MIG nem se transporta metal para a raiz por proximidade. A base considera o fundo da abertura e as paredes do chanfro. É um modelo de altura, sem fluido 3D, diluição, fusão das bordas, gravidade ou perfuração. Uma raiz retentora didática mantém metal em frestas abertas: não representa penetração real ou suporte de cobre especificado. A acumulação usa os subpassos fixos do acionamento, sem depender da frequência de renderização.
+
+Metal, escória, martelo, escova, ponta, arco e avaliação leem a mesma altura local, inclusive negativa dentro da junta. A crosta fica 0,10–0,28 mm acima do metal; não é presa ao topo da chapa. O 3D usa a malha real do depósito e a escória tem resolução compatível. O MIG e suas regras permanecem com o modelo anterior. Metas e pesos didáticos por peça, escopo ISO e limites estão em AVALIACAO-SMAW.md. A raiz do V é avaliada como raiz; não como enchimento completo do chanfro.
+
+
+### H80 — sólido 3D do metal e acabamento
+O depósito SMAW tem agora malha fechada: superfície, fundo e paredes laterais do material acumulado. A base é a geometria real da abertura; a superfície vem do campo local, sem exagero da espessura. As caudas abaixo de 0,025 mm não geram faces visuais. Até 1,2 mm acima do perfil-alvo a distribuição favorece o preenchimento dos pontos baixos; acima dessa margem didática ela preserva a coroa convexa; continuar depositando aumenta o reforço local. Um micro-relevo de escamas limitado a 0,06 mm modifica só o acabamento visual, e a escória acompanha esse mesmo acabamento. Testes conferem cada aresta com exatamente duas faces e volume orientado positivo para topo, V e filete. O modelo continua sendo um campo de altura didático; não é uma simulação de fluido volumétrica.
+
+### H81 — encerrar tentativa e receber pontuação
+O eletrodo passa a seguir o fluxo do MIG: soldar, encerrar por botão ou Enter, receber nota automática inteira de 0 a 1000 e conceitos S/A/B/C/D, examinar os critérios e iniciar outra tentativa. Os pesos geométricos continuam específicos do processo SMAW, sem inventar parâmetros MIG. A referência ISO C é fixa no exercício. Escória remanescente não bloqueia o placar: desconta até 200 pontos, proporcional à fração de escória não removida, e impede declarar a inspeção visual liberada. Ocultar a escória na inspeção é apenas visual e não altera a nota. O resultado congela a simulação, mantendo câmera e zoom; a ferramenta e partículas não obstruem a inspeção.
+
+### H82–H85 — calor por passe e defeitos do eletrodo (v1.6, Claude)
+
+Somados ao depósito (H79) e à nota de 0 a 1000 (H81), sem mudar nenhum dos dois: o calor que cada passe pôs em cada meio milímetro da junta (aporte em kJ/mm) comparado com o calor de referência da peça; daí falta de fusão, fusão fraca, calor em excesso e perfuração da raiz aberta; defeitos de superfície (mordedura, sobreposição, poros, cratera, inclusão de escória, respingos, abertura fora da junta, eletrodo grudado) desenhados sobre o metal; e a lista, no resultado, com o lugar, a causa e como corrigir. Detalhes e calibração em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
 

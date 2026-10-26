@@ -1,6 +1,6 @@
 # Mapa: onde foi parar cada arquivo da v1.5
 
-A v1.6 tem o mesmo código da v1.5 com pastas e arquivos renomeados. Os nomes de funções, classes e variáveis dentro dos arquivos **não mudaram**.
+A v1.6 tem o código da alpha-v1.6 com pastas e arquivos renomeados. Os nomes de funções, classes e variáveis dentro dos arquivos **não mudaram**. A primeira tabela vale para os arquivos que já existiam na v1.5; a segunda, para os que o GPT criou na alpha-v1.6.
 
 | v1.5 | v1.6 |
 |---|---|
@@ -148,3 +148,28 @@ A v1.6 tem o mesmo código da v1.5 com pastas e arquivos renomeados. Os nomes de
 | `tests/torneio.test.ts` | `testes/torneio.test.ts` |
 | `tests/util.ts` | `testes/utilidades-dos-testes.ts` |
 | `tests/vista3d.test.ts` | `testes/vista3d.test.ts` |
+
+## Arquivos novos da alpha-v1.6
+
+| alpha-v1.6 | v1.6 |
+|---|---|
+| `docs/AVALIACAO-SMAW.md` | `documentacao/AVALIACAO-SMAW.md` |
+| `src/hud-maquina.css` | `codigo/estilos/7-painel-da-maquina.css` |
+| `src/modelo/depositoEletrodo.ts` | `codigo/eletrodo/deposito-do-cordao.ts` |
+| `src/pontuacao/eletrodo.ts` | `codigo/eletrodo/placar-do-eletrodo.ts` |
+| `src/render/metalEletrodo.ts` | `codigo/eletrodo/metal-do-cordao-3d.ts` |
+| `src/render/pecaIndustrial15.ts` | `codigo/eletrodo/pecas-industriais-3d.ts` |
+| `src/ui/componentes/menuOficina.ts` | `codigo/partes-das-telas/menu-da-oficina.ts` |
+| `src/ui/componentes/painelMaquina.ts` | `codigo/partes-das-telas/painel-da-maquina.ts` |
+| `src/ui/componentes/pause.ts` | `codigo/partes-das-telas/menu-de-pausa.ts` |
+| `src/ui/componentes/resultadoEletrodo.ts` | `codigo/eletrodo/janela-do-resultado.ts` |
+| `src/ui/telas/centralArcade.ts` | `codigo/telas/central-do-arcade.ts` |
+| `tests/controleConsumo15.test.ts` | `testes/eletrodo-controle-do-consumo.test.ts` |
+| `tests/depositoEletrodo.test.ts` | `testes/eletrodo-deposito-do-cordao.test.ts` |
+| `tests/metalSolidoEletrodo.test.ts` | `testes/eletrodo-metal-solido.test.ts` |
+| `tests/pecasUniao15.test.ts` | `testes/eletrodo-pecas-de-uniao.test.ts` |
+| `tests/perfisPecasEletrodo.test.ts` | `testes/eletrodo-perfis-das-pecas.test.ts` |
+| `tests/pontuacaoEletrodo.test.ts` | `testes/eletrodo-placar.test.ts` |
+| `tests/superficiesEletrodo.test.ts` | `testes/eletrodo-superficies.test.ts` |
+
+Arquivos novos da v1.6 organizada (lista de defeitos do eletrodo): `codigo/eletrodo/analise-do-cordao.ts`, `defeitos-do-eletrodo.ts`, `marcas-dos-defeitos-3d.ts`, `registro-do-passe.ts` e `testes/eletrodo-defeitos.test.ts`.

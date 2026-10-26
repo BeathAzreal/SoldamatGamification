@@ -1,41 +1,42 @@
 /*
  * █ Eletrodo: análise do cordão
  *
- * O que faz: lê o cordão e o registro do passe e calcula, em cada fatia da
- *    junta, a fusão prevista (pelo calor de cada passe), a mordedura, a
- *    sobreposição, a porosidade, a cratera, a inclusão de escória, os
- *    respingos presos e as escamas. Devolve no mesmo formato que o 3D do
- *    MIG já sabe desenhar (desenho-3d/defeitos-visiveis.ts). Hipóteses
- *    H74–H76 em documentacao/PROTOTIPO-V15.md.
+ * O que faz: lê o metal depositado (deposito-do-cordao.ts) e o registro do
+ *    passe e calcula, em cada fatia da junta, a fusão prevista (pelo calor
+ *    de cada passe), a mordedura, a sobreposição, a porosidade, a cratera,
+ *    a inclusão de escória e os respingos presos. O 3D desenha esses
+ *    defeitos sobre o cordão (marcas-dos-defeitos-3d.ts) e a lista com
+ *    causa e correção sai de defeitos-do-eletrodo.ts. Hipóteses H82–H84 em
+ *    documentacao/PROTOTIPO-V15.md.
  *
  * Onde mexer: os limites estão em LIMITES, no começo. Eles são do jogo
  *    (didáticos), não de norma.
  */
-import type { Cordao } from '../simulacao-mig/cordao'
 import { sorteioFixo, type AnaliseDefeitos } from '../simulacao-mig/defeitos'
+import type { DepositoEletrodo } from './deposito-do-cordao'
 import { INFO_JUNTA } from '../simulacao-mig/tipos-de-junta-e-posicao'
 import { aporteAlvoKJmm, type PecaEletrodo } from './pecas-de-treino'
 import type { RegistroPasse } from './registro-do-passe'
 
 export const LIMITES = {
-  /** Fusão (aporte do passe ÷ aporte de referência da peça, H74). */
+  /** Fusão (aporte do passe ÷ aporte de referência da peça, H82). */
   fusaoFaltaAbaixo: 0.6,
   fusaoFracaAbaixo: 0.8,
   fusaoExcessoAcima: 1.7,
   /** Aporte acima disto (× referência) perfura a borda fina ou a raiz aberta. */
   perfuracaoAcima: 2.3,
-  /** Mordedura máxima pelo modelo e a partir de quanto vira defeito (mm, H76). */
+  /** Mordedura máxima pelo modelo e a partir de quanto vira defeito (mm, H84). */
   mordeduraMaxMm: 0.8,
   mordeduraLimiteMm: 0.5,
-  /** Arco médio (em diâmetros da alma) a partir do qual o revestimento já não protege bem a poça (H76). */
+  /** Arco médio (em diâmetros da alma) a partir do qual o revestimento já não protege bem a poça (H84). */
   arcoPorosoAcima: 1.5,
   /** Espaçamento das escamas no tempo (ms): eletrodo forma escamas mais espaçadas que o MIG (H56). */
   intervaloEscamaMs: 190,
   /** Fim de passe sem parar este tempo (ms) perto do ponto final deixa cratera (H55). */
   enchimentoCrateraMs: 300,
-  /** Raio (mm) ao redor de uma abertura a frio que fica sujeito a poro de partida (H76). */
+  /** Raio (mm) ao redor de uma abertura a frio que fica sujeito a poro de partida (H84). */
   raioPartidaMm: 3,
-  /** Metal posto sobre escória fria (mm³ por fatia) que conta como inclusão (H65/H76). */
+  /** Metal posto sobre escória fria (mm³ por fatia) que conta como inclusão (H65/H84). */
   inclusaoMinimaMm3: 0.15,
 } as const
 
@@ -55,8 +56,26 @@ export interface AnaliseEletrodo {
   aporteAlvoKJmm: number
 }
 
-export function analisarEletrodo(peca: PecaEletrodo, cordao: Cordao, reg: RegistroPasse): AnaliseEletrodo {
-  const n = cordao.nPosicoes, passo = cordao.passoMm
+/** Corte do cordão numa posição x: largura, centro e altura do metal acima da chapa (mm). */
+export interface SecaoDeposito { xMm: number; larguraMm: number; yCentroMm: number; alturaMm: number }
+
+/** Mede o cordão numa posição x: a faixa contínua de metal que passa pela parte mais grossa. */
+export function secaoDoDeposito(dep: DepositoEletrodo, xMm: number): SecaoDeposito {
+  const passo = dep.dy, minimo = 0.1
+  let yMax = 0, eMax = 0
+  for (let y = -dep.alcanceY; y <= dep.alcanceY; y += passo) {
+    const e = dep.espessura(xMm, y)
+    if (e > eMax) { eMax = e; yMax = y }
+  }
+  if (eMax < minimo) return { xMm, larguraMm: 0, yCentroMm: 0, alturaMm: 0 }
+  let e = yMax, d = yMax
+  while (e - passo > -dep.alcanceY && dep.espessura(xMm, e - passo) > minimo) e -= passo
+  while (d + passo < dep.alcanceY && dep.espessura(xMm, d + passo) > minimo) d += passo
+  return { xMm, larguraMm: d - e + passo, yCentroMm: (e + d) / 2, alturaMm: eMax }
+}
+
+export function analisarEletrodo(peca: PecaEletrodo, dep: DepositoEletrodo, reg: RegistroPasse): AnaliseEletrodo {
+  const n = reg.nPosicoes, passo = reg.passoMm
   const novo = () => new Float32Array(n)
   const a: AnaliseDefeitos = {
     n, passoMm: passo,
@@ -69,7 +88,7 @@ export function analisarEletrodo(peca: PecaEletrodo, cordao: Cordao, reg: Regist
   const alvo = aporteAlvoKJmm(peca)
   const fusaoMin = novo(), fusaoMax = novo(), fusaoPrimeiro = novo(), inclusao = novo(), partida = novo()
   const filete = INFO_JUNTA[peca.junta].familia === 'filete'
-  // Poro de partida (H76): abrir o arco a frio e seguir em frente deixa o começo poroso;
+  // Poro de partida (H84): abrir o arco a frio e seguir em frente deixa o começo poroso;
   // voltar por cima do ponto de abertura (técnica de recuar) refunde e elimina.
   for (const ab of reg.aberturas) {
     if (ab.aQuente) continue
@@ -79,7 +98,7 @@ export function analisarEletrodo(peca: PecaEletrodo, cordao: Cordao, reg: Regist
     for (let i = i0; i <= i1; i++) partida[i] = Math.max(partida[i], 0.6)
   }
   for (let i = 0; i < n; i++) {
-    const s = cordao.secao(i)
+    const s = secaoDoDeposito(dep, (i + 0.5) * passo)
     const p = reg.aportePorPasse(i)
     fusaoMin[i] = p.min / alvo
     fusaoMax[i] = p.max / alvo
@@ -93,18 +112,18 @@ export function analisarEletrodo(peca: PecaEletrodo, cordao: Cordao, reg: Regist
     // Escamas (H56): pelo tempo de arco em que a ponta passou por cima.
     a.escamaFase[i] = (reg.tempoArcoNaPassagem[i] * 1000) / LIMITES.intervaloEscamaMs
     a.escamaDir[i] = reg.sentido[i] || 1
-    // Mordedura (H76): arco longo e calor demais cavam a borda da chapa.
+    // Mordedura (H84): arco longo e calor demais cavam a borda da chapa.
     const u = 0.5 * lim01((arco - 1.3) / 0.6) + 0.5 * lim01((fusaoMax[i] - LIMITES.fusaoExcessoAcima) / 0.6)
     const mm = LIMITES.mordeduraMaxMm * u
     a.mordeduraMenos[i] = mm
     a.mordeduraMais[i] = filete ? mm * 0.8 : mm
-    // Sobreposição (H76): metal frio e lento rola sobre a chapa sem fundir.
+    // Sobreposição (H84): metal frio e lento rola sobre a chapa sem fundir.
     const frio = lim01((LIMITES.fusaoFracaAbaixo + 0.1 - fusaoMax[i]) / 0.4)
     const lento = lim01((2.2 - vLocal) / 1.2)
     const o = frio * (0.35 + 0.65 * lento)
     a.sobreposicaoMenos[i] = o
     a.sobreposicaoMais[i] = o
-    // Porosidade (H76): arco longo tira a proteção do revestimento; partida a frio.
+    // Porosidade (H84): arco longo tira a proteção do revestimento; partida a frio.
     const poro = lim01(0.7 * lim01((arco - LIMITES.arcoPorosoAcima) / 0.6) + 0.3 * lim01(instab - 0.3) + partida[i])
     a.porosidade[i] = poro
     const meia = s.larguraMm / 2
@@ -130,7 +149,7 @@ export function analisarEletrodo(peca: PecaEletrodo, cordao: Cordao, reg: Regist
     const c0 = lim01(1 - pa.permanenciaMs / LIMITES.enchimentoCrateraMs)
     if (c0 <= 0) continue
     const i = reg.indiceEm(pa.xMm)
-    const s = cordao.secao(i)
+    const s = secaoDoDeposito(dep, (i + 0.5) * passo)
     if (s.larguraMm < 1.5 || reg.ultimaPassagemMs[i] > pa.tMs + 1) continue
     const r = Math.ceil(3 / passo)
     for (let k = Math.max(0, i - r); k <= Math.min(n - 1, i + r); k++) {

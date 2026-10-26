@@ -53,6 +53,8 @@ const SOBRE_CHAPA = 0.03
 
 export interface OpcoesPalco {
   serralheria?: boolean
+  larguraPecaMm?: number
+  processo?: 'mig' | 'eletrodo'
   oficinaTreino?: boolean
   contexto: ContextoProcesso
   geometria: GeometriaJunta
@@ -324,11 +326,14 @@ export class Palco3D {
     const textura = texturaEscovada()
     textura.anisotropy = renderer.capabilities.getMaxAnisotropy()
     this.texturas.push(textura)
-    const matChapa = new THREE.MeshStandardMaterial({ color: material.aparencia.chapaClara, map: textura, ...ACABAMENTO[material.id] })
+    const matChapa = new THREE.MeshStandardMaterial({ color: op.processo === 'eletrodo' ? '#525d63' : material.aparencia.chapaClara, map: op.processo === 'eletrodo' ? null : textura, ...ACABAMENTO[material.id], ...(op.processo === 'eletrodo' ? { roughness: 0.78, metalness: 0.45 } : {}) })
     const juntaPeca = juntaDe(op.contexto)
     const dobra = juntaPeca === 'topo' || juntaPeca === 'v'
     geometriaChapas(op.contexto).forEach((g, k) => {
-      const m = new THREE.Mesh(g, matChapa)
+      if (op.larguraPecaMm) g.scale(op.larguraPecaMm / 150, 1, 1)
+      const acabamento = op.processo === 'eletrodo' ? matChapa.clone() : matChapa
+      if (op.processo === 'eletrodo') acabamento.color.set(k === 0 ? '#53636c' : '#738087')
+      const m = new THREE.Mesh(g, acabamento)
       this.chapasColisao.push(m)
       m.receiveShadow = true
       m.castShadow = true
@@ -345,7 +350,7 @@ export class Palco3D {
     })
     // Sala da oficina (H47): piso, paredes e teto dão a referência de "para baixo" quando a peça tomba.
     this.montarSala()
-    if (op.oficinaTreino) this.ambienteGrupo.add(criarOficinaTreino(SALA.piso))
+    if (op.oficinaTreino) this.ambienteGrupo.add(criarOficinaTreino(SALA.piso, { processo: op.processo }))
     else if (op.serralheria) {
       const oficina = criarSerralheria(SALA.piso)
       this.ambienteGrupo.add(oficina.grupo)
@@ -363,7 +368,7 @@ export class Palco3D {
     }
     const orelha = new THREE.Mesh(new THREE.BoxGeometry(18, 5, 12), matChapa)
     orelha.castShadow = true
-    orelha.position.set(PECA.comprimentoMm / 2 + 10, -3, 0)
+    orelha.position.set((op.larguraPecaMm ?? PECA.comprimentoMm) / 2 + 10, -3, 0)
     this.orelha.copy(orelha.position)
     this.peca.add(orelha)
 
@@ -371,6 +376,19 @@ export class Palco3D {
 
     this.cores = material.aparencia.cordao.map((c) => new THREE.Color(c))
     const matCordao = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.7, roughness: 0.36, side: THREE.DoubleSide })
+    if (op.processo === 'eletrodo') {
+      matCordao.roughness = 0.65
+      matCordao.metalness = 0.58
+      // H75: ondulações e oxidação do SMAW são só acabamento, sem mudar o volume avaliado.
+      matCordao.onBeforeCompile = shader => {
+        shader.vertexShader = 'varying vec3 vSmaw;\n' + shader.vertexShader
+        shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvSmaw = position;')
+        shader.fragmentShader = 'varying vec3 vSmaw;\n' + shader.fragmentShader
+        shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\nfloat ondaSmaw = 0.5 + 0.5 * cos(vSmaw.x * 4.2 + abs(vSmaw.z) * 1.6);\ndiffuseColor.rgb *= vec3(0.64, 0.69, 0.72) * (0.7 + 0.3 * smoothstep(0.1, 0.9, ondaSmaw));')
+        shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nnormal = normalize(normal + vec3(0.12 * sin(vSmaw.x * 4.2 + abs(vSmaw.z) * 1.6), 0.0, 0.025 * cos(vSmaw.x * 4.2)));')
+      }
+      matCordao.customProgramCacheKey = () => 'smaw-ondulado-v1'
+    }
     this.cordao3d = new THREE.Mesh(new THREE.BufferGeometry(), matCordao)
     this.cordao3d.castShadow = true
     this.cordao3d.receiveShadow = true

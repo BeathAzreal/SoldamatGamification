@@ -6,6 +6,7 @@ Cada arquivo é uma tela inteira do jogo. Para mudar textos e a ordem dos blocos
 |---|---|
 | [`arcade.ts`](arcade.ts) | Tela: Arcade — Partidas de desafios sorteados, com vidas e combo. |
 | [`avaliacao-do-professor.ts`](avaliacao-do-professor.ts) | Tela: avaliação do professor — Onde o professor revê o replay de uma entrega do torneio e dá a nota. |
+| [`central-do-arcade.ts`](central-do-arcade.ts) | Tela: central do Arcade — O menu com HISTÓRIA (missões), DESAFIOS (sorteados) e VERSUS (torneio local). |
 | [`configuracoes.ts`](configuracoes.ts) | Tela: configurações — Opções do jogo: dispositivo, calibração, controles, qualidade gráfica e dados salvos. |
 | [`menu-inicial.ts`](menu-inicial.ts) | Tela: menu inicial — A tela de abertura com a ilustração e a lista JOGAR, TREINO, ARCADE, TORNEIO, RECORDES e OPÇÕES. |
 | [`missoes.ts`](missoes.ts) | Tela: missões (modo História) — Lista as missões em capítulos, com Aprendiz e Profissional, e leva à preparação da missão escolhida. |

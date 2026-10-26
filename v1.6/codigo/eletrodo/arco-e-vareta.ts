@@ -16,7 +16,7 @@
 export type Processo15 = 'mig' | 'eletrodo'
 import { Escoria15 } from './escoria'
 export type EstadoArco15 = 'desligado' | 'pronto' | 'contato' | 'arco' | 'afastado' | 'fim' | 'grudado'
-export const VARETA15 = { inicialMm: 120, reservaMm: 25, consumoMmS: 4, contatoMm: 0.35, arcoMaxMm: 5 }
+export const VARETA15 = { inicialMm: 120, reservaMm: 25, consumoMmS: 3, contatoMm: 0.35, arcoMaxMm: 5 }
 const PASSO = 1 / 120
 /** H68: ponta deslizando acima desta velocidade conta como "riscar" a abertura. */
 export const RISCO15 = { velocidadeMmS: 8, fatorAderencia: 0.25 }
@@ -33,11 +33,17 @@ export function velocidadeAltura15(seguradoS: number, maximaMmS: number): number
   const minima = Math.min(2, maximaMmS)
   return minima + (maximaMmS - minima) * Math.min(1, seguradoS / 0.5)
 }
+/** H74: descida inclui o consumo vertical restante, além da correção pedida pelo jogador. */
+export function velocidadeDescida15(seguradoS: number, maximaMmS: number, consumoMmS: number, assistencia: number, cosInclinado: number, arcoAberto: boolean): number {
+  if (!(seguradoS > 0)) return 0
+  const compensacao = arcoAberto ? Math.max(0, consumoMmS) * Math.max(0, Math.min(1, cosInclinado)) * (1 - Math.max(0, Math.min(1, assistencia))) : 0
+  return velocidadeAltura15(seguradoS, Math.max(3, maximaMmS)) + compensacao
+}
 /** H69: forma do depósito pelo comprimento do arco (razão altura/largura e instabilidade). */
 export interface FormaDeposito15 {
   razao: number
   instabilidade: number
-  /** Energia do arco neste passo (J, já com o rendimento térmico, H74). */
+  /** Energia do arco neste passo (J, já com o rendimento térmico, H82). Só a análise usa. */
   energiaJ?: number
   /** Duração do passo (s) e tempo de arco acumulado no fim dele (s). */
   dtS?: number
@@ -46,14 +52,16 @@ export interface FormaDeposito15 {
   razaoArco?: number
 }
 /**
- * H74: metal depositado ÷ volume da alma consumida (inclui o pó de ferro do
- * revestimento) e rendimento térmico do arco (fração da energia que entra na peça).
+ * Metal depositado ÷ volume da alma consumida e, para a análise do calor
+ * (H82), rendimento térmico do arco: a fração da energia que entra na peça.
  */
-export const RENDIMENTO15 = { deposicao: 0.95, termico: 0.8 }
+export const RENDIMENTO15 = { deposicao: 0.7, termico: 0.8 }
 
 export class Acionamento15 {
   pressionado = false
   naPeca = true
+  /** H76: largura efetivamente soldável no domínio longitudinal da bancada. */
+  limitesX = { min: 0, max: 150 }
   restanteMm = VARETA15.inicialMm
   alturaMm: number
   tempoArcoS = 0
@@ -126,8 +134,7 @@ export class Acionamento15 {
   get forma(): FormaDeposito15 {
     const r = this.razaoArco
     return {
-      // H74: corrente alta abre e achata o cordão; corrente baixa deixa alto e estreito.
-      razao: Math.max(0.16, Math.min(0.36, 0.25 + 0.09 * (1 - r) - 0.07 * (this.correnteRelativa - 1))),
+      razao: Math.max(0.16, Math.min(0.34, 0.25 + 0.09 * (1 - r))),
       instabilidade: Math.max(0, Math.min(1, (r - 1.1) / 0.8)),
     }
   }
@@ -223,13 +230,11 @@ export class Acionamento15 {
         dt = Math.min(dt, (this.restanteMm - VARETA15.reservaMm) / this.consumoMmS)
         const gasto = this.consumoMmS * dt
         this.restanteMm = Math.max(VARETA15.reservaMm, this.restanteMm - gasto)
-        // Resíduo de arredondamento no último passo: encosta no toco exato.
-        if (this.restanteMm - VARETA15.reservaMm < 1e-6) this.restanteMm = VARETA15.reservaMm
         this.alturaMm -= gasto * this.cosInclinado * (this.compensar ? 1 : Math.max(0, Math.min(1, this.assistencia)))
         const lado = gasto * Math.sin(this.inclinacaoGraus * Math.PI / 180)
         this.xMm += lado * Math.cos(this.azimuteGraus * Math.PI / 180)
         this.yMm += lado * Math.sin(this.azimuteGraus * Math.PI / 180)
-        this.naPeca = this.xMm >= 0 && this.xMm <= 150 && Math.abs(this.yMm) <= 50
+        this.naPeca = this.xMm >= this.limitesX.min && this.xMm <= this.limitesX.max && Math.abs(this.yMm) <= 50
       }
       this.tempoArcoS += dt
       // Só traço visual de depósito. Não usa as regras MIG como física SMAW.

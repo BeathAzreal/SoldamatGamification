@@ -10,16 +10,18 @@
  *    procure abrirPainel.
  */
 
+import { instalarPause } from './partes-das-telas/menu-de-pausa'
 import './estilos/1-base.css'
 import './estilos/2-telas-e-componentes.css'
 import './estilos/3-visual-v14.css'
 import './estilos/4-oficina.css'
 import './estilos/5-espacamento-e-layout.css'
 import './estilos/6-eletrodo.css'
+import './estilos/7-painel-da-maquina.css'
 import { App } from './interface/aplicativo'
 import { icone } from './partes-das-telas/icones'
 import { telaHistoria } from './telas/missoes'
-import { telaArcade } from './telas/arcade'
+import { telaCentralArcade } from './telas/central-do-arcade'
 import { telaTreino } from './telas/treino'
 import { telaTorneios } from './telas/torneio'
 import { telaRecordes } from './telas/recordes'
@@ -34,8 +36,10 @@ import { somArco } from './interface/som-do-arco'
  * O treino livre usa a mesma bancada e execução das missões, com a peça padrão.
  */
 const app = new App()
+instalarPause(app)
+app.voltarArcade = () => telaCentralArcade(app)
 const rotas: Record<string, (app: App) => void> = {
-  inicio: telaMenu, historia: telaHistoria, arcade: telaArcade, treino: telaTreino,
+  inicio: telaMenu, historia: telaHistoria, arcade: telaCentralArcade, treino: telaTreino,
   torneio: telaTorneios, recordes: (app) => telaRecordes(app), config: telaConfiguracoes,
 }
 document.querySelectorAll<HTMLButtonElement>('[data-rota]').forEach(botao => {
