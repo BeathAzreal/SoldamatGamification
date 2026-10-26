@@ -31,6 +31,8 @@ export interface FormaDeposito15 { razao: number; instabilidade: number }
 export class Acionamento15 {
   pressionado = false
   naPeca = true
+  /** H76: largura efetivamente soldável no domínio longitudinal da bancada. */
+  limitesX = { min: 0, max: 150 }
   restanteMm = VARETA15.inicialMm
   alturaMm: number
   tempoArcoS = 0
@@ -203,7 +205,7 @@ export class Acionamento15 {
         const lado = gasto * Math.sin(this.inclinacaoGraus * Math.PI / 180)
         this.xMm += lado * Math.cos(this.azimuteGraus * Math.PI / 180)
         this.yMm += lado * Math.sin(this.azimuteGraus * Math.PI / 180)
-        this.naPeca = this.xMm >= 0 && this.xMm <= 150 && Math.abs(this.yMm) <= 50
+        this.naPeca = this.xMm >= this.limitesX.min && this.xMm <= this.limitesX.max && Math.abs(this.yMm) <= 50
       }
       this.tempoArcoS += dt
       // Só traço visual de depósito. Não usa as regras MIG como física SMAW.

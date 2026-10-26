@@ -1,3 +1,4 @@
+import { limitesPecaEletrodo } from '../missoes/pecasEletrodo'
 import { criarDetalhesIndustriais15 } from './pecaIndustrial15'
 import * as THREE from 'three'
 import { Palco3D } from './palco3d'
@@ -32,12 +33,12 @@ function texturaBrilho(): THREE.CanvasTexture {
 }
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
-export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number }) {
+export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade' }) {
   // A peça chega na posição plana (rolagem 0): no filete, o canto fica voltado para cima.
   const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } : CONTEXTO_PADRAO
   const palco = Palco3D.criar({
-    processo: 'eletrodo', contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
-    missao: peca ? { inicioMm: peca.inicioMm, fimMm: peca.fimMm } : undefined, regua: !!peca,
+    larguraPecaMm: peca?.larguraMm, processo: 'eletrodo', contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
+    missao: peca ? { inicioMm: peca.inicioMm, fimMm: peca.fimMm } : undefined, regua: !!peca && !peca.larguraMm,
   })
   if (!palco) return null
   const canvas = palco.elemento
@@ -164,6 +165,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   let proximoRespingo = 0, acumulado = 0
   const raio = new THREE.Raycaster()
   const ponto = new THREE.Vector3()
+  const limitesX = limitesPecaEletrodo(peca ?? {})
   const junta = juntaDe(contexto)
   /** Altura da superfície das chapas a um desvio lateral n (filete na posição plana: paredes a 45°). */
   const superficie = (n: number) => pontoNaSuperficie(junta, contexto, n)[1]
@@ -178,7 +180,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   }
   palco.peca.add(escoria.malha)
   palco.guardarTexturas(escoria.textura, escoria.crosta)
-  if (peca) palco.peca.add(criarDetalhesIndustriais15(junta))
+  if (peca) palco.peca.add(criarDetalhesIndustriais15(junta, peca.conjunto))
   const eixo = new THREE.Vector3(), normal = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion()
   const pontaMartelo = new THREE.Vector3()
   const cameraLocal = new THREE.Vector3()
@@ -228,7 +230,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       const o = raio.ray.origin, d = raio.ray.direction
       const acima = (t: number) => {
         const n = o.z + d.z * t, x = o.x + d.x * t + 75
-        if (Math.abs(n) > alcanceLateral || x < 0 || x > 150) return true
+        if (Math.abs(n) > alcanceLateral || x < limitesX.min || x > limitesX.max) return true
         return o.y + d.y * t > superficie(n)
       }
       let t0 = 0, t1 = -1
@@ -244,7 +246,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       }
       raio.ray.at((t0 + t1) / 2, ponto)
       const p = { x: ponto.x + 75, y: ponto.z }
-      if (!(p.x >= 0 && p.x <= 150 && Math.abs(p.y) <= alcanceLateral)) return null
+      if (!(p.x >= limitesX.min && p.x <= limitesX.max && Math.abs(p.y) <= alcanceLateral)) return null
       // H73: no filete a ponta apoiada desliza para o fundo do canto; perto da raiz ela assenta ali.
       if (filete) p.y = Math.sign(p.y) * Math.max(0, Math.abs(p.y) - ASSENTO_FILETE_MM)
       return p

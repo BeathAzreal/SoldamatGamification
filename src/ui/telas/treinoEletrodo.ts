@@ -8,7 +8,7 @@ import { carregarControles15, nomeTecla15 as nomeTecla } from '../../dados/contr
 import { configurarControles15 } from '../componentes/controles15'
 import type { FerramentaBancada15 } from '../../modelo/escoria15'
 import { INFO_JUNTA } from '../../modelo/juntas'
-import type { PecaEletrodo } from '../../missoes/pecasEletrodo'
+import { limitesPecaEletrodo, type PecaEletrodo } from '../../missoes/pecasEletrodo'
 
 /** Quadro muito longo (aba travada, depurador) não vira um salto de vários segundos de arco. */
 const DT_MAX = 0.25
@@ -29,7 +29,9 @@ const TEXTO_FAIXA: Record<FaixaArco15, string> = {
 export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => void): void {
   app.ir((app) => {
     app.raiz.classList.add('app-cheia')
+    const limitesX = limitesPecaEletrodo(peca)
     let modelo = new Acionamento15('eletrodo')
+    modelo.limitesX = limitesX
     // O cordão conhece a junta (filete com pernas, V que enche o chanfro), como no jogo MIG.
     const novoCordao = () => new Cordao(undefined, undefined, undefined, { junta: peca.junta, dimensoes: { espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } })
     let cordao = novoCordao()
@@ -75,12 +77,10 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const ajuda = h('p', { class: 'p15-ajuda' })
     const trocar = h('button', { type: 'button', on: { click: () => { modelo.soltar(); modelo.trocarVareta(); canvas.focus() } } }, 'Nova vareta')
     const desgrudar = h('button', { type: 'button', class: 'p15-alerta', on: { click: () => { modelo.soltar(); modelo.desgrudar(); canvas.focus() } } }, 'Desgrudar eletrodo')
-    const direcaoGolpe = h('select', { 'aria-label': 'Direção do golpe do martelo' }, h('option', { value: 'lateral' }, 'Golpe lateral'), h('option', { value: 'diagonal' }, 'Golpe diagonal'), h('option', { value: 'cima' }, 'Golpe por cima'))
-    const escolhaGolpe = h('label', { class: 'p15-linha', hidden: true }, 'Martelo', direcaoGolpe)
+    let direcaoGolpe: 'lateral' | 'diagonal' | 'cima' = 'lateral'
     const botoesFerramenta = new Map<FerramentaBancada15, HTMLButtonElement>()
     const selecionarFerramenta = (f: FerramentaBancada15) => {
       soltar(); limpezaPressionada = false; ferramentaAtual = f
-      escolhaGolpe.hidden = f !== 'martelo'
       trocar.hidden = f !== 'soldar'
       for (const [id, b] of botoesFerramenta) b.setAttribute('aria-pressed', String(id === f))
       canvas.focus()
@@ -144,6 +144,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const recomecar = () => {
       soltar()
       modelo = new Acionamento15('eletrodo')
+      modelo.limitesX = limitesX
       modelo.superficie = vista.superficie
       modelo.abrirAoTocar = true
       aplicarAjuda()
@@ -172,7 +173,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       h('div', { class: 'p15-grade' }, area,
         h('aside', { class: 'p15-painel' },
           h('div', { class: 'maquina-identificacao' }, 'SMAW / CC', h('span', {}, '● FONTE ENERGIZADA')),
-          ferramentas, escolhaGolpe, h('div', { class: 'p15-comandos' }, desgrudar, trocar),
+          ferramentas, h('div', { class: 'p15-comandos' }, desgrudar, trocar),
           instrumentos,
           h('div', { class: 'p15-acoes' }, pausar, h('button', { type: 'button', on: { click: recomecar } }, 'Recomeçar peça')))))
     app.raiz.append(conteudo)
@@ -299,7 +300,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
         const eixo = (i: number) => Math.abs(g.axes[i] ?? 0) > cfg.zona ? (g.axes[i] ?? 0) : 0
         gatilhoControle = (g.buttons[cfg.gatilho]?.value ?? 0) > 0.5
         if (!modelo.grudado) {
-          modelo.xMm = Math.max(0, Math.min(150, modelo.xMm + eixo(0) * dt * 35))
+          modelo.xMm = Math.max(limitesX.min, Math.min(limitesX.max, modelo.xMm + eixo(0) * dt * 35))
           modelo.yMm = Math.max(-50, Math.min(50, modelo.yMm + eixo(1) * dt * 35))
           if (eixo(0) || eixo(1)) modelo.naPeca = true
         }
@@ -321,6 +322,9 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
           (volume, forma) => cordao.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0))
         const pressionada = !!(modelo.naPeca && (ponteiro || ativo('acionar') || gatilhoControle))
         if (ferramentaAtual === 'martelo' && pressionada && !limpezaPressionada) {
+          const direcoes = ['lateral', 'diagonal', 'cima'] as const
+          const outras = direcoes.filter(d => d !== direcaoGolpe)
+          direcaoGolpe = outras[Math.floor(app.ambiente.aleatorio() * outras.length)]
           const removido = modelo.escoria.martelar(modelo.xMm, modelo.yMm)
           vista.soltarEscoria(modelo.xMm, modelo.yMm, removido)
           ultimoGolpeMs = agora
@@ -390,7 +394,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       trocar.disabled = pausado || modelo.estado === 'arco' || modelo.grudado
       trocar.classList.toggle('primario', modelo.estado === 'fim')
       atualizarObjetivo(agora)
-      vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe.value as 'lateral' | 'diagonal' | 'cima')
+      vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe)
       pedido = requestAnimationFrame(quadro)
     }
     pedido = requestAnimationFrame(quadro)

@@ -43,6 +43,7 @@ const SOBRE_CHAPA = 0.03
 
 export interface OpcoesPalco {
   serralheria?: boolean
+  larguraPecaMm?: number
   processo?: 'mig' | 'eletrodo'
   oficinaTreino?: boolean
   contexto: ContextoProcesso
@@ -319,7 +320,10 @@ export class Palco3D {
     const juntaPeca = juntaDe(op.contexto)
     const dobra = juntaPeca === 'topo' || juntaPeca === 'v'
     geometriaChapas(op.contexto).forEach((g, k) => {
-      const m = new THREE.Mesh(g, matChapa)
+      if (op.larguraPecaMm) g.scale(op.larguraPecaMm / 150, 1, 1)
+      const acabamento = op.processo === 'eletrodo' ? matChapa.clone() : matChapa
+      if (op.processo === 'eletrodo') acabamento.color.set(k === 0 ? '#53636c' : '#738087')
+      const m = new THREE.Mesh(g, acabamento)
       this.chapasColisao.push(m)
       m.receiveShadow = true
       m.castShadow = true
@@ -354,7 +358,7 @@ export class Palco3D {
     }
     const orelha = new THREE.Mesh(new THREE.BoxGeometry(18, 5, 12), matChapa)
     orelha.castShadow = true
-    orelha.position.set(PECA.comprimentoMm / 2 + 10, -3, 0)
+    orelha.position.set((op.larguraPecaMm ?? PECA.comprimentoMm) / 2 + 10, -3, 0)
     this.orelha.copy(orelha.position)
     this.peca.add(orelha)
 

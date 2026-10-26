@@ -14,6 +14,8 @@ export interface PecaEletrodo {
   aplicacao: string
   /** Por que eletrodo revestido aqui. */
   porque: string
+  larguraMm?: number
+  conjunto?: 'grade'
   junta: TipoJunta
   espessuraMm: number
   aberturaMm: number
@@ -28,12 +30,12 @@ export interface PecaEletrodo {
 export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
   {
     id: 'cordao-chapa',
-    titulo: 'Emenda de chapa — estrutura de transportador',
-    aplicacao: 'Fabricação de estrutura de transportador industrial em aço carbono.',
-    porque: 'Chapa grossa e parada: só abrir o arco, manter o comprimento e avançar em linha.',
-    junta: 'topo', espessuraMm: 10, aberturaMm: 0, diametroMm: 2.5, correnteA: { min: 80, max: 100 },
+    titulo: 'Unir duas chapas — junta de topo',
+    aplicacao: 'Duas chapas separadas e alinhadas para formar uma única peça.',
+    porque: 'Montagem de chapas de aço carbono: unir as bordas pela abertura central.',
+    junta: 'topo', espessuraMm: 8, aberturaMm: 2, diametroMm: 2.5, correnteA: { min: 80, max: 100 },
     inicioMm: 20, fimMm: 130,
-    objetivo: 'Um cordão contínuo do INÍCIO ao FIM, com o arco perto do diâmetro da alma.',
+    objetivo: 'Unir as duas bordas ao longo da abertura, do INÍCIO ao FIM; retirar a escória para inspecionar a emenda.',
   },
   {
     id: 't-estrutural',
@@ -55,12 +57,13 @@ export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
   },
   {
     id: 'canto-portao',
-    titulo: 'Canto de caixa — coluna de pórtico',
-    aplicacao: 'Fechamento de seção de caixa de uma coluna de estrutura industrial.',
-    porque: 'Serviço de serralheria e de campo, muitas vezes ao ar livre.',
-    junta: 'canto', espessuraMm: 8, aberturaMm: 0, diametroMm: 2.5, correnteA: { min: 75, max: 95 },
-    inicioMm: 15, fimMm: 135,
-    objetivo: 'Cordão na quina sem furar a borda: arco curto e avanço constante.',
+    titulo: 'Conserto de grade — emenda da barra',
+    aplicacao: 'Grade de aço com uma barra chata cortada em duas partes, alinhadas para o reparo.',
+    porque: 'Serviço de manutenção: recompor a continuidade da barra dentro do quadro da grade.',
+    conjunto: 'grade', larguraMm: 40,
+    junta: 'topo', espessuraMm: 6.3, aberturaMm: 1.5, diametroMm: 2.5, correnteA: { min: 75, max: 95 },
+    inicioMm: 57, fimMm: 93,
+    objetivo: 'Soldar a abertura entre as duas metades da barra de 40 mm, limpar e inspecionar a união.',
   },
   {
     id: 'sobreposta-reforco',
@@ -75,4 +78,10 @@ export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
 
 export function pecaEletrodo(id: string): PecaEletrodo {
   return PECAS_ELETRODO.find(p => p.id === id) ?? PECAS_ELETRODO[0]
+}
+
+/** Coordenadas da largura real da peça no domínio de 150 mm da bancada. */
+export function limitesPecaEletrodo(p: { larguraMm?: number }): { min: number; max: number } {
+  const meia = (p.larguraMm ?? 150) / 2
+  return { min: 75 - meia, max: 75 + meia }
 }

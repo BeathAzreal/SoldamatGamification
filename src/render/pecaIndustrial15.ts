@@ -1,11 +1,26 @@
 import * as THREE from 'three'
 
 /** Complementos sólidos fora do trecho da junta. A superfície soldável continua sendo a junta do modelo. */
-export function criarDetalhesIndustriais15(junta: string): THREE.Group {
+export function criarDetalhesIndustriais15(junta: string, conjunto?: 'grade'): THREE.Group {
   const g = new THREE.Group()
   g.name = 'Conjunto industrial de chapa grossa'
   const aco = new THREE.MeshStandardMaterial({ color: '#424e56', metalness: 0.55, roughness: 0.8 })
   const usinado = new THREE.MeshStandardMaterial({ color: '#8c989e', metalness: 0.75, roughness: 0.45 })
+  if (conjunto === 'grade') {
+    g.name = 'Grade de aço com barra chata seccionada para emenda'
+    const caixa = (nome: string, x: number, z: number, l: number, c: number, e = 6.3) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(l,e,c),aco)
+      m.name = nome; m.position.set(x,-e/2,z);m.castShadow=m.receiveShadow=true;g.add(m)
+    }
+    // As duas metades centrais são as chapas soldáveis do palco: 40 × 50 × 6,3.
+    // Estas continuações e as barras vizinhas formam o quadro real da grade.
+    for (const z of [-75,75]) caixa('Continuação da barra a reparar',0,z,40,50)
+    for (const x of [-65,65]) caixa('Barra vizinha intacta',x,0,12,200)
+    for (const z of [-106,106]) caixa('Travessa do quadro da grade',0,z,190,12,8)
+    return g
+  }
+  // Topo e V são duas peças distintas: sem travessas que as unam antes de soldar.
+  if (junta === 'topo' || junta === 'v') return g
   // Orelhas de montagem realmente furadas: ficam além das extremidades soldáveis.
   for (const sinal of [-1, 1]) {
     const forma = new THREE.Shape()
