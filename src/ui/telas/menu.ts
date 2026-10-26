@@ -41,7 +41,9 @@ export function telaMenu(app: App): void {
     const abrir = (i: number) => {
       if (saindo) return
       saindo = true; som()
-      timer = window.setTimeout(() => MODOS[i].abrir(app), 0)
+      app.raiz.classList.add('menu-saindo')
+      botoes[i].classList.add('confirmado')
+      timer = window.setTimeout(() => MODOS[i].abrir(app), window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240)
     }
     const botoes = MODOS.map((m, i) => h('button', {
       type: 'button', class: 'grafico-opcao', style: `--ordem:${i}`, 'aria-keyshortcuts': String(i + 1),

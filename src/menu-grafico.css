@@ -41,3 +41,23 @@ body.menu-grafico{background:#090909;color:#f4efdf}
 @media(min-width:701px){
 .menu-grafico #app{background-size:auto 112svh;background-position:right center;padding-top:max(52px,8svh)}
 }
+
+/* Continuidade: a arte permanece fixa durante a navegação da oficina. */
+.menu-grafico #app.submenu-oficina { height: 100svh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding-bottom: 76px; }
+.submenu-oficina .grafico-titulo { flex: none; margin-bottom: 26px; }
+.submenu-oficina .grafico-titulo .tela-titulo { font-size: clamp(42px, 5vw, 68px); }
+.submenu-oficina .grafico-lista { width: min(510px, 45vw); min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 4px 28px 10px 0; scrollbar-width: thin; flex-shrink: 1; }
+.submenu-oficina .grafico-opcao { font-size: clamp(23px, 2.7vw, 38px); min-height: 48px; flex-shrink: 0; }
+.submenu-oficina .opcao-voltar { margin-top: 18px; font-size: clamp(20px, 2vw, 29px); }
+.submenu-oficina .grafico-legenda { max-width: 40%; margin-top: 20px; min-height: 48px; flex-shrink: 0; }
+.submenu-oficina .grafico-descricao { max-width: 440px; }
+.menu-saindo .grafico-lista, .menu-saindo .grafico-titulo, .menu-saindo .grafico-legenda { opacity: 0; transform: translateX(-20px); transition: opacity 240ms ease, transform 240ms ease; pointer-events: none; }
+.menu-saindo .grafico-opcao.confirmado { transform: translateX(32px); }
+@media(max-width:700px) {
+ .menu-grafico #app.submenu-oficina { padding: 52px 6vw 92px; background-position: 65% center; }
+ .submenu-oficina .grafico-lista { width: 90%; max-width: none; }
+ .submenu-oficina .grafico-legenda { max-width: 88%; }
+}
+@media(prefers-reduced-motion:reduce) { .menu-saindo .grafico-lista, .menu-saindo .grafico-titulo, .menu-saindo .grafico-legenda { transition: none; } }
+
+.submenu-longo .grafico-opcao { font-size: clamp(20px, 1.85vw, 27px); min-height: 47px; line-height: 1.12; }

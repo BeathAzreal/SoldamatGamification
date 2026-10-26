@@ -156,6 +156,9 @@ export class App {
     const r = tela(this)
     if (typeof r === 'function') this.limpeza = r
     this.raiz.querySelector<HTMLElement>('.tela-titulo')?.focus()
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.raiz.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 280, easing: 'cubic-bezier(.2,.8,.2,1)' })
+    }
     window.scrollTo(0, 0)
   }
 }
