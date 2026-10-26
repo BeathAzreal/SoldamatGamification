@@ -51,6 +51,7 @@ export class App {
   }
   jogoPausado = false
   controlePausa: { pausar: () => void; retomar: () => void } | null = null
+  escolherOutraPeca: (() => void) | null = null
   voltarArcade: () => void = () => {}
   abrirPausa: () => void = () => {}
   fecharPausa: () => void = () => {}
@@ -147,6 +148,7 @@ export class App {
     this.fecharPausa()
     this.jogoPausado = false
     this.controlePausa = null
+    this.escolherOutraPeca = null
     this.limpeza?.()
     this.limpeza = null
     this.raiz.replaceChildren()

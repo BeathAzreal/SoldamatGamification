@@ -43,6 +43,7 @@ export interface OpcoesExecucao {
   regra?: string
   aoConcluir: (r: { eventos: EventosCompactos; sim: Simulacao }) => void
   /** Saída sem concluir (oficial: a tentativa fica interrompida). */
+  aoEscolherPeca?: () => void
   aoSair: () => void
 }
 
@@ -61,6 +62,7 @@ const INSTRUCOES: Record<Dispositivo, string> = {
 export function telaExecucao(op: OpcoesExecucao): Tela {
   return (app: App) => {
     app.raiz.classList.add('app-cheia')
+    app.escolherOutraPeca = op.aoEscolherPeca ?? null
     const req = requisitosEfetivos(op.missao, op.dificuldade)
     const sim = new Simulacao(op.contexto)
     sim.definirAjustes(op.ajustes)

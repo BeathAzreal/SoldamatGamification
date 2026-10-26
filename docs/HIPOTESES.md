@@ -782,3 +782,7 @@ As peças representam trechos simplificados de conjuntos industriais em aço car
 
 ### H76 — União de duas peças e golpe automático (v1.6)
 A direção do martelo é sorteada a cada clique, entre as duas direções diferentes da anterior. É somente animação; o resultado da limpeza não depende do sorteio. O primeiro trabalho começa com duas chapas e abertura de 2 mm, sem reforço transversal anterior à solda. O conserto de grade representa uma barra chata de 40 × 6,3 mm separada em duas metades com abertura de 1,5 mm, dentro de um quadro com outras barras. A geometria, a fixação, o limite do ponteiro e do controle usam essa largura; somente o trecho da barra quebrada recebe solda. O domínio interno de 150 mm é preservado para os buffers do cordão, com trecho acessível central de 40 mm. Os acabamentos dos dois componentes diferem para tornar visível a união. O modelo de processo permanece qualitativo.
+
+
+### H77 — Avaliação visual parcial do treino SMAW
+A avaliação separa a nota didática de 0 a 1000 dos limites dimensionais 502/503 da ISO 5817:2023 (B/C/D). A ISO 17637:2016 orienta a preparação e a consulta visual; escória remanescente impede a nota final. Não se atribui conformidade global, integridade interna ou qualificação de soldador. Pesos e fator de cobertura são do jogo e aparecem explicados na interface. Dados do arco e aderência servem como dicas, sem falsa equivalência com critérios ISO. Fontes, escopo e limitações estão em AVALIACAO-SMAW.md.

@@ -1,3 +1,5 @@
+import { avaliarEletrodo, type NivelISO } from '../../pontuacao/eletrodo'
+import { confirmar } from '../dialogo'
 import { painelMaquina } from '../componentes/painelMaquina'
 import { Acionamento15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from '../../modelo/acionamento15'
 import { Cordao } from '../../modelo/cordao'
@@ -29,6 +31,7 @@ const TEXTO_FAIXA: Record<FaixaArco15, string> = {
 export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => void): void {
   app.ir((app) => {
     app.raiz.classList.add('app-cheia')
+    app.escolherOutraPeca = voltar
     const limitesX = limitesPecaEletrodo(peca)
     let modelo = new Acionamento15('eletrodo')
     modelo.limitesX = limitesX
@@ -155,7 +158,25 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       selecionarFerramenta('soldar')
     }
     const teclasVista = h('div', { class: 'p15-instrucoes' })
-    const area = h('div', { class: 'p15-vista' }, canvas, hud, teclasVista)
+    const zoomValor=h('output',{},'100%')
+    const zoomMais=h('button',{type:'button','aria-label':'Aproximar câmera',on:{click:()=>{vista.aproximar(-150);canvas.focus()}}},'+')
+    const zoomMenos=h('button',{type:'button','aria-label':'Afastar câmera',on:{click:()=>{vista.aproximar(150);canvas.focus()}}},'−')
+    const area = h('div', { class: 'p15-vista' }, canvas, hud, teclasVista,
+      h('div',{class:'zoom-bancada',role:'group','aria-label':'Zoom da câmera'},h('span',{},'ZOOM'),zoomMenos,zoomValor,zoomMais))
+    const nivel=h('select',{'aria-label':'Nível de referência ISO 5817'},...(['B','C','D'] as const).map(n=>h('option',{value:n,selected:n==='C'},`Nível ${n}`)))
+    const avaliar=h('button',{type:'button',class:'primario',disabled:true,on:{click:async()=>{
+      soltar();modal=true
+      const r=avaliarEletrodo(peca,cordao,modelo,nivel.value as NivelISO)
+      const corpo=h('div',{class:'resultado-smaw'},
+        h('p',{class:'nota-smaw'},r.nota===null?'INSPEÇÃO PENDENTE':`${r.nota} / 1000`),
+        h('p',{},'Nota didática do treino. ISO 5817:2023: verificação dimensional parcial. ISO 17637:2016: referência de inspeção visual.'),
+        h('p',{},r.criterioISO),
+        h('ul',{},...r.itens.map(i=>h('li',{},h('strong',{},`${i.nome}: ${r.inspecaoPendente?'—':i.pontos+'/'+i.maximo}`),h('small',{},i.explicacao)))),
+        r.fator<1?h('p',{},'A nota é reduzida proporcionalmente enquanto menos de 80% do trecho estiver unido. Regra didática, não ISO.'):null,
+        h('p',{},r.dicas),h('small',{},r.limites))
+      try {if(await confirmar('Avaliação · eletrodo revestido',corpo,{sim:'Nova tentativa',nao:'Continuar na bancada'}))recomecar()}finally{modal=false;anterior=performance.now();canvas.focus()}
+    }}},'Avaliar solda')
+    const avaliacao=h('div',{class:'p15-avaliacao'},nivel,avaliar,pausar,h('button',{type:'button','aria-label':'Recomeçar peça',on:{click:recomecar}},'↺'))
     orientar.open = true
     detalhes.open = true
     const instrumentos = painelMaquina([
@@ -175,7 +196,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
           h('div', { class: 'maquina-identificacao' }, 'SMAW / CC', h('span', {}, '● FONTE ENERGIZADA')),
           ferramentas, h('div', { class: 'p15-comandos' }, desgrudar, trocar),
           instrumentos,
-          h('div', { class: 'p15-acoes' }, pausar, h('button', { type: 'button', on: { click: recomecar } }, 'Recomeçar peça')))))
+          avaliacao)))
     app.raiz.append(conteudo)
     corrente.value = String(Math.round((peca.correnteA.min + peca.correnteA.max) / 10) * 5)
     diametro.value = String(peca.diametroMm)
@@ -393,6 +414,9 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       barra.dataset.fim = String(modelo.restanteMm < VARETA15.reservaMm + 10)
       trocar.disabled = pausado || modelo.estado === 'arco' || modelo.grudado
       trocar.classList.toggle('primario', modelo.estado === 'fim')
+      avaliar.disabled = modelo.tempoArcoS < 0.1 || pausado || modal
+      zoomValor.value = `${vista.zoomPercentual()}%`
+      zoomMais.disabled = zoomMenos.disabled = modelo.estado === 'arco'
       atualizarObjetivo(agora)
       vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe)
       pedido = requestAnimationFrame(quadro)

@@ -30,7 +30,7 @@ export function telaTreino(app: App): void {
 function escolherPecaEletrodo(app: App): void {
   menuOficina(app, 'ELETRODO', 'TREINO / ESCOLHA A PEÇA', PECAS_ELETRODO.map(p => ({
     nome: p.titulo,
-    descricao: `${p.aplicacao} · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}. Sem pontuação nesta versão.`,
+    descricao: `${p.aplicacao} · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}. Avaliação visual e nota do treino.`,
     abrir: () => telaTreinoEletrodo(app, p, () => escolherPecaEletrodo(app)),
   })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
 }
@@ -67,6 +67,7 @@ function treinoMissao(app: App, m: Missao, d: Dificuldade): void {
 
 function bancadaTreino(app: App, s: SessaoTreino): void {
   app.ir((app) => {
+    app.escolherOutraPeca = () => s.livre ? telaTreino(app) : escolherMissaoTreino(app)
     const prep = montarPreparacao(app, {
       oficinaTreino: true,
       missao: s.m,
@@ -92,6 +93,7 @@ function bancadaTreino(app: App, s: SessaoTreino): void {
             rotulo: s.livre ? 'Treino livre · peça padrão' : `Treino · ${m.titulo} · ${NOME_DIFICULDADE[s.d]}`,
             aoConcluir: ({ eventos }) => resultadoTreino(app, atual, config, eventos),
             aoSair: () => bancadaTreino(app, atual),
+            aoEscolherPeca: () => s.livre ? telaTreino(app) : escolherMissaoTreino(app),
           }),
           'Treino · execução',
         )

@@ -197,6 +197,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   let calorPonta = 0
   return {
     canvas, enquadrar, superficie,
+    zoomPercentual: () => Math.round(ZOOM0 / zoom * 100),
     soltarEscoria(x: number, y: number, removido: number) {
       if (removido <= 0) return
       const quantidade = Math.min(24, Math.max(4, Math.ceil(removido * 6)))

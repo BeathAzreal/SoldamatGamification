@@ -122,7 +122,8 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
     if (lembrete.textContent !== texto) lembrete.textContent = texto
   }
   const botaoOficina = op.oficinaTreino || op.serralheria ? h('button', { type: 'button', class: 'botao-fantasma botao-ver-cenario', title: 'Afastar a câmera para conhecer a estação' }, op.serralheria ? 'Ver serralheria' : 'Ver oficina') : null
-  const rotuloCamera = h('span', { class: 'camera-livre', hidden: true }, botaoCentralizar, botaoOficina, lembrete)
+  const zoomBotao=(rotulo:string,delta:number)=>h('button',{type:'button',class:'botao-fantasma','aria-label':rotulo,on:{click:()=>{if(cena){cena.vista.aproximar(delta);guardarCamera();op.aoMudarMapa()}}}},rotulo.startsWith('Aproximar')?'+':'−')
+  const rotuloCamera = h('span', { class: 'camera-livre', hidden: true }, botaoCentralizar, zoomBotao('Afastar câmera',150), zoomBotao('Aproximar câmera',-150), botaoOficina, lembrete)
   botaoOficina?.addEventListener('click', () => {
     camera.azimute = camera.base = -0.25
     camera.elevacao = 0.8

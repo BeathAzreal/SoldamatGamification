@@ -22,6 +22,7 @@ export function instalarPause(app: App): void {
     const conteudo = config ? montarConfiguracoes(app, true) : h('nav', { class: 'pause-opcoes', 'aria-label': 'Opções da pausa' },
       botao('CONTINUAR', () => fechar(true)),
       botao('CONFIGURAÇÕES', () => desenhar(true)),
+      app.escolherOutraPeca ? botao('ESCOLHER OUTRA PEÇA', () => app.escolherOutraPeca?.()) : null,
       botao('VOLTAR AO MENU', () => telaMenu(app)))
     fundo.replaceChildren(h('section', { class: `pause-painel${config ? ' pause-config' : ''}`, role: 'dialog', 'aria-modal': 'true', 'aria-label': config ? 'Configurações da partida' : 'Pausa' },
       h('h2', {}, config ? 'CONFIGURAÇÕES' : 'PAUSA'), conteudo,
