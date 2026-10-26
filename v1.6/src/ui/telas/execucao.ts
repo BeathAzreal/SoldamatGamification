@@ -43,6 +43,7 @@ export interface OpcoesExecucao {
   regra?: string
   aoConcluir: (r: { eventos: EventosCompactos; sim: Simulacao }) => void
   /** Saída sem concluir (oficial: a tentativa fica interrompida). */
+  aoEscolherPeca?: () => void
   aoSair: () => void
 }
 
@@ -61,6 +62,7 @@ const INSTRUCOES: Record<Dispositivo, string> = {
 export function telaExecucao(op: OpcoesExecucao): Tela {
   return (app: App) => {
     app.raiz.classList.add('app-cheia')
+    app.escolherOutraPeca = op.aoEscolherPeca ?? null
     const req = requisitosEfetivos(op.missao, op.dificuldade)
     const sim = new Simulacao(op.contexto)
     sim.definirAjustes(op.ajustes)
@@ -99,8 +101,8 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
     const tempo = h('dd', {}, '0,0 s')
     const status = h('p', { class: 'status', role: 'status' })
     const botaoEncerrar = h('button', { type: 'button', class: 'primario', disabled: true }, 'Encerrar tentativa ', h('kbd', {}, 'Enter'))
-    const botaoPausa = h('button', { type: 'button' }, 'Pausar ', h('kbd', {}, 'P'))
-    const botaoSair = h('button', { type: 'button', class: 'secundario' }, op.oficial ? 'Abandonar tentativa' : 'Sair do treino')
+    const botaoPausa = h('button', { type: 'button', class: 'navegacao-de-partida' }, 'Pausar ', h('kbd', {}, 'P'))
+    const botaoSair = h('button', { type: 'button', class: 'secundario navegacao-de-partida' }, op.oficial ? 'Abandonar tentativa' : 'Sair do treino')
 
     const ESCALA_V = 40
     const painel = h(
@@ -192,6 +194,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         : `${motivoPausa} Reconecte o controle para continuar.`
       botaoRetomar.disabled = !conectado
     }
+    app.controlePausa = { pausar: () => { pausar('Pausa pedida.'); sobreposicao.hidden = true }, retomar }
     fonte.aoDesconectar = () => pausar('O controle foi desconectado.')
     fonte.ligar(sim)
 
@@ -202,7 +205,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
       op.aoConcluir({ eventos: compactar(sim.eventos), sim })
     }
     botaoEncerrar.addEventListener('click', encerrar)
-    botaoPausa.addEventListener('click', () => (pausado ? retomar() : pausar('Pausa pedida.')))
+    botaoPausa.addEventListener('click', () => app.abrirPausa())
     botaoSair.addEventListener('click', async () => {
       const ok = op.oficial
         ? await confirmar('Abandonar a tentativa oficial?', 'Ela será registrada como interrompida e contará no limite.', { sim: 'Abandonar', perigo: true })
@@ -221,7 +224,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
     const teclas = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return
       if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement)) encerrar()
-      else if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') pausado ? retomar() : pausar('Pausa pedida.')
+      else if (e.key === 'p' || e.key === 'P') app.abrirPausa()
     }
     window.addEventListener('keydown', teclas)
     // H49: janela escondida ou sem foco pausa a tentativa (o tempo parado não vira solda).

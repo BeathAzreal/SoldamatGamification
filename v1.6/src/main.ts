@@ -1,13 +1,15 @@
+import { instalarPause } from './ui/componentes/pause'
 import './estilo.css'
 import './estilo-app.css'
 import './estilo-v14.css'
 import './estilo-oficina.css'
 import './estilo-espaco.css'
 import './estilo-prototipo15.css'
+import './hud-maquina.css'
 import { App } from './ui/app'
 import { icone } from './ui/componentes/icones'
 import { telaHistoria } from './ui/telas/historia'
-import { telaArcade } from './ui/telas/arcade'
+import { telaCentralArcade } from './ui/telas/centralArcade'
 import { telaTreino } from './ui/telas/treino'
 import { telaTorneios } from './ui/telas/torneio'
 import { telaRecordes } from './ui/telas/recordes'
@@ -22,8 +24,10 @@ import { somArco } from './ui/som'
  * O treino livre usa a mesma bancada e execução das missões, com a peça padrão.
  */
 const app = new App()
+instalarPause(app)
+app.voltarArcade = () => telaCentralArcade(app)
 const rotas: Record<string, (app: App) => void> = {
-  inicio: telaMenu, historia: telaHistoria, arcade: telaArcade, treino: telaTreino,
+  inicio: telaMenu, historia: telaHistoria, arcade: telaCentralArcade, treino: telaTreino,
   torneio: telaTorneios, recordes: (app) => telaRecordes(app), config: telaConfiguracoes,
 }
 document.querySelectorAll<HTMLButtonElement>('[data-rota]').forEach(botao => {

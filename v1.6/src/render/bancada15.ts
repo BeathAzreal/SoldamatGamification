@@ -1,3 +1,8 @@
+import { DepositoEletrodo, baseEletrodo } from '../modelo/depositoEletrodo'
+import { criarMetalEletrodo } from './metalEletrodo'
+import type { PecaEletrodo } from '../missoes/pecasEletrodo'
+import { limitesPecaEletrodo } from '../missoes/pecasEletrodo'
+import { criarDetalhesIndustriais15 } from './pecaIndustrial15'
 import * as THREE from 'three'
 import { Palco3D } from './palco3d'
 import { geometriaDa } from '../modelo/junta'
@@ -11,8 +16,6 @@ import { cristaMm, INFO_JUNTA, juntaDe, pontoNaSuperficie, type TipoJunta } from
 
 /** Ponta nua da vareta presa nas garras do alicate (mm). */
 const PONTA_NUA = 20
-/** H73: faixa (mm) em que a ponta assenta na raiz do filete. */
-const ASSENTO_FILETE_MM = 4
 const MAX_RESPINGOS = 160
 const GRAVIDADE = 9810
 
@@ -31,12 +34,12 @@ function texturaBrilho(): THREE.CanvasTexture {
 }
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
-export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number }) {
+export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade' }) {
   // A peça chega na posição plana (rolagem 0): no filete, o canto fica voltado para cima.
   const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } : CONTEXTO_PADRAO
   const palco = Palco3D.criar({
-    contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
-    missao: peca ? { inicioMm: peca.inicioMm, fimMm: peca.fimMm } : undefined, regua: !!peca,
+    larguraPecaMm: peca?.larguraMm, processo: 'eletrodo', contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
+    missao: peca ? { inicioMm: peca.inicioMm, fimMm: peca.fimMm } : undefined, regua: !!peca && !peca.larguraMm,
   })
   if (!palco) return null
   const canvas = palco.elemento
@@ -46,12 +49,12 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   // Filete na posição plana: câmera mais alta para enxergar as duas paredes e a raiz no fundo do V.
   const filete = !!peca && INFO_JUNTA[peca.junta].familia === 'filete'
   const AZIMUTE0 = 0.237, POLAR0 = filete ? 0.62 : 1.077, ZOOM0 = filete ? 0.75 : 1, ALVO_Y = filete ? 12 : 40
-  let azimute = AZIMUTE0, polar = POLAR0, zoom = ZOOM0
+  let azimute = AZIMUTE0, polar = POLAR0, zoom = ZOOM0, alvoY = ALVO_Y
   const posicionarCamera = () => {
     const d = 338 * Math.max(1, 1 / camera.aspect) * zoom
-    camera.position.setFromSphericalCoords(d, polar, azimute).add(new THREE.Vector3(0, ALVO_Y, 0))
+    camera.position.setFromSphericalCoords(d, polar, azimute).add(new THREE.Vector3(0, alvoY, 0))
     camera.position.y = Math.max(-350, camera.position.y)
-    camera.lookAt(0, ALVO_Y, 0)
+    camera.lookAt(0, alvoY, 0)
     camera.updateMatrixWorld()
   }
   const enquadrar = (l: number, a: number) => {
@@ -134,9 +137,6 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
     cerda.position.set(-14 + i * 3.5, 3.5, -4.5 + j * 3)
     escova.add(cerda)
   }
-  const mira = new THREE.Mesh(new THREE.RingGeometry(3, 3.5, 40), new THREE.MeshBasicMaterial({ color: '#edc167', side: THREE.DoubleSide }))
-  mira.rotation.x = -Math.PI / 2
-  palco.peca.add(mira)
   // Arco: coluna luminosa da ponta à poça, halo voltado para a câmera, poça e luz que tremulam.
   const aditivo = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false } as const
   const coluna = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 1.6, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#d9f0ff', opacity: 0.9, ...aditivo }))
@@ -163,28 +163,47 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   let proximoRespingo = 0, acumulado = 0
   const raio = new THREE.Raycaster()
   const ponto = new THREE.Vector3()
+  const limitesX = limitesPecaEletrodo(peca ?? {})
   const junta = juntaDe(contexto)
   /** Altura da superfície das chapas a um desvio lateral n (filete na posição plana: paredes a 45°). */
-  const superficie = (n: number) => pontoNaSuperficie(junta, contexto, n)[1]
+  const superficie = (n: number) => peca ? baseEletrodo(peca as PecaEletrodo,n) : pontoNaSuperficie(junta, contexto, n)[1]
   /** Até onde vão as chapas de cada lado da junta (no filete, 50 mm de parede a 45°). */
   const alcanceLateral = INFO_JUNTA[junta].familia === 'filete' ? 50 / Math.SQRT2 : 50
   const escoria = criarSuperficieEscoria15(superficie, junta)
-  // Risco de pedra-sabão na raiz do filete, do INÍCIO ao FIM: mostra onde o cordão deve correr.
-  if (peca && filete) {
-    const giz = new THREE.Mesh(new THREE.BoxGeometry(peca.fimMm - peca.inicioMm, 0.12, 0.6), new THREE.MeshBasicMaterial({ color: '#e9e4d4', transparent: true, opacity: 0.8 }))
-    giz.position.set((peca.inicioMm + peca.fimMm) / 2 - 75, superficie(0) + 0.45, 0)
-    palco.peca.add(giz)
-  }
   palco.peca.add(escoria.malha)
-  palco.guardarTexturas(escoria.textura)
+  palco.guardarTexturas(escoria.textura, escoria.crosta)
+  if (peca) palco.peca.add(criarDetalhesIndustriais15(junta, peca.conjunto))
   const eixo = new THREE.Vector3(), normal = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion()
   const pontaMartelo = new THREE.Vector3()
   const cameraLocal = new THREE.Vector3()
   let volumeAntes = -1
-  let cordaoAntes: Cordao | null = null
+  let cordaoAntes: Cordao | DepositoEletrodo | null = null
+  const metalLocal = criarMetalEletrodo()
+  palco.peca.add(metalLocal.malha)
+  const lascas = new THREE.Group()
+  palco.peca.add(lascas)
+  const particulasEscoria: { malha: THREE.Mesh; velocidade: THREE.Vector3; vida: number }[] = []
+  for (let i = 0; i < 24; i++) {
+    const malha = new THREE.Mesh(new THREE.TetrahedronGeometry(1), new THREE.MeshStandardMaterial({ color: '#373632', roughness: 0.88 }))
+    malha.visible = false; lascas.add(malha)
+    particulasEscoria.push({ malha, velocidade: new THREE.Vector3(), vida: 0 })
+  }
   let calorPonta = 0
   return {
     canvas, enquadrar, superficie,
+    zoomPercentual: () => Math.round(ZOOM0 / zoom * 100),
+    soltarEscoria(x: number, y: number, removido: number) {
+      if (removido <= 0) return
+      const quantidade = Math.min(24, Math.max(4, Math.ceil(removido * 6)))
+      for (let i = 0; i < quantidade; i++) {
+        const p = particulasEscoria[i], a = i * 2.39996
+        p.vida = 0.45 + (i % 4) * 0.08
+        p.malha.position.set(x - 75, superficie(y) + 2, y)
+        p.malha.scale.set(1.2 + (i % 3) * 0.3, 0.25, 0.7)
+        p.velocidade.set(Math.cos(a) * 24, 30 + (i % 5) * 7, Math.sin(a) * 24)
+        p.malha.visible = true
+      }
+    },
     iniciarGiro(m: Acionamento15) {
       const inicial = { azimute: m.azimuteGraus, inclinacao: m.inclinacaoGraus }
       const direita = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).toArray() as unknown as Vetor15
@@ -196,17 +215,17 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       polar = Math.max(0.04, Math.min(Math.PI - 0.04, polar + dy * 0.006))
       posicionarCamera()
     },
-    aproximar(delta: number) { zoom = Math.max(0.5, Math.min(2, zoom * Math.exp(delta * 0.001))); posicionarCamera() },
-    centralizar() { azimute = AZIMUTE0; polar = POLAR0; zoom = ZOOM0; posicionarCamera() },
+    aproximar(delta: number) { zoom = Math.max(0.5, Math.min(3, zoom * Math.exp(delta * 0.001))); posicionarCamera() },
+    verEstacao() { alvoY = -140; zoom = 3; polar = 0.85; azimute = AZIMUTE0; posicionarCamera() },
+    centralizar() { alvoY = ALVO_Y; azimute = AZIMUTE0; polar = POLAR0; zoom = ZOOM0; posicionarCamera() },
     pontoNaTela(x: number, y: number) {
       const r = canvas.getBoundingClientRect()
       raio.setFromCamera(new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, 1 - ((y - r.top) / r.height) * 2), camera)
       // Anda pelo raio até cruzar a superfície das chapas e refina por bissecção.
       const o = raio.ray.origin, d = raio.ray.direction
       const acima = (t: number) => {
-        const n = o.z + d.z * t, x = o.x + d.x * t + 75
-        if (Math.abs(n) > alcanceLateral || x < 0 || x > 150) return true
-        return o.y + d.y * t > superficie(n)
+        const n = o.z + d.z * t
+        return o.y + d.y * t > (cordaoAntes instanceof DepositoEletrodo ? cordaoAntes.altura(o.x+d.x*t+75,n) : superficie(n))
       }
       let t0 = 0, t1 = -1
       for (let t = 0; t < 3000; t += 2) {
@@ -220,29 +239,28 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         else t1 = tm
       }
       raio.ray.at((t0 + t1) / 2, ponto)
+      // A borda não é uma superfície de contato: continue seguindo a mão fora da peça.
       const p = { x: ponto.x + 75, y: ponto.z }
-      if (!(p.x >= 0 && p.x <= 150 && Math.abs(p.y) <= alcanceLateral)) return null
-      // H73: no filete a ponta apoiada desliza para o fundo do canto; perto da raiz ela assenta ali.
-      if (filete) p.y = Math.sign(p.y) * Math.max(0, Math.abs(p.y) - ASSENTO_FILETE_MM)
-      return p
+      return { ...p, naPeca: p.x >= limitesX.min && p.x <= limitesX.max && Math.abs(p.y) <= alcanceLateral }
     },
-    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0) {
+    desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao | DepositoEletrodo, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0, direcaoGolpe: 'lateral' | 'diagonal' | 'cima' = 'lateral', ocultarEscoria = false, inspecionando = false) {
       const ligado = modo === 'soldar' && m.estado === 'arco'
-      ferramenta.visible = modo === 'soldar'
-      martelo.visible = modo === 'martelo' && m.naPeca
-      escova.visible = modo === 'escova' && m.naPeca
+      ferramenta.visible = modo === 'soldar' && !inspecionando
+      martelo.visible = modo === 'martelo' && m.naPeca && !inspecionando
+      escova.visible = modo === 'escova' && m.naPeca && !inspecionando
       // Alturas absolutas (acima da raiz): chão sob a ponta e crista do cordão, se houver.
-      const chao = superficie(p.y)
+      const chao = c instanceof DepositoEletrodo ? c.altura(p.x,p.y) : superficie(p.y)
       let topo = chao
-      for (const cord of [c, ...c.soltos]) {
+      if (!(c instanceof DepositoEletrodo)) for (const cord of [c, ...c.soltos]) {
         const s = cord.secao(cord.indiceEm(p.x))
         if (s.larguraMm > 0 && Math.abs(s.yCentroMm - p.y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, cristaMm(s, junta))
       }
       // Cabo de lado: a cabeça chega em arco lateral e a ponta toca a crosta.
       const golpe = desdeGolpeMs >= 0 && desdeGolpeMs < 260 ? Math.sin(Math.PI * desdeGolpeMs / 260) : 0
-      martelo.rotation.set(0, -0.6 + golpe * 0.22, 1.1 + golpe * 0.35)
+      const deCima = direcaoGolpe === 'cima', diagonal = direcaoGolpe === 'diagonal'
+      martelo.rotation.set(diagonal ? 0.45 : 0, -0.6 + golpe * 0.22, (deCima ? 0 : diagonal ? 0.6 : 1.1) + golpe * 0.35)
       pontaMartelo.set(-20.5, 0, 0).applyEuler(martelo.rotation)
-      martelo.position.set(p.x - 75 - (1 - golpe) * 10, topo + 0.8 + (1 - golpe) * 5, p.y + (1 - golpe) * 4).sub(pontaMartelo)
+      martelo.position.set(p.x - 75 - (1 - golpe) * 10, topo + 0.8 + (1 - golpe) * (deCima ? 28 : diagonal ? 18 : 5), p.y + (1 - golpe) * 4).sub(pontaMartelo)
       escova.position.set(p.x - 75 + (acionada ? Math.sin(agoraMs * 0.04) * 1.5 : 0), topo + 0.5, p.y)
       escova.rotation.y = 0.2
       const altura = Math.max(0, m.distanciaMm)
@@ -272,9 +290,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       punho.position.y = 30
       arame.scale.y = Math.max(0.1, altura - 2)
       arame.position.y = -(altura - 2) / 2
-      mira.position.set(p.x - 75, chao + 0.3, p.y)
-      mira.material.color.set(modo === 'soldar' ? '#edc167' : '#8ccbd4')
-      mira.visible = m.naPeca && !ligado
+
       // Arco e poça.
       const tremor = 0.85 + 0.3 * Math.random()
       const instavel = ligado && m.processo === 'eletrodo' ? m.forma.instabilidade : 0
@@ -313,15 +329,27 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         const t = Math.max(0, vidaRespingo[i]) / 0.8
         corRespingo.set([1, 0.35 + 0.5 * t, 0.08 + 0.3 * t * t], i * 3)
       }
-      respingos.visible = vivos
+      respingos.visible = vivos && !inspecionando
       geoRespingo.attributes.position.needsUpdate = true
       geoRespingo.attributes.color.needsUpdate = true
-      if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
+      if (c instanceof DepositoEletrodo) {
+        metalLocal.atualizar(c)
+        cordaoAntes = c
+      } else if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
         palco.atualizarCordao(c)
         cordaoAntes = c
         volumeAntes = c.volumeTotal()
       }
+      lascas.visible = !inspecionando
+      for (const p of particulasEscoria) {
+        if (p.vida <= 0) { p.malha.visible = false; continue }
+        p.vida -= dt
+        p.velocidade.y -= 230 * dt
+        p.malha.position.addScaledVector(p.velocidade, dt)
+        p.malha.rotation.x += dt * 8; p.malha.rotation.z += dt * 5
+      }
       escoria.atualizar(m.escoria, c)
+      if (ocultarEscoria) escoria.malha.visible = false
       palco.desenhar(camera)
     },
     destruir() { palco.destruir() },

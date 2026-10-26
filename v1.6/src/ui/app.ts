@@ -49,6 +49,12 @@ export class App {
     },
     novoId,
   }
+  jogoPausado = false
+  controlePausa: { pausar: () => void; retomar: () => void } | null = null
+  escolherOutraPeca: (() => void) | null = null
+  voltarArcade: () => void = () => {}
+  abrirPausa: () => void = () => {}
+  fecharPausa: () => void = () => {}
   private limpeza: (() => void) | null = null
   /** Pergunta antes de sair da tela atual (ex.: tentativa oficial em andamento). */
   guardaSaida: (() => Promise<boolean>) | null = null
@@ -139,23 +145,36 @@ export class App {
   async ir(tela: Tela, contexto = ''): Promise<void> {
     if (this.guardaSaida && !(await this.guardaSaida())) return
     this.guardaSaida = null
+    this.fecharPausa()
+    this.jogoPausado = false
+    this.controlePausa = null
+    this.escolherOutraPeca = null
     this.limpeza?.()
     this.limpeza = null
     this.raiz.replaceChildren()
     this.raiz.classList.remove('app-cheia', 'tela-bancada', 'tela-resultado', 'tela-julgamento', 'tela-inicio')
     document.getElementById('topo-contexto')!.textContent = contexto
     const nome = contexto.toLocaleLowerCase('pt-BR')
-    const rota = /torneio|julgamento|professor/.test(nome) ? 'torneio'
+    const rota = /torneio|versus|julgamento|professor/.test(nome) ? 'arcade'
       : /treino/.test(nome) ? 'treino' : /arcade/.test(nome) ? 'arcade'
-      : /história|historia|missão|capítulo/.test(nome) ? 'historia'
+      : /história|historia|missão|capítulo/.test(nome) ? 'arcade'
       : /recordes/.test(nome) ? 'recordes' : /configura/.test(nome) ? 'config' : 'inicio'
     document.querySelectorAll<HTMLElement>('[data-rota]').forEach(botao => {
       if (botao.dataset.rota === rota) botao.setAttribute('aria-current', 'page')
       else botao.removeAttribute('aria-current')
     })
     const r = tela(this)
+    const imersivo = !!this.raiz.querySelector('canvas')
+    document.body.classList.toggle('jogo-imersivo', imersivo)
+    const paginaArcade = rota === 'arcade' && !imersivo && !document.body.classList.contains('menu-grafico')
+    document.body.classList.toggle('arcade-interno', paginaArcade)
+    if (paginaArcade) this.raiz.prepend(h('button', { type: 'button', class: 'arcade-voltar', on: { click: () => this.voltarArcade() } }, '← VOLTAR AO ARCADE'))
+    if (imersivo) this.raiz.append(h('button', { type: 'button', class: 'atalho-pause', on: { click: () => this.abrirPausa() } }, 'Esc · Pausa'))
     if (typeof r === 'function') this.limpeza = r
     this.raiz.querySelector<HTMLElement>('.tela-titulo')?.focus()
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.raiz.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 280, easing: 'cubic-bezier(.2,.8,.2,1)' })
+    }
     window.scrollTo(0, 0)
   }
 }

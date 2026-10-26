@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 /** Cenografia estática: fora do volume de giro da chapa, sem participar da simulação. */
-export function criarOficinaTreino(piso: number, op: { armario?: boolean } = {}): THREE.Group {
+export function criarOficinaTreino(piso: number, op: { armario?: boolean; processo?: 'mig' | 'eletrodo' } = {}): THREE.Group {
   const oficina = new THREE.Group()
   oficina.name = 'Oficina pequena de treino'
   const material = (cor: string, metalness = 0.35) => new THREE.MeshStandardMaterial({ color: cor, metalness, roughness: 0.72 })
@@ -54,6 +54,24 @@ export function criarOficinaTreino(piso: number, op: { armario?: boolean } = {})
   caixa(70, 18, 32, 65, -100, -210, vermelho)
   caixa(34, 4, 5, 65, -88, -210, estrutura)
 
+  if (op.processo === 'eletrodo') {
+    // Inversora CC de eletrodo: portátil, um ajuste de corrente, bornes e estufa; sem gás.
+    const x = 265
+    caixa(132, 8, 100, x, piso + 72, -40, estrutura)
+    for (const dx of [-50, 50]) caixa(8, 72, 75, x + dx, piso + 36, -40, estrutura)
+    caixa(98, 58, 132, x, piso + 105, -40, material('#cda53b'))
+    caixa(94, 52, 4, x, piso + 105, 28, borracha)
+    caixa(37, 16, 3, x - 15, piso + 118, 31, material('#70cbb2', 0))
+    const dial = cilindro(10, 6, x + 26, piso + 117, 32, claro); dial.rotation.x = Math.PI / 2
+    for (const dx of [-24, 24]) { const borne = cilindro(6, 7, x + dx, piso + 90, 33, borracha); borne.rotation.x = Math.PI / 2 }
+    caixa(65, 6, 8, x, piso + 144, -40, borracha)
+    for (const dx of [-28, 28]) caixa(8, 12, 8, x + dx, piso + 138, -40, borracha)
+    for (let i = 0; i < 7; i++) caixa(2, 33, 60, x + 50, piso + 102, -65 + i * 8, borracha)
+    // Cabos ficam recolhidos junto à fonte, sem atravessar a zona da solda.
+    cabo([[x-24,piso+90,36],[x-55,piso+40,66],[x+42,piso+24,60],[x+24,piso+90,36]], 3, borracha)
+    cilindro(14, 86, x - 92, piso + 119, -65, material('#8a6b3b'))
+    cilindro(15, 5, x - 92, piso + 164, -65, borracha)
+  } else {
   // Fonte de soldagem no carrinho lateral; frente voltada para quem trabalha.
   const xM = 265
   caixa(105, 9, 155, xM, piso + 30, -35, estrutura)
@@ -79,6 +97,8 @@ export function criarOficinaTreino(piso: number, op: { armario?: boolean } = {})
   const manometro = cilindro(10, 4, xM - 14, piso + 240, -111, claro)
   manometro.rotation.x = Math.PI / 2
   cabo([[265, piso + 230, -110], [302, piso + 204, -70], [300, piso + 110, -15]], 2, borracha)
+
+  }
 
   // Armário baixo ao fundo; a região central fica inteiramente livre.
   if (op.armario !== false) {

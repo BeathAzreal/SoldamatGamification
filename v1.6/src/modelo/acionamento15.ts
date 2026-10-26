@@ -19,12 +19,20 @@ export function velocidadeAltura15(seguradoS: number, maximaMmS: number): number
   const minima = Math.min(2, maximaMmS)
   return minima + (maximaMmS - minima) * Math.min(1, seguradoS / 0.5)
 }
+/** H74: descida inclui o consumo vertical restante, além da correção pedida pelo jogador. */
+export function velocidadeDescida15(seguradoS: number, maximaMmS: number, consumoMmS: number, assistencia: number, cosInclinado: number, arcoAberto: boolean): number {
+  if (!(seguradoS > 0)) return 0
+  const compensacao = arcoAberto ? Math.max(0, consumoMmS) * Math.max(0, Math.min(1, cosInclinado)) * (1 - Math.max(0, Math.min(1, assistencia))) : 0
+  return velocidadeAltura15(seguradoS, Math.max(3, maximaMmS)) + compensacao
+}
 /** H69: forma do depósito pelo comprimento do arco (razão altura/largura e instabilidade). */
 export interface FormaDeposito15 { razao: number; instabilidade: number }
 
 export class Acionamento15 {
   pressionado = false
   naPeca = true
+  /** H76: largura efetivamente soldável no domínio longitudinal da bancada. */
+  limitesX = { min: 0, max: 150 }
   restanteMm = VARETA15.inicialMm
   alturaMm: number
   tempoArcoS = 0
@@ -197,7 +205,7 @@ export class Acionamento15 {
         const lado = gasto * Math.sin(this.inclinacaoGraus * Math.PI / 180)
         this.xMm += lado * Math.cos(this.azimuteGraus * Math.PI / 180)
         this.yMm += lado * Math.sin(this.azimuteGraus * Math.PI / 180)
-        this.naPeca = this.xMm >= 0 && this.xMm <= 150 && Math.abs(this.yMm) <= 50
+        this.naPeca = this.xMm >= this.limitesX.min && this.xMm <= this.limitesX.max && Math.abs(this.yMm) <= 50
       }
       this.tempoArcoS += dt
       // Só traço visual de depósito. Não usa as regras MIG como física SMAW.

@@ -1,3 +1,5 @@
+import { menuOficina } from '../componentes/menuOficina'
+import { telaMenu } from './menu'
 import { EXERCICIOS_TECNICOS, type ExercicioTecnico } from '../../didatica/exercicios'
 import { abrirPainel, confirmar } from '../dialogo'
 import { DIFICULDADES, MISSOES, NOME_DIFICULDADE, PECA_PADRAO, type Dificuldade, type Missao, comJunta } from '../../missoes/catalogo'
@@ -15,72 +17,32 @@ import { PECAS_ELETRODO } from '../../missoes/pecasEletrodo'
 import { INFO_JUNTA } from '../../modelo/juntas'
 import { telaTreinoEletrodo } from './treinoEletrodo'
 
-/** Processo escolhido no topo do Treino; lembrado enquanto o jogo está aberto. */
-let processoTreino: 'mig' | 'eletrodo' = 'mig'
-
-/*
- * Treino: nada aqui entra em ranking ou torneio.
- * - Treino livre: peça padrão (aço carbono 3 mm) na bancada nova, com qualquer
- *   dispositivo e tipo de junta, pontuação, explicação e comparação.
- * - Treino de missão: qualquer missão, com o dispositivo escolhido, sem limite.
- */
-
-function seletorProcesso(app: App): HTMLElement {
-  const botao = (p: typeof processoTreino, texto: string) =>
-    h('button', { type: 'button', 'aria-pressed': String(processoTreino === p), on: { click: () => { processoTreino = p; telaTreino(app) } } }, texto)
-  return h('div', { class: 'treino-processo', role: 'group', 'aria-label': 'Processo de soldagem' },
-    h('span', {}, 'Processo'), botao('mig', 'MIG/MAG'), botao('eletrodo', 'Eletrodo revestido'))
-}
-
-function listaEletrodo(app: App): HTMLElement {
-  return h('ul', { class: 'grade-missoes' },
-    PECAS_ELETRODO.map((p) => h('li', { class: 'cartao-missao' },
-      h('p', { class: 'setor' }, `Aço carbono · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}`),
-      h('h3', {}, p.titulo),
-      h('p', {}, p.aplicacao),
-      h('p', { class: 'nota' }, `Por que eletrodo: ${p.porque}`),
-      h('p', { class: 'nota' }, `Eletrodo Ø ${n1(p.diametroMm)} mm · ${p.correnteA.min}–${p.correnteA.max} A (sugestão do modelo)`),
-      h('div', { class: 'acoes' }, h('button', { type: 'button', class: 'primario', on: { click: () => telaTreinoEletrodo(app, p, () => telaTreino(app)) } }, 'Treinar esta peça')),
-    )))
-}
-
+/** Treino: navegação por processo e peça, sem ranking ou registro oficial. */
 export function telaTreino(app: App): void {
-  if (processoTreino === 'eletrodo') {
-    app.ir((app) => {
-      anexar(app.raiz,
-        titulo('Treino', 'Eletrodo revestido: peças grossas e estruturais, onde o processo é usado. Sem pontuação nesta versão.'),
-        seletorProcesso(app),
-        listaEletrodo(app))
-    }, 'Treino')
-    return
-  }
-  app.ir((app) => {
-    anexar(app.raiz, 
-      titulo('Treino', 'Sem limite de tentativas e sem registro oficial.'),
-      seletorProcesso(app),
-      h(
-        'ul',
-        { class: 'grade-missoes' },
-        h(
-          'li',
-          { class: 'cartao-missao' },
-          h('h3', {}, 'Treino livre'),
-          h('p', {}, 'Peça de teste de aço carbono, qualquer dispositivo e tipo de junta (topo, V, T, sobreposta, canto): bancada, pontuação e inspeção.'),
-          h('div', { class: 'acoes' }, h('button', { type: 'button', class: 'primario', on: { click: () => treinoLivre(app) } }, 'Abrir treino livre'), h('button', { type: 'button', on: { click: () => escolherExercicio(app) } }, 'Exercícios técnicos')),
-        ),
-        MISSOES.map((m) =>
-          h(
-            'li',
-            { class: 'cartao-missao' },
-            h('p', { class: 'setor' }, `${MATERIAIS[m.material].nome} · ${n1(m.geometria.espessuraMm)} mm`),
-            h('h3', {}, `Treino: ${m.titulo}`),
-            h('p', { class: 'nota' }, m.desafio),
-            h('div', { class: 'acoes' }, DIFICULDADES.map((d) => h('button', { type: 'button', on: { click: () => treinoMissao(app, m, d) } }, NOME_DIFICULDADE[d]))),
-          ),
-        ),
-      ),
-    )
-  }, 'Treino')
+  menuOficina(app, 'TREINO', 'OFICINA / PRÁTICA LIVRE', [
+    { nome: 'MIG/MAG', descricao: 'Abra a bancada livre. Escolha a junta, regule a máquina e pratique.', abrir: () => treinoLivre(app) },
+    { nome: 'ELETRODO', descricao: 'Escolha a peça e pratique o controle da distância e o consumo da vareta.', abrir: () => escolherPecaEletrodo(app) },
+    { nome: 'EXERCÍCIOS', descricao: 'Roteiros técnicos para experimentar, inspecionar e comparar tentativas.', abrir: () => { telaTreino(app); void escolherExercicio(app) } },
+    { nome: 'TREINAR MISSÃO', descricao: 'Repita uma encomenda sem limite de tentativas.', abrir: () => escolherMissaoTreino(app) },
+  ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
+}
+
+function escolherPecaEletrodo(app: App): void {
+  menuOficina(app, 'ELETRODO', 'TREINO / ESCOLHA A PEÇA', PECAS_ELETRODO.map(p => ({
+    nome: p.titulo,
+    descricao: `${p.aplicacao} · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}. Avaliação visual e nota do treino.`,
+    abrir: () => telaTreinoEletrodo(app, p, () => escolherPecaEletrodo(app)),
+  })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
+}
+
+function escolherMissaoTreino(app: App): void {
+  menuOficina(app, 'MISSÕES', 'TREINO / ESCOLHA A ENCOMENDA', MISSOES.map(m => ({
+    nome: m.titulo,
+    descricao: `${MATERIAIS[m.material].nome} · ${n1(m.geometria.espessuraMm)} mm. ${m.desafio}`,
+    abrir: () => menuOficina(app, 'DIFICULDADE', m.titulo, DIFICULDADES.map(d => ({
+      nome: NOME_DIFICULDADE[d], descricao: 'Treino sem limite de tentativas e sem registro oficial.', abrir: () => treinoMissao(app, m, d),
+    })), { nome: 'VOLTAR ÀS MISSÕES', descricao: 'Escolher outra encomenda.', abrir: () => escolherMissaoTreino(app) }),
+  })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
 }
 
 /** Um treino em andamento: a missão (ou a peça padrão), e o que repetir. */
@@ -105,6 +67,7 @@ function treinoMissao(app: App, m: Missao, d: Dificuldade): void {
 
 function bancadaTreino(app: App, s: SessaoTreino): void {
   app.ir((app) => {
+    app.escolherOutraPeca = () => s.livre ? telaTreino(app) : escolherMissaoTreino(app)
     const prep = montarPreparacao(app, {
       oficinaTreino: true,
       missao: s.m,
@@ -130,6 +93,7 @@ function bancadaTreino(app: App, s: SessaoTreino): void {
             rotulo: s.livre ? 'Treino livre · peça padrão' : `Treino · ${m.titulo} · ${NOME_DIFICULDADE[s.d]}`,
             aoConcluir: ({ eventos }) => resultadoTreino(app, atual, config, eventos),
             aoSair: () => bancadaTreino(app, atual),
+            aoEscolherPeca: () => s.livre ? telaTreino(app) : escolherMissaoTreino(app),
           }),
           'Treino · execução',
         )

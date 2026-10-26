@@ -1,28 +1,25 @@
 import { vezAtual } from '../../dados/torneio'
 import type { App } from '../app'
 import { anexar, h } from '../dom'
-import { telaArcade } from './arcade'
+import { telaCentralArcade } from './centralArcade'
 import { telaConfiguracoes } from './configuracoes'
-import { telaHistoria } from './historia'
 import { telaRecordes } from './recordes'
-import { painelTorneio, telaTorneios } from './torneio'
+import { painelTorneio } from './torneio'
 import { telaTreino } from './treino'
 import '../../menu-grafico.css'
 
 const MODOS = [
-  { titulo: 'JOGAR', descricao: 'Missões e encomendas. Cada passe, um novo desafio.', abrir: telaHistoria },
+  { titulo: 'ARCADE', descricao: 'História, desafios e versus local.', abrir: telaCentralArcade },
   { titulo: 'TREINO', descricao: 'Sua bancada. Seu ritmo. Experimente e compare.', abrir: telaTreino },
-  { titulo: 'ARCADE', descricao: 'Três vidas. Faça cada cordão valer.', abrir: telaArcade },
-  { titulo: 'TORNEIO', descricao: 'Reúna a turma. Dispute rodada por rodada.', abrir: telaTorneios },
   { titulo: 'RECORDES', descricao: 'Reveja as marcas que você deixou na oficina.', abrir: (app: App) => telaRecordes(app) },
-  { titulo: 'OPÇÕES', descricao: 'Ajuste o som, os controles e a sua bancada.', abrir: telaConfiguracoes },
+  { titulo: 'CONFIGURAÇÕES', descricao: 'Som, dispositivo, controles e qualidade visual.', abrir: telaConfiguracoes },
 ]
 
 export function telaMenu(app: App): void {
   app.ir(() => {
     app.raiz.classList.add('tela-inicio')
     document.body.classList.add('menu-grafico')
-    let selecionado = 1
+    let selecionado = 0
     let saindo = false
     let timer = 0
     let frame = 0
@@ -44,7 +41,9 @@ export function telaMenu(app: App): void {
     const abrir = (i: number) => {
       if (saindo) return
       saindo = true; som()
-      timer = window.setTimeout(() => MODOS[i].abrir(app), 0)
+      app.raiz.classList.add('menu-saindo')
+      botoes[i].classList.add('confirmado')
+      timer = window.setTimeout(() => MODOS[i].abrir(app), window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240)
     }
     const botoes = MODOS.map((m, i) => h('button', {
       type: 'button', class: 'grafico-opcao', style: `--ordem:${i}`, 'aria-keyshortcuts': String(i + 1),
@@ -61,8 +60,8 @@ export function telaMenu(app: App): void {
     const teclas = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.altKey || e.metaKey || document.querySelector('[role="dialog"]')) return
       if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
-        e.preventDefault(); selecionar(e.key === 'Home' ? 0 : e.key === 'End' ? 5 : selecionado + (e.key === 'ArrowDown' ? 1 : -1), true)
-      } else if (/^[1-6]$/.test(e.key)) { e.preventDefault(); abrir(Number(e.key) - 1) }
+        e.preventDefault(); selecionar(e.key === 'Home' ? 0 : e.key === 'End' ? MODOS.length - 1 : selecionado + (e.key === 'ArrowDown' ? 1 : -1), true)
+      } else if (/^[1-4]$/.test(e.key)) { e.preventDefault(); abrir(Number(e.key) - 1) }
       else if (e.key === 'Enter' && e.target === app.raiz.querySelector('.tela-titulo')) { e.preventDefault(); abrir(selecionado) }
     }
     window.addEventListener('keydown', teclas)
@@ -81,13 +80,13 @@ export function telaMenu(app: App): void {
     const vez = torneio ? vezAtual(app.baseDoTorneio(torneio.id)) : null
     anexar(app.raiz,
       h('header', { class: 'grafico-titulo' }, h('h2', { class: 'tela-titulo', tabindex: '-1' }, 'OFICINA DE', h('br'), h('strong', {}, 'SOLDAGEM'))),
-      h('span', { class: 'grafico-versao' }, 'ALPHA / 1.5'),
+      h('span', { class: 'grafico-versao' }, 'ALPHA / 1.6'),
       h('nav', { class: 'grafico-lista', 'aria-label': 'Escolher modo de jogo' }, ...botoes),
       h('div', { class: 'grafico-legenda' }, descricao,
         torneio ? h('button', { class: 'grafico-retomar', type: 'button', on: { click: () => painelTorneio(app, torneio.id) } }, `↗ Retomar ${torneio.config.nome}${vez ? ' · rodada em andamento' : ''}`) : null),
       h('footer', { class: 'grafico-rodape' }, h('span', {}, 'JOGO DIDÁTICO'), h('span', {}, '↑ ↓ ESCOLHER    ENTER CONFIRMAR    /    CONTROLE: A')),
     )
-    selecionar(1)
+    selecionar(0)
     frame = requestAnimationFrame(controle)
     return () => {
       window.removeEventListener('keydown', teclas); clearTimeout(timer); cancelAnimationFrame(frame)
