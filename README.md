@@ -31,7 +31,7 @@ portão e sobreposta de reforço).
 
 | Versão | Estado | Download |
 |---|---|---|
-| Alpha v1.6 | Código organizado para editar + eletrodo com nota (inspeção visual) e preenchimento realista | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
+| Alpha v1.6 | Interface de máquina e eletrodo com nota 0–1000 (alpha-v1.6) + lista de defeitos com causa e correção, com o código organizado para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
 | **Alpha v1.5** | **Em teste — MIG/MAG + treino de eletrodo revestido** | [ZIP da v1.5](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip) |
 | Alpha v1.4 | Anterior — MIG/MAG com solda realista | [ZIP da v1.4](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
 | Alpha v1.3 | Aprovada | [ZIP da v1.3](v1.3/Oficina%20de%20Soldagem%203D%20Alpha%20v1.3.zip) |
@@ -44,23 +44,24 @@ acima para receber somente o jogo pronto.
 
 ## Quer mexer no código? Use a v1.6
 
-A pasta [`v1.6/`](v1.6/) tem o jogo da v1.5 com o código reorganizado para quem não programa em JavaScript: pastas e
+A pasta [`v1.6/`](v1.6/) tem o jogo da alpha-v1.6 com o código reorganizado para quem não programa em JavaScript: pastas e
 arquivos com nomes em português (por exemplo, tudo do eletrodo em
 `v1.6/codigo/eletrodo/`), um quadro "O que faz / Onde mexer" no começo de
 cada arquivo, um `LEIA-ME.md` em cada pasta e um guia com receitas de
 mudanças comuns e glossário: [**v1.6/README.md**](v1.6/README.md).
 
-No treino de eletrodo da v1.6, o botão **Inspecionar a peça** dá uma nota de 0 a
-100 com aprovação, defeitos (mordedura, poros, cratera, falta de fusão, inclusão
-de escória...) e como corrigir; o calor do arco aparece ao vivo, e o V de 8 mm se
-enche em vários passes.
+A v1.6 tem a interface nova da alpha-v1.6 (painel de máquina, menu da oficina,
+pausa, Arcade com História/Desafios/Versus) e o eletrodo com depósito real e nota
+de 0 a 1000. No resultado do eletrodo, o botão **Defeitos** lista o que se vê no
+cordão (falta de fusão, mordedura, poros, cratera, inclusão de escória...) com o
+lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 
 ## Onde está cada versão?
 
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
-- [`v1.6/`](v1.6/) ← branch [`reorganizacao`](https://github.com/BeathAzreal/SoldamatGamification/tree/reorganizacao) (código da v1.5 reorganizado)
+- [`v1.6/`](v1.6/) ← [`alpha-v1.6`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.6) (`gpt/v1.6`) com o código reorganizado e a lista de defeitos do eletrodo (`claude/v1.6`)
 - [`v1.5/`](v1.5/) ← [`alpha-v1.5`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.5) (`gpt/v1.5` + `claude/v1.5`)
 - [`v1.4/`](v1.4/) ← [`alpha-v1.4`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.4) (`gpt/v1.4` + `claude/v1.4`)
 
