@@ -49,6 +49,10 @@ export class App {
     },
     novoId,
   }
+  jogoPausado = false
+  controlePausa: { pausar: () => void; retomar: () => void } | null = null
+  abrirPausa: () => void = () => {}
+  fecharPausa: () => void = () => {}
   private limpeza: (() => void) | null = null
   /** Pergunta antes de sair da tela atual (ex.: tentativa oficial em andamento). */
   guardaSaida: (() => Promise<boolean>) | null = null
@@ -139,6 +143,9 @@ export class App {
   async ir(tela: Tela, contexto = ''): Promise<void> {
     if (this.guardaSaida && !(await this.guardaSaida())) return
     this.guardaSaida = null
+    this.fecharPausa()
+    this.jogoPausado = false
+    this.controlePausa = null
     this.limpeza?.()
     this.limpeza = null
     this.raiz.replaceChildren()
@@ -154,6 +161,9 @@ export class App {
       else botao.removeAttribute('aria-current')
     })
     const r = tela(this)
+    const imersivo = !!this.raiz.querySelector('canvas')
+    document.body.classList.toggle('jogo-imersivo', imersivo)
+    if (imersivo) this.raiz.append(h('button', { type: 'button', class: 'atalho-pause', on: { click: () => this.abrirPausa() } }, 'Esc · Pausa'))
     if (typeof r === 'function') this.limpeza = r
     this.raiz.querySelector<HTMLElement>('.tela-titulo')?.focus()
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

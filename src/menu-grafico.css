@@ -61,3 +61,10 @@ body.menu-grafico{background:#090909;color:#f4efdf}
 @media(prefers-reduced-motion:reduce) { .menu-saindo .grafico-lista, .menu-saindo .grafico-titulo, .menu-saindo .grafico-legenda { transition: none; } }
 
 .submenu-longo .grafico-opcao { font-size: clamp(20px, 1.85vw, 27px); min-height: 47px; line-height: 1.12; }
+
+.menu-grafico #app.recordes-oficina { height: 100svh; min-height: 0; overflow-y: auto; padding: 48px 42vw 36px 5vw; }
+.recordes-oficina > * { position: relative; z-index: 1; }
+.recordes-oficina:before { content: ''; position: absolute; inset: 0 39% 0 0; background: #090909e8; z-index: 0; }
+.recordes-oficina .tela-titulo { font-family: BarlowMenu, sans-serif; font-size: 52px; }
+.recordes-oficina .rolagem-tabela { max-height: 48svh; overflow: auto; }
+@media(max-width:700px) { .menu-grafico #app.recordes-oficina { padding: 35px 6vw; } .recordes-oficina:before { right: 0; } }

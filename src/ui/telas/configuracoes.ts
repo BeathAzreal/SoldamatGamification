@@ -1,3 +1,5 @@
+import { menuOficina } from '../componentes/menuOficina'
+import { abrirPainel } from '../dialogo'
 import { COLECOES, PREFIXO } from '../../dados/armazenamento'
 import { PREFERENCIAS_PADRAO } from '../../dados/preferencias'
 import { DISPOSITIVOS, NOME_DISPOSITIVO, type Dispositivo } from '../../entrada/tipos'
@@ -8,19 +10,20 @@ import { somArco } from '../som'
 import { configurarControles15 } from '../componentes/controles15'
 import { carregarControles15 } from '../../dados/controles15'
 import { confirmar, pedirTexto } from '../dialogo'
-import { anexar, h, titulo } from '../dom'
+import { anexar, h } from '../dom'
 import { webglDisponivel } from '../../render/palco3d'
 import { NOME_QUALIDADE, QUALIDADES, RESUMO_QUALIDADE, type Qualidade3D } from '../../render/qualidade3d'
 import { telaMenu } from './menu'
 
 /** Preferências do jogo, separadas da bancada de treino. */
-export function telaConfiguracoes(app: App): void {
-  app.ir((app) => {
+export function montarConfiguracoes(app: App, duranteJogo = false, secoes?: string[]): HTMLElement {
+    const caixa = h('div', { class: 'config-paineis' })
+    const redesenhar = () => caixa.replaceChildren(...montarConfiguracoes(app, duranteJogo, secoes).childNodes)
     const dispositivo = h('select', { id: 'pref-dispositivo' }, DISPOSITIVOS.map(d => h('option', { value: d, selected: d === app.preferencias.dispositivo }, NOME_DISPOSITIVO[d])))
     dispositivo.addEventListener('change', () => {
       app.preferencias.dispositivo = dispositivo.value as Dispositivo
       app.salvar('preferencias')
-      telaConfiguracoes(app)
+      redesenhar()
     })
     const som = h('input', { type: 'checkbox', checked: app.preferencias.som })
     som.addEventListener('change', () => {
@@ -39,7 +42,7 @@ export function telaConfiguracoes(app: App): void {
       // O visual 3D não é calibração: fica como estava.
       app.preferencias = { ...PREFERENCIAS_PADRAO, ultimoNome: p.ultimoNome, dispositivo: p.dispositivo, qualidade3d: p.qualidade3d }
       app.salvar('preferencias')
-      telaConfiguracoes(app)
+      redesenhar()
     }
     const apagarTudo = async () => {
       const texto = await pedirTexto('Apagar todos os dados?', 'Recordes, torneios, avaliações e preferências deste navegador serão apagados. Para confirmar, escreva APAGAR.')
@@ -100,18 +103,36 @@ export function telaConfiguracoes(app: App): void {
       ),
     )
 
-    app.raiz.classList.add('app-cheia')
-    const calibracao = montarCalibracao(app, app.preferencias.dispositivo, () => null, () => telaConfiguracoes(app))
+    const calibracao = montarCalibracao(app, app.preferencias.dispositivo, () => null, redesenhar)
     calibracao.elemento.querySelector('h4')?.remove()
-    anexar(app.raiz,
-      titulo('Configurações', 'Ajustes salvos automaticamente neste navegador.'),
-      h('div', { class: 'config-paineis' },
+    anexar(caixa,
         h('section', { class: 'cartao' }, h('h3', {}, 'Som e dispositivo'),
           h('label', {}, som, ' Som do arco'),
           h('div', { class: 'campo' }, h('label', { for: 'pref-dispositivo' }, 'Dispositivo padrão'), dispositivo)),
         h('section', { class: 'cartao' }, h('h3', {}, 'Câmera e peça'), montarControles(app)),
         h('section', { class: 'cartao' }, h('h3', {}, 'Calibração do dispositivo'), calibracao.elemento),
         h('section', { class: 'cartao' }, h('h3', {}, 'Eletrodo revestido'), h('p', {}, 'Teclas de altura, orientação da vareta, câmera e ferramentas.'), h('button', { type: 'button', class: 'botao-secundario', on: { click: () => { void configurarControles15(carregarControles15()) } } }, 'Configurar controles do eletrodo')),
-        outros))
-  }, 'Configurações')
+        outros)
+    if (duranteJogo) {
+      caixa.querySelector('.mais-opcoes-caixa')?.children[1]?.remove()
+      caixa.querySelector('.mais-opcoes-caixa')?.lastElementChild?.remove()
+      const seletor = caixa.querySelector<HTMLSelectElement>('#pref-dispositivo')
+      if (seletor) { seletor.disabled = true; seletor.title = 'Troque o dispositivo antes de iniciar outra tentativa.' }
+    }
+    if (secoes) caixa.querySelectorAll('section').forEach(secao => { if (!secoes.includes(secao.querySelector('h3')?.textContent ?? '')) secao.remove() })
+    return caixa
+}
+
+export function telaConfiguracoes(app: App): void {
+  const abrir = (nome: string, secoes: string[]) => {
+    telaConfiguracoes(app)
+    const painel = montarConfiguracoes(app, false, secoes)
+    void abrirPainel(nome, painel)
+  }
+  menuOficina(app, 'CONFIGURAÇÕES', 'OFICINA / AJUSTES', [
+    { nome: 'SOM E DISPOSITIVO', descricao: 'Som do arco e dispositivo padrão das próximas partidas.', abrir: () => abrir('Som e dispositivo', ['Som e dispositivo']) },
+    { nome: 'CONTROLES', descricao: 'Botões, teclas, câmera e calibração de mouse, caneta e controle.', abrir: () => abrir('Controles', ['Câmera e peça', 'Calibração do dispositivo', 'Eletrodo revestido', 'Calibração']) },
+    { nome: 'VISUAL', descricao: 'Qualidade do desenho 3D.', abrir: () => abrir('Visual', ['Visual da soldagem']) },
+    { nome: 'DADOS SALVOS', descricao: 'Informações e gerenciamento dos dados deste navegador.', abrir: () => abrir('Dados salvos', ['Dados salvos']) },
+  ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
 }

@@ -133,7 +133,8 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       soltar(); modal = true
       try { cfg = await configurarControles15(cfg) } finally { modal = false; anterior = performance.now(); canvas.focus() }
     } } }, 'Controles')
-    const pausar = h('button', { type: 'button', on: { click: () => { pausado = !pausado; soltar(); pausar.textContent = pausado ? 'Continuar' : 'Pausar'; anterior = performance.now() } } }, 'Pausar')
+    app.controlePausa = { pausar: () => { pausado = true; soltar() }, retomar: () => { cfg = carregarControles15(); pausado = false; anterior = performance.now() } }
+    const pausar = h('button', { type: 'button', class: 'navegacao-de-partida', on: { click: () => { pausado = !pausado; soltar(); pausar.textContent = pausado ? 'Continuar' : 'Pausar'; anterior = performance.now() } } }, 'Pausar')
     const recomecar = () => {
       soltar()
       modelo = new Acionamento15('eletrodo')
@@ -153,7 +154,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
         h('div', {},
           h('h2', { class: 'tela-titulo', tabindex: '-1' }, peca.titulo),
           h('p', {}, `Eletrodo revestido · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · ${peca.aplicacao}`)),
-        h('div', { class: 'p15-processos' }, controles, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
+        h('div', { class: 'p15-processos navegacao-de-partida' }, controles, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
       h('div', { class: 'p15-grade' }, area,
         h('aside', { class: 'p15-painel' }, objetivo, ferramentas, ajuda,
           h('div', { class: 'p15-comandos' }, desgrudar, trocar),

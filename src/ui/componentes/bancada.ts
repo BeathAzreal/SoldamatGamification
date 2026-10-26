@@ -405,7 +405,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   // ------------------------------------------------------------ dispositivo
   const statusDispositivo = h('span', { class: 'status-dispositivo' })
   const gaveta = h('div', { class: 'gaveta', hidden: true })
-  const botaoCalibrar = h('button', { type: 'button', class: 'botao-fantasma', 'aria-expanded': 'false' }, icone('ajuste'), ' Calibrar')
+  const botaoCalibrar = h('button', { type: 'button', class: 'botao-fantasma navegacao-de-partida', 'aria-expanded': 'false' }, icone('ajuste'), ' Calibrar')
   const segmentos = h('div', { class: 'segmentado', role: 'radiogroup', 'aria-label': 'Dispositivo de entrada' })
   const desenharSegmentos = () => {
     const temControle = controlesConectados().length > 0
@@ -501,7 +501,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
         { class: 'barra-dispositivo' },
         segmentos,
         botaoCalibrar,
-        h('button', { type: 'button', class: 'botao-fantasma', title: 'Botões e teclas da câmera e do giro da peça', on: { click: () => abrirPainel('Controles da câmera e da peça', montarControles(app)) } }, icone('ajuste'), ' Controles'),
+        h('button', { type: 'button', class: 'botao-fantasma', 'data-ajuste-partida': true, title: 'Botões e teclas da câmera e do giro da peça', on: { click: () => abrirPainel('Controles da câmera e da peça', montarControles(app)) } }, icone('ajuste'), ' Controles'),
         h('button', { type: 'button', class: 'botao-fantasma', on: { click: reiniciarPeca } }, icone('limpar'), ' Limpar'),
       ),
     ),
@@ -528,12 +528,14 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   const observador = new ResizeObserver(redimensionar)
   observador.observe(areaPeca)
 
+  app.controlePausa = { pausar: () => { sim.pausar(performance.now()); fonte?.desligar(); somArco.calar() }, retomar: () => { sim.retomar(performance.now()); ligarFonte() } }
   let pedido = 0
   // Alguns navegadores não avisam a conexão do controle: confere periodicamente.
   let controlesVistos = controlesConectados().length
   let ultimaChecagem = 0
   const quadro = () => {
     const agora = performance.now()
+    if (app.jogoPausado) { pedido = requestAnimationFrame(quadro); return }
     if (agora - ultimaChecagem > 500) {
       ultimaChecagem = agora
       const n = controlesConectados().length

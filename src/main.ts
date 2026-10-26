@@ -1,3 +1,4 @@
+import { instalarPause } from './ui/componentes/pause'
 import './estilo.css'
 import './estilo-app.css'
 import './estilo-v14.css'
@@ -22,6 +23,7 @@ import { somArco } from './ui/som'
  * O treino livre usa a mesma bancada e execução das missões, com a peça padrão.
  */
 const app = new App()
+instalarPause(app)
 const rotas: Record<string, (app: App) => void> = {
   inicio: telaMenu, historia: telaHistoria, arcade: telaCentralArcade, treino: telaTreino,
   torneio: telaTorneios, recordes: (app) => telaRecordes(app), config: telaConfiguracoes,

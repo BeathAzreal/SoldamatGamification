@@ -1,3 +1,5 @@
+import { menuOficina } from '../componentes/menuOficina'
+import { telaMenu } from './menu'
 import { chaveRanking, ranking, type Recorde } from '../../dados/recordes'
 import { chaveRankingArcade, rankingArcade } from '../../dados/recordesArcade'
 import { NOME_DISPOSITIVO } from '../../entrada/tipos'
@@ -22,6 +24,8 @@ function abasRecordes(app: App, atual: 'historia' | 'arcade'): HTMLElement {
 /** Recordes das partidas de Arcade, por dispositivo. */
 export function telaRecordesArcade(app: App): void {
   app.ir((app) => {
+    document.body.classList.add('menu-grafico')
+    app.raiz.classList.add('recordes-oficina')
     const chaves = [...new Set(app.recordesArcade.map(chaveRankingArcade))].sort()
     let chave = chaves.find((c) => c.startsWith(app.preferencias.dispositivo)) ?? chaves[0]
     const tabela = h('div', {})
@@ -90,16 +94,20 @@ export function telaRecordesArcade(app: App): void {
       app.raiz,
       titulo('Recordes', 'Guardados só neste navegador. Podem ser perdidos se os dados do site forem apagados.'),
       abasRecordes(app, 'arcade'),
+      h('button', { type: 'button', on: { click: () => telaRecordes(app) } }, '← Voltar aos recordes'),
       chaves.length ? h('div', { class: 'campo' }, h('label', { for: 'ranking-arcade' }, 'Dispositivo e versão das regras'), seletor) : null,
       tabela,
       h('p', { class: 'dica' }, 'Cada partida sorteia desafios diferentes: este ranking é de diversão, não uma comparação técnica entre jogadores.'),
     )
     desenhar()
+    return () => { document.body.classList.remove('menu-grafico'); app.raiz.classList.remove('recordes-oficina') }
   }, 'Recordes · Arcade')
 }
 
 function telaRecordesHistoria(app: App, chaveInicial?: string): void {
   app.ir((app) => {
+    document.body.classList.add('menu-grafico')
+    app.raiz.classList.add('recordes-oficina')
     const chaves = [...new Set(app.recordes.map(chaveRanking))].sort()
     let chave = chaveInicial && chaves.includes(chaveInicial) ? chaveInicial : chaves[0]
     const tabela = h('div', {})
@@ -166,16 +174,21 @@ function telaRecordesHistoria(app: App, chaveInicial?: string): void {
     anexar(app.raiz, 
       titulo('Recordes', 'Guardados só neste navegador. Podem ser perdidos se os dados do site forem apagados.'),
       abasRecordes(app, 'historia'),
+      h('button', { type: 'button', on: { click: () => telaRecordes(app) } }, '← Voltar aos recordes'),
       chaves.length ? h('div', { class: 'campo' }, h('label', { for: 'ranking-escolha' }, 'Desafio (missão, dificuldade, dispositivo e versão das regras)'), seletor) : null,
       tabela,
 
     )
     desenhar()
+    return () => { document.body.classList.remove('menu-grafico'); app.raiz.classList.remove('recordes-oficina') }
   }, 'Recordes')
 }
 
 /** Entrada padrão: partidas de Arcade; links com chave abrem a missão correspondente. */
 export function telaRecordes(app: App, chaveInicial?: string): void {
   if (chaveInicial !== undefined) telaRecordesHistoria(app, chaveInicial)
-  else telaRecordesArcade(app)
+  else menuOficina(app, 'RECORDES', 'OFICINA / SUAS MARCAS', [
+    { nome: 'ARCADE', descricao: 'Partidas, pontuação e desafios concluídos.', abrir: () => telaRecordesArcade(app) },
+    { nome: 'HISTÓRIA', descricao: 'Resultados por missão, dificuldade e dispositivo.', abrir: () => telaRecordesHistoria(app) },
+  ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
 }
