@@ -786,3 +786,7 @@ A direção do martelo é sorteada a cada clique, entre as duas direções difer
 
 ### H77 — Avaliação visual parcial do treino SMAW
 A avaliação separa a nota didática de 0 a 1000 dos limites dimensionais 502/503 da ISO 5817:2023 (B/C/D). A ISO 17637:2016 orienta a preparação e a consulta visual; escória remanescente impede a nota final. Não se atribui conformidade global, integridade interna ou qualificação de soldador. Pesos e fator de cobertura são do jogo e aparecem explicados na interface. Dados do arco e aderência servem como dicas, sem falsa equivalência com critérios ISO. Fontes, escopo e limitações estão em AVALIACAO-SMAW.md.
+
+
+### H78 — movimento livre do eletrodo na borda
+Removidos o assento automático na raiz do filete, a mira e o risco guia. O ponteiro continua fora dos limites, mas deixa de gerar contato: a borda não conta como interseção com a face. A aderência física por arco curto permanece. Zoom por +/− (inclusive teclado numérico), com arco fechado.

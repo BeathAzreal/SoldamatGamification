@@ -162,7 +162,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const zoomMais=h('button',{type:'button','aria-label':'Aproximar câmera',on:{click:()=>{vista.aproximar(-150);canvas.focus()}}},'+')
     const zoomMenos=h('button',{type:'button','aria-label':'Afastar câmera',on:{click:()=>{vista.aproximar(150);canvas.focus()}}},'−')
     const area = h('div', { class: 'p15-vista' }, canvas, hud, teclasVista,
-      h('div',{class:'zoom-bancada',role:'group','aria-label':'Zoom da câmera'},h('span',{},'ZOOM'),zoomMenos,zoomValor,zoomMais))
+      h('div',{class:'zoom-bancada',role:'group','aria-label':'Zoom da câmera'},h('span',{title:'Teclas + e −'},'ZOOM'),zoomMenos,zoomValor,zoomMais))
     const nivel=h('select',{'aria-label':'Nível de referência ISO 5817'},...(['B','C','D'] as const).map(n=>h('option',{value:n,selected:n==='C'},`Nível ${n}`)))
     const avaliar=h('button',{type:'button',class:'primario',disabled:true,on:{click:async()=>{
       soltar();modal=true
@@ -207,7 +207,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const atualizarPosicao = (e: PointerEvent) => {
       if (modelo.grudado) return
       const p = vista.pontoNaTela(e.clientX, e.clientY)
-      modelo.naPeca = !!p
+      modelo.naPeca = !!p?.naPeca
       if (p) { posicao = p; modelo.xMm = p.x; modelo.yMm = p.y }
     }
     ouvir(canvas, 'pointerdown', (ev) => {
@@ -252,7 +252,13 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     faixa.addEventListener('input', () => { if (!pausado) modelo.definirDistancia(Number(faixa.value)) })
     ouvir(window, 'keydown', ev => {
       const e = ev as KeyboardEvent
-      if (modal || (e.target as HTMLElement)?.matches('input,select,textarea') || !Object.values(cfg.teclas).includes(e.code)) return
+      if (modal || (e.target as HTMLElement)?.matches('input,select,textarea')) return
+      if (['+','-','='].includes(e.key) || ['NumpadAdd','NumpadSubtract'].includes(e.code)) {
+        e.preventDefault()
+        if (!pausado && modelo.estado !== 'arco') vista.aproximar(e.key === '-' || e.code === 'NumpadSubtract' ? 150 : -150)
+        return
+      }
+      if (!Object.values(cfg.teclas).includes(e.code)) return
       e.preventDefault()
       if (!pausado) teclas.add(e.code)
     })

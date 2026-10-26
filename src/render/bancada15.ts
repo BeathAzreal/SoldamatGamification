@@ -13,8 +13,6 @@ import { cristaMm, INFO_JUNTA, juntaDe, pontoNaSuperficie, type TipoJunta } from
 
 /** Ponta nua da vareta presa nas garras do alicate (mm). */
 const PONTA_NUA = 20
-/** H73: faixa (mm) em que a ponta assenta na raiz do filete. */
-const ASSENTO_FILETE_MM = 4
 const MAX_RESPINGOS = 160
 const GRAVIDADE = 9810
 
@@ -136,9 +134,6 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
     cerda.position.set(-14 + i * 3.5, 3.5, -4.5 + j * 3)
     escova.add(cerda)
   }
-  const mira = new THREE.Mesh(new THREE.RingGeometry(3, 3.5, 40), new THREE.MeshBasicMaterial({ color: '#edc167', side: THREE.DoubleSide }))
-  mira.rotation.x = -Math.PI / 2
-  palco.peca.add(mira)
   // Arco: coluna luminosa da ponta à poça, halo voltado para a câmera, poça e luz que tremulam.
   const aditivo = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false } as const
   const coluna = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 1.6, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#d9f0ff', opacity: 0.9, ...aditivo }))
@@ -172,12 +167,6 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   /** Até onde vão as chapas de cada lado da junta (no filete, 50 mm de parede a 45°). */
   const alcanceLateral = INFO_JUNTA[junta].familia === 'filete' ? 50 / Math.SQRT2 : 50
   const escoria = criarSuperficieEscoria15(superficie, junta)
-  // Risco de pedra-sabão na raiz do filete, do INÍCIO ao FIM: mostra onde o cordão deve correr.
-  if (peca && filete) {
-    const giz = new THREE.Mesh(new THREE.BoxGeometry(peca.fimMm - peca.inicioMm, 0.12, 0.6), new THREE.MeshBasicMaterial({ color: '#e9e4d4', transparent: true, opacity: 0.8 }))
-    giz.position.set((peca.inicioMm + peca.fimMm) / 2 - 75, superficie(0) + 0.45, 0)
-    palco.peca.add(giz)
-  }
   palco.peca.add(escoria.malha)
   palco.guardarTexturas(escoria.textura, escoria.crosta)
   if (peca) palco.peca.add(criarDetalhesIndustriais15(junta, peca.conjunto))
@@ -230,8 +219,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       // Anda pelo raio até cruzar a superfície das chapas e refina por bissecção.
       const o = raio.ray.origin, d = raio.ray.direction
       const acima = (t: number) => {
-        const n = o.z + d.z * t, x = o.x + d.x * t + 75
-        if (Math.abs(n) > alcanceLateral || x < limitesX.min || x > limitesX.max) return true
+        const n = o.z + d.z * t
         return o.y + d.y * t > superficie(n)
       }
       let t0 = 0, t1 = -1
@@ -246,11 +234,9 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         else t1 = tm
       }
       raio.ray.at((t0 + t1) / 2, ponto)
+      // A borda não é uma superfície de contato: continue seguindo a mão fora da peça.
       const p = { x: ponto.x + 75, y: ponto.z }
-      if (!(p.x >= limitesX.min && p.x <= limitesX.max && Math.abs(p.y) <= alcanceLateral)) return null
-      // H73: no filete a ponta apoiada desliza para o fundo do canto; perto da raiz ela assenta ali.
-      if (filete) p.y = Math.sign(p.y) * Math.max(0, Math.abs(p.y) - ASSENTO_FILETE_MM)
-      return p
+      return { ...p, naPeca: p.x >= limitesX.min && p.x <= limitesX.max && Math.abs(p.y) <= alcanceLateral }
     },
     desenhar(m: Acionamento15, p: { x: number; y: number }, c: Cordao, modo: FerramentaBancada15 = 'soldar', acionada = false, desdeGolpeMs = Infinity, agoraMs = 0, dt = 0, direcaoGolpe: 'lateral' | 'diagonal' | 'cima' = 'lateral') {
       const ligado = modo === 'soldar' && m.estado === 'arco'
@@ -299,9 +285,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       punho.position.y = 30
       arame.scale.y = Math.max(0.1, altura - 2)
       arame.position.y = -(altura - 2) / 2
-      mira.position.set(p.x - 75, chao + 0.3, p.y)
-      mira.material.color.set(modo === 'soldar' ? '#edc167' : '#8ccbd4')
-      mira.visible = m.naPeca && !ligado
+
       // Arco e poça.
       const tremor = 0.85 + 0.3 * Math.random()
       const instavel = ligado && m.processo === 'eletrodo' ? m.forma.instabilidade : 0
