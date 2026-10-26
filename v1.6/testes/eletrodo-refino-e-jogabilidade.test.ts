@@ -169,20 +169,21 @@ describe('jogabilidade da altura com toques curtos (H70–H72)', () => {
     m.posicionar(5, 0)
     m.pressionado = true
     m.definirDistancia(0.2)
-    let segurado = 0, apertando = false, espera = -1, quadrosArco = 0, quadros = 0, toques = 0
+    let segurado = 0, apertando = false, espera = -1, quadrosArco = 0, quadros = 0, toques = 0, apertandoS = 0
     const dt = 1 / 60
     for (let i = 0; i < 60 * 40 && m.estado !== 'fim'; i++) {
       if (!apertando && espera < 0 && m.distanciaMm > alto) espera = reacaoS
       if (espera >= 0) { espera -= dt; if (espera < 0) { apertando = true; toques++ } }
       if (apertando && m.distanciaMm < baixo) apertando = false
       segurado = apertando ? segurado + dt : 0
+      if (apertando) apertandoS += dt
       m.xMm += 2.5 * dt
       m.avancar(dt, -velocidadeAltura15(segurado, 6))
       quadros++
       if (m.estado === 'arco') quadrosArco++
     }
     const t = m.tempoFaixaS
-    return { m, fracaoArco: quadrosArco / quadros, adequado: t.adequado / (t.curto + t.adequado + t.longo), toques, segundos: quadros * dt }
+    return { m, fracaoArco: quadrosArco / quadros, adequado: t.adequado / (t.curto + t.adequado + t.longo), toques, segundos: quadros * dt, apertandoS }
   }
 
   it('com a ajuda parcial, poucos toques em S mantêm o arco a vareta inteira, sem grudar', () => {
@@ -196,11 +197,13 @@ describe('jogabilidade da altura com toques curtos (H70–H72)', () => {
     }
   })
 
-  it('sem ajuda (eletrodo real) ainda é possível, segurando S mais vezes', () => {
+  it('sem ajuda (eletrodo real) ainda é possível, segurando S por mais tempo', () => {
     const r = jogar(90, 0)
     expect(r.m.grudadas).toBe(0)
     expect(r.fracaoArco).toBeGreaterThan(0.95)
-    expect(r.toques / r.segundos).toBeGreaterThan(jogar(90, 0.8).toques / jogar(90, 0.8).segundos)
+    // Mais esforço: a fração do tempo com S apertado é bem maior sem ajuda.
+    const parcial = jogar(90, 0.8)
+    expect(r.apertandoS / r.segundos).toBeGreaterThan(2 * parcial.apertandoS / parcial.segundos)
   })
 
   it('um toque curto desce poucos décimos de milímetro', () => {
