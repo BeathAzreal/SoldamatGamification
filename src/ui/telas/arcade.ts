@@ -92,8 +92,8 @@ export function telaArcade(app: App): void {
           'form',
           { class: 'cartao cartao-destaque form-nome', on: { submit: comecar } },
           icone('arcade', 'icone grande'),
-          h('h2', { class: 'tela-titulo titulo-arcade', tabindex: '-1' }, 'ARCADE'),
-          h('p', { class: 'piscar' }, 'INSIRA SEU NOME'),
+          h('h2', { class: 'tela-titulo titulo-arcade', tabindex: '-1' }, 'DESAFIOS'),
+          h('p', { class: 'piscar' }, 'TRÊS VIDAS. ATÉ ONDE VOCÊ CHEGA?'),
           h(
             'ul',
             { class: 'regras-arcade' },

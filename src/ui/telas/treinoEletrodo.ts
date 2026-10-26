@@ -1,3 +1,4 @@
+import { painelMaquina } from '../componentes/painelMaquina'
 import { Acionamento15, VARETA15, velocidadeAltura15, type FaixaArco15 } from '../../modelo/acionamento15'
 import { Cordao } from '../../modelo/cordao'
 import { criarBancada15 } from '../../render/bancada15'
@@ -133,7 +134,8 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       soltar(); modal = true
       try { cfg = await configurarControles15(cfg) } finally { modal = false; anterior = performance.now(); canvas.focus() }
     } } }, 'Controles')
-    const pausar = h('button', { type: 'button', on: { click: () => { pausado = !pausado; soltar(); pausar.textContent = pausado ? 'Continuar' : 'Pausar'; anterior = performance.now() } } }, 'Pausar')
+    app.controlePausa = { pausar: () => { pausado = true; soltar() }, retomar: () => { cfg = carregarControles15(); pausado = false; anterior = performance.now() } }
+    const pausar = h('button', { type: 'button', class: 'navegacao-de-partida', on: { click: () => { pausado = !pausado; soltar(); pausar.textContent = pausado ? 'Continuar' : 'Pausar'; anterior = performance.now() } } }, 'Pausar')
     const recomecar = () => {
       soltar()
       modelo = new Acionamento15('eletrodo')
@@ -148,16 +150,25 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     }
     const teclasVista = h('div', { class: 'p15-instrucoes' })
     const area = h('div', { class: 'p15-vista' }, canvas, hud, teclasVista)
+    orientar.open = true
+    detalhes.open = true
+    const instrumentos = painelMaquina([
+      ['FONTE', h('div', {}, fisica, altura)],
+      ['TOCHA', h('div', {}, orientar)],
+      ['LEITURAS', h('div', {}, detalhes)],
+      ['MISSÃO', h('div', {}, objetivo, ajuda)],
+    ])
     const conteudo = h('section', { class: 'p15' },
       h('header', { class: 'p15-cabecalho' },
         h('div', {},
           h('h2', { class: 'tela-titulo', tabindex: '-1' }, peca.titulo),
           h('p', {}, `Eletrodo revestido · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · ${peca.aplicacao}`)),
-        h('div', { class: 'p15-processos' }, controles, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
+        h('div', { class: 'p15-processos navegacao-de-partida' }, controles, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
       h('div', { class: 'p15-grade' }, area,
-        h('aside', { class: 'p15-painel' }, objetivo, ferramentas, ajuda,
-          h('div', { class: 'p15-comandos' }, desgrudar, trocar),
-          fisica, altura, orientar, detalhes,
+        h('aside', { class: 'p15-painel' },
+          h('div', { class: 'maquina-identificacao' }, 'SMAW / CC', h('span', {}, '● FONTE ENERGIZADA')),
+          ferramentas, h('div', { class: 'p15-comandos' }, desgrudar, trocar),
+          instrumentos,
           h('div', { class: 'p15-acoes' }, pausar, h('button', { type: 'button', on: { click: recomecar } }, 'Recomeçar peça')))))
     app.raiz.append(conteudo)
     corrente.value = String(Math.round((peca.correnteA.min + peca.correnteA.max) / 10) * 5)

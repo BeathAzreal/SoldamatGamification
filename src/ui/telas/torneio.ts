@@ -82,7 +82,7 @@ export function telaTorneios(app: App): void {
   app.ir((app) => {
     const lista = [...app.torneios].sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
     anexar(app.raiz, 
-      titulo('Torneios locais', 'Por turnos, no mesmo computador. Tudo fica salvo neste navegador.'),
+      titulo('Versus · torneios locais', 'Por turnos, no mesmo computador. Tudo fica salvo neste navegador.'),
       h('div', { class: 'acoes' }, h('button', { type: 'button', class: 'primario', on: { click: () => telaConfigTorneio(app) } }, 'Novo torneio')),
       lista.length
         ? h(
@@ -121,7 +121,7 @@ export function telaTorneios(app: App): void {
           )
         : h('p', {}, 'Nenhum torneio ainda.'),
     )
-  }, 'Torneio')
+  }, 'Versus')
 }
 
 // ---------------------------------------------------------------- configuração
@@ -406,7 +406,7 @@ export function painelTorneio(app: App, id: string): void {
       b.torneio.historico.length ? h('details', {}, h('summary', {}, 'Histórico'), h('ul', {}, b.torneio.historico.map((x) => h('li', {}, `${dataHora(x.data)} — ${x.descricao}`)))) : null,
       h('div', { class: 'acoes' }, h('button', { type: 'button', on: { click: () => telaTorneios(app) } }, 'Lista de torneios')),
     )
-  }, 'Torneio')
+  }, 'Versus')
 }
 
 export function tabelaClassificacao(b: BaseTorneio, grupos: GrupoClassificacao[], legenda: string): HTMLElement {
