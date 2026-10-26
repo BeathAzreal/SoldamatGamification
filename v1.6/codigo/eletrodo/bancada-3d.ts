@@ -19,6 +19,7 @@ import { criarSuperficieEscoria15 } from './escoria-3d'
 import { girarFerramenta15, type Vetor15 } from './girar-com-o-mouse'
 import type { FerramentaBancada15 } from './escoria'
 import { cristaMm, INFO_JUNTA, juntaDe, pontoNaSuperficie, type TipoJunta } from '../simulacao-mig/tipos-de-junta-e-posicao'
+import type { AnaliseDefeitos } from '../simulacao-mig/defeitos'
 
 /** Ponta nua da vareta presa nas garras do alicate (mm). */
 const PONTA_NUA = 20
@@ -335,6 +336,8 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       escoria.atualizar(m.escoria, c)
       palco.desenhar(camera)
     },
+    /** Defeitos visíveis calculados pela análise do eletrodo (escamas, poros, crateras, respingos, cor de calor). */
+    atualizarDefeitos(a: AnaliseDefeitos | null) { palco.atualizarDefeitos(a) },
     destruir() { palco.destruir() },
   }
 }
