@@ -51,6 +51,7 @@ export class App {
   }
   jogoPausado = false
   controlePausa: { pausar: () => void; retomar: () => void } | null = null
+  voltarArcade: () => void = () => {}
   abrirPausa: () => void = () => {}
   fecharPausa: () => void = () => {}
   private limpeza: (() => void) | null = null
@@ -163,6 +164,9 @@ export class App {
     const r = tela(this)
     const imersivo = !!this.raiz.querySelector('canvas')
     document.body.classList.toggle('jogo-imersivo', imersivo)
+    const paginaArcade = rota === 'arcade' && !imersivo && !document.body.classList.contains('menu-grafico')
+    document.body.classList.toggle('arcade-interno', paginaArcade)
+    if (paginaArcade) this.raiz.prepend(h('button', { type: 'button', class: 'arcade-voltar', on: { click: () => this.voltarArcade() } }, '← VOLTAR AO ARCADE'))
     if (imersivo) this.raiz.append(h('button', { type: 'button', class: 'atalho-pause', on: { click: () => this.abrirPausa() } }, 'Esc · Pausa'))
     if (typeof r === 'function') this.limpeza = r
     this.raiz.querySelector<HTMLElement>('.tela-titulo')?.focus()

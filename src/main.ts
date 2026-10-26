@@ -24,6 +24,7 @@ import { somArco } from './ui/som'
  */
 const app = new App()
 instalarPause(app)
+app.voltarArcade = () => telaCentralArcade(app)
 const rotas: Record<string, (app: App) => void> = {
   inicio: telaMenu, historia: telaHistoria, arcade: telaCentralArcade, treino: telaTreino,
   torneio: telaTorneios, recordes: (app) => telaRecordes(app), config: telaConfiguracoes,
