@@ -86,3 +86,39 @@
 
 .jogo-imersivo:has(.execucao) .atalho-pause { left: 20px; right: auto; }
 .jogo-imersivo .resumo-passe > button { padding: 4px 8px; font-size: 11px; }
+
+.jogo-imersivo .p15-fonte { min-width: 0; max-width: 100%; }
+
+.zoom-bancada { position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:7px;background:#141e22e8;border:1px solid #56666c;padding:4px 8px;font:11px Consolas,monospace;color:#d3dfdd; }
+.zoom-bancada button { padding:3px 9px;font-size:18px;background:#263539;border:1px solid #647574;color:#d5eee7; }
+.zoom-bancada output { min-width:40px;text-align:center; }
+.p15-avaliacao { display:flex;gap:5px;margin-top:auto;flex:none; }
+.p15-avaliacao select { width:86px; }
+.p15-avaliacao button { flex:1; }
+.jogo-imersivo .p15-painel .p15-acoes { margin-top:0; }
+.resultado-smaw { font-size:12px; }
+.resultado-smaw .nota-smaw { font:700 36px Consolas,monospace;color:#a9e7cb;margin:8px 0; }
+.resultado-smaw ul { list-style:none;padding:0;display:grid;gap:8px; }
+.resultado-smaw li { display:flex;flex-direction:column;gap:2px;border-bottom:1px solid #444;padding-bottom:5px; }
+.resultado-smaw p { margin:8px 0; }
+
+.p15-avaliacao select { width:78px; }
+.p15-avaliacao button:last-child { flex:0 0 32px; }
+
+.p15-painel[hidden] { display:none !important; }
+.jogo-imersivo .p15-resultado { gap:10px; }
+.p15-resultado h2 { font-size:16px;margin:0; }
+.p15-resultado .placar { gap:10px; }
+.p15-resultado .placar-numero { font-size:42px; }
+.p15-resultado .conceito { font-size:34px;min-width:44px; }
+.p15-resultado .placar-rotulo { font-size:9px; }
+.p15-resultado .barras-categorias { margin:0;padding:0;display:grid;gap:10px; }
+.p15-resultado .barra-cabeca { font-size:11px;gap:6px; }
+.p15-resultado .selo { margin:0;font-size:11px;padding:7px; }
+.p15-resultado .p15-descontos { margin:0;font-size:11px; }
+.p15-resultado > button,.p15-proxima button { padding:9px 6px;min-height:34px;font-size:12px; }
+.p15-resultado small { font-size:11px;line-height:1.35; }
+.p15-proxima { display:grid;gap:6px;margin-top:auto; }
+.p15-avaliacao:has(button:first-child) button:first-child { font-size:12px; }
+
+.p15-hud[hidden],.p15-instrucoes[hidden] { display:none !important; }

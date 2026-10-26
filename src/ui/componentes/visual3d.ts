@@ -122,7 +122,8 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
     if (lembrete.textContent !== texto) lembrete.textContent = texto
   }
   const botaoOficina = op.oficinaTreino || op.serralheria ? h('button', { type: 'button', class: 'botao-fantasma botao-ver-cenario', title: 'Afastar a câmera para conhecer a estação' }, op.serralheria ? 'Ver serralheria' : 'Ver oficina') : null
-  const rotuloCamera = h('span', { class: 'camera-livre', hidden: true }, botaoCentralizar, botaoOficina, lembrete)
+  const zoomBotao=(rotulo:string,delta:number)=>h('button',{type:'button',class:'botao-fantasma','aria-label':rotulo,on:{click:()=>{if(cena){cena.vista.aproximar(delta);guardarCamera();op.aoMudarMapa()}}}},rotulo.startsWith('Aproximar')?'+':'−')
+  const rotuloCamera = h('span', { class: 'camera-livre', hidden: true }, botaoCentralizar, zoomBotao('Afastar câmera',150), zoomBotao('Aproximar câmera',-150), botaoOficina, lembrete)
   botaoOficina?.addEventListener('click', () => {
     camera.azimute = camera.base = -0.25
     camera.elevacao = 0.8
@@ -182,6 +183,14 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
   }
 
   const quando = op.quando ?? 'nesta tela'
+  let arcoAberto = false
+  const zoomTecla = (e: KeyboardEvent) => {
+    if (!area.isConnected || !cena || arcoAberto || document.querySelector('[role="dialog"]') || (e.target as HTMLElement)?.matches('input,select,textarea')) return
+    if (!['+','-','='].includes(e.key) && !['NumpadAdd','NumpadSubtract'].includes(e.code)) return
+    e.preventDefault()
+    api.aproximar(e.key === '-' || e.code === 'NumpadSubtract' ? 150 : -150)
+  }
+  window.addEventListener('keydown', zoomTecla)
   const api: Visual3D = {
     permitePosicao: (giro, rolagem) => cena?.permitePosicao(giro, rolagem) ?? true,
     elemento: h('div', { class: 'visual-sobre', role: 'group', 'aria-label': 'Câmera' }, rotuloCamera, aviso),
@@ -214,6 +223,7 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
       botaoCentralizar.click()
     },
     desenhar(d) {
+      arcoAberto = d.arcoAberto
       rolagemAtual = d.rolagemGraus
       if (!cena) return
       // Analógico direito do controle move a câmera (arco fechado), se não estiver guiando a tocha.
@@ -255,6 +265,7 @@ export function montarVisual3D(op: OpcoesVisual3D): Visual3D {
       if (largura > 0) cena?.ajustarTamanho(largura, altura)
     },
     destruir() {
+      window.removeEventListener('keydown', zoomTecla)
       descartar()
     },
   }
