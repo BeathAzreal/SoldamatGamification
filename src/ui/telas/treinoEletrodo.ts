@@ -1,8 +1,9 @@
 import { avaliarEletrodo, type NivelISO } from '../../pontuacao/eletrodo'
 import { resultadoEletrodo } from '../componentes/resultadoEletrodo'
 import { painelMaquina } from '../componentes/painelMaquina'
-import { Acionamento15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from '../../modelo/acionamento15'
+import { Acionamento15, RENDIMENTO15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from '../../modelo/acionamento15'
 import { DepositoEletrodo, alvoEletrodo, trechoEletrodo } from '../../modelo/depositoEletrodo'
+import { Cordao } from '../../modelo/cordao'
 import { criarBancada15 } from '../../render/bancada15'
 import type { App } from '../app'
 import { h, n0, n1 } from '../dom'
@@ -10,7 +11,10 @@ import { carregarControles15, nomeTecla15 as nomeTecla } from '../../dados/contr
 import { configurarControles15 } from '../componentes/controles15'
 import type { FerramentaBancada15 } from '../../modelo/escoria15'
 import { INFO_JUNTA } from '../../modelo/juntas'
-import { limitesPecaEletrodo, type PecaEletrodo } from '../../missoes/pecasEletrodo'
+import { RegistroPasse } from '../../modelo/registroPasse'
+import { analisarEletrodo, LIMITES } from '../../modelo/analiseEletrodo'
+import { inspecionarDefeitos } from '../../pontuacao/defeitosEletrodo'
+import { aporteAlvoKJmm, limitesPecaEletrodo, type PecaEletrodo } from '../../missoes/pecasEletrodo'
 
 /** Quadro muito longo (aba travada, depurador) não vira um salto de vários segundos de arco. */
 const DT_MAX = 0.25
@@ -35,6 +39,15 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     modelo.limitesX = limitesX
     const novoCordao = () => new DepositoEletrodo(peca)
     let cordao = novoCordao()
+    // H86: o cordão que aparece na tela é o cordão 3D (mesmo desenho do MIG, com escamas e brilho),
+    // alimentado com o mesmo metal. O depósito acima continua decidindo o arco, a nota e os defeitos.
+    const novoCordao3D = () => new Cordao(undefined, undefined, undefined, { junta: peca.junta, dimensoes: { espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } })
+    let cordao3D = novoCordao3D()
+    // Calor de cada passe, arco e escória sob o metal (H82–H84), em fatias de meio milímetro.
+    const novoRegistro = () => new RegistroPasse(300, 0.5)
+    let registro = novoRegistro()
+    let analiseMs = 0, inclusaoAntes = 0
+    const alvo = aporteAlvoKJmm(peca)
     let posicao = { x: 75, y: 0 }
     let ponteiro = false
     let pausado = false
@@ -122,7 +135,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       h('button', { type: 'button', on: { click: () => { vista.verEstacao(); canvas.focus() } } }, 'Ver estação SMAW'))
     const leituras = h('dl', { class: 'p15-leituras' })
     const valoresLeitura = new Map<string, HTMLElement>()
-    for (const nome of ['Tensão do arco', 'Consumo', 'Tempo de arco', 'Energia', 'Escória', 'Resíduos soltos', 'Sobre escória fria', 'Respingos']) {
+    for (const nome of ['Tensão do arco', 'Consumo', 'Tempo de arco', 'Energia', 'Calor do passe', 'Escória', 'Resíduos soltos', 'Sobre escória fria', 'Respingos']) {
       const dd = h('dd')
       valoresLeitura.set(nome, dd)
       leituras.append(h('dt', {}, nome), dd)
@@ -151,6 +164,9 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       const painel = app.raiz.querySelector<HTMLElement>('.p15-painel')
       if (painel) painel.hidden = false
       cordao = novoCordao()
+      cordao3D = novoCordao3D()
+      registro = novoRegistro(); inclusaoAntes = 0; analiseMs = 0
+      vista.atualizarDefeitos(null)
       modelo = new Acionamento15('eletrodo')
       modelo.limitesX = limitesX
       modelo.superficie = y => cordao.altura(modelo.xMm,y)
@@ -174,7 +190,11 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       soltar(); encerrada = true
       hud.hidden = true; teclasVista.hidden = true
       const r = avaliarEletrodo(peca,cordao,modelo,nivelISO)
-      const resultado = resultadoEletrodo(r, {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta}})
+      registro.fimArco(modelo.xMm, modelo.yMm, performance.now(), 'soltou')
+      const analise = analisarEletrodo(peca, cordao, registro)
+      vista.atualizarDefeitos(analise.defeitos)
+      const inspecao = inspecionarDefeitos(peca, cordao, registro, analise)
+      const resultado = resultadoEletrodo(r, inspecao, {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta}})
       const painel = conteudo.querySelector<HTMLElement>('.p15-painel')!
       painel.hidden = true
       painelResultado = resultado.painel
@@ -355,8 +375,20 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       const vAltura = velocidadeAltura15(seguraSobe, cfg.velocidade) - velocidadeDescida15(seguraDesce, cfg.velocidade, modelo.consumoMmS, modelo.compensar ? 1 : modelo.assistencia, modelo.cosInclinado, modelo.estado === 'arco')
       if (pode) {
         if (ferramentaAtual === 'soldar') modelo.orientar(modelo.azimuteGraus + (ativo('azMais') - ativo('azMenos')) * dt * 60, modelo.inclinacaoGraus + (ativo('inclMais') - ativo('inclMenos')) * dt * 45, modelo.rolamentoGraus + (ativo('rolMais') - ativo('rolMenos')) * dt * 60)
-        modelo.avancar(dt, ferramentaAtual === 'soldar' ? vAltura : 0,
-          (volume, forma) => cordao.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0))
+        const estadoAntes = modelo.estado, quenteAntes = modelo.pontaQuente
+        modelo.avancar(dt, ferramentaAtual === 'soldar' ? vAltura : 0, (volume, forma) => {
+          cordao.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0)
+          cordao3D.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0)
+          // Registro do passe (H82–H84): calor, arco e metal posto sobre escória fria.
+          if (forma) registro.depositar(modelo.xMm, forma, agora, modelo.escoria.inclusaoMm3 - inclusaoAntes)
+          inclusaoAntes = modelo.escoria.inclusaoMm3
+        })
+        const estadoDepois = modelo.estado
+        if (estadoAntes !== 'arco' && estadoDepois === 'arco') registro.inicioArco(modelo.xMm, modelo.yMm, agora, quenteAntes)
+        if (estadoAntes === 'arco' && estadoDepois !== 'arco') {
+          registro.fimArco(modelo.xMm, modelo.yMm, agora, estadoDepois === 'fim' ? 'fim-da-vareta' : estadoDepois === 'grudado' ? 'grudou' : !modelo.pressionado ? 'soltou' : 'afastou')
+        }
+        if (estadoAntes !== 'grudado' && estadoDepois === 'grudado') registro.grudou(modelo.xMm, modelo.yMm)
         const pressionada = !!(modelo.naPeca && (ponteiro || ativo('acionar') || gatilhoControle))
         if (ferramentaAtual === 'martelo' && pressionada && !limpezaPressionada) {
           const direcoes = ['lateral', 'diagonal', 'cima'] as const
@@ -391,6 +423,9 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       if (medidorTexto.textContent !== textoMedidor) medidorTexto.textContent = textoMedidor
       medidorTexto.dataset.faixa = modelo.esticado ? 'longo' : faixaArco ?? ''
       avanco.value = `${n1(modelo.estado === 'arco' ? modelo.velocidadeMmS : 0)} mm/s`
+      // Calor do arco agora (H82): potência que entra na peça ÷ velocidade de avanço, comparado com o da peça.
+      const calorAgora = modelo.estado === 'arco' && modelo.velocidadeMmS > 0.3 ? RENDIMENTO15.termico * modelo.correnteA * modelo.tensaoV / modelo.velocidadeMmS / 1000 : 0
+      avanco.dataset.faixa = !calorAgora ? '' : calorAgora < LIMITES.fusaoFracaAbaixo * alvo ? 'frio' : calorAgora > LIMITES.fusaoExcessoAcima * alvo ? 'quente' : 'bom'
       fonteHud.value = `${n0(modelo.correnteA)} A · Ø ${n1(modelo.diametroMm)}`
       const chaveTeclas = JSON.stringify(cfg.teclas)
       if (chaveTeclas !== teclasChave) {
@@ -415,6 +450,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       leitura('Consumo', `${n1(modelo.consumoMmS)} mm/s`)
       leitura('Tempo de arco', `${n1(modelo.tempoArcoS)} s`)
       leitura('Energia', `${n1(modelo.energiaJ / 1000)} kJ`)
+      leitura('Calor do passe', `${calorAgora ? `${n1(calorAgora)} kJ/mm` : '—'} · bom de ${n1(LIMITES.fusaoFracaAbaixo * alvo)} a ${n1(LIMITES.fusaoExcessoAcima * alvo)}`)
       leitura('Escória', `${n0(modelo.escoria.areaMm2)} mm²${modelo.escoria.cobertura > 0.01 ? ` · ${n0(quente * 100)}% quente` : ''}`)
       leitura('Resíduos soltos', `${n0(modelo.escoria.residuos * 9)} mm²`)
       leitura('Sobre escória fria', `${n1(modelo.escoria.inclusaoMm3)} mm³ (indicador)`)
@@ -434,7 +470,12 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       zoomValor.value = `${vista.zoomPercentual()}%`
       zoomMais.disabled = zoomMenos.disabled = modelo.estado === 'arco'
       atualizarObjetivo(agora)
-      vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe, ocultarEscoria, encerrada)
+      // A análise (poros, crateras, mordedura, respingos, cor de calor) acompanha o cordão a cada meio segundo.
+      if (!encerrada && agora - analiseMs > 500 && registro.aberturas.length) {
+        analiseMs = agora
+        vista.atualizarDefeitos(analisarEletrodo(peca, cordao, registro).defeitos)
+      }
+      vista.desenhar(modelo, posicao, cordao3D, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe, ocultarEscoria, encerrada)
       pedido = requestAnimationFrame(quadro)
     }
     pedido = requestAnimationFrame(quadro)

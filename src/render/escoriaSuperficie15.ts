@@ -93,7 +93,8 @@ export function criarSuperficieEscoria15(superficie: (n: number) => number = () 
         fragmentos = amostrar(escoria.fragmentos,x,y)
         calor = amostrar(escoria.calor,x,y) * quantidade
         amostras = 1
-        posicoes[n * 3 + 1] = local ? alturaCrostaEletrodo(local,x,y,quantidade) : topo + 0.10 + 0.18 * Math.min(1, quantidade / Math.max(1, amostras) * 3)
+        // Sobre o cordão 3D (H86) a crosta volta à espessura da v1.5: a crista desenhada é mais alta que a parábola usada aqui.
+        posicoes[n * 3 + 1] = local ? alturaCrostaEletrodo(local,x,y,quantidade) : topo + 0.35 + 0.25 * Math.min(1, quantidade / Math.max(1, amostras) * 3)
         cor.copy(fria).lerp(quente, quantidade > 0 ? calor / quantidade : 0)
         if (quantidade > 0) cor.lerp(residuo, fragmentos / quantidade)
         cores.set([cor.r, cor.g, cor.b], n * 3)

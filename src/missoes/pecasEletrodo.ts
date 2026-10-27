@@ -1,3 +1,4 @@
+import { RENDIMENTO15 } from '../modelo/acionamento15'
 import type { TipoJunta } from '../modelo/juntas'
 
 /**
@@ -25,6 +26,22 @@ export interface PecaEletrodo {
   inicioMm: number
   fimMm: number
   objetivo: string
+}
+
+/** Tensão do arco com o comprimento igual ao diâmetro da alma (mesma regra de acionamento15.ts). */
+const tensaoNominalV = (diametroMm: number) => 20 + 2 * diametroMm
+/** Avanço de referência do eletrodo revestido no treino (mm/s), cerca de 15 cm por minuto. */
+export const AVANCO_REFERENCIA_MMS = 2.5
+
+/**
+ * H82: aporte de calor de referência da peça (kJ/mm): o calor que o arco põe
+ * na junta com a corrente no meio da faixa sugerida, arco do tamanho do
+ * diâmetro e o avanço de referência. A análise compara o calor de cada passe
+ * com este valor: de 0,8 a 1,7 vez é a faixa adequada (analiseEletrodo.ts).
+ */
+export function aporteAlvoKJmm(p: PecaEletrodo): number {
+  const corrente = (p.correnteA.min + p.correnteA.max) / 2
+  return RENDIMENTO15.termico * corrente * tensaoNominalV(p.diametroMm) / AVANCO_REFERENCIA_MMS / 1000
 }
 
 export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
