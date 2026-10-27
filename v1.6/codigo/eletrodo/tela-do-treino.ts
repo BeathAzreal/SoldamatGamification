@@ -7,7 +7,8 @@
  *    Enquanto o arco está aceso, anota o calor de cada passe
  *    (registro-do-passe.ts); a cada meio segundo a análise desenha os
  *    defeitos no cordão; ao encerrar, o resultado mostra a nota de 0 a
- *    1000 e a lista de defeitos com causa e correção.
+ *    1000 e a lista de defeitos com causa e correção. O cordão desenhado
+ *    é o cordão 3D (o mesmo do MIG), alimentado com o mesmo metal (H86).
  *
  * Onde mexer: Textos de estado estão em "mensagens" e TEXTO_FAIXA; os
  *    itens do objetivo em itensObjetivo; as leituras em valoresLeitura;
@@ -19,6 +20,7 @@ import { resultadoEletrodo } from './janela-do-resultado'
 import { painelMaquina } from '../partes-das-telas/painel-da-maquina'
 import { Acionamento15, RENDIMENTO15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from './arco-e-vareta'
 import { DepositoEletrodo, alvoEletrodo, trechoEletrodo } from './deposito-do-cordao'
+import { Cordao } from '../simulacao-mig/cordao'
 import { criarBancada15 } from './bancada-3d'
 import type { App } from '../interface/aplicativo'
 import { h, n0, n1 } from '../interface/criar-elementos'
@@ -54,6 +56,10 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     modelo.limitesX = limitesX
     const novoCordao = () => new DepositoEletrodo(peca)
     let cordao = novoCordao()
+    // H86: o cordão que aparece na tela é o cordão 3D (mesmo desenho do MIG, com escamas e brilho),
+    // alimentado com o mesmo metal. O depósito acima continua decidindo o arco, a nota e os defeitos.
+    const novoCordao3D = () => new Cordao(undefined, undefined, undefined, { junta: peca.junta, dimensoes: { espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } })
+    let cordao3D = novoCordao3D()
     // Calor de cada passe, arco e escória sob o metal (H82–H84), em fatias de meio milímetro.
     const novoRegistro = () => new RegistroPasse(300, 0.5)
     let registro = novoRegistro()
@@ -175,6 +181,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       const painel = app.raiz.querySelector<HTMLElement>('.p15-painel')
       if (painel) painel.hidden = false
       cordao = novoCordao()
+      cordao3D = novoCordao3D()
       registro = novoRegistro(); inclusaoAntes = 0; analiseMs = 0
       vista.atualizarDefeitos(null)
       modelo = new Acionamento15('eletrodo')
@@ -388,6 +395,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
         const estadoAntes = modelo.estado, quenteAntes = modelo.pontaQuente
         modelo.avancar(dt, ferramentaAtual === 'soldar' ? vAltura : 0, (volume, forma) => {
           cordao.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0)
+          cordao3D.depositar(modelo.xMm, modelo.yMm, volume, agora, forma?.razao, 0, forma?.instabilidade ?? 0)
           // Registro do passe (H82–H84): calor, arco e metal posto sobre escória fria.
           if (forma) registro.depositar(modelo.xMm, forma, agora, modelo.escoria.inclusaoMm3 - inclusaoAntes)
           inclusaoAntes = modelo.escoria.inclusaoMm3
@@ -484,7 +492,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
         analiseMs = agora
         vista.atualizarDefeitos(analisarEletrodo(peca, cordao, registro).defeitos)
       }
-      vista.desenhar(modelo, posicao, cordao, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe, ocultarEscoria, encerrada)
+      vista.desenhar(modelo, posicao, cordao3D, ferramentaAtual, limpezaPressionada && pode, agora - ultimoGolpeMs, agora, pode ? dt : 0, direcaoGolpe, ocultarEscoria, encerrada)
       pedido = requestAnimationFrame(quadro)
     }
     pedido = requestAnimationFrame(quadro)

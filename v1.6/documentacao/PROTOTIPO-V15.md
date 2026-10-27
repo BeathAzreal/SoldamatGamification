@@ -85,15 +85,18 @@ Somam-se ao depósito do GPT (H79–H80) e à nota de 0 a 1000 (H81). Não mudam
 
 **H83 — onde olhar:** a análise mede o metal do depósito (`DepositoEletrodo`) em fatias de 0,5 mm: largura, centro e altura da faixa contínua de metal que passa pela parte mais grossa. Fatias com menos de 2 mm de largura não entram na lista de defeitos.
 
-**H84 — defeitos do eletrodo**, calculados a partir do registro do passe e desenhados sobre o metal do cordão (`codigo/eletrodo/marcas-dos-defeitos-3d.ts`), a cada meio segundo enquanto se solda:
+**H84 — defeitos do eletrodo**, calculados a partir do registro do passe e desenhados sobre o cordão 3D com o mesmo desenho dos defeitos do MIG (`codigo/desenho-3d/defeitos-visiveis.ts`), a cada meio segundo enquanto se solda:
 - mordedura: arco longo (acima de 1,3 diâmetro) e calor em excesso; risco escuro na borda do cordão;
 - sobreposição: passe frio e lento;
 - porosidade: arco longo (acima de 1,5 diâmetro) tira a proteção do revestimento; abrir o arco a frio e seguir em frente deixa poros no começo, a menos que a ponta volte por cima do ponto de abertura; furinhos escuros no cordão;
 - cratera: apagar o arco sem parar 0,3 s sobre a poça, a não ser que outro passe cubra depois; mancha escura no fim do passe;
 - inclusão de escória: metal posto sobre escória fria (soldar sem limpar entre passes);
 - respingos presos (alguns sempre; muitos com arco longo), marca de abertura de arco fora da junta e marca de eletrodo grudado: bolinhas de metal na chapa;
-- cor de calor: o cordão fica palha, marrom ou azulado onde o calor passou da referência.
+- escamas espaçadas pelo avanço a cada 190 ms de arco;
+- cor de calor ao lado do cordão onde o calor passou da referência.
 
 **H85 — lista de defeitos no resultado:** ao encerrar, o resultado mostra, abaixo da nota, os defeitos do trecho exigido com a posição em mm (a régua da peça), a causa provável e como corrigir (`codigo/eletrodo/defeitos-do-eletrodo.ts`). Falta de fusão, perfuração, inclusão de escória e sobreposição aparecem primeiro, como trechos que pediriam reparo. A lista é didática, inspirada em inspeção visual de soldagem; não é norma, não mexe na nota e não entra em recordes.
+
+**H86 — cordão 3D na tela:** o cordão que aparece é o cordão 3D (o mesmo do MIG, com seção arredondada, escamas e brilho de metal), alimentado com o mesmo metal, no mesmo lugar e ao mesmo tempo que o depósito do GPT (H79). O depósito continua decidindo o comprimento do arco, a nota de 0 a 1000 e a lista de defeitos; o cordão 3D é só o desenho, e a escória, a ponta e o martelinho seguem a sua superfície. A malha do depósito (`metal-do-cordao-3d.ts`) não aparece mais.
 
 Calibração (`testes/eletrodo-defeitos.test.ts`, soldador simulado a 60 quadros/s): técnica boa (arco ≈ diâmetro, avanço de 2,5 mm/s, parada no fim, recuo na abertura, limpeza entre passes) não deixa defeito grave; avanço rápido demais dá falta de fusão; lento demais dá calor em excesso e, na raiz aberta, perfuração; arco longo dá mordedura, poros e respingos; não parar no fim deixa cratera; soldar por cima da escória sem limpar dá inclusão.

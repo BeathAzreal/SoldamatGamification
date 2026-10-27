@@ -172,4 +172,4 @@ A v1.6 tem o código da alpha-v1.6 com pastas e arquivos renomeados. Os nomes de
 | `tests/pontuacaoEletrodo.test.ts` | `testes/eletrodo-placar.test.ts` |
 | `tests/superficiesEletrodo.test.ts` | `testes/eletrodo-superficies.test.ts` |
 
-Arquivos novos da v1.6 organizada (lista de defeitos do eletrodo): `codigo/eletrodo/analise-do-cordao.ts`, `defeitos-do-eletrodo.ts`, `marcas-dos-defeitos-3d.ts`, `registro-do-passe.ts` e `testes/eletrodo-defeitos.test.ts`.
+Arquivos novos da v1.6 organizada (lista de defeitos do eletrodo): `codigo/eletrodo/analise-do-cordao.ts`, `defeitos-do-eletrodo.ts`, `registro-do-passe.ts` e `testes/eletrodo-defeitos.test.ts`.
