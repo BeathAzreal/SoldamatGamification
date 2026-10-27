@@ -17,7 +17,7 @@ interface Passe {
 function passe(o: Passe = {}): Simulacao {
   const sim = new Simulacao(o.ctx ?? CONTEXTO_PADRAO)
   if (o.ajustes) sim.definirAjustes(o.ajustes)
-  const vel = o.velocidade ?? (() => 12)
+  const vel = o.velocidade ?? (() => 6) // v1.8 (H87): metade da velocidade de antes
   const y = o.lateral ?? 0
   let t = 0
   let x = 5
@@ -55,13 +55,13 @@ describe('índice de fusão sintético (H31–H34)', () => {
   })
 
   it('rápido demais → falta de fusão; chapa fina na referência → perfuração', () => {
-    expect(noMeio(passe({ velocidade: () => 30 })).estado).toBe('falta')
+    expect(noMeio(passe({ velocidade: () => 15 })).estado).toBe('falta')
     expect(noMeio(passe({ ctx: { ...CONTEXTO_PADRAO, espessuraMm: 1.5 } })).estado).toBe('perfuracao')
   })
 
   it('devagar demais não aumenta a fusão sem limite (amortecimento)', () => {
-    const lento = noMeio(passe({ velocidade: () => 2 })).indice
-    const medio = noMeio(passe({ velocidade: () => 5 })).indice
+    const lento = noMeio(passe({ velocidade: () => 1 })).indice
+    const medio = noMeio(passe({ velocidade: () => 2.5 })).indice
     expect(lento).toBeLessThan(medio)
   })
 
@@ -70,8 +70,8 @@ describe('índice de fusão sintético (H31–H34)', () => {
   })
 
   it('não depende da taxa de quadros (inclui o aquecimento acumulado)', () => {
-    const a = passe({ pausaMs: 1200 }).percurso.copiaDosAportesEfetivos()
-    const b = passe({ pausaMs: 1200, quadroMs: 1000 / 23 }).percurso.copiaDosAportesEfetivos()
+    const a = passe({ pausaMs: 2400 }).percurso.copiaDosAportesEfetivos()
+    const b = passe({ pausaMs: 2400, quadroMs: 1000 / 23 }).percurso.copiaDosAportesEfetivos()
     let maior = 0
     for (let i = 0; i < a.length; i++) maior = Math.max(maior, Math.abs(a[i] - b[i]))
     expect(maior).toBeLessThan(1e-9)
@@ -84,17 +84,17 @@ describe('materiais com comportamento próprio (H35)', () => {
   const ajustes = { alimentacao: 7, tensao: 9.5 }
 
   it('no alumínio a fusão cresce ao longo do passe muito mais que no aço', () => {
-    const cresceAl = noMeio(passe({ ctx: aluminio, ajustes, velocidade: () => 25 }), 130).indice /
-      noMeio(passe({ ctx: aluminio, ajustes, velocidade: () => 25 }), 20).indice
-    const cresceAco = noMeio(passe({ ctx: aco, ajustes, velocidade: () => 25 }), 130).indice /
-      noMeio(passe({ ctx: aco, ajustes, velocidade: () => 25 }), 20).indice
+    const cresceAl = noMeio(passe({ ctx: aluminio, ajustes, velocidade: () => 12.5 }), 130).indice /
+      noMeio(passe({ ctx: aluminio, ajustes, velocidade: () => 12.5 }), 20).indice
+    const cresceAco = noMeio(passe({ ctx: aco, ajustes, velocidade: () => 12.5 }), 130).indice /
+      noMeio(passe({ ctx: aco, ajustes, velocidade: () => 12.5 }), 20).indice
     expect(cresceAl).toBeGreaterThan(1.25)
     expect(cresceAco).toBeLessThan(1.1)
   })
 
   it('alumínio sem remover o óxido funde menos', () => {
-    const limpo = noMeio(passe({ ctx: aluminio, ajustes, velocidade: () => 25 })).indice
-    const sujo = noMeio(passe({ ctx: { ...aluminio, oxidoRemovido: false }, ajustes, velocidade: () => 25 })).indice
+    const limpo = noMeio(passe({ ctx: aluminio, ajustes, velocidade: () => 12.5 })).indice
+    const sujo = noMeio(passe({ ctx: { ...aluminio, oxidoRemovido: false }, ajustes, velocidade: () => 12.5 })).indice
     expect(sujo / limpo).toBeCloseTo(0.6, 5)
   })
 
@@ -111,7 +111,7 @@ describe('materiais com comportamento próprio (H35)', () => {
 
 describe('replay', () => {
   it('reproduz exatamente o cordão e o calor da tentativa', () => {
-    const original = passe({ pausaMs: 800, quadroMs: 16, ajustes: { alimentacao: 6, tensao: 6 } })
+    const original = passe({ pausaMs: 1600, quadroMs: 16, ajustes: { alimentacao: 6, tensao: 6 } })
     const copia = reproduzir(original.contexto, original.eventos)
     const a = original.cordao.copiaDosVolumes()
     const b = copia.cordao.copiaDosVolumes()

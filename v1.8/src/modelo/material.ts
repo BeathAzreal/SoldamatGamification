@@ -14,7 +14,7 @@ export interface Material {
   efeitoAquecimento: number
   /** g: ganho do aquecimento acumulado por unidade de potência (H32). */
   ganhoAquecimento: number
-  /** τ: tempo característico de aquecimento e resfriamento da peça, em s (H32). */
+  /** τ: tempo característico de aquecimento e resfriamento da peça, em s (H32). H87 (v1.8): o dobro, porque o passe dura o dobro. */
   tauAquecimentoS: number
   /** f: tendência a deformar (H36). */
   fatorDeformacao: number
@@ -40,7 +40,7 @@ export const MATERIAIS: Record<MaterialId, Material> = {
     necessidadeFusao: 1,
     efeitoAquecimento: 0.3,
     ganhoAquecimento: 0.25,
-    tauAquecimentoS: 12,
+    tauAquecimentoS: 24,
     fatorDeformacao: 1,
     exigeLimpeza: false,
     aparencia: { chapaClara: '#77808b', chapaEscura: '#545c66', cordao: ['#474d55', '#6c737b', '#959ca4', '#c8cdd2'], brilhoFraco: false, tintaTermica: false },
@@ -51,7 +51,7 @@ export const MATERIAIS: Record<MaterialId, Material> = {
     necessidadeFusao: 0.85,
     efeitoAquecimento: 0.25,
     ganhoAquecimento: 0.35,
-    tauAquecimentoS: 18,
+    tauAquecimentoS: 36,
     fatorDeformacao: 1.7,
     exigeLimpeza: false,
     aparencia: { chapaClara: '#d3d1cb', chapaEscura: '#aba79f', cordao: ['#726c62', '#a09a8f', '#cbc6bc', '#efede8'], brilhoFraco: false, tintaTermica: true },
@@ -62,7 +62,7 @@ export const MATERIAIS: Record<MaterialId, Material> = {
     necessidadeFusao: 1.8,
     efeitoAquecimento: 0.8,
     ganhoAquecimento: 0.3,
-    tauAquecimentoS: 8,
+    tauAquecimentoS: 16,
     fatorDeformacao: 1.2,
     exigeLimpeza: true,
     aparencia: { chapaClara: '#e6ebf1', chapaEscura: '#c2cbd6', cordao: ['#97a2ae', '#bcc6d1', '#dbe2ea', '#f8fafc'], brilhoFraco: true, tintaTermica: false },

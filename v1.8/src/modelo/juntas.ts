@@ -46,7 +46,7 @@ export const INFO_JUNTA: Record<TipoJunta, InfoJunta> = {
     fatorFusao: 1,
     espessuraTesteMm: 3,
     aberturaTesteMm: 1,
-    velocidadeReferenciaMms: 12,
+    velocidadeReferenciaMms: 6,
   },
   v: {
     nome: 'Topo em V (60°)',
@@ -56,7 +56,7 @@ export const INFO_JUNTA: Record<TipoJunta, InfoJunta> = {
     fatorFusao: 1.1,
     espessuraTesteMm: 6,
     aberturaTesteMm: 1,
-    velocidadeReferenciaMms: 5,
+    velocidadeReferenciaMms: 2.5,
   },
   t: {
     nome: 'Em T (filete)',
@@ -66,7 +66,7 @@ export const INFO_JUNTA: Record<TipoJunta, InfoJunta> = {
     fatorFusao: 1.3,
     espessuraTesteMm: 3,
     aberturaTesteMm: 0,
-    velocidadeReferenciaMms: 12,
+    velocidadeReferenciaMms: 6,
   },
   sobreposta: {
     nome: 'Sobreposta (filete)',
@@ -76,7 +76,7 @@ export const INFO_JUNTA: Record<TipoJunta, InfoJunta> = {
     fatorFusao: 1.55,
     espessuraTesteMm: 2,
     aberturaTesteMm: 0,
-    velocidadeReferenciaMms: 14,
+    velocidadeReferenciaMms: 7,
   },
   canto: {
     nome: 'De canto (externa)',
@@ -86,7 +86,7 @@ export const INFO_JUNTA: Record<TipoJunta, InfoJunta> = {
     fatorFusao: 1.1,
     espessuraTesteMm: 3,
     aberturaTesteMm: 0,
-    velocidadeReferenciaMms: 12,
+    velocidadeReferenciaMms: 6,
   },
 }
 

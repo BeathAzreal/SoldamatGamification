@@ -117,6 +117,8 @@ Cada missão lista suas condições essenciais (iguais desde a v1):
 | E3 | Cordão contínuo no trecho exigido (sem trecho de 1 mm ou mais sem cordão) | sim | sim |
 | E4 | Óxido removido antes de soldar (só missões de alumínio) | sim | sim |
 
+> **Desde a v1.8 (`pontuacao-v9`, H89) não há mais trava:** a entrega não aprovada recebe todos os pontos que fez, o conceito vem só da nota, os rankings e torneios ordenam pela nota e o Arcade e a História não bloqueiam por aprovação. O texto abaixo descreve as regras até a `pontuacao-v8`.
+
 **Se alguma condição essencial falhar, a entrega é "não aprovada"** e:
 
 Na tela, a categoria zerada mostra **quanto valeria** (barra tracejada e
@@ -312,3 +314,8 @@ Perfuração e as condições essenciais valem igual nos dois modos (a integrida
 | Desconto máximo pela escória que restar | 100 | 200 |
 | Desconto por defeito grave (falta de fusão, perfuração, inclusão, sobreposição) | 25 cada, até 75 | 100 cada, até 300 |
 | Desconto por defeito leve | 0 | 15 cada, até 90 |
+
+## pontuacao-v9 — física mais lenta e sem trava (v1.8, H87 e H89)
+
+- **Sem trava (H89):** a condição essencial descumprida continua aparecendo ("não aprovada", com o motivo), mas não tira mais pontos: Controle térmico e Execução não são zerados, o conceito (S, A, B, C, D) vem só da nota, os rankings, a regra "melhor" do torneio e as classificações ordenam pela nota, o desafio do Arcade não é perdido por não aprovar, e a missão seguinte da História libera ao entregar.
+- **Física mais lenta (H87):** a solda certa pede metade da velocidade de antes (faixa verde de 4 a 8 mm/s na alimentação de referência). As faixas do Fácil e do Difícil não mudaram; mudou o que a física pede.

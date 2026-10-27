@@ -4,7 +4,7 @@ Abra o HTML no Chrome ou Edge. Sem instalação ou internet.
 
 X1 em rede: use o pacote de rede e INICIAR-REDE.bat no PC anfitrião. Nos dois navegadores abra o endereço mostrado pelo servidor. Arcade → X1 em rede. O HTML portátil continua offline; ele não hospeda salas.
 
-MIG/MAG: jogo completo (missões, arcade, treino, torneio). Com o arco aberto, a tocha não passa de 12 mm/s no mouse e na caneta: se a mão correr, a tocha vai atrás no próprio ritmo.
+MIG/MAG: jogo completo (missões, arcade, treino, torneio). A solda certa agora pede metade da velocidade de antes (faixa verde de 4 a 8 mm/s): o arame deposita menos por segundo e a junta pede mais calor por mm. O mouse e a caneta respondem como antes. A nota conta inteira mesmo quando a solda não é aprovada.
 
 Modo de pontuação: antes de soldar, escolha FÁCIL (tolerâncias largas) ou DIFÍCIL (tolerâncias apertadas; defeitos custam caro), no MIG/MAG e no eletrodo.
 

@@ -6,14 +6,13 @@ import { montarAbas } from './abas'
 
 /**
  * Conceito estilo arcade (S, A, B, C, D) — só APRESENTAÇÃO da nota total.
- * Entrega não aprovada fica no máximo com C, para o conceito não esconder um
- * requisito essencial descumprido (docs/PONTUACAO.md).
+ * Desde a v1.8 (H89) vale a nota, aprovada ou não; `aprovada` fica para
+ * quem chama, sem efeito no conceito.
  */
-export function conceito(total: number, aprovada: boolean, escala = ESCALA_PONTUACAO): string {
+export function conceito(total: number, _aprovada: boolean, escala = ESCALA_PONTUACAO): string {
   // Limites em fração da escala (S ≥ 95 %, A ≥ 85 %, B ≥ 70 %, C ≥ 50 %).
   const f = total / escala
-  const c = f >= 0.95 ? 'S' : f >= 0.85 ? 'A' : f >= 0.7 ? 'B' : f >= 0.5 ? 'C' : 'D'
-  return !aprovada && 'SAB'.includes(c) ? 'C' : c
+  return f >= 0.95 ? 'S' : f >= 0.85 ? 'A' : f >= 0.7 ? 'B' : f >= 0.5 ? 'C' : 'D'
 }
 
 /** O que mais provavelmente fez a solda não ser aprovada, em linguagem de bancada. */
@@ -21,7 +20,7 @@ function dicaReprovada(r: ResultadoPontuacao): string {
   const falhas = r.essenciais.filter((e) => !e.cumprida).map((e) => e.id)
   // O problema que ocupa mais junta.
   const problema = [...r.problemas].sort((a, b) => b.fimMm - b.inicioMm - (a.fimMm - a.inicioMm))[0]?.descricao ?? ''
-  const base = 'Enquanto a solda não for aprovada, deformação e eficiência ficam em zero: economia não compensa um requisito essencial.'
+  const base = 'A nota conta inteira, mas uma condição essencial não foi cumprida.'
   if (falhas.includes('E4')) return `${base} Marque a remoção do óxido na preparação.`
   if (falhas.includes('E2') || /perfura|excessiv/.test(problema)) return `${base} Calor demais por mm: ande mais rápido ou reduza alimentação/tensão.`
   if (falhas.includes('E3')) return `${base} Houve trecho sem cordão: não feche o arco no meio e cubra do INÍCIO ao FIM.`

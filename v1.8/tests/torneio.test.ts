@@ -20,7 +20,7 @@ function ambiente(): Ambiente {
 function resultado(total: number, aprovada = true, integridade = total * 0.4, desenho = total * 0.25): ResultadoPontuacao {
   const pontos = { integridade, desenho, regularidade: 0, deformacao: 0, eficiencia: 0 }
   return {
-    versao: 'pontuacao-v8',
+    versao: 'pontuacao-v9',
     pesos: { ...PESOS_PADRAO },
     total,
     aprovada,
@@ -166,12 +166,12 @@ describe('regra de entrega', () => {
     expect(() => selecionarEntrega('escolha', tentativas, 'integridade-desenho', 'xx')).toThrow(ErroTorneio)
   })
 
-  it('"melhor" prefere aprovada mesmo com nota menor', () => {
+  it('"melhor" fica com a maior nota, aprovada ou não (v1.8, H89)', () => {
     const lista = [
       { id: 'a', numero: 1, status: 'concluida', resultado: resultado(95, false) },
       { id: 'b', numero: 2, status: 'concluida', resultado: resultado(60, true) },
     ] as never[]
-    expect(selecionarEntrega('melhor', lista, 'integridade-desenho')!.id).toBe('b')
+    expect(selecionarEntrega('melhor', lista, 'integridade-desenho')!.id).toBe('a')
   })
 
   it('a regra aplicada fica registrada na entrega', () => {
@@ -217,11 +217,11 @@ describe('classificação automática e desempates', () => {
     return base
   }
 
-  it('aprovada fica à frente de não aprovada com nota maior (sem compensação)', () => {
+  it('a maior nota fica à frente, aprovada ou não (v1.8, H89)', () => {
     let { base, amb } = novaBase()
     base = jogarRodada(base, amb, { Ana: [60, true], Bruno: [95, false] })
     const grupos = classificacaoRodada(base, 0)!
-    expect(grupos[0].linhas.map((l) => l.nome)).toEqual(['Ana', 'Bruno'])
+    expect(grupos[0].linhas.map((l) => l.nome)).toEqual(['Bruno', 'Ana'])
   })
 
   it('empate na nota é decidido pela integridade', () => {
@@ -239,13 +239,13 @@ describe('classificação automática e desempates', () => {
     expect(classificacaoRodada(base, 0)![0].linhas[0].participanteId).toBe(v2.participanteId)
   })
 
-  it('classificação geral soma rodadas e conta aprovações primeiro', () => {
+  it('classificação geral soma as notas das rodadas, aprovadas ou não (v1.8, H89)', () => {
     let { base, amb } = novaBase()
     base = jogarRodada(base, amb, { Ana: [70, true], Bruno: [99, false] })
     base = jogarRodada(base, amb, { Ana: [70, true], Bruno: [99, false] })
     const geral = classificacaoGeral(base)!
-    expect(geral.grupos[0].linhas[0].nome).toBe('Ana')
-    expect(geral.grupos[0].linhas[0].nota).toBe(140)
+    expect(geral.grupos[0].linhas[0].nome).toBe('Bruno')
+    expect(geral.grupos[0].linhas[0].nota).toBe(198)
   })
 
   it('modo "separar" cria uma classificação por dispositivo', () => {

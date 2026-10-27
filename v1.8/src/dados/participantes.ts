@@ -9,7 +9,7 @@ import type { Participante } from './torneio'
 
 export interface PerfilParticipante extends Participante {
   origem: 'arcade' | 'torneio'
-  /** Missões aprovadas no Arcade: "missaoId|dificuldade". */
+  /** Missões entregues na História: "missaoId|dificuldade". Antes da v1.8 só entravam as aprovadas (o nome ficou). */
   aprovadas?: string[]
 }
 
@@ -21,10 +21,10 @@ export function missaoLiberada(perfil: PerfilParticipante | undefined, missaoId:
   if (i < 0) return { liberada: false, motivo: 'Missão indisponível.' }
   const aprovadas = new Set(perfil?.aprovadas ?? [])
   if (d === 'profissional' && !aprovadas.has(chaveProgresso(missaoId, 'aprendiz'))) {
-    return { liberada: false, motivo: 'Seja aprovado no nível Aprendiz desta missão.' }
+    return { liberada: false, motivo: 'Entregue esta missão no modo Fácil.' }
   }
   if (d === 'aprendiz' && i > 0 && !aprovadas.has(chaveProgresso(MISSOES[i - 1].id, 'aprendiz'))) {
-    return { liberada: false, motivo: `Seja aprovado em "${MISSOES[i - 1].titulo}" (Aprendiz).` }
+    return { liberada: false, motivo: `Entregue "${MISSOES[i - 1].titulo}" no modo Fácil.` }
   }
   return { liberada: true, motivo: '' }
 }

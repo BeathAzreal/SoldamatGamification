@@ -43,9 +43,10 @@ describe('geração de desafios', () => {
 })
 
 /** Procura velocidade (e aceleração, no alumínio) que aprova com ajustes dados. */
-function aprovaCom(m: (typeof MISSOES)[number], d: (typeof DIFICULDADES)[number], ajustes: { alimentacao: number; tensao: number }, tecnica: Tecnica = 'neutra', vMin = 4) {
+function aprovaCom(m: (typeof MISSOES)[number], d: (typeof DIFICULDADES)[number], ajustes: { alimentacao: number; tensao: number }, tecnica: Tecnica = 'neutra', vMin = 2) {
   const preparo = { diametroArameMm: m.consumiveis.diametrosMm[m.consumiveis.diametrosMm.length - 1], gas: m.consumiveis.gases[0], oxidoRemovido: true, tecnica }
-  for (let v = vMin; v <= 30; v += 0.5) {
+  // v1.8 (H87): metade das velocidades de antes (era de 4 a 30 mm/s, de 0,5 em 0,5).
+  for (let v = vMin; v <= 15; v += 0.25) {
     for (const acel of m.material === 'aluminio' ? [0, 0.3, 0.5] : [0]) {
       for (const jeito of jeitosDeSoldar(m)) {
         const r = executar(m, d, preparo, ajustes, v, acel, jeito)
@@ -107,10 +108,10 @@ describe('avaliação do desafio e combo', () => {
   const base = { numero: 3, missaoId: MISSOES[0].id, dificuldade: 'aprendiz' } as const
   const exec = { aberturasDeArco: 1, tempoArcoS: 10, tecnica: 'neutra' as Tecnica, ajustes: { alimentacao: 5, tensao: 5.5 } }
 
-  it('falha se não aprovar a missão, mesmo cumprindo a condição', () => {
+  it('não aprovar a missão não faz perder o desafio; a nota conta (v1.8, H89)', () => {
     const r = avaliarDesafio({ ...base, condicao: { tipo: 'livre' } }, resultado(90, false), exec, 0)
-    expect(r.concluido).toBe(false)
-    expect(r.pontos).toBe(0)
+    expect(r.concluido).toBe(true)
+    expect(r.pontos).toBeGreaterThan(0)
   })
 
   it('verifica cada condição', () => {

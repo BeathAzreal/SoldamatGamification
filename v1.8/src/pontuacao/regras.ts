@@ -20,7 +20,7 @@ import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/ca
  * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v8'
+export const VERSAO_PONTUACAO = 'pontuacao-v9'
 /** Nota máxima (cada ponto de peso vale ESCALA ÷ 100). */
 export const ESCALA_PONTUACAO = 1000
 
@@ -420,20 +420,9 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     },
   ]
 
-  // Essencial descumprida: economia e rapidez não podem compensar (docs/PONTUACAO.md).
+  // v1.8 (H89): sem trava. Todas as categorias contam mesmo com condição essencial descumprida;
+  // "aprovada" fica só como informação.
   const penalidades: Penalidade[] = []
-  if (!aprovada) {
-    for (const c of categorias.filter((c) => c.id === 'deformacao' || c.id === 'eficiencia')) {
-      if (c.pontos > 0) {
-        penalidades.push({
-          descricao: `${c.nome} zerada`,
-          pontos: -c.pontos,
-          justificativa: 'Condição essencial descumprida: controle térmico e execução não compensam o requisito.',
-        })
-      }
-      c.pontos = 0
-    }
-  }
 
   return {
     versao: VERSAO_PONTUACAO,
@@ -467,15 +456,14 @@ export function notaCategoria(r: Pick<ResultadoPontuacao, 'categorias'>, id: Cat
 export type CriterioDesempate = 'integridade-desenho' | 'desenho-integridade'
 
 /**
- * Ordem: aprovada antes de não aprovada → total → (integridade, desenho) na
- * ordem escolhida. Negativo se `a` fica à frente de `b`.
+ * Ordem: total → (integridade, desenho) na ordem escolhida, aprovada ou não
+ * (v1.8, H89). Negativo se `a` fica à frente de `b`.
  */
 export function compararPontuacoes(
   a: Pick<ResultadoPontuacao, 'aprovada' | 'total' | 'categorias'>,
   b: Pick<ResultadoPontuacao, 'aprovada' | 'total' | 'categorias'>,
   criterio: CriterioDesempate = 'integridade-desenho',
 ): number {
-  if (a.aprovada !== b.aprovada) return a.aprovada ? -1 : 1
   if (a.total !== b.total) return b.total - a.total
   const ordem: CategoriaId[] = criterio === 'integridade-desenho' ? ['integridade', 'desenho'] : ['desenho', 'integridade']
   for (const c of ordem) {

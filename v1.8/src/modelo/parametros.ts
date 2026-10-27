@@ -26,8 +26,11 @@ export const AJUSTES = {
 } as const
 
 export const MODELO = {
-  /** Volume depositado por segundo com a alimentação de referência (mm³/s do jogo) (H1). */
-  taxaDeposicaoMm3s: 100,
+  /**
+   * Volume depositado por segundo com a alimentação de referência (mm³/s do jogo) (H1).
+   * H87 (v1.8): metade do valor anterior (100), para a solda certa pedir metade da velocidade.
+   */
+  taxaDeposicaoMm3s: 50,
   /** Altura do cordão dividida pela largura, na tensão de referência (H3). */
   razaoAlturaLargura: 0.25,
   /** Razão altura/largura nos extremos do botão de tensão: 1 → 10 (H9). */
@@ -63,8 +66,8 @@ export const VELOCIDADE = {
    * Faixa-alvo DESTE JOGO (arbitrária) com a alimentação de referência.
    * Ela cresce junto com a alimentação (H11).
    */
-  alvoMinMms: 8,
-  alvoMaxMms: 16,
+  alvoMinMms: 4,
+  alvoMaxMms: 8,
 } as const
 
 /** Critérios da avaliação ao fim da tentativa (H14–H16). Todos são escolhas do jogo. */
@@ -104,8 +107,12 @@ export const EXPLICACAO = {
 
 /** Índice de fusão sintético (H33, H34). Números do jogo. */
 export const FUSAO = {
-  /** Aporte necessário por mm de espessura (unidades relativas: potência × s ÷ mm). */
-  necessidadePorMm: 0.01677,
+  /**
+   * Aporte necessário por mm de espessura (unidades relativas: potência × s ÷ mm).
+   * H87 (v1.8): o dobro do valor anterior (0,01677): a mesma potência precisa de
+   * duas vezes mais tempo sobre cada mm, ou seja, metade da velocidade.
+   */
+  necessidadePorMm: 0.03354,
   /** Seção a partir da qual o metal acumulado amortece a fusão (mm²). */
   areaAmortecimentoMm2: 25,
   minimoAdequado: 1,
@@ -158,9 +165,9 @@ export const DEFEITOS = {
   /** Respingos presos por mm de cordão, por unidade de excesso de respingo (H54). */
   respingosPorMm: 0.35,
   /** Permanência no fim do passe que enche a cratera (ms, H55). */
-  enchimentoCrateraMs: 250,
+  enchimentoCrateraMs: 500,
   /** Escama a cada tanto tempo de arco (ms, H56): espaçamento = velocidade × intervalo. */
-  intervaloEscamaMs: 120,
+  intervaloEscamaMs: 240,
   /** Empeno angular por unidade do índice de deformação D (graus, H57). */
   empenoPorD: 1.2,
   empenoMaxGraus: 6,

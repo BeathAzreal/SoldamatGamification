@@ -131,8 +131,8 @@ export function multiplicador(combo: number): number {
 
 export function avaliarDesafio(d: Desafio, r: ResultadoPontuacao, e: DadosExecucao, combo: number): ResultadoDesafio {
   let motivo = ''
-  if (!r.aprovada) motivo = 'A solda não foi aprovada (condição essencial da missão).'
-  else if (d.condicao.tipo === 'arco-unico' && e.aberturasDeArco > 1) motivo = `O arco foi aberto ${e.aberturasDeArco} vezes.`
+  // v1.8 (H89): não ser aprovada não faz perder o desafio; só as condições do desafio contam.
+  if (d.condicao.tipo === 'arco-unico' && e.aberturasDeArco > 1) motivo = `O arco foi aberto ${e.aberturasDeArco} vezes.`
   else if (d.condicao.tipo === 'tempo-arco' && e.tempoArcoS > d.condicao.maximoS) motivo = `Tempo de arco de ${e.tempoArcoS.toFixed(1).replace('.', ',')} s, acima de ${d.condicao.maximoS} s.`
   else if (d.condicao.tipo === 'tecnica' && e.tecnica !== d.condicao.tecnica) motivo = 'A técnica exigida não foi usada.'
   else if (

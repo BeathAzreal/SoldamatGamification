@@ -13,8 +13,11 @@ O jogo mostra **ALPHA v1.8** no topo. Novidades:
 - **Fácil ou Difícil:** antes de soldar (MIG/MAG e eletrodo), escolha o modo de
   pontuação. Fácil: tolerâncias largas, defeitos custam pouco. Difícil:
   tolerâncias apertadas, cada defeito grave custa caro.
-- **Solda mais lenta no MIG/MAG:** com o arco aberto, a tocha não passa de
-  12 mm/s no mouse e na caneta; se a mão correr, a tocha vai atrás no próprio ritmo.
+- **Solda mais lenta no MIG/MAG:** o mouse e a caneta respondem como antes, mas
+  a solda certa pede metade da velocidade (faixa verde de 4 a 8 mm/s): o arame
+  deposita menos por segundo e a junta pede mais calor por mm.
+- **Nota sem trava:** mesmo quando a solda não é aprovada, todos os pontos contam
+  (rankings, torneios, Arcade e História seguem a nota).
 
 **[BAIXAR PACOTE DE REDE v1.8 — para o X1 (Windows 64 bits, 39 MB)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip)**
 
@@ -30,7 +33,7 @@ abre ao tocar a peça com **S**; **Encerrar tentativa** ou **Enter** mostra a no
 
 | Versão | Estado | Download |
 |---|---|---|
-| **Alpha v1.8** | **Mais nova — modos Fácil e Difícil na nota e solda mais lenta no MIG/MAG** | [ZIP da v1.8](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip) · [Pacote de rede (X1)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip) |
+| **Alpha v1.8** | **Mais nova — modos Fácil e Difícil, solda mais lenta no MIG/MAG e nota sem trava** | [ZIP da v1.8](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip) · [Pacote de rede (X1)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip) |
 | Alpha v1.7 | Anterior — x1 em rede (MIG/MAG), painel MIG maior e eletrodo com cordão 3D e lista de defeitos | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
 | Alpha v1.6 | Interface de máquina e eletrodo com nota 0–1000 (alpha-v1.6) + lista de defeitos com causa e correção, com o código organizado para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
 | Alpha v1.5 | Anterior — MIG/MAG + treino de eletrodo revestido | [ZIP da v1.5](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip) |
@@ -75,7 +78,8 @@ Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 
 - **Modos Fácil e Difícil** na pontuação, escolhidos antes de soldar, no MIG/MAG e
   no eletrodo (os antigos Aprendiz e Profissional do MIG viraram Fácil e Difícil).
-- **Tocha limitada a 12 mm/s** no MIG/MAG com mouse e caneta.
+- **Solda mais lenta no MIG/MAG pela física** (metade do metal por segundo, o dobro do calor por mm); o mouse e a caneta respondem como antes.
+- **Nota sem trava:** a solda não aprovada também conta todos os pontos.
 
 ## O que mudou na v1.7?
 
