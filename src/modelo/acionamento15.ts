@@ -26,7 +26,22 @@ export function velocidadeDescida15(seguradoS: number, maximaMmS: number, consum
   return velocidadeAltura15(seguradoS, Math.max(3, maximaMmS)) + compensacao
 }
 /** H69: forma do depósito pelo comprimento do arco (razão altura/largura e instabilidade). */
-export interface FormaDeposito15 { razao: number; instabilidade: number }
+export interface FormaDeposito15 {
+  razao: number
+  instabilidade: number
+  /** Energia do arco neste passo (J, já com o rendimento térmico, H82). Só a análise usa. */
+  energiaJ?: number
+  /** Duração do passo (s) e tempo de arco acumulado no fim dele (s). */
+  dtS?: number
+  tempoArcoS?: number
+  /** Comprimento do arco em diâmetros da alma (H69). */
+  razaoArco?: number
+}
+/**
+ * Metal depositado ÷ volume da alma consumida e, para a análise do calor
+ * (H82), rendimento térmico do arco: a fração da energia que entra na peça.
+ */
+export const RENDIMENTO15 = { deposicao: 0.7, termico: 0.8 }
 
 export class Acionamento15 {
   pressionado = false
@@ -209,7 +224,7 @@ export class Acionamento15 {
       }
       this.tempoArcoS += dt
       // Só traço visual de depósito. Não usa as regras MIG como física SMAW.
-      const volume = this.processo === 'mig' ? 64 * dt : Math.PI * (this.diametroMm / 2) ** 2 * this.consumoMmS * 0.7 * dt
+      const volume = this.processo === 'mig' ? 64 * dt : Math.PI * (this.diametroMm / 2) ** 2 * this.consumoMmS * RENDIMENTO15.deposicao * dt
       this.volumeMm3 += volume
       if (this.processo === 'eletrodo') {
         const forma = this.forma
@@ -217,7 +232,7 @@ export class Acionamento15 {
         this.respingos += (0.5 + 20 * forma.instabilidade) * dt
         // A escória cobre a largura do cordão, não só o ponto da ponta.
         this.escoria.depositar(this.xMm, this.yMm, volume, 1.5 * this.diametroMm)
-        depositar?.(volume, forma)
+        depositar?.(volume, { ...forma, energiaJ: RENDIMENTO15.termico * this.correnteA * tensaoAntes * dt, dtS: dt, tempoArcoS: this.tempoArcoS, razaoArco: this.razaoArco })
       } else depositar?.(volume)
     }
     this.xAntes = this.xMm

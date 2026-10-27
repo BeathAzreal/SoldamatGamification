@@ -13,6 +13,7 @@ import { criarSuperficieEscoria15 } from './escoriaSuperficie15'
 import { girarFerramenta15, type Vetor15 } from '../entrada/giroFerramenta15'
 import type { FerramentaBancada15 } from '../modelo/escoria15'
 import { cristaMm, INFO_JUNTA, juntaDe, pontoNaSuperficie, type TipoJunta } from '../modelo/juntas'
+import type { AnaliseDefeitos } from '../modelo/defeitos'
 
 /** Ponta nua da vareta presa nas garras do alicate (mm). */
 const PONTA_NUA = 20
@@ -336,6 +337,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         metalLocal.atualizar(c)
         cordaoAntes = c
       } else if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
+        metalLocal.malha.visible = false
         palco.atualizarCordao(c)
         cordaoAntes = c
         volumeAntes = c.volumeTotal()
@@ -351,6 +353,10 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       escoria.atualizar(m.escoria, c)
       if (ocultarEscoria) escoria.malha.visible = false
       palco.desenhar(camera)
+    },
+    /** Defeitos visíveis calculados pela análise do eletrodo (poros, crateras, mordedura, respingos, cor de calor), desenhados sobre o cordão 3D (H84, H86). */
+    atualizarDefeitos(a: AnaliseDefeitos | null) {
+      palco.atualizarDefeitos(a)
     },
     destruir() { palco.destruir() },
   }

@@ -1,5 +1,12 @@
 # Verificação
 
+## Alpha v1.7 — lista de defeitos e cordão 3D do eletrodo (branch `claude/v1.7`)
+
+- Trazidas da v1.6 organizada (pasta `v1.6/` da página inicial, PRs #25 e #26) para a alpha-v1.7 do GPT, no layout `src/`: registro do calor por passe, análise do cordão e lista de defeitos com lugar, causa e correção (H82–H85), e o cordão 3D do MIG desenhado no eletrodo no lugar da malha do depósito (H86). A nota de 0 a 1000, o depósito, o x1 em rede e o painel MIG do GPT não mudaram.
+- Nenhum arquivo do eletrodo tinha mudado entre a alpha-v1.6 e a alpha-v1.7, então a passagem não teve conflito; os arquivos foram convertidos de volta para os nomes de `src/` e conferidos linha a linha.
+- `npm run typecheck` e `npm test`: 46 arquivos e 465 testes passando (os da rede do GPT e `tests/defeitosEletrodo.test.ts`).
+- Não testado em aparelhos físicos.
+
 ## Alpha v1.5 — treino de eletrodo após o teste do dono (branch `claude/v1.5`)
 
 Pedido: controle de altura ruim (o arco apagava e era preciso soldar aos poucos), menu

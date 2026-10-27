@@ -114,3 +114,12 @@
 .p15-objetivo li[data-ok=true]{color:#bfe8d4}
 .p15-objetivo li[data-ok=true]::before{content:'✓';color:#6fd3a5}
 .p15-obj-valor{font-variant-numeric:tabular-nums;color:#e9dcc4}
+
+/* Defeitos do eletrodo (H82–H85): cor do avanço pelo calor e lista no resultado. */
+.p15-hud-item output[data-faixa=bom]{color:#9fe0c4}
+.p15-hud-item output[data-faixa=frio]{color:#9cc6f0}
+.p15-hud-item output[data-faixa=quente]{color:#f0b07a}
+.p15-botoes-resultado{display:grid;grid-template-columns:1fr auto;gap:8px}
+.p15-botao-defeitos:not([data-graves="0"]){border-color:#f08a7c;color:#f6c2b8}
+.p15-defeitos li{border-left:3px solid #d0a96a;padding-left:8px}
+.p15-defeitos li[data-grave=true]{border-left-color:#f08a7c}
