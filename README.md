@@ -1,42 +1,37 @@
 # Oficina de Soldagem — versões e downloads
 
-## Alpha v1.7 disponível para teste
+## Alpha v1.8 disponível para teste
 
-**[BAIXAR ALPHA v1.7 — jogo pronto em ZIP](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip)**
+**[BAIXAR ALPHA v1.8 — jogo pronto em ZIP](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip)**
 
 Extraia o ZIP inteiro e abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html**
 no Chrome ou Edge. Não precisa instalar nada nem ter internet para jogar.
 Entre na sua conta do GitHub para baixar os arquivos deste repositório privado.
 
-O jogo mostra **ALPHA v1.7** no topo. O MIG/MAG continua completo, agora com
-**X1 em rede** (Arcade → X1 em rede).
+O jogo mostra **ALPHA v1.8** no topo. Novidades:
 
-**[BAIXAR PACOTE DE REDE v1.7 — para o X1 (Windows 64 bits, 39 MB)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip)**
+- **Fácil ou Difícil:** antes de soldar (MIG/MAG e eletrodo), escolha o modo de
+  pontuação. Fácil: tolerâncias largas, defeitos custam pouco. Difícil:
+  tolerâncias apertadas, cada defeito grave custa caro.
+- **Solda mais lenta no MIG/MAG:** com o arco aberto, a tocha não passa de
+  12 mm/s no mouse e na caneta; se a mão correr, a tocha vai atrás no próprio ritmo.
+
+**[BAIXAR PACOTE DE REDE v1.8 — para o X1 (Windows 64 bits, 39 MB)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip)**
 
 No PC anfitrião, extraia a pasta inteira e abra **ABRIR-OFICINA.bat** (não precisa
 instalar nada; o Node.js vai junto). Deixe a janela do servidor aberta. No segundo
 PC, abra no navegador o endereço com IP mostrado nessa janela (ex.:
 `http://192.168.0.10:5197/?rede=1`). Nos dois: Arcade → X1 em rede, um cria a sala
-e o outro entra com o código.
-No **eletrodo revestido** (Treino → Eletrodo → escolha a peça):
+e o outro entra com o código. Os dois PCs precisam estar na v1.8.
 
-- **Abrir o arco:** não há botão. Leve a ponta com o mouse até o INÍCIO e desça
-  com **S** até tocar a peça: o arco abre sozinho. Empurrar contra a poça gruda
-  o eletrodo (use **Desgrudar**).
-- **Manter o arco:** a vareta queima e encurta. Segure **S** para acompanhar o
-  consumo; o medidor sobre a vista mostra se o arco está curto, adequado ou longo.
-  **W** sobe. A **Ajuda na altura** começa em Parcial.
-- **Encerrar:** botão **Encerrar tentativa** ou **Enter**. Aparece a nota de 0 a
-  1000 e o botão **Defeitos**, com o lugar, a causa e como corrigir cada defeito.
-- **Escória:** espere esfriar, quebre com o **Martelinho** (clique) e retire os
-  resíduos com a **Escova de aço** (arraste).
-- **Controles:** botão do meio gira a câmera, botão direito orienta o eletrodo,
-  I/K inclinam, J/L mudam a direção e Q/E giram o punho. Tudo pode ser trocado
-  em **Controles**.
+No **eletrodo revestido** (Treino → Eletrodo → escolha a peça e o modo), o arco
+abre ao tocar a peça com **S**; **Encerrar tentativa** ou **Enter** mostra a nota de
+0 a 1000 e o botão **Defeitos**, com o lugar, a causa e como corrigir cada defeito.
 
 | Versão | Estado | Download |
 |---|---|---|
-| **Alpha v1.7** | **Mais nova — x1 em rede (MIG/MAG), painel MIG maior e eletrodo com cordão 3D e lista de defeitos** | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
+| **Alpha v1.8** | **Mais nova — modos Fácil e Difícil na nota e solda mais lenta no MIG/MAG** | [ZIP da v1.8](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip) · [Pacote de rede (X1)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip) |
+| Alpha v1.7 | Anterior — x1 em rede (MIG/MAG), painel MIG maior e eletrodo com cordão 3D e lista de defeitos | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
 | Alpha v1.6 | Interface de máquina e eletrodo com nota 0–1000 (alpha-v1.6) + lista de defeitos com causa e correção, com o código organizado para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
 | Alpha v1.5 | Anterior — MIG/MAG + treino de eletrodo revestido | [ZIP da v1.5](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip) |
 | Alpha v1.4 | Anterior — MIG/MAG com solda realista | [ZIP da v1.4](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
@@ -67,6 +62,7 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
+- [`v1.8/`](v1.8/) ← [`claude/v1.8`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v1.8) (feita a partir da `alpha-v1.7`; ainda não há `alpha-v1.8`)
 - [`v1.7/`](v1.7/) ← [`alpha-v1.7`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.7) (`gpt/v1.7` + `claude/v1.7`)
 - [`v1.6/`](v1.6/) ← [`alpha-v1.6`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.6) (`gpt/v1.6`) com o código reorganizado e a lista de defeitos do eletrodo (`claude/v1.6`)
 - [`v1.5/`](v1.5/) ← [`alpha-v1.5`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.5) (`gpt/v1.5` + `claude/v1.5`)
@@ -74,6 +70,12 @@ entrega correspondente, que junta o trabalho do GPT e do Claude por pull request
 
 Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 [`v1.5/docs/PROTOTIPO-V15.md`](v1.5/docs/PROTOTIPO-V15.md).
+
+## O que mudou na v1.8?
+
+- **Modos Fácil e Difícil** na pontuação, escolhidos antes de soldar, no MIG/MAG e
+  no eletrodo (os antigos Aprendiz e Profissional do MIG viraram Fácil e Difícil).
+- **Tocha limitada a 12 mm/s** no MIG/MAG com mouse e caneta.
 
 ## O que mudou na v1.7?
 
