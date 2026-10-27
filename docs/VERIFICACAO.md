@@ -1,5 +1,13 @@
 # Verificação
 
+## Alpha v1.8 — modos Fácil e Difícil e tocha mais lenta (branch `claude/v1.8`)
+
+- H87: no MIG/MAG, mouse e caneta, a tocha não passa de 12 mm/s com o arco aberto. Teste em `tests/caneta.test.ts`: a mão a 40 mm/s por 1 s leva a tocha só 12 mm; com a mão parada, a tocha alcança quadro a quadro; com a mão devagar, fica embaixo do ponteiro; com o arco fechado, mira sem limite.
+- H88: modos Fácil e Difícil escolhidos antes de soldar. MIG (`pontuacao-v8`): a mesma solda nunca vale menos no Fácil; um passe lento demais vale uns 130 pontos a mais no Fácil (`tests/referencia.test.ts`). Eletrodo: desconto dos defeitos com teto por modo; com falta de fusão, o Difícil fica pelo menos 50 pontos abaixo do Fácil (`tests/defeitosEletrodo.test.ts`).
+- `npm run typecheck` e `npm test`: 46 arquivos, 470 testes passando.
+- Navegador (Chromium headless, 1366×768): menu de modo no treino MIG e no eletrodo; passe MIG completo no treino livre (Fácil); eletrodo no Difícil com o modo no cabeçalho e no placar e o desconto dos defeitos no resultado; sem erros no console. O navegador de teste é lento demais para medir os 12 mm/s na tela; o limite é conferido pelo teste.
+- Não testado em aparelhos físicos (mesa digitalizadora, controle, dois PCs).
+
 ## Alpha v1.7 — lista de defeitos e cordão 3D do eletrodo (branch `claude/v1.7`)
 
 - Trazidas da v1.6 organizada (pasta `v1.6/` da página inicial, PRs #25 e #26) para a alpha-v1.7 do GPT, no layout `src/`: registro do calor por passe, análise do cordão e lista de defeitos com lugar, causa e correção (H82–H85), e o cordão 3D do MIG desenhado no eletrodo no lugar da malha do depósito (H86). A nota de 0 a 1000, o depósito, o x1 em rede e o painel MIG do GPT não mudaram.
