@@ -516,9 +516,9 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     resumoPasse,
   )
 
-  const fontePainel = h('div', {}, maquina.querySelector('.mostradores'))
+  const fontePainel = h('div', { class: 'fonte-com-leituras' }, maquina.querySelector('.mostradores'), maquina.querySelector('.leituras'))
   const preparoPainel = h('div', {}, maquina.querySelector('.maquina-grade'), maquina.querySelector('.aviso-trava'))
-  maquina.append(painelMaquina([['FONTE', fontePainel], ['PREPARO', preparoPainel], ['LEITURAS', h('div', {}, maquina.querySelector('.leituras'))]]))
+  maquina.append(painelMaquina([['FONTE', fontePainel], ['PREPARO', preparoPainel]]))
   bancada.elemento = h('div', { class: 'bancada' }, maquina, pecaTeste)
 
   // ------------------------------------------------------------ laço da peça de teste

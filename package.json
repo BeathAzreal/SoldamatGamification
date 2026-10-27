@@ -1,16 +1,21 @@
 {
   "name": "soldagem-mig-didatico",
   "private": true,
-  "version": "1.6.0",
+  "version": "1.7.0",
   "type": "module",
   "description": "Protótipo didático de soldagem MIG/MAG (modelo qualitativo simplificado)",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc",
+    "typecheck": "tsc && node --check servidor/http.mjs && node --check servidor/index.mjs",
     "test": "vitest run",
-    "portatil": "npm run build && node scripts/portatil.mjs"
+    "portatil": "npm run build && node scripts/portatil.mjs",
+    "build:servidor": "vite build --ssr servidor/index.mjs --outDir dist-servidor",
+    "rede": "npm run build && npm run build:servidor && node dist-servidor/index.js",
+    "pacote:rede": "npm run build && npm run build:servidor && node scripts/pacote-rede.mjs",
+    "build:hospedado": "npm run portatil && node scripts/hospedado.mjs",
+    "preview:hospedado": "node scripts/preview-hospedado.mjs"
   },
   "devDependencies": {
     "@types/three": "^0.186.0",
