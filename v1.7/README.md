@@ -8,7 +8,7 @@ Baixe [`Oficina-de-Soldagem-Alpha-v1.7.zip`](Oficina-de-Soldagem-Alpha-v1.7.zip)
 
 ## O que há na v1.7
 
-- **X1 em rede (GPT):** duas pessoas em PCs diferentes disputam a mesma missão MIG/MAG numa sala por código. Precisa do pacote de rede no PC anfitrião (`npm run pacote:rede`); o HTML portátil sozinho não hospeda salas. Detalhes em [`docs/REDE-V17.md`](docs/REDE-V17.md).
+- **X1 em rede (GPT):** duas pessoas em PCs diferentes disputam a mesma missão MIG/MAG numa sala por código. No PC anfitrião, baixe [`Oficina-de-Soldagem-v1.7-Rede.zip`](Oficina-de-Soldagem-v1.7-Rede.zip) (Windows 64 bits, já com o Node.js), extraia e abra **ABRIR-OFICINA.bat**; o HTML portátil sozinho não hospeda salas. O pacote foi gerado com `npm run pacote:rede` a partir desta versão, com o `node.exe` oficial v24.19.0 conferido pelo SHA-256. Detalhes em [`docs/REDE-V17.md`](docs/REDE-V17.md).
 - **Painel MIG/MAG (GPT):** leituras integradas à fonte e painel maior, sem rolagem.
 - **Eletrodo (Claude):** cordão 3D com escamas e brilho, e o botão **Defeitos** no resultado, com o lugar, a causa e como corrigir cada defeito, desenhados também no cordão. A nota de 0 a 1000 do GPT continua igual. Detalhes (H82–H86) em [`docs/PROTOTIPO-V15.md`](docs/PROTOTIPO-V15.md).
 

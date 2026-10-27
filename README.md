@@ -9,7 +9,15 @@ no Chrome ou Edge. Não precisa instalar nada nem ter internet para jogar.
 Entre na sua conta do GitHub para baixar os arquivos deste repositório privado.
 
 O jogo mostra **ALPHA v1.7** no topo. O MIG/MAG continua completo, agora com
-**X1 em rede** (Arcade → X1 em rede; precisa do pacote de rede no PC anfitrião).
+**X1 em rede** (Arcade → X1 em rede).
+
+**[BAIXAR PACOTE DE REDE v1.7 — para o X1 (Windows 64 bits, 39 MB)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip)**
+
+No PC anfitrião, extraia a pasta inteira e abra **ABRIR-OFICINA.bat** (não precisa
+instalar nada; o Node.js vai junto). Deixe a janela do servidor aberta. No segundo
+PC, abra no navegador o endereço com IP mostrado nessa janela (ex.:
+`http://192.168.0.10:5197/?rede=1`). Nos dois: Arcade → X1 em rede, um cria a sala
+e o outro entra com o código.
 No **eletrodo revestido** (Treino → Eletrodo → escolha a peça):
 
 - **Abrir o arco:** não há botão. Leve a ponta com o mouse até o INÍCIO e desça
@@ -28,7 +36,7 @@ No **eletrodo revestido** (Treino → Eletrodo → escolha a peça):
 
 | Versão | Estado | Download |
 |---|---|---|
-| **Alpha v1.7** | **Mais nova — x1 em rede (MIG/MAG), painel MIG maior e eletrodo com cordão 3D e lista de defeitos** | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) |
+| **Alpha v1.7** | **Mais nova — x1 em rede (MIG/MAG), painel MIG maior e eletrodo com cordão 3D e lista de defeitos** | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
 | Alpha v1.6 | Interface de máquina e eletrodo com nota 0–1000 (alpha-v1.6) + lista de defeitos com causa e correção, com o código organizado para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
 | Alpha v1.5 | Anterior — MIG/MAG + treino de eletrodo revestido | [ZIP da v1.5](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip) |
 | Alpha v1.4 | Anterior — MIG/MAG com solda realista | [ZIP da v1.4](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
