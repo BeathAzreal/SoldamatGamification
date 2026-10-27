@@ -5,7 +5,7 @@
  *    passe e calcula, em cada fatia da junta, a fusão prevista (pelo calor
  *    de cada passe), a mordedura, a sobreposição, a porosidade, a cratera,
  *    a inclusão de escória e os respingos presos. O 3D desenha esses
- *    defeitos sobre o cordão (marcas-dos-defeitos-3d.ts) e a lista com
+ *    defeitos sobre o cordão 3D (desenho-3d/defeitos-visiveis.ts) e a lista com
  *    causa e correção sai de defeitos-do-eletrodo.ts. Hipóteses H82–H84 em
  *    documentacao/PROTOTIPO-V15.md.
  *

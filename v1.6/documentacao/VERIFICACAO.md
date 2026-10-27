@@ -1,5 +1,13 @@
 # Verificação
 
+## v1.6 — cordão 3D de volta no eletrodo (H86)
+
+- Pedido do dono: o cordão do eletrodo deve ser 3D, como antes, e não a malha em blocos.
+- O cordão desenhado volta a ser o cordão 3D do MIG (seção arredondada, escamas, brilho), alimentado com o mesmo metal e ao mesmo tempo que o depósito do GPT. O depósito continua decidindo o arco, a nota de 0 a 1000 e a lista de defeitos; os defeitos voltam a ser desenhados pelo desenho de defeitos do MIG (escamas, poros, mordedura, cratera, respingos, cor de calor).
+- A crosta de escória sobre o cordão 3D voltou à espessura da v1.5 (0,35 + 0,25 mm); a do GPT (0,10 + 0,18 mm) era para a malha e deixava o meio do cordão aparecendo.
+- Conferido no navegador (Chromium headless, 1366×768): junta de topo soldada sobre a junta com o cordão 3D, escória cobrindo, metal sem escória com escamas e respingos; resultado com nota e "Defeitos (N)". Sem erros no console. Num filete em T soldado longe do canto, a crosta cobriu só as bordas do cordão (a altura da crosta é uma aproximação da crista; como na v1.5).
+- Testes: 42 arquivos e 445 testes passando.
+
 ## v1.6 — interface e eletrodo da alpha-v1.6 + lista de defeitos (branch `claude/v1.6-ui-gpt`)
 
 A pasta v1.6 tinha sido reorganizada a partir da alpha-v1.5 e não trazia o que o GPT fez na alpha-v1.6 (interface de máquina, menu da oficina, pausa, central do Arcade, depósito real do eletrodo e nota de 0 a 1000). Agora traz.

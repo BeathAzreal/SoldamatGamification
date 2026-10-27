@@ -11,7 +11,6 @@
 
 import { DepositoEletrodo, baseEletrodo } from './deposito-do-cordao'
 import { criarMetalEletrodo } from './metal-do-cordao-3d'
-import { criarMarcasDefeitos } from './marcas-dos-defeitos-3d'
 import type { PecaEletrodo } from './pecas-de-treino'
 import { limitesPecaEletrodo } from './pecas-de-treino'
 import { criarDetalhesIndustriais15 } from './pecas-industriais-3d'
@@ -193,8 +192,6 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   let cordaoAntes: Cordao | DepositoEletrodo | null = null
   const metalLocal = criarMetalEletrodo()
   palco.peca.add(metalLocal.malha)
-  const marcasDefeitos = criarMarcasDefeitos()
-  palco.peca.add(marcasDefeitos.grupo)
   const lascas = new THREE.Group()
   palco.peca.add(lascas)
   const particulasEscoria: { malha: THREE.Mesh; velocidade: THREE.Vector3; vida: number }[] = []
@@ -351,6 +348,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         metalLocal.atualizar(c)
         cordaoAntes = c
       } else if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
+        metalLocal.malha.visible = false
         palco.atualizarCordao(c)
         cordaoAntes = c
         volumeAntes = c.volumeTotal()
@@ -367,10 +365,9 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       if (ocultarEscoria) escoria.malha.visible = false
       palco.desenhar(camera)
     },
-    /** Defeitos visíveis calculados pela análise do eletrodo (poros, crateras, mordedura, respingos, cor de calor), desenhados sobre o metal (H84). */
+    /** Defeitos visíveis calculados pela análise do eletrodo (poros, crateras, mordedura, respingos, cor de calor), desenhados sobre o cordão 3D (H84, H86). */
     atualizarDefeitos(a: AnaliseDefeitos | null) {
-      metalLocal.definirMarcas(a ? { calor: a.calor, cratera: a.cratera, passoMm: a.passoMm } : null)
-      marcasDefeitos.atualizar(a, cordaoAntes instanceof DepositoEletrodo ? cordaoAntes : null)
+      palco.atualizarDefeitos(a)
     },
     destruir() { palco.destruir() },
   }

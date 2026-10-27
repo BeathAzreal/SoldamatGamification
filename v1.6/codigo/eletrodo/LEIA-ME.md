@@ -2,7 +2,7 @@
 
 Tudo do modo eletrodo revestido (SMAW): a física do arco e da vareta, o metal depositado, a escória, as peças do treino, a cena 3D, a tela, a nota e os defeitos. Os nomes terminados em 15 (Acionamento15, VARETA15...) vêm da v1.5, quando o eletrodo foi criado. Hipóteses H59–H73 e H82–H85 em ../../documentacao/PROTOTIPO-V15.md; H74–H81 (v1.6, GPT) em ../../documentacao/HIPOTESES.md e a nota em ../../documentacao/AVALIACAO-SMAW.md.
 
-Caminho de uma tentativa: `tela-do-treino.ts` lê o mouse e o teclado → `arco-e-vareta.ts` decide o arco e quanto metal sai → `deposito-do-cordao.ts` guarda o metal → `metal-do-cordao-3d.ts` desenha → ao encerrar, `placar-do-eletrodo.ts` dá a nota e `defeitos-do-eletrodo.ts` lista os defeitos → `janela-do-resultado.ts` mostra tudo.
+Caminho de uma tentativa: `tela-do-treino.ts` lê o mouse e o teclado → `arco-e-vareta.ts` decide o arco e quanto metal sai → `deposito-do-cordao.ts` guarda o metal (e o mesmo metal alimenta o cordão 3D de `../simulacao-mig/cordao.ts`, que é o que aparece na tela) → ao encerrar, `placar-do-eletrodo.ts` dá a nota e `defeitos-do-eletrodo.ts` lista os defeitos → `janela-do-resultado.ts` mostra tudo.
 
 | Arquivo | O que é |
 |---|---|
@@ -17,8 +17,7 @@ Caminho de uma tentativa: `tela-do-treino.ts` lê o mouse e o teclado → `arco-
 | [`girar-com-o-mouse.ts`](girar-com-o-mouse.ts) | Eletrodo: girar com o mouse — Conta matemática que transforma o arraste do mouse (botão direito) em inclinação e direção do eletrodo, acompanhando a câmera. |
 | [`janela-de-controles.ts`](janela-de-controles.ts) | Eletrodo: janela de controles — A janela "Controles" do treino de eletrodo, onde o jogador troca teclas, botões e sensibilidade. |
 | [`janela-do-resultado.ts`](janela-do-resultado.ts) | Eletrodo: resultado da tentativa — O painel ao encerrar: conceito, nota de 0 a 1000, barras dos critérios, resumo dos defeitos e os botões de nova tentativa e outra peça. |
-| [`marcas-dos-defeitos-3d.ts`](marcas-dos-defeitos-3d.ts) | Eletrodo: defeitos desenhados no cordão — Poros, respingos, mordedura e cratera desenhados sobre o metal. Só desenha. |
-| [`metal-do-cordao-3d.ts`](metal-do-cordao-3d.ts) | Eletrodo: metal do cordão (3D) — Transforma o metal depositado num sólido 3D com escamas e pinta a cor de calor e a cratera. |
+| [`metal-do-cordao-3d.ts`](metal-do-cordao-3d.ts) | Eletrodo: metal do cordão em malha — Sólido de malha do metal depositado; a altura serve para a crosta de escória. Na tela aparece o cordão 3D do MIG (H86). |
 | [`pecas-de-treino.ts`](pecas-de-treino.ts) | Eletrodo: peças do treino — A lista das peças: nome, aplicação, junta, espessura, eletrodo e corrente sugeridos, trecho e objetivo; e o calor de referência de cada peça. |
 | [`pecas-industriais-3d.ts`](pecas-industriais-3d.ts) | Eletrodo: acabamento das peças industriais — Partes da peça fora do trecho soldado (orelhas, travessas, quadro da grade). Só visual. |
 | [`placar-do-eletrodo.ts`](placar-do-eletrodo.ts) | Eletrodo: nota da tentativa (0 a 1000) — União, preenchimento e perfil, metal na região e continuidade, com desconto pela escória. |
