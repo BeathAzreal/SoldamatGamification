@@ -110,7 +110,7 @@ trecho exigido **menos 2 mm em cada ponta** (H37).
 
 Cada missão lista suas condições essenciais (iguais desde a v1):
 
-| Código | Condição | Aprendiz | Profissional |
+| Código | Condição | Fácil | Difícil |
 |---|---|---|---|
 | E1 | Integridade prevista no trecho avaliado | ≥ 85 % | ≥ 95 % |
 | E2 | Nenhuma perfuração prevista (F > 2,6 em 1 mm ou mais) | sim | sim |
@@ -283,3 +283,32 @@ trecho no aproveitamento da **Execução**. Antes ele esticava o cordão da
 junta até o lugar novo. A mesma tentativa pode mudar de nota, então a versão
 subiu para pontuacao-v7.
 
+## pontuacao-v8 — modos Fácil e Difícil (v1.8, H88)
+
+O jogador escolhe o modo antes de soldar (missões, treino livre, treino de missão, Arcade e X1 já pediam o nível; agora os nomes são Fácil e Difícil). Os ids salvos continuam `aprendiz` (Fácil) e `profissional` (Difícil), então recordes antigos continuam legíveis; como as regras mudaram, a versão da nota passou para `pontuacao-v8` e tentativas antigas não são reavaliadas.
+
+| Parâmetro (`src/pontuacao/regras.ts`) | Fácil (`TOLERANCIAS_FACIL`) | Difícil (`TOLERANCIAS`) |
+|---|---|---|
+| Largura fora da faixa até zerar | 3 mm | 1,5 mm |
+| Reforço acima do máximo / falta de enchimento até zerar | 2 mm | 1 mm |
+| Alinhamento fora até zerar | 2 mm | 1 mm |
+| Índice de fusão que zera a posição (falta) | 0,4 | 0,6 |
+| Nota mínima de uma posição com fusão excessiva (antes de perfurar) | 0,5 | 0 |
+| Variação da largura que zera a regularidade | 30 % | 20 % |
+| Índice de deformação que zera o controle térmico | 3 | 2 |
+| Tempo de arco sobre a junta abaixo do qual zera essa parte da execução | 50 % | 70 % |
+| Reinícios até zerar | 6 | 3 |
+| Metal no trecho abaixo do qual zera | 60 % | 80 % |
+| Folga na faixa de largura e no alinhamento pedidos | 1 mm | 0 |
+
+Perfuração e as condições essenciais valem igual nos dois modos (a integridade mínima já era diferente por missão). Na referência (`tests/referencia.test.ts`), a mesma solda nunca vale menos no Fácil, e um passe lento demais vale cerca de 130 pontos a mais no Fácil.
+
+**Eletrodo (`src/pontuacao/eletrodo.ts`, `MODOS_ELETRODO`):** a nota de 0 a 1000 da v1.6 recebe o modo escolhido antes de soldar.
+
+| | Fácil | Difícil |
+|---|---|---|
+| Comparação ISO 5817 (reforço h/b) | nível D | nível B |
+| Preenchimento a partir do qual a nota não é reduzida | 60 % | 90 % |
+| Desconto máximo pela escória que restar | 100 | 200 |
+| Desconto por defeito grave (falta de fusão, perfuração, inclusão, sobreposição) | 25 cada, até 75 | 100 cada, até 300 |
+| Desconto por defeito leve | 0 | 15 cada, até 90 |

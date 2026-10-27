@@ -4,7 +4,10 @@ import type { Extras, FonteEntrada, Mapeamento, Receptor } from './fonte'
 /*
  * Mouse e mesa digitalizadora (caneta) via Pointer Events.
  *
- * - Posição absoluta: o ponto da tela é o ponto da peça.
+ * - Posição absoluta: o ponto da tela é o ponto da peça. Com o arco aberto,
+ *   a tocha vai até ele no máximo a VELOCIDADE_MAXIMA_PONTEIRO (H87): se a
+ *   mão corre, a tocha fica para trás e alcança no próprio ritmo, a cada
+ *   quadro (atualizar).
  * - O instante de cada leitura é event.timeStamp (mesmo relógio de
  *   performance.now()); getCoalescedEvents() recupera leituras agrupadas.
  *   Assim o resultado não depende da frequência de eventos nem dos quadros.
@@ -21,6 +24,9 @@ export interface OpcoesCaneta {
 }
 
 export const OPCOES_CANETA_PADRAO: OpcoesCaneta = { usarPressao: false, limiarPressao: 0.25 }
+
+/** H87: velocidade máxima da tocha com o arco aberto, no mouse e na caneta (mm/s). */
+export const VELOCIDADE_MAXIMA_PONTEIRO = 12
 
 export class FontePonteiro implements FonteEntrada {
   posicao: { x: number; y: number } | null = null
@@ -89,9 +95,27 @@ export class FontePonteiro implements FonteEntrada {
     return encostada
   }
 
+  /** Onde a mão está (mm da peça) e onde a tocha está com o arco aberto (H87). */
+  private alvoMao: Amostra | null = null
+  private tocha: Amostra | null = null
+
+  /** Leva a tocha em direção à mão até o instante t, sem passar da velocidade máxima. */
+  private seguirMao(t: number): Amostra {
+    const alvo = this.alvoMao!, de = this.tocha ?? alvo
+    const dt = Math.max(0, t - de.t)
+    const dx = alvo.x - de.x, dy = alvo.y - de.y, d = Math.hypot(dx, dy)
+    const passo = (VELOCIDADE_MAXIMA_PONTEIRO * dt) / 1000
+    const f = d <= passo || d === 0 ? 1 : passo / d
+    this.tocha = { t, x: de.x + dx * f, y: de.y + dy * f }
+    return this.tocha
+  }
+
   private processar(leituras: PointerEvent[]): void {
     for (const l of leituras) {
-      const a = this.amostra(l)
+      const mao = this.amostra(l)
+      this.alvoMao = mao
+      // Com o arco aberto, a tocha anda até a mão no máximo a VELOCIDADE_MAXIMA_PONTEIRO (H87).
+      const a = this.receptor?.arcoAberto ? this.seguirMao(mao.t) : mao
       this.posicao = { x: a.x, y: a.y }
       this.lerExtras(l)
       const quer = this.gatilhoDe(l)
@@ -99,9 +123,13 @@ export class FontePonteiro implements FonteEntrada {
         this.gatilho = quer
         continue
       }
-      if (quer && !this.receptor.arcoAberto) this.receptor.iniciarArco(a)
-      else if (!quer && this.receptor.arcoAberto) this.receptor.encerrarArco(a)
-      else this.receptor.moverTocha(a)
+      if (quer && !this.receptor.arcoAberto) {
+        this.tocha = a
+        this.receptor.iniciarArco(a)
+      } else if (!quer && this.receptor.arcoAberto) {
+        this.receptor.encerrarArco(a)
+        this.tocha = null
+      } else this.receptor.moverTocha(a)
       this.gatilho = quer
     }
   }
@@ -129,9 +157,12 @@ export class FontePonteiro implements FonteEntrada {
     })
     const soltar = (e: PointerEvent) => {
       if (!this.aceita(e)) return
-      const a = this.amostra(e)
+      const mao = this.amostra(e)
+      this.alvoMao = mao
+      const a = this.receptor?.arcoAberto ? this.seguirMao(mao.t) : mao
       this.gatilho = false
       if (this.receptor?.arcoAberto) this.receptor.encerrarArco(a)
+      this.tocha = null
     }
     ouvir('pointerup', soltar)
     ouvir('pointercancel', soltar)
@@ -147,7 +178,12 @@ export class FontePonteiro implements FonteEntrada {
     this.receptor = null
   }
 
-  atualizar(): void {
-    // Ponteiros são guiados por eventos; nada a consultar.
+  atualizar(agoraMs: number): void {
+    // Com a mão parada à frente, a tocha continua indo até ela no próprio ritmo (H87).
+    if (!this.receptor?.arcoAberto || !this.tocha || !this.alvoMao || agoraMs <= this.tocha.t) return
+    if (this.tocha.x === this.alvoMao.x && this.tocha.y === this.alvoMao.y) return
+    const a = this.seguirMao(agoraMs)
+    this.posicao = { x: a.x, y: a.y }
+    this.receptor.moverTocha(a)
   }
 }

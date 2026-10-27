@@ -41,18 +41,19 @@ peça escolhida para a rodada, a mesma para todos. Com posicionador, a peça
 pode ser girada e tombada com o arco fechado (H47); presa na estrutura, não.
 
 O **Treino livre** usa a mesma interface das missões (bancada, execução,
-pontuação, inspeção), com a peça padrão (aço carbono 3 mm, Aprendiz, trecho
+pontuação, inspeção), com a peça padrão (aço carbono 3 mm, no modo escolhido antes — Fácil ou Difícil —, trecho
 10–140 mm) e o tipo de junta escolhido na bancada (cada um com a espessura de teste dele: o V em chapa de 6 mm), mais a explicação e a
 comparação com a tentativa anterior da etapa 4. Não conta. A interface
 antiga das etapas 1–4 foi removida (etapa 8).
 
-Cada missão tem duas dificuldades:
+Cada missão tem dois modos de pontuação, escolhidos antes de soldar (v1.8, H88; os ids salvos continuam `aprendiz` e `profissional`):
 
-| | Aprendiz | Profissional |
+| | Fácil | Difícil |
 |---|---|---|
 | Tentativas | 5 (alumínio: 6) | 3 (alumínio: 4) |
-| Faixa de largura | a do desenho, ampliada 0,5 mm de cada lado | a do desenho |
-| Tolerância de alinhamento | a do desenho + 0,5 mm | a do desenho |
+| Faixa de largura | a do desenho, ampliada 1 mm de cada lado | a do desenho |
+| Tolerância de alinhamento | a do desenho + 1 mm | a do desenho |
+| Faixas da nota graduada | duas vezes mais largas (`TOLERANCIAS_FACIL`) | `TOLERANCIAS` |
 | Integridade mínima (E1) | 85 % | 95 % |
 
 O que diferencia os materiais **não é cor nem multiplicador de dificuldade**:

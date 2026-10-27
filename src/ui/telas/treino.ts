@@ -20,18 +20,31 @@ import { telaTreinoEletrodo } from './treinoEletrodo'
 /** Treino: navegação por processo e peça, sem ranking ou registro oficial. */
 export function telaTreino(app: App): void {
   menuOficina(app, 'TREINO', 'OFICINA / PRÁTICA LIVRE', [
-    { nome: 'MIG/MAG', descricao: 'Abra a bancada livre. Escolha a junta, regule a máquina e pratique.', abrir: () => treinoLivre(app) },
+    { nome: 'MIG/MAG', descricao: 'Abra a bancada livre. Escolha a junta, regule a máquina e pratique.', abrir: () => escolherModo(app, 'MIG/MAG', 'TREINO / BANCADA LIVRE', (d) => treinoLivre(app, d), () => telaTreino(app)) },
     { nome: 'ELETRODO', descricao: 'Escolha a peça e pratique o controle da distância e o consumo da vareta.', abrir: () => escolherPecaEletrodo(app) },
     { nome: 'EXERCÍCIOS', descricao: 'Roteiros técnicos para experimentar, inspecionar e comparar tentativas.', abrir: () => { telaTreino(app); void escolherExercicio(app) } },
     { nome: 'TREINAR MISSÃO', descricao: 'Repita uma encomenda sem limite de tentativas.', abrir: () => escolherMissaoTreino(app) },
   ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
 }
 
+/** O que cada modo de pontuação faz, para a escolha antes de soldar (H88). */
+export const DESCRICAO_MODO: Record<Dificuldade, string> = {
+  aprendiz: 'Tolerâncias largas: um pouco fora da medida perde pouco. Bom para aprender o movimento.',
+  profissional: 'Tolerâncias apertadas, perto das de norma: desvios e defeitos custam caro.',
+}
+
+/** Escolha do modo de pontuação antes de soldar (H88). */
+function escolherModo(app: App, titulo: string, caminho: string, abrir: (d: Dificuldade) => void, voltar: () => void): void {
+  menuOficina(app, titulo, caminho + ' / MODO DE PONTUAÇÃO', DIFICULDADES.map(d => ({
+    nome: NOME_DIFICULDADE[d].toUpperCase(), descricao: DESCRICAO_MODO[d], abrir: () => abrir(d),
+  })), { nome: 'VOLTAR', descricao: 'Voltar à escolha anterior.', abrir: voltar })
+}
+
 function escolherPecaEletrodo(app: App): void {
   menuOficina(app, 'ELETRODO', 'TREINO / ESCOLHA A PEÇA', PECAS_ELETRODO.map(p => ({
     nome: p.titulo,
     descricao: `${p.aplicacao} · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}. Avaliação visual e nota do treino.`,
-    abrir: () => telaTreinoEletrodo(app, p, () => escolherPecaEletrodo(app)),
+    abrir: () => escolherModo(app, 'ELETRODO', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoEletrodo(app, p, d, () => escolherPecaEletrodo(app)), () => escolherPecaEletrodo(app)),
   })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
 }
 
@@ -40,7 +53,7 @@ function escolherMissaoTreino(app: App): void {
     nome: m.titulo,
     descricao: `${MATERIAIS[m.material].nome} · ${n1(m.geometria.espessuraMm)} mm. ${m.desafio}`,
     abrir: () => menuOficina(app, 'DIFICULDADE', m.titulo, DIFICULDADES.map(d => ({
-      nome: NOME_DIFICULDADE[d], descricao: 'Treino sem limite de tentativas e sem registro oficial.', abrir: () => treinoMissao(app, m, d),
+      nome: NOME_DIFICULDADE[d].toUpperCase(), descricao: `${DESCRICAO_MODO[d]} Treino sem limite de tentativas e sem registro oficial.`, abrir: () => treinoMissao(app, m, d),
     })), { nome: 'VOLTAR ÀS MISSÕES', descricao: 'Escolher outra encomenda.', abrir: () => escolherMissaoTreino(app) }),
   })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
 }
@@ -57,8 +70,8 @@ interface SessaoTreino {
   anterior: Tentativa | null
 }
 
-function treinoLivre(app: App): void {
-  bancadaTreino(app, { m: PECA_PADRAO, d: 'aprendiz', livre: true, anterior: null })
+function treinoLivre(app: App, d: Dificuldade): void {
+  bancadaTreino(app, { m: PECA_PADRAO, d, livre: true, anterior: null })
 }
 
 function treinoMissao(app: App, m: Missao, d: Dificuldade): void {
@@ -90,7 +103,7 @@ function bancadaTreino(app: App, s: SessaoTreino): void {
             dispositivo: config.dispositivo,
             preferencias: app.preferencias,
             oficial: false,
-            rotulo: s.livre ? 'Treino livre · peça padrão' : `Treino · ${m.titulo} · ${NOME_DIFICULDADE[s.d]}`,
+            rotulo: s.livre ? `Treino livre · peça padrão · ${NOME_DIFICULDADE[s.d]}` : `Treino · ${m.titulo} · ${NOME_DIFICULDADE[s.d]}`,
             aoConcluir: ({ eventos }) => resultadoTreino(app, atual, config, eventos),
             aoSair: () => bancadaTreino(app, atual),
             aoEscolherPeca: () => s.livre ? telaTreino(app) : escolherMissaoTreino(app),
@@ -101,7 +114,7 @@ function bancadaTreino(app: App, s: SessaoTreino): void {
     })
     anexar(
       app.raiz,
-      s.livre ? titulo('Treino livre', 'Peça de teste de aço carbono · escolha o tipo de junta · nada é registrado') : titulo(`Treino: ${s.m.titulo}`, `${NOME_DIFICULDADE[s.d]} · nada é registrado`),
+      s.livre ? titulo('Treino livre', `Peça de teste de aço carbono · modo ${NOME_DIFICULDADE[s.d]} · escolha o tipo de junta · nada é registrado`) : titulo(`Treino: ${s.m.titulo}`, `${NOME_DIFICULDADE[s.d]} · nada é registrado`),
       prep.elemento,
     )
     return prep.destruir

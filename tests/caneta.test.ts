@@ -61,3 +61,32 @@ describe('caneta: contato abre o arco com qualquer driver', () => {
     expect(passe('pen', 'pen', 0.4).ultimo).toContain('pointerup · pen')
   })
 })
+
+describe('mouse e caneta com velocidade máxima de soldagem (H87)', () => {
+  it('com o arco aberto a tocha não passa de VELOCIDADE_MAXIMA_PONTEIRO; com a mão parada, alcança a mão quadro a quadro', async () => {
+    const { VELOCIDADE_MAXIMA_PONTEIRO: V } = await import('../src/entrada/ponteiro')
+    expect(V).toBeLessThanOrEqual(16)
+    const alvo = new AlvoFalso()
+    const fonte = new FontePonteiro('mouse', alvo as unknown as HTMLElement, mapa, OPCOES_CANETA_PADRAO)
+    const sim = new Simulacao()
+    fonte.ligar(sim)
+    let t = 1000
+    alvo.disparar('pointerdown', { pointerType: 'mouse', buttons: 1, pressure: 0.5, x: 10, t })
+    // Mão a 40 mm/s durante 1 s: a tocha anda só V mm.
+    for (let k = 1; k <= 125; k++) alvo.disparar('pointermove', { pointerType: 'mouse', buttons: 1, pressure: 0.5, x: 10 + 40 * k * 0.008, t: (t += 8) })
+    expect(fonte.posicao!.x).toBeCloseTo(10 + V, 4)
+    // Mão parada em 50 mm: a cada quadro a tocha continua indo até ela, sem passar.
+    for (let k = 0; k < 600; k++) fonte.atualizar((t += 16))
+    expect(fonte.posicao!.x).toBeCloseTo(50, 6)
+    alvo.disparar('pointerup', { pointerType: 'mouse', buttons: 0, pressure: 0, x: 50, t: (t += 8) })
+    expect(sim.arcoAberto).toBe(false)
+    // Mão devagar (abaixo do limite): a tocha fica embaixo do ponteiro.
+    alvo.disparar('pointerdown', { pointerType: 'mouse', buttons: 1, pressure: 0.5, x: 60, t: (t += 8) })
+    for (let k = 1; k <= 125; k++) alvo.disparar('pointermove', { pointerType: 'mouse', buttons: 1, pressure: 0.5, x: 60 + 8 * k * 0.008, t: (t += 8) })
+    expect(fonte.posicao!.x).toBeCloseTo(68, 4)
+    // Arco fechado: a tocha mira no ponto exato da tela, sem limite.
+    alvo.disparar('pointerup', { pointerType: 'mouse', buttons: 0, pressure: 0, x: 68, t: (t += 8) })
+    alvo.disparar('pointermove', { pointerType: 'mouse', buttons: 0, pressure: 0, x: 120, t: (t += 8) })
+    expect(fonte.posicao!.x).toBeCloseTo(120, 6)
+  })
+})

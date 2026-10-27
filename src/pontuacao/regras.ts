@@ -20,7 +20,7 @@ import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/ca
  * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v7'
+export const VERSAO_PONTUACAO = 'pontuacao-v8'
 /** Nota máxima (cada ponto de peso vale ESCALA ÷ 100). */
 export const ESCALA_PONTUACAO = 1000
 
@@ -50,7 +50,38 @@ export const TOLERANCIAS = {
   reinicios: 3,
   /** Metal no trecho ÷ metal na peça: zero em 80 %. */
   aproveitamentoMinimo: 0.8,
+  /** Variação da largura (desvio ÷ média) que zera a regularidade. */
+  variacaoMaxima: 0.2,
+  /** Índice de deformação D que zera o controle térmico. */
+  deformacaoMaxima: 2,
+  /** Fração do tempo de arco sobre a junta abaixo da qual essa parte da Execução zera. */
+  tempoUtilMinimo: 0.7,
+  /** Nota mínima de uma posição com fusão excessiva (antes de perfurar). */
+  excessivaMinima: 0,
 } as const
+
+/**
+ * H88: modo Fácil. As faixas em que a nota cai até zero ficam duas vezes mais
+ * largas (e a variação aceita na largura, 50 % maior); o Difícil usa TOLERANCIAS.
+ */
+export const TOLERANCIAS_FACIL = {
+  larguraMm: 3,
+  reforcoMm: 2,
+  faltaEnchimentoMm: 2,
+  alinhamentoMm: 2,
+  fusaoMinima: 0.4,
+  reinicios: 6,
+  aproveitamentoMinimo: 0.6,
+  variacaoMaxima: 0.3,
+  deformacaoMaxima: 3,
+  tempoUtilMinimo: 0.5,
+  excessivaMinima: 0.5,
+} as const
+
+/** Tolerâncias da nota no modo escolhido (H88). */
+export function toleranciasDe(d: Dificuldade) {
+  return d === 'aprendiz' ? TOLERANCIAS_FACIL : TOLERANCIAS
+}
 
 export type CategoriaId = 'integridade' | 'desenho' | 'regularidade' | 'deformacao' | 'eficiencia'
 export type Pesos = Record<CategoriaId, number>
@@ -217,7 +248,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   const { inicioMm: x0, fimMm: x1 } = missao.trecho
   const a0 = x0 + 2
   const a1 = x1 - 2
-  const T = TOLERANCIAS
+  const T = toleranciasDe(e.dificuldade)
 
   const fusao = analisarFusao(cordao, e.percurso, contexto)
   // v6: defeitos visíveis previstos (H50–H57), do mesmo registro.
@@ -237,7 +268,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   const notaPosicao = (p: PontoFusao): number => {
     if (p.estado === 'adequada') return 1
     if (p.estado === 'falta') return limitar((p.indice - T.fusaoMinima) / (FUSAO.minimoAdequado - T.fusaoMinima))
-    if (p.estado === 'excessiva') return limitar((FUSAO.perfuracao - p.indice) / (FUSAO.perfuracao - FUSAO.maximoAdequado))
+    if (p.estado === 'excessiva') return T.excessivaMinima + (1 - T.excessivaMinima) * limitar((FUSAO.perfuracao - p.indice) / (FUSAO.perfuracao - FUSAO.maximoAdequado))
     if (p.estado === 'enchimento') return 0.5 * limitar(cordao.secao(cordao.indiceEm(p.xMm)).enchimento ?? 0)
     return 0
   }
@@ -262,12 +293,12 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   const larguras = comCordao.map((s) => s.larguraMm)
   const larguraMedia = media(larguras)
   const cv = larguras.length >= 10 ? Math.sqrt(larguras.reduce((s, w) => s + (w - larguraMedia) ** 2, 0) / larguras.length) / larguraMedia : 1
-  const fracaoRegularidade = larguras.length >= 10 ? limitar((0.2 - cv) / 0.17) : 0
+  const fracaoRegularidade = larguras.length >= 10 ? limitar((T.variacaoMaxima - cv) / (T.variacaoMaxima - 0.03)) : 0
   const alturaMedia = media(comCordao.map((c) => c.alturaMm))
 
   // Controle térmico.
   const deformacao = indiceDeformacao(fAvaliado, contexto)
-  const fracaoDeformacao = fAvaliado.some((p) => p.estado !== 'sem-cordao') ? limitar(2 - deformacao) : 0
+  const fracaoDeformacao = fAvaliado.some((p) => p.estado !== 'sem-cordao') ? limitar((T.deformacaoMaxima - deformacao) / (T.deformacaoMaxima - 1)) : 0
 
   // Execução: arco sobre a junta, reinícios e metal no trecho.
   const rendimento = GASES[contexto.gas].rendimento
@@ -285,7 +316,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   metalTotal += cordao.volumeSolto()
   const aproveitamento = metalTotal > 0 ? metalTrecho / metalTotal : 0
   const fracaoEficiencia =
-    0.4 * limitar((tempoUtil - 0.7) / 0.3) + 0.3 * cair(reinicios, T.reinicios) + 0.3 * limitar((aproveitamento - T.aproveitamentoMinimo) / (1 - T.aproveitamentoMinimo))
+    0.4 * limitar((tempoUtil - T.tempoUtilMinimo) / (1 - T.tempoUtilMinimo)) + 0.3 * cair(reinicios, T.reinicios) + 0.3 * limitar((aproveitamento - T.aproveitamentoMinimo) / (1 - T.aproveitamentoMinimo))
 
   // Condições essenciais (iguais às da v1).
   const perfuracaoMm = maiorSequencia(fAvaliado, (p) => p.estado === 'perfuracao', passo)

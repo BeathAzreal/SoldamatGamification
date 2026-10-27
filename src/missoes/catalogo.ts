@@ -12,7 +12,11 @@ import type { ContextoProcesso, Movimento, Tecnica } from '../modelo/processo'
 export type Dificuldade = 'aprendiz' | 'profissional'
 
 export const DIFICULDADES: Dificuldade[] = ['aprendiz', 'profissional']
-export const NOME_DIFICULDADE: Record<Dificuldade, string> = { aprendiz: 'Aprendiz', profissional: 'Profissional' }
+/**
+ * H88: os dois modos de pontuação, escolhidos antes de soldar. Os ids
+ * ('aprendiz', 'profissional') ficam os mesmos para não mudar recordes salvos.
+ */
+export const NOME_DIFICULDADE: Record<Dificuldade, string> = { aprendiz: 'Fácil', profissional: 'Difícil' }
 
 export interface Missao {
   id: string
@@ -234,9 +238,9 @@ export function buscarMissao(id: string): Missao | undefined {
   return MISSOES.find((m) => m.id === id)
 }
 
-/** Requisitos ajustados à dificuldade (docs/MISSOES.md). */
+/** Requisitos ajustados à dificuldade (docs/MISSOES.md). No Fácil, 1 mm de folga na largura e no alinhamento (H88). */
 export function requisitosEfetivos(m: Missao, d: Dificuldade) {
-  const folga = d === 'aprendiz' ? 0.5 : 0
+  const folga = d === 'aprendiz' ? 1 : 0
   return {
     larguraMinMm: m.requisitos.larguraMinMm - folga,
     larguraMaxMm: m.requisitos.larguraMaxMm + folga,

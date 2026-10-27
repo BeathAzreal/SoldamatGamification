@@ -4,7 +4,7 @@ import { analisarEletrodo } from '../src/modelo/analiseEletrodo'
 import { inspecionarDefeitos, type InspecaoEletrodo } from '../src/pontuacao/defeitosEletrodo'
 import { DepositoEletrodo } from '../src/modelo/depositoEletrodo'
 import { limitesPecaEletrodo, pecaEletrodo, type PecaEletrodo } from '../src/missoes/pecasEletrodo'
-import { avaliarEletrodo } from '../src/pontuacao/eletrodo'
+import { avaliarEletrodo, descontoDefeitos, MODOS_ELETRODO } from '../src/pontuacao/eletrodo'
 import { RegistroPasse } from '../src/modelo/registroPasse'
 
 interface Tecnica {
@@ -172,4 +172,37 @@ describe('defeitos do eletrodo sobre o depósito (H82–H85)', () => {
     expect(p.passes).toBe(2)
     expect(p.max).toBeCloseTo(p.min, 6)
   })
+})
+
+describe('modos Fácil e Difícil da nota do eletrodo (H88)', () => {
+  const nota = (id: string, t: Tecnica, modo: 'aprendiz' | 'profissional') => {
+    const peca = pecaEletrodo(id)
+    const { r, dep, m } = soldar(peca, t)
+    const regras = MODOS_ELETRODO[modo]
+    return avaliarEletrodo(peca, dep, m, regras.nivel, { preenchimentoCheio: regras.preenchimentoCheio, escoriaMax: regras.escoriaMax, descontoDefeitos: descontoDefeitos(modo, r.defeitos) })
+  }
+
+  it('desconto pelos defeitos: graves custam pouco no Fácil e muito no Difícil, sempre com teto', () => {
+    const graves = [{ grave: true }, { grave: true }, { grave: true }, { grave: true }]
+    const leves = [{ grave: false }, { grave: false }]
+    expect(descontoDefeitos('aprendiz', [...graves, ...leves])).toBe(75)
+    expect(descontoDefeitos('profissional', [...graves, ...leves])).toBe(300 + 30)
+    expect(descontoDefeitos('profissional', [])).toBe(0)
+  })
+
+  it('a mesma solda nunca vale menos no Fácil; com falta de fusão, o Difícil cai bem mais', () => {
+    for (const t of [bom, { ...bom, v: 6 }, { ...bom, passes: 3 }]) {
+      expect(nota('t-estrutural', t, 'aprendiz').nota).toBeGreaterThanOrEqual(nota('t-estrutural', t, 'profissional').nota)
+    }
+    const facil = nota('t-estrutural', { ...bom, v: 6 }, 'aprendiz')
+    const dificil = nota('t-estrutural', { ...bom, v: 6 }, 'profissional')
+    expect(dificil.penalidadeDefeitos).toBeGreaterThanOrEqual(100)
+    expect(facil.nota - dificil.nota).toBeGreaterThanOrEqual(50)
+  }, 60000)
+
+  it('sem ajuste, a nota é a mesma da v1.6 (nível C)', () => {
+    const peca = pecaEletrodo('t-estrutural')
+    const { dep, m } = soldar(peca, bom)
+    expect(avaliarEletrodo(peca, dep, m, 'C', { preenchimentoCheio: 0.8, escoriaMax: 200, descontoDefeitos: 0 })).toEqual(avaliarEletrodo(peca, dep, m))
+  }, 30000)
 })

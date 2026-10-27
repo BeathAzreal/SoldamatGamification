@@ -259,7 +259,7 @@ describe('nota, replay e relatório técnico', () => {
     andar(95, 143, 10)
     const resultado = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
     const r = relatorioTecnico({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, eventos: sim.eventos, tempoArcoMs: sim.tempoDeArcoMs, resultado })
-    expect(r.versaoPontuacao).toBe('pontuacao-v7')
+    expect(r.versaoPontuacao).toBe('pontuacao-v8')
     expect(r.preparo).toMatchObject({ dbcpMm: 15, tecnica: 'neutra', anguloAvancoGraus: 0, junta: 'topo' })
     expect(r.regulagens).toHaveLength(1)
     expect(r.regulagens[0].correnteRelativa).toBeCloseTo(1, 9)
@@ -282,7 +282,7 @@ describe('nota, replay e relatório técnico', () => {
     expect(MATERIAIS[ctx.material].id).toBe('aco-carbono')
   })
 
-  it('pontuacao-v7: escala 0–1000; um buraco no cordão perde na extensão, não de novo na largura', () => {
+  it('pontuacao-v8: escala 0–1000; um buraco no cordão perde na extensão, não de novo na largura', () => {
     const ctx = ctxRef()
     const sim = new Simulacao(ctx)
     sim.definirAjustes(AJUSTES)
@@ -297,7 +297,7 @@ describe('nota, replay e relatório técnico', () => {
       sim.encerrarArco({ t, x: x1, y: 0 })
     }
     const r = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs, aberturasDeArco: 2 })
-    expect(r.versao).toBe('pontuacao-v7')
+    expect(r.versao).toBe('pontuacao-v8')
     expect(r.categorias.reduce((s, c) => s + c.maximo, 0)).toBe(1000)
     const desenho = r.categorias.find((c) => c.id === 'desenho')!
     const pct = (rotulo: string) => Number.parseInt(desenho.detalhes.find((d) => d.rotulo === rotulo)!.valor, 10)
@@ -308,11 +308,11 @@ describe('nota, replay e relatório técnico', () => {
     expect(r.medidas.reiniciosArco).toBe(1)
   })
 
-  it('pontuacao-v7: nota graduada — um pouco fora da faixa perde pouco, muito fora perde tudo', () => {
+  it('pontuacao-v8: nota graduada — um pouco fora da faixa perde pouco, muito fora perde tudo', () => {
     const ctx = ctxRef()
     const notaLargura = (v: number) => {
       const { sim } = passe(ctx, AJUSTES, v)
-      const r = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
+      const r = pontuar({ missao: MISSAO, dificuldade: 'profissional', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
       return { r, largura: r.medidas.larguraMediaMm, nota: Number.parseInt(r.categorias.find((c) => c.id === 'desenho')!.detalhes.find((d) => d.rotulo === 'Largura')!.valor, 10) }
     }
     const certo = notaLargura(10)
@@ -325,7 +325,21 @@ describe('nota, replay e relatório técnico', () => {
     expect(muitoLargo.nota).toBe(0)
   })
 
-  it('pontuacao-v7: reinícios de arco e metal fora do trecho baixam a Execução', () => {
+  it('pontuacao-v8: Fácil tem faixas mais largas que Difícil; a mesma solda nunca vale menos no Fácil (H88)', () => {
+    const ctx = ctxRef()
+    for (const v of [14, 12, 10, 8, 6.5, 5.5, 4.5, 3.5]) {
+      const { sim } = passe(ctx, AJUSTES, v)
+      const nota = (dificuldade: 'aprendiz' | 'profissional') =>
+        pontuar({ missao: MISSAO, dificuldade, contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
+      expect(nota('aprendiz').total).toBeGreaterThanOrEqual(nota('profissional').total)
+    }
+    const { sim } = passe(ctx, AJUSTES, 5.5)
+    const facil = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
+    const dificil = pontuar({ missao: MISSAO, dificuldade: 'profissional', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
+    expect(facil.total).toBeGreaterThan(dificil.total + 80)
+  })
+
+  it('pontuacao-v8: reinícios de arco e metal fora do trecho baixam a Execução', () => {
     const ctx = ctxRef()
     const { sim } = passe(ctx)
     const base = { missao: MISSAO, dificuldade: 'aprendiz' as const, contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs }

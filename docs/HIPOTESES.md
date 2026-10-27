@@ -809,3 +809,11 @@ O eletrodo passa a seguir o fluxo do MIG: soldar, encerrar por botão ou Enter, 
 ### H82–H86 — calor por passe, defeitos e cordão 3D do eletrodo (v1.6, Claude)
 
 Somados ao depósito (H79) e à nota de 0 a 1000 (H81), sem mudar nenhum dos dois: o calor que cada passe pôs em cada meio milímetro da junta (aporte em kJ/mm) comparado com o calor de referência da peça; daí falta de fusão, fusão fraca, calor em excesso e perfuração da raiz aberta; defeitos de superfície (mordedura, sobreposição, poros, cratera, inclusão de escória, respingos, abertura fora da junta, eletrodo grudado) desenhados sobre o metal; e a lista, no resultado, com o lugar, a causa e como corrigir; o cordão na tela é o cordão 3D do MIG, alimentado com o mesmo metal (H86). Detalhes e calibração em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
+
+### H87 — velocidade máxima da tocha no mouse e na caneta (v1.8, Claude)
+
+No MIG/MAG, com o arco fechado, o ponto da tela continua sendo o ponto da peça (para mirar). Com o arco aberto, a tocha vai até o ponteiro no máximo a 12 mm/s (`VELOCIDADE_MAXIMA_PONTEIRO` em `src/entrada/ponteiro.ts`), cerca de 40 % da velocidade natural da mão. O dono achou a velocidade de soldagem alta demais. Se a mão corre, a tocha fica para trás e alcança no próprio ritmo, a cada quadro; com a mão devagar, a tocha fica embaixo do ponteiro. Os 12 mm/s ficam dentro da faixa de avanço da alimentação de referência (8–16 mm/s, H11); com alimentação bem mais alta, a faixa passa do limite e é preciso baixar a alimentação. O passe inteiro continua cabendo na tela (uma redução proporcional da mão não caberia). O controle (gamepad) não mudou. As leituras gravadas continuam em mm da peça, então replay, nota e X1 não dependem do limite.
+
+### H88 — modos de pontuação Fácil e Difícil (v1.8, Claude)
+
+O jogador escolhe Fácil ou Difícil antes de soldar, no MIG/MAG e no eletrodo. No MIG os dois níveis já existiam (Aprendiz e Profissional) com pouca diferença na nota; agora têm esses nomes e o Fácil tem faixas de tolerância duas vezes mais largas. No eletrodo, o Fácil compara com o nível D da ISO 5817 e desconta pouco pelos defeitos; o Difícil, com o nível B, e cada defeito grave custa 100 pontos. Tabelas em [PONTUACAO.md](PONTUACAO.md). Critérios do jogo, didáticos, não de norma.
