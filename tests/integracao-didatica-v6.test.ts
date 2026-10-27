@@ -17,7 +17,7 @@ for (const m of MISSOES) {
     const { resultado, relatorio } = relatorioDoRegistro(m, 'aprendiz', contexto, compactar(sim.eventos))
     const antes = structuredClone(resultado)
     const feedback = devolverTentativa(resultado)
-    expect(resultado.versao).toBe('pontuacao-v8')
+    expect(resultado.versao).toBe('pontuacao-v9')
     expect(resultado.categorias.find(c => c.id === 'desenho')!.detalhes.some(d => d.rotulo === 'Superfície')).toBe(true)
     expect(relatorio.defeitos).toBeDefined()
     expect(Object.values(feedback).every(t => t.length > 0)).toBe(true)

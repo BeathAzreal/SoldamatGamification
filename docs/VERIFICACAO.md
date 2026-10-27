@@ -1,11 +1,11 @@
 # Verificação
 
-## Alpha v1.8 — modos Fácil e Difícil e tocha mais lenta (branch `claude/v1.8`)
+## Alpha v1.8 — modos Fácil e Difícil, solda mais lenta e nota sem trava (branch `claude/v1.8`)
 
-- H87: no MIG/MAG, mouse e caneta, a tocha não passa de 12 mm/s com o arco aberto. Teste em `tests/caneta.test.ts`: a mão a 40 mm/s por 1 s leva a tocha só 12 mm; com a mão parada, a tocha alcança quadro a quadro; com a mão devagar, fica embaixo do ponteiro; com o arco fechado, mira sem limite.
-- H88: modos Fácil e Difícil escolhidos antes de soldar. MIG (`pontuacao-v8`): a mesma solda nunca vale menos no Fácil; um passe lento demais vale uns 130 pontos a mais no Fácil (`tests/referencia.test.ts`). Eletrodo: desconto dos defeitos com teto por modo; com falta de fusão, o Difícil fica pelo menos 50 pontos abaixo do Fácil (`tests/defeitosEletrodo.test.ts`).
+- H87: o limite de 12 mm/s no mouse e na caneta foi retirado (o ponteiro voltou a ser o da v1.7). A física do MIG foi desacelerada: metade do metal por segundo, o dobro do calor necessário por mm, o dobro do tempo de aquecimento da peça, faixa verde de 4–8 mm/s. Todos os testes de solda simulada foram refeitos com metade da velocidade e o dobro das pausas e passam com os mesmos critérios de antes.
+- H88: modos Fácil e Difícil escolhidos antes de soldar (MIG e eletrodo); a mesma solda nunca vale menos no Fácil (`tests/referencia.test.ts`, `tests/defeitosEletrodo.test.ts`).
+- H89: sem trava da nota (`pontuacao-v9`). Testes ajustados de propósito: torneio ("melhor" e classificações pela nota), Arcade (não aprovar não perde o desafio) e um teste novo de que a condição essencial descumprida não zera categorias nem limita o conceito.
 - `npm run typecheck` e `npm test`: 46 arquivos, 470 testes passando.
-- Navegador (Chromium headless, 1366×768): menu de modo no treino MIG e no eletrodo; passe MIG completo no treino livre (Fácil); eletrodo no Difícil com o modo no cabeçalho e no placar e o desconto dos defeitos no resultado; sem erros no console. O navegador de teste é lento demais para medir os 12 mm/s na tela; o limite é conferido pelo teste.
 - Não testado em aparelhos físicos (mesa digitalizadora, controle, dois PCs).
 
 ## Alpha v1.7 — lista de defeitos e cordão 3D do eletrodo (branch `claude/v1.7`)

@@ -115,3 +115,7 @@ deve ser acompanhada de revisão desses roteiros.
 As seis encomendas agora têm habilidade principal, preparação, execução, inspeção e um experimento de treino em `src/missoes/aprendizagem.ts`. O roteiro aparece na ficha comum e pode ser consultado antes do desbloqueio. Não muda limites, tentativas ou requisitos físicos.
 
 O resumo de progressão deriva as contagens das aprovações existentes e recomenda a próxima missão Aprendiz liberada. Depois recomenda os níveis Profissional pendentes. Missões inexistentes não são liberadas; dados antigos e chaves desconhecidas são preservados e não contam como capítulo concluído. Completar todas as etapas permite repetir o catálogo. Aprovação não equivale a certificação.
+
+## v1.8 — História sem trava (H89)
+
+A missão seguinte da História libera quando a anterior é **entregue** no modo Fácil, aprovada ou não; o modo Difícil de uma missão libera quando ela é entregue no Fácil. Perfis antigos continuam valendo (a lista salva tem o mesmo nome e formato).

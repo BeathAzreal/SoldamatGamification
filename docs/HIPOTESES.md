@@ -810,10 +810,23 @@ O eletrodo passa a seguir o fluxo do MIG: soldar, encerrar por botão ou Enter, 
 
 Somados ao depósito (H79) e à nota de 0 a 1000 (H81), sem mudar nenhum dos dois: o calor que cada passe pôs em cada meio milímetro da junta (aporte em kJ/mm) comparado com o calor de referência da peça; daí falta de fusão, fusão fraca, calor em excesso e perfuração da raiz aberta; defeitos de superfície (mordedura, sobreposição, poros, cratera, inclusão de escória, respingos, abertura fora da junta, eletrodo grudado) desenhados sobre o metal; e a lista, no resultado, com o lugar, a causa e como corrigir; o cordão na tela é o cordão 3D do MIG, alimentado com o mesmo metal (H86). Detalhes e calibração em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
 
-### H87 — velocidade máxima da tocha no mouse e na caneta (v1.8, Claude)
+### H87 — solda mais lenta pela física, não pelo mouse (v1.8, Claude)
 
-No MIG/MAG, com o arco fechado, o ponto da tela continua sendo o ponto da peça (para mirar). Com o arco aberto, a tocha vai até o ponteiro no máximo a 12 mm/s (`VELOCIDADE_MAXIMA_PONTEIRO` em `src/entrada/ponteiro.ts`), cerca de 40 % da velocidade natural da mão. O dono achou a velocidade de soldagem alta demais. Se a mão corre, a tocha fica para trás e alcança no próprio ritmo, a cada quadro; com a mão devagar, a tocha fica embaixo do ponteiro. Os 12 mm/s ficam dentro da faixa de avanço da alimentação de referência (8–16 mm/s, H11); com alimentação bem mais alta, a faixa passa do limite e é preciso baixar a alimentação. O passe inteiro continua cabendo na tela (uma redução proporcional da mão não caberia). O controle (gamepad) não mudou. As leituras gravadas continuam em mm da peça, então replay, nota e X1 não dependem do limite.
+O mouse e a caneta continuam como antes: o ponto da tela é o ponto da peça, sem limite nem redução. O que mudou foi a física do MIG/MAG, para a solda certa pedir metade da velocidade de avanço:
+
+- `MODELO.taxaDeposicaoMm3s` de 100 para 50: o arame deposita metade do metal por segundo, então o mesmo cordão pede metade da velocidade;
+- `FUSAO.necessidadePorMm` de 0,01677 para 0,03354: cada mm de junta pede o dobro de calor para fundir, então a fusão certa pede o dobro de tempo sobre cada mm;
+- `tauAquecimentoS` de cada material em dobro (aço 24 s, inox 36 s, alumínio 16 s): a peça aquece e esfria no ritmo de um passe que agora dura o dobro;
+- faixa verde de velocidade (`VELOCIDADE.alvoMinMms`/`alvoMaxMms`) de 8–16 para 4–8 mm/s, velocidade típica de cada junta pela metade, escala do velocímetro de 40 para 20 mm/s;
+- escamas a cada 240 ms (eram 120) e 500 ms para encher a cratera (eram 250), para o cordão sair igual ao de antes na velocidade nova;
+- controle (gamepad): velocidade máxima de 15 mm/s (era 30), para o mesmo ponto do analógico dar a mesma solda.
+
+Andar na velocidade antiga agora deixa cordão fino e falta de fusão. Todos os testes de solda simulada foram refeitos com metade da velocidade e o dobro das pausas e dão os mesmos resultados de antes: o modelo é o mesmo, só com o tempo esticado em duas vezes. Números do jogo, não de norma.
 
 ### H88 — modos de pontuação Fácil e Difícil (v1.8, Claude)
 
 O jogador escolhe Fácil ou Difícil antes de soldar, no MIG/MAG e no eletrodo. No MIG os dois níveis já existiam (Aprendiz e Profissional) com pouca diferença na nota; agora têm esses nomes e o Fácil tem faixas de tolerância duas vezes mais largas. No eletrodo, o Fácil compara com o nível D da ISO 5817 e desconta pouco pelos defeitos; o Difícil, com o nível B, e cada defeito grave custa 100 pontos. Tabelas em [PONTUACAO.md](PONTUACAO.md). Critérios do jogo, didáticos, não de norma.
+
+### H89 — nota sem trava (v1.8, Claude)
+
+Pedido do dono: "considere todas as pontuações independente da nota". A condição essencial descumprida (integridade mínima, perfuração, trecho sem cordão, óxido) continua sendo mostrada como "não aprovada", mas não zera Controle térmico e Execução, não limita o conceito a C, não põe aprovadas à frente nos rankings e torneios, não faz perder o desafio do Arcade e não trava a História (a missão seguinte libera ao entregar). Versão da nota: `pontuacao-v9`.

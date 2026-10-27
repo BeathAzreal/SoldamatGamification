@@ -40,9 +40,8 @@ export function chaveRanking(r: Pick<Recorde, 'missaoId' | 'missaoVersao' | 'dif
   return `${r.missaoId}@${r.missaoVersao}|${r.dificuldade}|${r.dispositivo}|${r.versaoPontuacao}`
 }
 
-/** Aprovada antes, depois total, integridade, desenho e, por fim, quem chegou primeiro. */
+/** Total, integridade, desenho e, por fim, quem chegou primeiro, aprovada ou não (v1.8, H89). */
 export function compararRecordes(a: Recorde, b: Recorde): number {
-  if (a.aprovada !== b.aprovada) return a.aprovada ? -1 : 1
   if (a.total !== b.total) return b.total - a.total
   for (const c of ['integridade', 'desenho'] as CategoriaId[]) {
     if (a.categorias[c] !== b.categorias[c]) return b.categorias[c] - a.categorias[c]

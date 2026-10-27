@@ -104,7 +104,8 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
     const botaoPausa = h('button', { type: 'button', class: 'navegacao-de-partida' }, 'Pausar ', h('kbd', {}, 'P'))
     const botaoSair = h('button', { type: 'button', class: 'secundario navegacao-de-partida' }, op.oficial ? 'Abandonar tentativa' : 'Sair do treino')
 
-    const ESCALA_V = 40
+    // v1.8 (H87): a solda certa pede metade da velocidade; a escala também caiu à metade (era 40).
+    const ESCALA_V = 20
     const painel = h(
       'aside',
       { class: 'painel' },
@@ -119,7 +120,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         h('h2', {}, 'Velocidade de avanço'),
         h('p', { class: 'valor' }, vAvanco, h('small', {}, ' mm/s')),
         h('div', { class: 'barra', 'aria-hidden': 'true' }, faixa, marcador),
-        h('div', { class: 'escala' }, h('span', {}, '0'), h('span', {}, '20'), h('span', {}, '40 mm/s')),
+        h('div', { class: 'escala' }, h('span', {}, '0'), h('span', {}, '10'), h('span', {}, '20 mm/s')),
         h('p', { class: 'nota' }, 'Faixa verde: velocidade que daria a largura do desenho com estes ajustes (pelo modelo).'),
       ),
       h(

@@ -5,7 +5,7 @@ import { CONTEXTO_PADRAO, equilibrioArco, MOVIMENTOS, oscilacaoVisual, type Cont
 import { Simulacao } from '../src/modelo/simulacao'
 import { executar } from './util'
 
-/** Passe a 12 mm/s; `lateral(x)` permite oscilar à mão. */
+/** Passe a 6 mm/s (v1.8, H87: metade de antes); `lateral(x)` permite oscilar à mão. */
 function passe(ctx: ContextoProcesso, lateral: (x: number) => number = () => 0): Simulacao {
   const sim = new Simulacao(ctx)
   let t = 0
@@ -13,7 +13,7 @@ function passe(ctx: ContextoProcesso, lateral: (x: number) => number = () => 0):
   sim.iniciarArco({ t, x, y: lateral(x) })
   while (x < 145) {
     t += 8
-    x += 12 * 0.008
+    x += 6 * 0.008
     sim.moverTocha({ t, x, y: lateral(x) })
   }
   sim.encerrarArco({ t, x, y: lateral(x) })
@@ -84,7 +84,7 @@ describe('cada missão aprova com algum movimento oscilante (aprendiz)', () => {
           const ctx = { ...CONTEXTO_PADRAO, material: m.material, diametroArameMm: preparo.diametroArameMm, gas: preparo.gas }
           const tensao = Math.round(equilibrioArco({ alimentacao, tensao: 5 }, ctx).tensaoEquilibrio * 2) / 2
           if (tensao < 1 || tensao > 10) continue
-          for (let v = 4; v <= 26; v += 2)
+          for (let v = 2; v <= 13; v += 1)
             for (const acel of m.material === 'aluminio' ? [0, 0.3, 0.5] : [0])
               if (executar(m, 'aprendiz', preparo, { alimentacao, tensao }, v, acel).aprovada) return true
         }

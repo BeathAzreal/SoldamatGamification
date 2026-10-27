@@ -296,7 +296,8 @@ function passoPontuacaoFinal(app: App, s: Sessao, t: TentativaArcade): void {
       )
       app.recordes = [...app.recordes, recorde]
       app.salvar('recordes')
-      if (r.aprovada) {
+      // v1.8 (H89): entregar a missão já libera a próxima, aprovada ou não.
+      {
         let perfil = buscarPerfilArcade(app.perfis, nome)
         if (!perfil) {
           perfil = { id: app.ambiente.novoId('par'), nome, criadoEm: new Date().toISOString(), origem: 'arcade', aprovadas: [] }
