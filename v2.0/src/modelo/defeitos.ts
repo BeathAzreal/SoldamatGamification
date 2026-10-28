@@ -1,7 +1,7 @@
 import type { Cordao } from './cordao'
 import { analisarFusao, indiceDeformacao, suavizar, type PontoFusao } from './fusao'
 import { INFO_JUNTA, juntaDe } from './juntas'
-import { DEFEITOS } from './parametros'
+import { DEFEITOS, FUSAO } from './parametros'
 import type { Percurso } from './percurso'
 import { dbcpDe, type ContextoProcesso } from './processo'
 import type { EventoTentativa, PontoRegistro } from './simulacao'
@@ -19,7 +19,7 @@ import type { EventoTentativa, PontoRegistro } from './simulacao'
  * fatia (hash), não de Math.random: repetir a tentativa repete o desenho.
  */
 
-export type TipoDefeito = 'escorrimento' | 'gotejamento' | 'caimento' | 'mordedura' | 'sobreposicao' | 'respingos' | 'cratera' | 'porosidade'
+export type TipoDefeito = 'escorrimento' | 'gotejamento' | 'caimento' | 'mordedura' | 'sobreposicao' | 'respingos' | 'cratera' | 'porosidade' | 'penetracao-excessiva' | 'raiz-afundada' | 'furo'
 
 export const NOME_DEFEITO: Record<TipoDefeito, string> = {
   escorrimento: 'Cordão escorrido (embarrigado)',
@@ -30,6 +30,9 @@ export const NOME_DEFEITO: Record<TipoDefeito, string> = {
   respingos: 'Respingos presos na chapa',
   cratera: 'Cratera no fim do cordão',
   porosidade: 'Porosidade prevista',
+  'penetracao-excessiva': 'Penetração excessiva (metal passou e pendurou no avesso)',
+  'raiz-afundada': 'Raiz afundada (a poça caiu e a face ficou côncava)',
+  furo: 'Furo (a chapa varou)',
 }
 
 /** Causa típica e correção, em poucas palavras (a didática completa fica com quem exibe). */
@@ -42,6 +45,27 @@ export const CONSELHO_DEFEITO: Record<TipoDefeito, string> = {
   respingos: 'Arco fora do equilíbrio (tensão × alimentação) ou CO₂ puro: equilibre a máquina.',
   cratera: 'Ao terminar, segure a tocha parada um instante antes de fechar o arco para encher a cratera.',
   porosidade: 'Gás mal protegido: arco longo, distância bico-peça grande ou óxido não removido (alumínio).',
+  'penetracao-excessiva': 'Calor demais para a espessura: o metal atravessou e ficou pendurado do outro lado. Ande mais rápido ou baixe a alimentação.',
+  'raiz-afundada': 'A poça ficou pesada demais e caiu pela raiz: a face afunda. Menos corrente, avanço mais rápido ou curto-circuito em vez de spray.',
+  furo: 'O calor atravessou a chapa e abriu um buraco. Em chapa fina: curto-circuito, avanço constante e sem parar a tocha no lugar.',
+}
+
+/**
+ * H94 (v2.0): níveis de passar da chapa, pelo índice de fusão F (o calor já
+ * relativo à espessura). Da raiz aparente (normal) ao metal pendurado no
+ * avesso, à raiz afundada e ao furo. Números do jogo.
+ */
+export const PENETRACAO = {
+  /** Raiz começa a aparecer no avesso (ainda adequado). */
+  raizAparente: 1.6,
+  /** Metal passa e pendura no avesso. */
+  excesso: 2.1,
+  /** Altura máxima do metal pendurado no avesso (mm). */
+  penduradoMaxMm: 1.6,
+  /** A poça cai: a face afunda. */
+  afunda: 2.35,
+  /** Metal no avesso que já é defeito (mm), na ordem do limite de raiz da ISO 5817. */
+  limiteAvessoMm: 1,
 }
 
 export interface OcorrenciaDefeito {
@@ -101,6 +125,14 @@ export interface AnaliseDefeitos {
   gotas: Bolinha[]
   respingos: Bolinha[]
   poros: Poro[]
+  /** H94: metal no avesso da junta (mm): raiz aparente e, com calor demais, pendurado. */
+  penetracaoMm: Float32Array
+  /** H94: 0…1, quanto a face afundou porque a poça caiu pela raiz. */
+  afundamento: Float32Array
+  /** H94: largura do furo na fatia (mm); 0 sem furo. */
+  furoMm: Float32Array
+  /** H94: gotas grandes penduradas no avesso. */
+  gotasAvesso: Bolinha[]
   /** Empeno angular previsto das chapas (graus, H57). */
   empenoGraus: number
   /** Mordedura a partir da qual vira ocorrência (mm). */
@@ -156,6 +188,10 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
     cratera: novo(),
     porosidade: novo(),
     calor: novo(),
+    penetracaoMm: novo(),
+    afundamento: novo(),
+    furoMm: novo(),
+    gotasAvesso: [],
     escamaFase: novo(),
     escamaDir: new Int8Array(n),
     gotas: [],
@@ -220,6 +256,18 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
     // Porosidade (H57).
     const p = lim01(porosidadeBase + 0.5 * lim01((instab - 0.2) / 0.6) + 0.15 * f.cabeca)
     a.porosidade[i] = p
+
+    // H94: passar da chapa, em níveis. No filete não há avesso livre: só o furo conta.
+    if (INFO_JUNTA[junta].familia !== 'filete') {
+      const raiz = 0.3 * lim01((F - PENETRACAO.raizAparente) / (PENETRACAO.excesso - PENETRACAO.raizAparente))
+      const excesso = lim01((F - PENETRACAO.excesso) / (FUSAO.perfuracao - PENETRACAO.excesso))
+      a.penetracaoMm[i] = raiz + PENETRACAO.penduradoMaxMm * excesso
+      a.afundamento[i] = lim01((F - PENETRACAO.afunda) / (FUSAO.perfuracao - PENETRACAO.afunda))
+      if (excesso > 0.3 && sorteioFixo(i, 60) < 0.4 * excesso * passo) {
+        a.gotasAvesso.push({ xMm: s.xMm, nMm: s.yCentroMm + (sorteioFixo(i, 61) - 0.5) * 0.4 * s.larguraMm, raioMm: 0.5 + 0.9 * excesso * (0.6 + 0.6 * sorteioFixo(i, 62)) })
+      }
+    }
+    if (F > FUSAO.perfuracao) a.furoMm[i] = Math.min(0.85 * s.larguraMm, 1 + 3 * (F - FUSAO.perfuracao))
 
     // Objetos com sorteio fixo por fatia.
     const meia = s.larguraMm / 2
@@ -361,6 +409,9 @@ function ocorrencias(a: AnaliseDefeitos, secoes: { xMm: number; larguraMm: numbe
   trechos('sobreposicao', (i) => Math.max(a.sobreposicaoMenos[i], a.sobreposicaoMais[i]), 0.3, 'índice 0–1')
   trechos('porosidade', (i) => a.porosidade[i], 0.3, 'índice 0–1')
   trechos('cratera', (i) => a.cratera[i], 0.3, 'índice 0–1', 0.5)
+  trechos('penetracao-excessiva', (i) => a.penetracaoMm[i], PENETRACAO.limiteAvessoMm, 'mm no avesso')
+  trechos('raiz-afundada', (i) => a.afundamento[i], 0.3, 'índice 0–1')
+  trechos('furo', (i) => a.furoMm[i], 0, 'mm de largura', 0.5)
   const comprimento = secoes.filter((s) => s.larguraMm >= 1).length * a.passoMm
   const por10 = comprimento > 0 ? (a.respingos.length / comprimento) * 10 : 0
   if (por10 > 2) {
@@ -388,13 +439,17 @@ export function notaSuperficie(a: AnaliseDefeitos, i: number): number {
     0.7 * a.rolos[i] +
     0.8 * a.gotejamento[i] +
     0.6 * a.cratera[i] +
-    0.5 * lim01((Math.abs(a.caimento[i]) - 0.3) / 0.7)
+    0.5 * lim01((Math.abs(a.caimento[i]) - 0.3) / 0.7) +
+    // H94: metal pendurado no avesso tira um pouco; face afundada tira mais; furo tira tudo.
+    0.4 * lim01((a.penetracaoMm[i] - PENETRACAO.limiteAvessoMm) / 1) +
+    0.7 * a.afundamento[i] +
+    (a.furoMm[i] > 0 ? 1 : 0)
   return lim01(1 - perda)
 }
 
 /** Quanto da fusão prevista vale na fatia (H53, H57): poros e sobreposição tiram integridade. */
 export function fatorIntegridade(a: AnaliseDefeitos, i: number): number {
-  return (1 - 0.6 * a.porosidade[i]) * (1 - 0.4 * Math.max(a.sobreposicaoMenos[i], a.sobreposicaoMais[i]))
+  return (1 - 0.6 * a.porosidade[i]) * (1 - 0.4 * Math.max(a.sobreposicaoMenos[i], a.sobreposicaoMais[i])) * (1 - 0.5 * a.afundamento[i])
 }
 
 /**

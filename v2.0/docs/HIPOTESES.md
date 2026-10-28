@@ -895,3 +895,21 @@ Pedido do dono: "Precisamos melhorar a configuração... deixar mais realista qu
 - **Arcade:** a "máquina pré-ajustada" fica nos passos do painel, nunca no globular, e prefere o curto-circuito.
 
 Calibração por simulação (`tests/maquina.test.ts`). Números do jogo, não de catálogo de fabricante nem de procedimento; as direções (o que piora o quê) seguem a literatura de MIG/MAG. Versão da nota: `pontuacao-v11`.
+
+### H94 — passar da chapa em níveis, até varar (v2.0, Claude)
+
+Pedido do dono: "pensar em furar a peça, com vários níveis que podem acontecer, de apenas passar o material e não fazer um buraco até o ponto que ele realmente vara e faz um buraco."
+
+Pelo índice de fusão F de cada fatia (H33, já relativo à espessura), no topo e no V:
+
+| F | Nível | O que aparece |
+|---|---|---|
+| até 1,6 | normal | nada no avesso |
+| 1,6 a 2,1 | raiz aparente | um filete de metal no avesso (até 0,3 mm); não é defeito |
+| 2,1 a 2,6 | penetração excessiva | o metal passa e pendura no avesso (até ~1,9 mm), com gotas; vira defeito a partir de 1 mm, na ordem do limite de raiz da ISO 5817 |
+| 2,35 a 2,6 | raiz afundada | a poça cai pela raiz e a face fica côncava (até 65 % mais baixa) |
+| acima de 2,6 | furo | a chapa vara: buraco escuro atravessando a chapa, de 1 mm a 85 % da largura do cordão |
+
+No filete não há avesso livre: só o furo conta. Os três defeitos entram na nota de superfície (Desenho) e a raiz afundada tira até metade da integridade da fatia; o furo já zerava a fusão da fatia (perfuração).
+
+No resultado, o botão **Ver o avesso** mostra a raiz, o metal pendurado e os furos; a câmera da inspeção agora pode descer abaixo da peça. Números do jogo, não de procedimento.

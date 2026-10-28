@@ -331,3 +331,5 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
 - `npx tsc --noEmit` sem erros; `npx vitest run`: 488 testes passando (`tests/maquina.test.ts`: unidades, corrente, modos de transferência, arco curto, respingo no globular, fusão no spray, largura com a tensão).
 - Navegador: painel com tensão em V e alimentação em m/min, corrente em A, modo de transferência (curto-circuito, globular, spray) e tensão de equilíbrio em V.
 - Não testado em aparelho físico (mesa, gamepad, PCs dos alunos).
+- H94: `tests/penetracao.test.ts` (7 testes) — com os ajustes de referência na chapa de 3 mm: 6 mm/s nada no avesso; 4 mm/s raiz aparente sem defeito; 3 mm/s metal pendurado; 2,5 mm/s raiz afundada; 2 mm/s furo; os níveis só crescem com o calor; filete sem avesso.
+- Navegador: passe com 6, 3 e 1,8 mm/s; lista de defeitos com penetração excessiva, raiz afundada e furo nos trechos lentos; "Ver o avesso" mostra o metal pendurado.

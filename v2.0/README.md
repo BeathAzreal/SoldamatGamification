@@ -1,6 +1,6 @@
 # Oficina de Soldagem — Alpha v2.0
 
-Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9` (ainda não existe `alpha-v2.0`).
+Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`; entra na `alpha-v2.0` pelo PR #32.
 
 ## Jogar
 
@@ -16,8 +16,9 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
   - **spray** (só com argônio, corrente e tensão altas): liso, penetra muito e fura chapa fina;
   - **tensão baixa demais para o arame:** o metal deita sem fundir as bordas;
   - **tensão alta demais:** respinga, achata o cordão e morde a borda.
+- **Passar da chapa em níveis:** com calor demais, primeiro a raiz aparece no avesso (normal), depois o metal passa e fica pendurado do outro lado, depois a poça cai e a face afunda e, no limite, a chapa vara e abre um furo. No resultado, o botão **Ver o avesso** mostra tudo isso.
 - No Arcade, a máquina pré-ajustada usa os passos do painel e fica fora do globular.
 - Novo exercício técnico: **4. Curto-circuito, globular e spray**.
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil, eletrodo sem assistência.
 
-Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.
+Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 e H94) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.

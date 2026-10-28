@@ -226,6 +226,8 @@ export class MalhaCordaoViva {
     if (!a) return 1
     // Ondas de metal escorrido com espaçamento irregular (padrão fixo, o mesmo do arco instável, H44).
     let f = 1 - 0.8 * a.cratera[i] + 0.25 * a.rolos[i] * Math.sin((2 * Math.PI * s) / 3.6 + 2.2 * padraoIrregular(s * 0.7))
+    // H94: a poça que caiu pela raiz deixa a face afundada; no furo quase não sobra metal em cima.
+    f *= (1 - 0.65 * a.afundamento[i]) * (a.furoMm[i] > 0 ? 0.15 : 1)
     const dir = a.escamaDir[i]
     if (dir !== 0) {
       const p = this.passoMm
