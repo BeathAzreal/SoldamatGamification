@@ -26,7 +26,7 @@ function soldar(p: PecaTig, j: Jeito = {}) {
   m.xMm = p.inicioMm - 2
   m.distanciaMm = j.distancia ?? 2.5
   m.pedal = 1
-  const depositar = (x: number, y: number, v: number) => dep.depositar(x, y, v)
+  const depositar = (x: number, y: number, v: number) => dep.depositar(x, y, v, 0, 0.25, 0, 0, m.larguraDepositoMm)
   let t = 0
   if (j.esperarPoca !== false) while (m.raioPocaMm < 1.5 && t < 5) { m.avancar(dt, depositar); t += dt }
   let andando = 0

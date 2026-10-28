@@ -929,3 +929,25 @@ No resultado, o botão **Ver o avesso** mostra a raiz, o metal pendurado e os fu
   - furo no limite (como antes).
   - Metal pendurado e raiz afundada descontam por trecho: 10 e 25 pontos no Fácil, 30 e 60 no Difícil, com teto de 60 e 180.
 - **Filete:** em nenhum dos dois há avesso livre; só o furo conta.
+
+### H95 — seção parabólica no eletrodo e no TIG (v2.0, Claude)
+
+Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapping model for multi-material wire arc additive manufacturing (WAAM)", *Virtual and Physical Prototyping* 18(1), e2210541.
+
+- **Publicado (eq. 1, p. 4):** a seção do cordão é uma parábola, y = h(1 − 4n²/w²), entre −w/2 e w/2. Nos ensaios do artigo (GMAW pulsado, arame de 1,2 mm, cordão sobre chapa), o erro de área foi menor que 4 % (p. 9).
+- **Dedução:** integrando a parábola, a área é A = 2wh/3. Nos dados da Tabela 3 do artigo, 2wh/3 dividido pela área de arame que entrou (π·0,6²·WFS/TS) fica entre 0,86 e 1,04: os dados conservam massa (conta nossa, não publicada no artigo).
+- **No jogo:**
+  - O MIG já usava essa parábola (H3).
+  - O eletrodo e o TIG trocam a gaussiana pela parábola na lateral. Ao longo do avanço fica um espalhamento curto, só para não aparecer degrau.
+  - O volume entra inteiro e uma vez só: os pesos são normalizados.
+- **Largura do passe (adaptação do jogo):**
+  - Eletrodo: 4 × o desvio-padrão da gaussiana de antes, para manter a calibração. Cresce com o arco longo e a instabilidade, e com o diâmetro (fator diâmetro ÷ 2,5 mm).
+  - TIG: a largura da poça, de 2,5 a 8 mm.
+  - Os coeficientes do artigo não foram transferidos: os processos e as condições são outros.
+- **Regra de pontos baixos:** o metal novo procura os pontos baixos só dentro da junta, abaixo da face (enche abertura e chanfro). Acima da face vale a parábola. Antes, essa regra achatava a coroa até 1,2 mm acima do alvo.
+- **Testes:** `tests/perfilParabola.test.ts`:
+  - forma da parábola;
+  - área igual a 2wh/3 com tolerância de 3 % (amostragem da grade de 0,5 mm);
+  - volume exato;
+  - o mesmo resultado a 30 e a 144 quadros/s;
+  - largura maior com diâmetro maior e com arco longo.

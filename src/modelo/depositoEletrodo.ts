@@ -45,25 +45,43 @@ export class DepositoEletrodo {
     return this.espessura(x,y)>1e-9?this.amostrar(x,y,true):baseEletrodo(this.peca,y)
   }
   volumeTotal(){return this.volume}
-  depositar(x:number,y:number,volume:number,_agora=0,razao=.25,_oscilacao=0,instabilidade=0){
+  /**
+   * H95 (v2.0): largura do cordão (mm) que o passe deixa. Mesma escala do
+   * modelo anterior (4 desvios-padrão da gaussiana de antes): cresce com o
+   * diâmetro do eletrodo, com o arco longo (razão menor, H69) e com a
+   * instabilidade do arco.
+   */
+  larguraPasse(razao=.25,instabilidade=0):number{
+    const sigma=Math.max(.8,Math.min(1.8,1.05+(.25-razao)*2+Math.abs(instabilidade)*.4))
+    return 4*sigma*this.peca.diametroMm/2.5
+  }
+  /**
+   * Depósito local (H79). H95 (v2.0): a seção transversal do passe é a parábola
+   * de Banaee et al. (2023, eq. 1), y = h(1 − 4n²/w²), em vez de uma gaussiana.
+   * Ao longo do avanço o metal se espalha um pouco (sx), só para não ficar em
+   * degraus; somando os pontos de um passe reto, o corte sai parabólico.
+   * O volume entra inteiro e uma vez só: os pesos são normalizados.
+   */
+  depositar(x:number,y:number,volume:number,_agora=0,razao=.25,_oscilacao=0,instabilidade=0,larguraMm?:number){
     if(volume<=0 || !this.naPeca(x,y))return
-    const sx=1.2,sy=Math.max(.8,Math.min(1.8,1.05+( .25-razao)*2+Math.abs(instabilidade)*.4))
+    const sx=1.2,meia=Math.max(this.dy,(larguraMm??this.larguraPasse(razao,instabilidade))/2)
     const celulas:{k:number;peso:number;altura:number}[]=[]
     let minimo=Infinity
-    for(let j=Math.max(0,Math.floor((y+50-3*sy)/this.dy));j<=Math.min(this.ny-1,Math.ceil((y+50+3*sy)/this.dy));j++)
+    for(let j=Math.max(0,Math.floor((y+50-meia)/this.dy));j<=Math.min(this.ny-1,Math.ceil((y+50+meia)/this.dy));j++)
       for(let i=Math.max(0,Math.floor(x-3*sx));i<=Math.min(this.nx-1,Math.ceil(x+3*sx));i++){
         const cx=this.x(i),cy=this.y(j)
         if(!this.naPeca(cx,cy))continue
-        const r=((cx-x)/sx)**2+((cy-y)/sy)**2
-        if(r>9)continue
+        const ax=((cx-x)/sx)**2,n=(cy-y)/meia,perfil=1-n*n
+        if(ax>9 || perfil<=0)continue
         const k=j*this.nx+i,altura=baseEletrodo(this.peca,cy)+this.metal[k]
         minimo=Math.min(minimo,altura)
-        celulas.push({k,peso:Math.exp(-.5*r),altura})
+        celulas.push({k,peso:Math.exp(-.5*ax)*perfil,altura})
       }
     // Só o metal novo molha o entorno imediato; não move cordões frios nem salta para a raiz.
     let soma=0
-    // Após preencher o perfil-alvo, a distribuição local mantém a coroa convexa.
-    const nivel=alvoEletrodo(this.peca).altura+1.2
+    // Dentro da junta (abaixo da face) o metal novo procura os pontos baixos: enche a abertura e o chanfro.
+    // H95: acima da face vale só a parábola (a coroa não é achatada). No filete, o nível é o do canto.
+    const nivel=Math.min(0,alvoEletrodo(this.peca).altura)
     for(const c of celulas){c.peso/=1+2*Math.max(0,Math.min(nivel,c.altura)-Math.min(nivel,minimo));soma+=c.peso}
     if(!soma)return
     for(const c of celulas)this.metal[c.k]+=volume*c.peso/soma/(this.dx*this.dy)
