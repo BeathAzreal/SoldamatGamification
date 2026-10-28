@@ -334,3 +334,9 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
 - H94: `tests/penetracao.test.ts` (7 testes) — com os ajustes de referência na chapa de 3 mm: 6 mm/s nada no avesso; 4 mm/s raiz aparente sem defeito; 3 mm/s metal pendurado; 2,5 mm/s raiz afundada; 2 mm/s furo; os níveis só crescem com o calor; filete sem avesso.
 - Navegador: passe com 6, 3 e 1,8 mm/s; lista de defeitos com penetração excessiva, raiz afundada e furo nos trechos lentos; "Ver o avesso" mostra o metal pendurado.
 - H94 no eletrodo: `tests/defeitosEletrodo.test.ts` — nas peças de raiz aberta e de chapa inteira, conforme o avanço fica mais lento: nada → penetração excessiva → raiz afundada → furo. No TIG: `tests/tig.test.ts` — na chapa de 1,5 mm, conforme a corrente sobe: limpo → metal pendurado (sem furo, com desconto) → furo; no T, só o furo. Navegador: eletrodo lento sobre a chapa mostra "Furo (a chapa varou)" e o buraco no 3D.
+- H95–H98 (artigo de Banaee et al. 2023 como fonte): `npx vitest run` com 519 testes passando.
+  - `tests/perfilParabola.test.ts`: seção parabólica, área de 2wh/3 e volume conservado a 30 e 144 quadros/s.
+  - `tests/sobreposicao.test.ts`: o passo de 2w/3 dá quase plano; mais perto, morro; mais longe, vale.
+  - `tests/defeitosEletrodo.test.ts`: um passe quente funde no anterior; um passe frio e rápido deixa falta de fusão entre passes.
+  - `tests/humping.test.ts`: a forma muda com a alimentação e as corcovas aparecem só com avanço rápido e corrente alta.
+- Navegador: no eletrodo, "Unir duas chapas" com dois passes; o botão Corte mostra a chapa, a abertura e as camadas de cada passe em escala real. O humping no 3D do MIG não foi conferido no navegador, só nos testes.
