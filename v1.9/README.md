@@ -1,6 +1,6 @@
 # Oficina de Soldagem — Alpha v1.9
 
-Cópia da branch [`claude/v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v1.9), feita a partir da `claude/v1.8` (ainda não existe `alpha-v1.9`).
+Cópia da branch de entrega [`alpha-v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.9) (`claude/v1.9`, juntada pelo PR #31; inclui a v1.8).
 
 ## Jogar
 
