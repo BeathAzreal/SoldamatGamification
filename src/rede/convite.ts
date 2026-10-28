@@ -1,5 +1,5 @@
 /** Endereço público verificado da oficina; o portátil encaminha o x1 para ele. */
-export const OFICINA_ONLINE = 'https://oficina-soldagem-x1.beath.chatgpt.site'
+export const OFICINA_ONLINE = 'https://oficinadesolda.beath.chatgpt.site'
 
 export function codigoDoConvite(endereco: string): string {
   try {
