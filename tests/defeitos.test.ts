@@ -219,7 +219,7 @@ describe('defeitos visíveis (H50–H57)', () => {
       expect(sup(plana)).not.toBe(sup(cabeca))
     })
 
-    it('porosidade tira nota de fusão; os essenciais continuam os mesmos', () => {
+    it('porosidade tira nota de fusão; no Fácil não há aprovação (H90)', () => {
       const al = MISSOES.find((m) => m.id === 'aluminio-componente')!
       const base = { diametroArameMm: 1, gas: 'ar' as const, tecnica: 'neutra' as const, dbcpMm: 15 }
       const r = (oxidoRemovido: boolean) => {
@@ -230,7 +230,8 @@ describe('defeitos visíveis (H50–H57)', () => {
       const sujo = r(false)
       const limpo = r(true)
       expect(cat(sujo, 'integridade').pontos).toBeLessThan(cat(limpo, 'integridade').pontos)
-      expect(sujo.essenciais.map((e) => e.id)).toEqual(['E1', 'E2', 'E3', 'E4'])
+      expect(sujo.essenciais).toEqual([])
+      expect(sujo.exigencia).toBeNull()
     })
 
     it('cratera no fim custa pouco (é só a ponta), mas aparece', () => {

@@ -26,7 +26,7 @@ describe('geração de desafios', () => {
     for (const n of [1, 2]) {
       const d = gerarDesafio(n, semente(n))
       expect(d.condicao.tipo).toBe('livre')
-      expect(d.dificuldade).toBe('aprendiz')
+      expect(d.dificuldade).toBe('profissional') // H90: desafios só no Difícil
     }
   })
 
@@ -102,16 +102,18 @@ describe('cada condição sorteável tem solução', () => {
   }
 })
 
-const resultado = (total: number, aprovada = true) => ({ total, aprovada }) as ResultadoPontuacao
+const resultado = (total: number, aprovada = true) =>
+  ({ total, aprovada, exigencia: 0.4, categorias: [{ id: 'integridade', nome: 'Fusão prevista', pontos: aprovada ? 300 : 100, maximo: 400 }], essenciais: [{ id: 'integridade', descricao: '', cumprida: aprovada, justificativa: '' }] }) as unknown as ResultadoPontuacao
 
 describe('avaliação do desafio e combo', () => {
   const base = { numero: 3, missaoId: MISSOES[0].id, dificuldade: 'aprendiz' } as const
   const exec = { aberturasDeArco: 1, tempoArcoS: 10, tecnica: 'neutra' as Tecnica, ajustes: { alimentacao: 5, tensao: 5.5 } }
 
-  it('não aprovar a missão não faz perder o desafio; a nota conta (v1.8, H89)', () => {
+  it('perde o desafio com alguma categoria abaixo de 40 %, mesmo cumprindo a condição (H90)', () => {
     const r = avaliarDesafio({ ...base, condicao: { tipo: 'livre' } }, resultado(90, false), exec, 0)
-    expect(r.concluido).toBe(true)
-    expect(r.pontos).toBeGreaterThan(0)
+    expect(r.concluido).toBe(false)
+    expect(r.pontos).toBe(0)
+    expect(r.motivo).toContain('40 %')
   })
 
   it('verifica cada condição', () => {

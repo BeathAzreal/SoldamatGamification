@@ -18,7 +18,7 @@ import { NOME_DISPOSITIVO, type Dispositivo } from '../../entrada/tipos'
 import { NOME_DIFICULDADE, descreverJunta } from '../../missoes/catalogo'
 import { tecnicaDe } from '../../modelo/processo'
 import { pontuarRegistro } from '../../pontuacao/oficial'
-import { VERSAO_PONTUACAO, type ResultadoPontuacao } from '../../pontuacao/regras'
+import { EXIGENCIA, VERSAO_PONTUACAO, type ResultadoPontuacao } from '../../pontuacao/regras'
 import type { App } from '../app'
 import { icone } from '../componentes/icones'
 import { montarPontuacao } from '../componentes/pontuacao'
@@ -188,7 +188,7 @@ function soldar(app: App, p: Partida, config: ConfiguracaoTentativa): void {
       oficial: true,
       rotulo: `Desafio ${p.desafio.numero} · ${descreverCondicao(p.desafio.condicao).titulo}`,
       aoConcluir: ({ eventos }) => {
-        const { resultado, sim } = pontuarRegistro(m, p.desafio.dificuldade, config.contexto, eventos)
+        const { resultado, sim } = pontuarRegistro(m, p.desafio.dificuldade, config.contexto, eventos, undefined, EXIGENCIA.desafio)
         const r = avaliarDesafio(
           p.desafio,
           resultado,

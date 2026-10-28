@@ -5,7 +5,7 @@ import { chaveRankingArcade, rankingArcade } from '../../dados/recordesArcade'
 import { NOME_DISPOSITIVO } from '../../entrada/tipos'
 import { buscarMissao, NOME_DIFICULDADE } from '../../missoes/catalogo'
 import { MATERIAIS } from '../../modelo/material'
-import { CATEGORIAS, NOME_CATEGORIA } from '../../pontuacao/regras'
+import { CATEGORIAS, NOME_CATEGORIA, VERSAO_PONTUACAO } from '../../pontuacao/regras'
 import type { App } from '../app'
 import { confirmar } from '../dialogo'
 import { dataHora, h, n1, titulo, anexar } from '../dom'
@@ -152,7 +152,7 @@ function telaRecordesHistoria(app: App, chaveInicial?: string): void {
                   h('td', {}, i < 3 ? `${i + 1}º ★` : `${i + 1}º`),
                   h('th', { scope: 'row' }, r.nome),
                   h('td', { class: 'num' }, n1(r.total)),
-                  h('td', {}, r.aprovada ? 'aprovada' : 'não aprovada'),
+                  h('td', {}, r.dificuldade === 'aprendiz' && r.versaoPontuacao === VERSAO_PONTUACAO ? 'só nota (Fácil)' : r.aprovada ? 'aprovada' : 'não aprovada'),
                   CATEGORIAS.map((c) => h('td', { class: 'num' }, n1(r.categorias[c]))),
                   h('td', {}, dataHora(r.data)),
                   h('td', {}, h('button', { type: 'button', class: 'pequeno', 'aria-label': `Excluir o recorde de ${r.nome} (${n1(r.total)})`, on: { click: () => excluir(r) } }, 'Excluir')),

@@ -3234,3 +3234,19 @@ canvas.tela-solda-3d[hidden] {
 .pause-config .config-paineis { max-height: 58svh; padding: 8px; }
 
 .jogo-imersivo .navegacao-de-partida, .jogo-imersivo [data-ajuste-partida] { display: none!important; }
+
+/* H90 (v1.9): modo Fácil sem aprovação e marca do mínimo do Difícil em cada categoria. */
+.selo-livre {
+  background: #1c2733;
+  border: 1px solid #4b6a86;
+  color: #cfe3f5;
+}
+.barra-minimo {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  margin-left: -1px;
+  background: #f4efdf;
+  box-shadow: 0 0 0 1px #0008;
+}

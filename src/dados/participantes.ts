@@ -9,22 +9,23 @@ import type { Participante } from './torneio'
 
 export interface PerfilParticipante extends Participante {
   origem: 'arcade' | 'torneio'
-  /** Missões entregues na História: "missaoId|dificuldade". Antes da v1.8 só entravam as aprovadas (o nome ficou). */
+  /** Missões aprovadas na História: "missaoId|dificuldade" (v1.9: só o Difícil conta). */
   aprovadas?: string[]
 }
 
 export const chaveProgresso = (missaoId: string, d: Dificuldade) => `${missaoId}|${d}`
 
-/** Progressão do Arcade: a 1ª missão abre; cada Aprendiz aprovado abre a próxima missão e o Profissional da mesma. */
+/**
+ * Progressão da História (H90, v1.9): só no Difícil. A 1ª missão abre; ser aprovado numa
+ * missão (pelo menos 40 % em cada categoria) abre a seguinte. Aprovações antigas no Fácil não contam.
+ */
 export function missaoLiberada(perfil: PerfilParticipante | undefined, missaoId: string, d: Dificuldade): { liberada: boolean; motivo: string } {
   const i = MISSOES.findIndex((m) => m.id === missaoId)
   if (i < 0) return { liberada: false, motivo: 'Missão indisponível.' }
+  if (d !== 'profissional') return { liberada: false, motivo: 'A História é jogada só no Difícil.' }
   const aprovadas = new Set(perfil?.aprovadas ?? [])
-  if (d === 'profissional' && !aprovadas.has(chaveProgresso(missaoId, 'aprendiz'))) {
-    return { liberada: false, motivo: 'Entregue esta missão no modo Fácil.' }
-  }
-  if (d === 'aprendiz' && i > 0 && !aprovadas.has(chaveProgresso(MISSOES[i - 1].id, 'aprendiz'))) {
-    return { liberada: false, motivo: `Entregue "${MISSOES[i - 1].titulo}" no modo Fácil.` }
+  if (i > 0 && !aprovadas.has(chaveProgresso(MISSOES[i - 1].id, 'profissional'))) {
+    return { liberada: false, motivo: `Seja aprovado em "${MISSOES[i - 1].titulo}" (pelo menos 40 % em cada categoria).` }
   }
   return { liberada: true, motivo: '' }
 }
@@ -48,7 +49,7 @@ export function progressoDoPerfil(perfil: PerfilParticipante | undefined) {
   const aprovadas = new Set(perfil?.aprovadas ?? [])
   const aprendiz = MISSOES.filter(m => aprovadas.has(chaveProgresso(m.id, 'aprendiz'))).length
   const profissional = MISSOES.filter(m => aprovadas.has(chaveProgresso(m.id, 'profissional'))).length
-  const proxima = MISSOES.find(m => !aprovadas.has(chaveProgresso(m.id, 'aprendiz')) && missaoLiberada(perfil,m.id,'aprendiz').liberada)
-  const aprofundar = MISSOES.find(m => !aprovadas.has(chaveProgresso(m.id, 'profissional')) && missaoLiberada(perfil,m.id,'profissional').liberada)
-  return { aprendiz, profissional, total: MISSOES.length, proximaId: proxima?.id ?? aprofundar?.id ?? null, dificuldade: proxima ? 'aprendiz' as const : 'profissional' as const }
+  // H90: a História é só no Difícil; a próxima é a primeira liberada ainda sem aprovação.
+  const proxima = MISSOES.find(m => !aprovadas.has(chaveProgresso(m.id, 'profissional')) && missaoLiberada(perfil,m.id,'profissional').liberada)
+  return { aprendiz, profissional, total: MISSOES.length, proximaId: proxima?.id ?? null, dificuldade: 'profissional' as const }
 }

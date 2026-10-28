@@ -20,7 +20,19 @@ import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/ca
  * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v9'
+export const VERSAO_PONTUACAO = 'pontuacao-v10'
+
+/**
+ * H90 (v1.9): aprovação por categoria. Fácil: só a nota, sem aprovação.
+ * Difícil: pelo menos 20 % dos pontos de cada uma das cinco categorias.
+ * Desafios do Arcade e História: só no Difícil, com pelo menos 40 % em cada.
+ */
+export const EXIGENCIA = { dificil: 0.2, desafio: 0.4 } as const
+
+/** Exigência por categoria do modo, fora dos desafios e da História. */
+export function exigenciaDe(d: Dificuldade): number | null {
+  return d === 'aprendiz' ? null : EXIGENCIA.dificil
+}
 /** Nota máxima (cada ponto de peso vale ESCALA ÷ 100). */
 export const ESCALA_PONTUACAO = 1000
 
@@ -139,8 +151,9 @@ export interface ResultadoCategoria {
   detalhes: { rotulo: string; valor: string }[]
 }
 
+/** H90: no Difícil, uma linha por categoria com o mínimo exigido (o id é o da categoria). */
 export interface CondicaoEssencial {
-  id: 'E1' | 'E2' | 'E3' | 'E4'
+  id: CategoriaId
   descricao: string
   cumprida: boolean
   justificativa: string
@@ -163,7 +176,10 @@ export interface ResultadoPontuacao {
   versao: string
   pesos: Pesos
   total: number
+  /** Aprovada no Difícil (todas as categorias com o mínimo). No Fácil é sempre verdadeiro e não é mostrado. */
   aprovada: boolean
+  /** H90: fração mínima de cada categoria para aprovar; null = Fácil, só a nota (sem aprovação). */
+  exigencia?: number | null
   categorias: ResultadoCategoria[]
   essenciais: CondicaoEssencial[]
   penalidades: Penalidade[]
@@ -198,6 +214,8 @@ export interface EntradaPontuacao {
   aberturasDeArco?: number
   /** Aberturas e fechamentos do arco: crateras (v6, H55). Sem eles, não há crateras. */
   eventos?: readonly EventoTentativa[]
+  /** H90: fração mínima de cada categoria; ausente = a do modo (Fácil: nenhuma; Difícil: 20 %). */
+  exigencia?: number | null
 }
 
 const limitar = (v: number) => Math.min(1, Math.max(0, v))
@@ -214,17 +232,6 @@ export function validarPesos(p: Pesos): string[] {
   const soma = CATEGORIAS.reduce((s, c) => s + (p[c] || 0), 0)
   if (Math.abs(soma - 100) > 1e-9) erros.push(`Os pesos devem somar 100 (agora somam ${soma}).`)
   return erros
-}
-
-/** Maior sequência contínua (mm) de posições que satisfazem o critério. */
-function maiorSequencia(pontos: PontoFusao[], criterio: (p: PontoFusao) => boolean, passoMm: number): number {
-  let maior = 0
-  let atual = 0
-  for (const p of pontos) {
-    atual = criterio(p) ? atual + 1 : 0
-    maior = Math.max(maior, atual)
-  }
-  return maior * passoMm
 }
 
 function agruparProblemas(pontos: PontoFusao[], passoMm: number): TrechoProblema[] {
@@ -318,38 +325,6 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
   const fracaoEficiencia =
     0.4 * limitar((tempoUtil - T.tempoUtilMinimo) / (1 - T.tempoUtilMinimo)) + 0.3 * cair(reinicios, T.reinicios) + 0.3 * limitar((aproveitamento - T.aproveitamentoMinimo) / (1 - T.aproveitamentoMinimo))
 
-  // Condições essenciais (iguais às da v1).
-  const perfuracaoMm = maiorSequencia(fAvaliado, (p) => p.estado === 'perfuracao', passo)
-  const semCordaoMm = maiorSequencia(fAvaliado, (p) => p.estado === 'sem-cordao', passo)
-  const essenciais: CondicaoEssencial[] = [
-    {
-      id: 'E1',
-      descricao: `Integridade prevista em pelo menos ${fmtPct(req.integridadeMinima)} do trecho avaliado`,
-      cumprida: fracaoIntegra >= req.integridadeMinima,
-      justificativa: `Fusão adequada prevista em ${fmtPct(fracaoIntegra)} do trecho.`,
-    },
-    {
-      id: 'E2',
-      descricao: 'Evitar perfuração',
-      cumprida: perfuracaoMm < 1,
-      justificativa: perfuracaoMm < 1 ? 'Sem perfuração prevista.' : `Perfuração prevista em até ${fmt1(perfuracaoMm)} mm contínuos.`,
-    },
-    {
-      id: 'E3',
-      descricao: 'Cordão contínuo no trecho exigido',
-      cumprida: semCordaoMm < 1,
-      justificativa: semCordaoMm < 1 ? 'Sem interrupções.' : `Trecho sem cordão de até ${fmt1(semCordaoMm)} mm.`,
-    },
-  ]
-  if (MATERIAIS[contexto.material].exigeLimpeza) {
-    essenciais.push({
-      id: 'E4',
-      descricao: 'Óxido removido antes de soldar',
-      cumprida: contexto.oxidoRemovido,
-      justificativa: contexto.oxidoRemovido ? 'Limpeza feita na preparação.' : 'A limpeza do óxido não foi feita na preparação.',
-    })
-  }
-  const aprovada = essenciais.every((c) => c.cumprida)
 
   const fator = ESCALA_PONTUACAO / 100
   const pontos = (c: CategoriaId, fracao: number) => Math.round(pesos[c] * fator * fracao)
@@ -420,8 +395,16 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     },
   ]
 
-  // v1.8 (H89): sem trava. Todas as categorias contam mesmo com condição essencial descumprida;
-  // "aprovada" fica só como informação.
+  // H90 (v1.9): no Fácil não há aprovação, só a nota. No Difícil, cada categoria precisa de
+  // pelo menos `exigencia` dos seus pontos (20 % no treino; 40 % nos desafios e na História).
+  const exigencia = e.exigencia === undefined ? exigenciaDe(e.dificuldade) : e.exigencia
+  const essenciais: CondicaoEssencial[] = exigencia === null ? [] : categorias.filter((c) => c.maximo > 0).map((c) => ({
+    id: c.id,
+    descricao: `${c.nome}: pelo menos ${fmtPct(exigencia)} dos pontos`,
+    cumprida: c.pontos >= exigencia * c.maximo - 1e-9,
+    justificativa: `${c.pontos} de ${c.maximo} (${fmtPct(c.pontos / c.maximo)}).`,
+  }))
+  const aprovada = essenciais.every((c) => c.cumprida)
   const penalidades: Penalidade[] = []
 
   return {
@@ -429,6 +412,7 @@ export function pontuar(e: EntradaPontuacao, pesos: Pesos = PESOS_PADRAO): Resul
     pesos: { ...pesos },
     total: categorias.reduce((s, c) => s + c.pontos, 0),
     aprovada,
+    exigencia,
     categorias,
     essenciais,
     penalidades,

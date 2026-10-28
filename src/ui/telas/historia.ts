@@ -8,7 +8,7 @@ import { NOME_DISPOSITIVO } from '../../entrada/tipos'
 import { DIFICULDADES, MISSOES, NOME_DIFICULDADE, PLANEJADAS, requisitosEfetivos, type Dificuldade, type Missao } from '../../missoes/catalogo'
 import { MATERIAIS } from '../../modelo/material'
 import { pontuarRegistro } from '../../pontuacao/oficial'
-import { CATEGORIAS, NOME_CATEGORIA, VERSAO_PONTUACAO, type ResultadoPontuacao } from '../../pontuacao/regras'
+import { CATEGORIAS, EXIGENCIA, NOME_CATEGORIA, VERSAO_PONTUACAO, type ResultadoPontuacao } from '../../pontuacao/regras'
 import type { App } from '../app'
 import { montarInspecao } from '../componentes/inspecao'
 import { montarPontuacao } from '../componentes/pontuacao'
@@ -97,7 +97,8 @@ function passoMissoes(app: App, nome: string): void {
     const progresso = progressoDoPerfil(perfil)
     const proxima = MISSOES.find(m => m.id === progresso.proximaId)
     const capitulos = MISSOES.map((m, i) => {
-      const niveis = DIFICULDADES.map((d) => {
+      // H90: a História é só no Difícil.
+      const niveis = DIFICULDADES.filter((d) => d === 'profissional').map((d) => {
         const lib = missaoLiberada(perfil, m.id, d)
         const melhor = melhorDe(app, m, d)
         const aprovada = !!perfil?.aprovadas?.includes(chaveProgresso(m.id, d))
@@ -115,7 +116,7 @@ function passoMissoes(app: App, nome: string): void {
           h('span', { class: 'nivel-info' }, lib.liberada ? (melhor ? `recorde ${n0(melhor.total)}` : aprovada ? 'aprovado' : 'jogar') : 'bloqueado'),
         )
       })
-      const liberado = missaoLiberada(perfil, m.id, 'aprendiz')
+      const liberado = missaoLiberada(perfil, m.id, 'profissional')
       return h(
         'li',
         { class: `capitulo material-${m.material} ${liberado.liberada ? '' : 'trancado'}` },
@@ -138,7 +139,7 @@ function passoMissoes(app: App, nome: string): void {
     anexar(
       app.raiz,
       titulo(`Capítulos de ${nome}`, `Recordes mostrados para: ${NOME_DISPOSITIVO[app.preferencias.dispositivo]}. Eletrodo revestido e TIG ainda não estão disponíveis.`),
-      h('div', { class: 'acoes' }, h('span', {}, `Aprendiz: ${progresso.aprendiz}/${progresso.total} · Profissional: ${progresso.profissional}/${progresso.total}`), proxima ? h('button', { type: 'button', class: 'primario', on: { click: () => passoPreparacao(app, { nome, missao: proxima, dificuldade: progresso.dificuldade, tentativas: [] }) } }, `Continuar: ${proxima.titulo} · ${NOME_DIFICULDADE[progresso.dificuldade]}`) : h('span', {}, 'Todos os capítulos concluídos. Você pode repetir para aprimorar.')),
+      h('div', { class: 'acoes' }, h('span', {}, `Aprovadas no Difícil (40 % em cada categoria): ${progresso.profissional}/${progresso.total}`), proxima ? h('button', { type: 'button', class: 'primario', on: { click: () => passoPreparacao(app, { nome, missao: proxima, dificuldade: progresso.dificuldade, tentativas: [] }) } }, `Continuar: ${proxima.titulo} · ${NOME_DIFICULDADE[progresso.dificuldade]}`) : h('span', {}, 'Todos os capítulos concluídos. Você pode repetir para aprimorar.')),
       h('ol', { class: 'trilha-capitulos' }, capitulos),
       planejadas,
       h('div', { class: 'acoes' }, h('button', { type: 'button', class: 'botao-fantasma', on: { click: () => passoNome(app) } }, 'Trocar nome')),
@@ -187,7 +188,7 @@ function executar(app: App, s: Sessao, config: ConfiguracaoTentativa, oficial: b
       oficial,
       rotulo: oficial ? `Tentativa ${numero} de ${requisitosEfetivos(s.missao, s.dificuldade).tentativas} · ${s.nome}` : 'Treino livre da missão',
       aoConcluir: ({ eventos }) => {
-        const { resultado } = pontuarRegistro(s.missao, s.dificuldade, config.contexto, eventos)
+        const { resultado } = pontuarRegistro(s.missao, s.dificuldade, config.contexto, eventos, undefined, EXIGENCIA.desafio)
         const t: TentativaArcade = { numero, config, eventos, resultado }
         // Treino não é registrado (não consome tentativa, não pode ser entregue).
         s.tentativas = registrarExecucao({ limite: requisitosEfetivos(s.missao, s.dificuldade).tentativas, tentativas: s.tentativas }, t, oficial).tentativas
@@ -296,8 +297,8 @@ function passoPontuacaoFinal(app: App, s: Sessao, t: TentativaArcade): void {
       )
       app.recordes = [...app.recordes, recorde]
       app.salvar('recordes')
-      // v1.8 (H89): entregar a missão já libera a próxima, aprovada ou não.
-      {
+      // H90 (v1.9): ser aprovado (pelo menos 40 % em cada categoria) libera a próxima missão.
+      if (r.aprovada) {
         let perfil = buscarPerfilArcade(app.perfis, nome)
         if (!perfil) {
           perfil = { id: app.ambiente.novoId('par'), nome, criadoEm: new Date().toISOString(), origem: 'arcade', aprovadas: [] }

@@ -14,13 +14,16 @@ describe('roteiros e progressão', () => {
   expect(new Set(MISSOES.map(m=>roteiroDaMissao(m).habilidade)).size).toBe(MISSOES.length)
   for(const m of MISSOES) for(const texto of Object.values(roteiroDaMissao(m))) expect(texto.length).toBeGreaterThan(15)
  })
- it('começa no primeiro capítulo, respeita desbloqueios e ignora chaves antigas desconhecidas', () => {
+ it('começa no primeiro capítulo, só no Difícil, e ignora chaves antigas e desconhecidas (H90)', () => {
   expect(progressoDoPerfil(undefined).proximaId).toBe(MISSOES[0].id)
-  const p=perfil([chaveProgresso(MISSOES[0].id,'aprendiz'),'inexistente|aprendiz'])
-  expect(progressoDoPerfil(p).aprendiz).toBe(1)
+  const p=perfil([chaveProgresso(MISSOES[0].id,'profissional'),chaveProgresso(MISSOES[1].id,'aprendiz'),'inexistente|profissional'])
+  expect(progressoDoPerfil(p).profissional).toBe(1)
   expect(progressoDoPerfil(p).proximaId).toBe(MISSOES[1].id)
-  expect(missaoLiberada(p,'inexistente','aprendiz').liberada).toBe(false)
-  expect(missaoLiberada(p,MISSOES[2].id,'aprendiz').liberada).toBe(false)
+  expect(progressoDoPerfil(p).dificuldade).toBe('profissional')
+  expect(missaoLiberada(p,'inexistente','profissional').liberada).toBe(false)
+  // A aprovação antiga no Fácil não libera nada: a História é só no Difícil.
+  expect(missaoLiberada(p,MISSOES[2].id,'profissional').liberada).toBe(false)
+  expect(missaoLiberada(p,MISSOES[0].id,'aprendiz').liberada).toBe(false)
  })
  it('depois do Aprendiz recomenda aprofundamento e encerra a trilha completa sem apagar dados', () => {
   const chaves=MISSOES.map(m=>chaveProgresso(m.id,'aprendiz'));const p=perfil(chaves)
@@ -32,11 +35,11 @@ describe('roteiros e progressão', () => {
  })
 })
 describe('feedback baseado em evidência', () => {
- it('prioriza condição essencial e não confunde baixa pontuação com causa', () => {
-  const r=resultado();r.aprovada=false;r.essenciais=[{id:'E4',descricao:'Limpeza',cumprida:false,justificativa:'Óxido não removido.'}]
-  expect(devolverTentativa(r).prioridade).toBe('Limpeza')
-  expect(devolverTentativa(r).evidencia).toBe('Óxido não removido.')
-  expect(devolverTentativa(r).proximaAcao).toContain('óxido')
+ it('no Difícil prioriza a categoria abaixo do mínimo (H90)', () => {
+  const r=resultado();r.aprovada=false;r.essenciais=[{id:'integridade',descricao:'Fusão: pelo menos 20 %',cumprida:false,justificativa:'50 de 400 (13 %).'}]
+  expect(devolverTentativa(r).prioridade).toBe('Fusão: pelo menos 20 %')
+  expect(devolverTentativa(r).evidencia).toBe('50 de 400 (13 %).')
+  expect(devolverTentativa(r).proximaAcao).toContain('fusão')
  })
  it('compara proporção da categoria, não pontos absolutos, e é determinístico', () => {
   const r=resultado();expect(devolverTentativa(r).prioridade).toContain('Regularidade')
@@ -54,7 +57,8 @@ describe('Arcade progressivo', () => {
   for(let n=1;n<=80;n++) {
    const d=gerarDesafio(n,random,anterior)
    if(n===1)expect(d.missaoId).toBe(MISSOES[0].id)
-   if(n<=4) {expect(d.dificuldade).toBe('aprendiz');expect(['tecnica','tempo-arco']).not.toContain(d.condicao.tipo)}
+   expect(d.dificuldade).toBe('profissional') // H90: desafios só no Difícil
+   if(n<=4) expect(['tecnica','tempo-arco']).not.toContain(d.condicao.tipo)
    if(n<7)expect(d.condicao.tipo).not.toBe('tempo-arco')
    if(n>2 && anterior)expect(d.condicao.tipo).not.toBe(anterior.condicao.tipo)
    anterior=d
