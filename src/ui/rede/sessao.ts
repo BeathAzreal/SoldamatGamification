@@ -2,6 +2,7 @@ import type { App,Tela } from '../app'
 import type { CredencialRede,SalaRede } from '../../rede/contrato'
 import { configuracaoRede } from '../../rede/contrato'
 import { ClienteRede } from '../../rede/cliente'
+import { linkDaSala } from '../../rede/convite'
 import { telaExecucao } from '../telas/execucao'
 import { telaCentralArcade } from '../telas/centralArcade'
 import { h } from '../dom'
@@ -10,7 +11,7 @@ import { montarPontuacao } from '../componentes/pontuacao'
 import { montarInspecao } from '../componentes/inspecao'
 import { paginaRede,botaoRede } from './pagina'
 
-export const CHAVE_SESSAO='oficina-rede-1.7'
+export const CHAVE_SESSAO='oficina-rede-2.0'
 const STATUS={preparando:'Preparando',pronto:'Pronto',soldando:'Soldando',entregou:'Entregou a solda',abandonou:'Abandonou','tempo-esgotado':'Prazo encerrado'}
 export class SessaoRede {
  private cliente:ClienteRede
@@ -66,7 +67,17 @@ export class SessaoRede {
   const status=h('p',{class:'rede-conexao',role:'status'}),jogadores=h('div',{class:'rede-jogadores'}),contagem=h('p',{class:'rede-contagem','aria-live':'polite'})
   const codigo=h('input',{readOnly:true,'aria-label':'Código da sala',value:this.credencial.codigo,on:{focus:e=>(e.target as HTMLInputElement).select()}})
   const pronto=botaoRede('Pronto para soldar',()=>{const s=this.ultima,eu=s?.jogadores.find(j=>j.id===this.credencial.jogadorId);if(s&&eu)void this.comando({tipo:'pronto',rodada:s.rodada,pronto:eu.estado!=='pronto'})},true)
-  const caixa=h('section',{class:'rede-caixa'},h('div',{class:'rede-codigo'},h('label',{},'CÓDIGO DA SALA',codigo)),h('p',{class:'rede-endereco'},this.credencial.transporte==='consulta'?`No segundo PC, abra ${location.origin} e entre com este código em Arcade → X1 em rede.`:'No segundo PC, abra o endereço de rede mostrado no servidor e entre com este código.'),jogadores,contagem,status,pronto,botaoRede('Sair da sala',()=>void this.sair()))
+  const link=linkDaSala(this.credencial.codigo,location.origin)
+  const convite=h('input',{readOnly:true,'aria-label':'Link de convite',value:link,on:{focus:e=>(e.target as HTMLInputElement).select()}})
+  const avisoCopia=h('p',{class:'rede-conexao',role:'status'})
+  const copiar=botaoRede('Copiar convite',()=>void(async()=>{
+   try{await navigator.clipboard.writeText(link);avisoCopia.textContent='Convite copiado. Envie o link à outra pessoa.'}
+   catch{convite.focus();convite.select();avisoCopia.textContent='Selecione e copie o link acima para compartilhar.'}
+  })())
+  const caixa=h('section',{class:'rede-caixa'},h('div',{class:'rede-codigo'},h('label',{},'CÓDIGO DA SALA',codigo)),
+   h('div',{class:'rede-convite'},h('label',{},'CONVIDE A OUTRA PESSOA',convite),copiar),avisoCopia,
+   h('p',{class:'rede-endereco'},this.credencial.transporte==='consulta'?'A outra pessoa abre o convite no navegador e informa o apelido. Vocês podem estar em redes diferentes.':'Compartilhe o convite com outro dispositivo da mesma rede local.'),
+   jogadores,contagem,status,pronto,botaoRede('Sair da sala',()=>void this.sair()))
   this.trocar('sala',paginaRede('SALA DO X1','MIG/MAG / DOIS COMPUTADORES',caixa))
   const atualizar=()=>{
    const s=this.ultima;if(!s)return

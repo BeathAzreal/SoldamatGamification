@@ -29,3 +29,16 @@
 .rede-resultado-jogador.vencedor { border-color:#a1c994;background:#23443055; }
 @media(max-height:740px){.menu-grafico #app.rede-pagina{padding-top:30px}.rede-caixa{padding:14px;gap:9px}.rede-caixa button{min-height:34px;padding:7px 10px}.rede-caixa input,.rede-caixa select{height:38px}.rede-pagina .grafico-titulo{margin-bottom:10px}}
 @media(max-width:900px){.menu-grafico #app.rede-pagina{padding-right:15vw;background-position:75% center}.rede-caixa{max-width:650px}}
+
+/* Convites online sem ocultar ações em telas de notebook. */
+.rede-caixa label { font-size:13px; }
+.rede-conexao,.rede-endereco,.rede-erro { font-size:14px; }
+.rede-convite { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end; }
+.rede-convite input { font:13px Arial,sans-serif; }
+.rede-link-online { display:block;padding:12px;background:#df292b;color:#fff;text-align:center;font-weight:700; }
+.rede-caixa [hidden] { display:none!important; }
+.rede-caixa .rede-conexao:empty,.rede-caixa .rede-erro:empty { display:none; }
+@media(max-height:740px){.rede-caixa{gap:8px}.rede-pagina .grafico-titulo .tela-titulo{font-size:38px}.rede-jogador{padding:7px 10px}.rede-codigo input{height:46px;font-size:28px}}
+
+/* O estado da disputa fica fora da faixa dos controles de camera. */
+.rede-hud { top:auto;bottom:10px;font-size:13px;max-width:min(400px,calc(100% - 20px)); }

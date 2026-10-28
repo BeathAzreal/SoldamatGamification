@@ -15,5 +15,6 @@ const servidor=createServer(async(req,res)=>{
   res.writeHead(resposta.status,Object.fromEntries(resposta.headers));res.end(Buffer.from(await resposta.arrayBuffer()))
  }catch(e){console.error(e.message);res.writeHead(500);res.end('Falha na prévia.')}
 })
-servidor.listen(5198,'127.0.0.1',()=>console.log('Local: http://127.0.0.1:5198/'))
+const host=process.env.OFICINA_PREVIEW_HOST??'127.0.0.1'
+servidor.listen(5198,host,()=>console.log(`Prévia do Worker: http://${host}:5198/`))
 process.on('SIGINT',()=>servidor.close(()=>{sqlite.close();process.exit(0)}))

@@ -7,7 +7,14 @@ export class ClienteRede {
  aoEstado:((s:SalaRede)=>void)|null=null
  aoConexao:((conectado:boolean,mensagem:string)=>void)|null=null
  constructor(readonly credencial:CredencialRede,readonly base=location.origin){}
- static async verificar(base=location.origin){const r=await fetch(new URL('/api/rede/info',base));if(!r.ok)throw new Error('Abra o jogo pelo endereço exibido no servidor de rede.');const d=await r.json();if((d.protocolo!==PROTOCOLO_REDE||d.modelo!==MODELO_REDE))throw new Error('Versão incompatível. Recarregue a página do servidor.');return d}
+ static async verificar(base=location.origin,sinal?:AbortSignal){
+  try{
+   const r=await fetch(new URL('/api/rede/info',base),{cache:'no-store',signal:sinal?AbortSignal.any([sinal,AbortSignal.timeout(10000)]):AbortSignal.timeout(10000)})
+   if(!r.ok)throw new Error('O serviço de salas está indisponível neste endereço. Abra a oficina online ou tente novamente.')
+   const d=await r.json();if(d.protocolo!==PROTOCOLO_REDE||d.modelo!==MODELO_REDE)throw new Error('Versão incompatível. Recarregue a oficina online para atualizar.')
+   return d
+  }catch(e){if(e instanceof Error&&['TypeError','TimeoutError','AbortError'].includes(e.name))throw new Error('Não foi possível alcançar a oficina online. Confira sua conexão e tente novamente.');if(e instanceof SyntaxError)throw new Error('Este endereço não oferece salas online. Abra a oficina online.');throw e}
+ }
  static async criar(nome:string,config:ConfigRede,base=location.origin){return this.solicitar('/api/salas',{nome,config,protocolo:PROTOCOLO_REDE},undefined,base) as Promise<CredencialRede>}
  static async entrar(codigo:string,nome:string,base=location.origin){return this.solicitar(`/api/salas/${codigo}/entrar`,{nome,protocolo:PROTOCOLO_REDE},undefined,base) as Promise<CredencialRede>}
  private static async solicitar(caminho:string,corpo:unknown,token?:string,base=location.origin){
