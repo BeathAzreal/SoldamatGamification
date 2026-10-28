@@ -90,6 +90,7 @@ export class Calor3D {
   private readonly matrizGota = new THREE.Matrix4()
   private readonly corGota = new THREE.Color()
   private acumGota = 0
+  private acumVaza = 0
   private acumFaisca = 0
   private acumFumaca = 0
   private tAnterior: number | null = null
@@ -111,6 +112,11 @@ export class Calor3D {
   private readonly baseY: Float64Array
   private readonly normX: Float64Array
   private readonly normY: Float64Array
+
+  /** Materiais que cobrem o cordão e a chapa perto dele (o buraco do H101 tem de recortá-los também). */
+  get materiaisSobreACapa(): THREE.Material[] {
+    return [this.brilho.material as THREE.Material, this.halo.material as THREE.Material]
+  }
 
   constructor(
     geo: GeometriaJunta,
@@ -223,7 +229,7 @@ export class Calor3D {
    * Faíscas e fumaça (H43). `emissor`: ponto do arco (coordenadas da peça)
    * ou null com o arco fechado; `taxa` vem de taxaFaiscas (efeitos.ts).
    */
-  atualizarParticulas(agoraMs: number, emissor: { x: number; y: number; z: number } | null, taxa: number, g: { x: number; y: number; z: number } = { x: 0, y: -1, z: 0 }, gotejamento = 0): void {
+  atualizarParticulas(agoraMs: number, emissor: { x: number; y: number; z: number } | null, taxa: number, g: { x: number; y: number; z: number } = { x: 0, y: -1, z: 0 }, gotejamento = 0, avesso: { x: number; y: number; z: number; vazamento: number } | null = null): void {
     const dt = this.tAnterior === null ? 0 : Math.min(0.05, (agoraMs - this.tAnterior) / 1000)
     this.tAnterior = agoraMs
     const F = this.faiscas
@@ -271,6 +277,20 @@ export class Calor3D {
         G.pos[3 * k] = emissor.x + (Math.random() - 0.5) * 2
         G.pos[3 * k + 1] = emissor.y
         G.pos[3 * k + 2] = emissor.z + (Math.random() - 0.5) * 2
+        for (let e = 0; e < 3; e++) G.vel[3 * k + e] = 0
+        G.vida[k] = 0
+        G.duracao[k] = 1.1 + Math.random() * 0.4
+      }
+    }
+    // H101: metal vazando pelo avesso da chapa: as gotas se soltam por baixo e caem.
+    if (avesso && dt > 0 && avesso.vazamento > 0) {
+      this.acumVaza += dt * 5 * avesso.vazamento
+      while (this.acumVaza >= 1) {
+        this.acumVaza--
+        const k = G.nova()
+        G.pos[3 * k] = avesso.x + (Math.random() - 0.5) * 3
+        G.pos[3 * k + 1] = avesso.y
+        G.pos[3 * k + 2] = avesso.z + (Math.random() - 0.5) * 2
         for (let e = 0; e < 3; e++) G.vel[3 * k + e] = 0
         G.vida[k] = 0
         G.duracao[k] = 1.1 + Math.random() * 0.4

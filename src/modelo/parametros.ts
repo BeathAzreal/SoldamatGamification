@@ -115,6 +115,16 @@ export const EXPLICACAO = {
 } as const
 
 /** Índice de fusão sintético (H33, H34). Números do jogo. */
+/**
+ * H101: de quanto em quanto tempo de arco (ms) a simulação guarda o índice de
+ * fusão perto da tocha, e até que distância dela (mm). O pico guardado não
+ * diminui: o que derreteu e furou não volta.
+ */
+export const PICO_FUSAO = {
+  intervaloMs: 100,
+  raioMm: 12,
+} as const
+
 export const FUSAO = {
   /**
    * Aporte necessário por mm de espessura (unidades relativas: potência × s ÷ mm).

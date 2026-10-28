@@ -1019,3 +1019,29 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
 - **Arcade:** a máquina pré-ajustada continua só em curto-circuito ou spray.
 - **Origem dos números:** a direção vem da prática do MIG/MAG (tensão baixa demais faz o arame bater e mergulhar na poça; sem tensão não abre arco). Os limites de 10 e 14 V são do jogo, não de catálogo de fabricante.
 - **Testes:** `tests/tensaoBaixa.test.ts` cobre o H99 e o H100.
+
+### H101 — a chapa consumida pelo calor, em estágios, e furada de verdade (v2.0, Claude)
+
+- **O que derreteu não volta:** a simulação guarda, a cada 100 ms de tempo de arco e no fim do passe, o índice de fusão das fatias a até 12 mm da tocha. O pico guardado nunca diminui. A análise usa o maior entre o índice final e o pico, então metal que chega depois não "desfaz" a fusão nem fecha o buraco. Por isso andar muito devagar (1 mm/s) também fura a chapa de 3 mm: com 2,5× o calor por mm, o índice sobe só ~4 % sobre o de 2,5 mm/s. O teste do amortecimento mudou de propósito para isso.
+- **Calor para os lados:** o índice F é o calor no meio da poça. Para os lados ele cai como `F·exp(−3,3·(2d/w)²)`, com w a mancha de calor (a largura da poça, até 8 mm). Cada ponto da chapa passa pelos estágios conforme o calor que chegou nele:
+  - raiz aparente no avesso;
+  - metal vazando e pendurado (a faixa do avesso que vazou acompanha esse calor);
+  - face afundando;
+  - **buraco**, que nasce pequeno no ponto mais quente e alarga com mais calor: `largura = w·√(ln(F ÷ limite) ÷ 3,3)`.
+- **Material e espessura:** os dois já entram no calor necessário (H33/H35: espessura × fator do material). Além disso, o alumínio quase não avisa: raiz aparente, metal pendurado e afundamento ficam numa faixa estreita, logo antes do furo, porque ele conduz o calor para longe, não muda de cor e cai de uma vez. Na chapa de 8 mm, o tempo parado que fura a de 3 mm não fura.
+- **No 3D, durante a solda e no resultado:** no topo e no V há um mapa da chapa (células de 0,5 mm) que recorta a chapa, o cordão, o brilho do metal quente e o metal do avesso onde o metal caiu.
+  - Dá para ver através do buraco, de cima e de baixo (a câmera da execução já desce até o avesso).
+  - Em volta fica a borda queimada; por dentro, a parede escura da chapa.
+  - Por baixo, o metal pendurado forma um lábio em volta do buraco.
+  - Enquanto vaza, gotas de metal se soltam do avesso e caem.
+  - Vale também para o eletrodo e o TIG, que já calculam a largura do furo.
+  - No filete continua o cilindro escuro.
+- **Testes:** `tests/consumoChapa.test.ts` cobre:
+  - a ordem dos estágios e o alumínio sem aviso;
+  - o buraco que nasce pequeno e só cresce;
+  - o metal vazando antes de furar;
+  - a chapa grossa e o material;
+  - a independência da taxa de quadros;
+  - o mapa recortando o ponto mais quente.
+- O teste de `tests/penetracao.test.ts` que pedia furo maior que 0,5 mm a 2 mm/s agora pede furo maior que 0, porque o buraco nasce pequeno.
+- Os números são do jogo; não é simulação de metal líquido.
