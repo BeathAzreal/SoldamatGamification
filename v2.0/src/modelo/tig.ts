@@ -141,6 +141,10 @@ export class ModeloTig {
     for (let i = Math.max(0, i0 - 8); i <= Math.min(NX - 1, i0 + 8); i++) for (let j = 0; j < NY; j++) if (this.temperatura[j * NX + i] >= TIG.fusaoK) n++
     return Math.sqrt((n * DX * DY) / Math.PI)
   }
+  /** H95: largura com que o metal da vareta se espalha: a da poça em que funde (entre 2,5 e 8 mm). */
+  get larguraDepositoMm(): number {
+    return Math.max(2.5, Math.min(8, 2 * this.raioPocaMm))
+  }
   /** Até onde a poça vai na frente do tungstênio, no sentido do avanço (mm). */
   get frentePocaMm(): number {
     let d = 0

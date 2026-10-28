@@ -36,6 +36,13 @@ export const MODELO = {
   /** Razão altura/largura nos extremos do botão de tensão: 1 → 10 (H9). */
   razaoTensaoMinima: 0.34,
   razaoTensaoMaxima: 0.16,
+  /**
+   * H98: razão × (alimentação ÷ referência)^−expoente, entre os limites.
+   * O artigo (Banaee et al. 2023, Tab. 3) dá ~0,35; o jogo usa menos.
+   */
+  formaAlimentacaoExpoente: 0.2,
+  formaAlimentacaoMin: 0.8,
+  formaAlimentacaoMax: 1.1,
   /** Resolução da discretização ao longo da junta (mm). */
   passoMm: 0.5,
   /** Espalhamento numérico do depósito ao longo da junta, em mm (H4). */

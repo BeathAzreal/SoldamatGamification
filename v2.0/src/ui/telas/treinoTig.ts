@@ -295,7 +295,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
         modelo.distanciaMm = alturaTocha - dep.espessura(modelo.xMm, modelo.yMm)
         const x0 = modelo.xMm, y0 = modelo.yMm
         modelo.avancar(dt, (x, y, v) => {
-          dep.depositar(x, y, v)
+          dep.depositar(x, y, v, agora, 0.25, 0, 0, modelo.larguraDepositoMm)
           cordao3D.depositar(x, y, v, agora, 0.3)
         })
         // Fusão sem vareta também aparece: um filme fino onde a poça passa.

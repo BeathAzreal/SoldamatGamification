@@ -929,3 +929,68 @@ No resultado, o botão **Ver o avesso** mostra a raiz, o metal pendurado e os fu
   - furo no limite (como antes).
   - Metal pendurado e raiz afundada descontam por trecho: 10 e 25 pontos no Fácil, 30 e 60 no Difícil, com teto de 60 e 180.
 - **Filete:** em nenhum dos dois há avesso livre; só o furo conta.
+
+### H95 — seção parabólica no eletrodo e no TIG (v2.0, Claude)
+
+Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapping model for multi-material wire arc additive manufacturing (WAAM)", *Virtual and Physical Prototyping* 18(1), e2210541.
+
+- **Publicado (eq. 1, p. 4):** a seção do cordão é uma parábola, y = h(1 − 4n²/w²), entre −w/2 e w/2. Nos ensaios do artigo (GMAW pulsado, arame de 1,2 mm, cordão sobre chapa), o erro de área foi menor que 4 % (p. 9).
+- **Dedução:** integrando a parábola, a área é A = 2wh/3. Nos dados da Tabela 3 do artigo, 2wh/3 dividido pela área de arame que entrou (π·0,6²·WFS/TS) fica entre 0,86 e 1,04: os dados conservam massa (conta nossa, não publicada no artigo).
+- **No jogo:**
+  - O MIG já usava essa parábola (H3).
+  - O eletrodo e o TIG trocam a gaussiana pela parábola na lateral. Ao longo do avanço fica um espalhamento curto, só para não aparecer degrau.
+  - O volume entra inteiro e uma vez só: os pesos são normalizados.
+- **Largura do passe (adaptação do jogo):**
+  - Eletrodo: 4 × o desvio-padrão da gaussiana de antes, para manter a calibração. Cresce com o arco longo e a instabilidade, e com o diâmetro (fator diâmetro ÷ 2,5 mm).
+  - TIG: a largura da poça, de 2,5 a 8 mm.
+  - Os coeficientes do artigo não foram transferidos: os processos e as condições são outros.
+- **Regra de pontos baixos:** o metal novo procura os pontos baixos só dentro da junta, abaixo da face (enche abertura e chanfro). Acima da face vale a parábola. Antes, essa regra achatava a coroa até 1,2 mm acima do alvo.
+- **Testes:** `tests/perfilParabola.test.ts`:
+  - forma da parábola;
+  - área igual a 2wh/3 com tolerância de 3 % (amostragem da grade de 0,5 mm);
+  - volume exato;
+  - o mesmo resultado a 30 e a 144 quadros/s;
+  - largura maior com diâmetro maior e com arco longo.
+
+### H96 — passes lado a lado: vale, plano ou morro (v2.0, Claude)
+
+- **No jogo (eletrodo e TIG):** o passe novo assenta a sua parábola (H95) sobre a superfície que encontra, inclusive sobre os passes anteriores. O volume é conservado, e acima da face não há regra extra de escorrimento.
+- **Resultado** com dois passes iguais e o primeiro frio (60 s, como no artigo), medido no meio entre os centros:
+
+| Distância entre centros | Meio ÷ pico | Leitura |
+|---|---|---|
+| 2w/3 | +9 % | morro leve |
+| 0,75 × 2w/3 | +48 % | morro |
+| 1,3 × 2w/3 | −53 % | vale |
+
+- **Comparação com o artigo** (Banaee et al., 2023):
+  - distância menor que a crítica dá morro e maior dá vale (Fig. 10, p. 12);
+  - na distância do MMFOM, d = (w₁ + w₂)/3, que com materiais iguais é 2w/3 (eq. 6), os ensaios "invariavelmente" deram um morro leve (Fig. 13, p. 15).
+- **Regra descartada:** testei uma regra de escorrimento para os vales. Ela compensava demais (transformava 2w/3 em vale) e foi retirada.
+- **Metal frio:** cada célula registra o metal já solidificado (sem receber metal há mais de 2 s). O registro serve para separar os passes no corte e na fusão entre passes.
+- **Limites:** o artigo é de GMAW pulsado, posição plana, cordão sobre chapa. A distância 2w/3 é referência, não garantia de fusão: os ensaios mostram que a superfície plana não garantiu união (Fig. 14).
+- **Testes:** `tests/sobreposicao.test.ts`.
+
+### H97 — camadas, fusão entre passes e corte (v2.0, Claude)
+
+- **Camadas:** cada célula do depósito (eletrodo e TIG) guarda as camadas que recebeu, de baixo para cima. Para cada uma: o passe, a espessura e o vale que ela encheu. Uma camada nova começa quando a célula recebe metal depois de solidificada.
+- **Vale:** quanto a célula estava abaixo do metal **depositado e frio** dos dois lados, na mesma seção. A chapa e a abertura da junta não contam como paredes, nem o simples flanco de um morro.
+- **Fusão entre passes (hipótese do jogo):** a camada funde na de baixo se o calor da passagem mais quente depois que ela começou chegar a 0,8 × o calor de referência da peça, mais 0,15 por mm de vale (até 2 mm). Camadas com menos de 0,2 mm não contam.
+- **Origem da regra:** vem do mecanismo descrito por Banaee et al. (2023, pp. 16–17): com calor, o metal do passe novo sobe e enche o vão; sem calor, espalha para os lados e não liga. Também confere com a observação do artigo de que a superfície plana por fora não garantiu união por dentro (Fig. 14). Os números são do jogo, e o artigo não dá um modelo geral de falta de fusão.
+- **Defeito:** "Falta de fusão entre passes" (pede reparo) onde mais de 30 % da interface de uma fatia não fundiu, num trecho de pelo menos 2 mm.
+- **Corte:** o botão **Corte** no resultado do eletrodo desenha, em escala real, a chapa, as camadas de cada passe (uma cor por passe) e em vermelho as interfaces sem fundir. É o mesmo estado que a análise usou, sem defeito inventado na tela.
+- **Testes:** em `tests/defeitosEletrodo.test.ts`, um segundo passe com calor funde no primeiro (menos de 10 % de interface sem fundir) e um passe rápido, frio, não liga (mais de 50 %, defeito grave). A técnica boa nas cinco peças continua sem defeito.
+
+### H98 — forma pela alimentação e humping no MIG (v2.0, Claude)
+
+- **Forma pela alimentação:** a razão altura/largura passa a ser `razão pela tensão (H9) × fator da alimentação`. O fator é `(alimentação ÷ referência)^−0,2`, limitado entre 0,8 e 1,1. Na alimentação de referência ele vale 1, e nada muda.
+- **Origem:** a direção vem da Tabela 3 de Banaee et al. (2023). Na mesma velocidade, h/w caiu de 0,39 (1,8 m/min) para 0,28 (4,6 m/min), um expoente de cerca de 0,35. O jogo usa 0,2 e um teto de 1,1 porque o arame e a máquina são outros. Com o teto de 1,25, a condição "puxando" do inox-equipamento no Arcade ficou sem solução no Difícil. Os coeficientes das regressões do artigo **não** foram transferidos.
+- **Comparação de tentativas:** a decomposição da largura (H25) põe o efeito da alimentação na forma junto com o da taxa, e o fator da tensão usa só a parte da tensão. O produto continua exato.
+- **Humping (hipótese do jogo):** corcovas com pescoços estreitos entre elas, onde a tocha passou rápido **e** com corrente alta. O índice por fatia é o produto de `(vRel − 1,5) ÷ 0,8` e `(I − 190·d) ÷ (70·d)`, cada parte limitada a 0…1. Aqui vRel é a velocidade relativa à de referência da junta, I a corrente dos ajustes de quando a tocha passou (pelo registro) e d o diâmetro do arame em mm. O artigo cita o humping como limite da velocidade alta, mas a regra e os números são do jogo.
+- **Defeito:** "Cordão em corcovas (humping)" quando o índice passa de 0,3 num trecho de pelo menos 3 mm. Tira da nota de superfície como o escorrimento. No 3D, a altura do cordão ondula com período de 7 mm, e o volume médio fica o mesmo.
+- **Testes:** os testes ficam em `tests/humping.test.ts` e verificam:
+  - o fator vale 1 na referência e cai com a alimentação;
+  - um cordão com o dobro de arame no dobro da velocidade sai mais baixo para a largura;
+  - não há humping na corrente de referência andando rápido, nem com corrente alta no ritmo certo;
+  - há humping com corrente alta andando rápido;
+  - o resultado é o mesmo a 30 e a 144 quadros/s.

@@ -1,6 +1,7 @@
 import { aprovacaoEletrodo, avaliarEletrodo, descontoDefeitos, MODOS_ELETRODO } from '../../pontuacao/eletrodo'
 import { NOME_DIFICULDADE, type Dificuldade } from '../../missoes/catalogo'
 import { resultadoEletrodo } from '../componentes/resultadoEletrodo'
+import { abrirCorteEletrodo } from '../componentes/corteEletrodo'
 import { painelMaquina } from '../componentes/painelMaquina'
 import { Acionamento15, RENDIMENTO15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from '../../modelo/acionamento15'
 import { DepositoEletrodo, alvoEletrodo, trechoEletrodo } from '../../modelo/depositoEletrodo'
@@ -192,7 +193,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       vista.atualizarDefeitos(analise.defeitos)
       const inspecao = inspecionarDefeitos(peca, cordao, registro, analise)
       const r = avaliarEletrodo(peca,cordao,modelo,regras.nivel,{ preenchimentoCheio: regras.preenchimentoCheio, escoriaMax: regras.escoriaMax, descontoDefeitos: descontoDefeitos(modo, inspecao.defeitos) })
-      const resultado = resultadoEletrodo(r, inspecao, NOME_DIFICULDADE[modo], aprovacaoEletrodo(r, modo), {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta}})
+      const resultado = resultadoEletrodo(r, inspecao, NOME_DIFICULDADE[modo], aprovacaoEletrodo(r, modo), {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta},corte:()=>abrirCorteEletrodo(cordao,peca,inspecao.defeitos.find(d=>d.tipo==='falta-de-fusao-entre-passes')?.inicioMm)})
       const painel = conteudo.querySelector<HTMLElement>('.p15-painel')!
       painel.hidden = true
       painelResultado = resultado.painel

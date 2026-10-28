@@ -60,6 +60,7 @@ export class RegistroPasse {
   /** Energia do primeiro passe (J): só ele pode furar a raiz aberta do chanfro. */
   private readonly ePrimeiroPasse: Float64Array
   readonly passes: Uint8Array
+  private readonly visitas: { tFimMs: number; e: number }[][]
   readonly aberturas: AberturaArco[] = []
   readonly paradas: ParadaArco[] = []
   readonly grudadas: { xMm: number; yMm: number }[] = []
@@ -81,6 +82,7 @@ export class RegistroPasse {
     this.eMaxPasse = new Float64Array(nPosicoes)
     this.ePrimeiroPasse = new Float64Array(nPosicoes)
     this.passes = new Uint8Array(nPosicoes)
+    this.visitas = Array.from({ length: nPosicoes }, () => [])
   }
 
   /** Fecha a passagem em andamento da fatia, se ela foi de verdade (não só calor do vizinho). */
@@ -91,6 +93,8 @@ export class RegistroPasse {
       this.eMaxPasse[j] = Math.max(this.eMaxPasse[j], e)
       if (this.passes[j] === 0) this.ePrimeiroPasse[j] = e
       if (this.passes[j] < 255) this.passes[j]++
+      // H97: cada passagem guardada com o instante em que terminou, para saber o calor que veio depois de uma camada.
+      this.visitas[j].push({ tFimMs: this.tVisitaMs[j], e })
     }
     this.eVisita[j] = 0
   }
@@ -155,6 +159,17 @@ export class RegistroPasse {
 
   grudou(xMm: number, yMm: number): void {
     this.grudadas.push({ xMm, yMm })
+  }
+
+  /**
+   * H97: maior calor de uma passagem (kJ/mm) na fatia que terminou em `tMs` ou depois,
+   * contando a passagem ainda aberta. É o calor que pode ter fundido uma camada posta em `tMs`.
+   */
+  calorDepoisDe(i: number, tMs: number): number {
+    let max = 0
+    for (const v of this.visitas[i]) if (v.tFimMs >= tMs) max = Math.max(max, v.e)
+    if (this.tVisitaMs[i] >= tMs) max = Math.max(max, this.eVisita[i])
+    return max / this.passoMm / 1000
   }
 
   /** Aporte de calor somado de todos os passes na fatia (kJ/mm). */

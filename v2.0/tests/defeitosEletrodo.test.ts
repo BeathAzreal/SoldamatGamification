@@ -11,6 +11,8 @@ interface Tecnica {
   corrente?: number
   /** Velocidade de avanço (mm/s). */
   v: number
+  /** Velocidade de cada passe (substitui `v` no passe de mesmo índice). */
+  vPasses?: number[]
   /** Comprimento do arco mantido (mm). */
   arco?: number
   passes?: number
@@ -75,7 +77,7 @@ function soldar(peca: PecaEletrodo, t: Tecnica): { r: InspecaoEletrodo; dep: Dep
         continue
       }
       if (m.estado !== 'arco') { abrir(m.xMm); continue }
-      passo(t.v)
+      passo(t.vPasses?.[p] ?? t.v)
     }
     if (t.pararNoFim) for (let k = 0; k < 21; k++) passo(0)
     reg.fimArco(m.xMm, m.yMm, tMs, 'afastou')
@@ -129,6 +131,22 @@ describe('defeitos do eletrodo sobre o depósito (H82–H85)', () => {
       expect(graves(soldar(peca, { ...bom, v: fura }).r), id).toContain('perfuracao')
     }
   }, 120000)
+
+  it('H97: segundo passe com calor funde no primeiro; passe frio por cima não liga (grave)', () => {
+    const peca = pecaEletrodo('cordao-sobre-chapa')
+    const quente = soldar(peca, { ...bom, passes: 2 })
+    expect(tipos(quente.r)).not.toContain('falta-de-fusao-entre-passes')
+    const frio = soldar(peca, { ...bom, passes: 2, vPasses: [2.5, 4.5] })
+    expect(graves(frio.r)).toContain('falta-de-fusao-entre-passes')
+    // O corte lê as mesmas camadas: espessura de interface sem fundir, quase nada no quente e muito no frio.
+    const semFundir = (dep: DepositoEletrodo) => {
+      let mal = 0, total = 0
+      for (const l of dep.camadas.values()) for (const c of l.slice(1)) if (c.espessuraMm >= 0.2) { total += c.espessuraMm; if (c.fundiu === false) mal += c.espessuraMm }
+      return mal / total
+    }
+    expect(semFundir(quente.dep)).toBeLessThan(0.1)
+    expect(semFundir(frio.dep)).toBeGreaterThan(0.5)
+  }, 60000)
 
   it('trechos repetidos do mesmo defeito viram uma linha só', () => {
     const { r } = soldar(pecaEletrodo('cordao-chapa'), { ...bom, v: 1 })

@@ -190,9 +190,27 @@ export function razaoEfetiva(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO
  * Interpolação linear entre os extremos do botão — forma escolhida para o
  * jogo, só a DIREÇÃO da tendência é o que se quer mostrar.
  */
-export function razaoAlturaLargura(a: Ajustes): number {
+export function razaoPelaTensao(a: Ajustes): number {
   const f = (a.tensao - AJUSTES.minimo) / (AJUSTES.maximo - AJUSTES.minimo)
   return MODELO.razaoTensaoMinima + (MODELO.razaoTensaoMaxima - MODELO.razaoTensaoMinima) * f
+}
+
+/**
+ * H98: mais arame (e a corrente que vem com ele) → poça maior e mais
+ * molhada, cordão mais achatado. Direção da Tabela 3 de Banaee et al. (2023):
+ * na mesma velocidade, h/w caiu de 0,39 (1,8 m/min) para 0,28 (4,6 m/min).
+ * Os coeficientes do artigo não são transferidos (outro arame, outra
+ * máquina): o expoente e os limites são do jogo, mais suaves que o artigo.
+ * 1 na alimentação de referência.
+ */
+export function fatorFormaAlimentacao(a: Ajustes): number {
+  const r = Math.max(0.05, a.alimentacao / AJUSTES.alimentacaoReferencia)
+  return Math.min(MODELO.formaAlimentacaoMax, Math.max(MODELO.formaAlimentacaoMin, r ** -MODELO.formaAlimentacaoExpoente))
+}
+
+/** H9 + H98: razão altura/largura pela tensão e pela alimentação. */
+export function razaoAlturaLargura(a: Ajustes): number {
+  return razaoPelaTensao(a) * fatorFormaAlimentacao(a)
 }
 
 export type CondicaoArco = 'curto' | 'equilibrado' | 'longo'
