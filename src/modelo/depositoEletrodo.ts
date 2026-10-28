@@ -11,6 +11,8 @@ export function baseEletrodo(p: PecaEletrodo, y: number): number {
   return Math.min(0,-p.espessuraMm+faceRaizMm(p)+(n-a)/Math.tan(Math.PI/6))
 }
 
+export interface CamadaDeposito { passe:number; tInicioMs:number; espessuraMm:number; vale:number; fundiu:boolean|null }
+
 /** H96: tempo sem receber metal para a célula contar como solidificada (ms). */
 export const SOLIDIFICA_MS=2000
 
@@ -24,6 +26,15 @@ export class DepositoEletrodo {
   /** H96: metal já solidificado em cada célula (passes anteriores) e quando a célula recebeu metal pela última vez (ms). */
   readonly solido=new Float64Array(this.nx*this.ny)
   private readonly tDeposito=new Float64Array(this.nx*this.ny).fill(-Infinity)
+  /**
+   * H97: camadas de cada célula, de baixo para cima. Uma camada nova começa quando a célula
+   * recebe metal depois de solidificada. `vale` é quanto a célula estava abaixo do metal frio
+   * mais alto ao redor quando a camada começou (mm); `fundiu` é decidido pela análise (null = ainda não).
+   */
+  readonly camadas=new Map<number,CamadaDeposito[]>()
+  /** Passe atual: muda quando nada foi depositado em lugar nenhum por SOLIDIFICA_MS. */
+  passe=0
+  private ultimoMs=-Infinity
   readonly limitesX
   readonly alcanceY
   versao=0
@@ -33,6 +44,8 @@ export class DepositoEletrodo {
     this.alcanceY=INFO_JUNTA[peca.junta].familia==='filete'?50/Math.SQRT2:50
   }
   x(i:number){return (i+.5)*this.dx}
+  /** Índice da célula mais perto de (x, y). */
+  celula(x:number,y:number){return Math.max(0,Math.min(this.ny-1,Math.round((y+50)/this.dy-.5)))*this.nx+Math.max(0,Math.min(this.nx-1,Math.round(x/this.dx-.5)))}
   y(j:number){return -50+(j+.5)*this.dy}
   naPeca(x:number,y:number){return x>=this.limitesX.min && x<=this.limitesX.max && Math.abs(y)<=this.alcanceY}
   private amostrar(x:number,y:number,absoluta=false):number {
@@ -70,6 +83,8 @@ export class DepositoEletrodo {
    */
   depositar(x:number,y:number,volume:number,_agora=0,razao=.25,_oscilacao=0,instabilidade=0,larguraMm?:number){
     if(volume<=0 || !this.naPeca(x,y))return
+    if(_agora-this.ultimoMs>SOLIDIFICA_MS || this.passe===0)this.passe++
+    this.ultimoMs=_agora
     const sx=1.2,meia=Math.max(this.dy,(larguraMm??this.larguraPasse(razao,instabilidade))/2)
     const celulas:{k:number;peso:number;altura:number}[]=[]
     let minimo=Infinity
@@ -95,7 +110,30 @@ export class DepositoEletrodo {
     // a distância entre passes, como nos ensaios de Banaee et al. (2023, Fig. 10 e 13).
     for(const c of celulas){c.peso/=1+2*Math.max(0,Math.min(nivel,c.altura)-Math.min(nivel,minimo));soma+=c.peso}
     if(!soma)return
-    for(const c of celulas){this.metal[c.k]+=volume*c.peso/soma/(this.dx*this.dy);this.tDeposito[c.k]=_agora}
+    // H97: vale entre passes = metal já depositado e frio, mais alto dos DOIS lados (na mesma seção x).
+    const frioDe=(c:{k:number;altura:number})=>c.altura-this.metal[c.k]+this.solido[c.k]
+    const valeEm=(c:{k:number;altura:number})=>{
+      const i=c.k%this.nx,j=Math.floor(c.k/this.nx),f=frioDe(c)
+      let esq=-Infinity,dir=-Infinity
+      for(const o of celulas){
+        // Só metal depositado e já frio forma as paredes do vale: a chapa e a abertura da junta não contam.
+        if(o.k%this.nx!==i || this.solido[o.k]<0.05)continue
+        const jo=Math.floor(o.k/this.nx)
+        if(jo<j)esq=Math.max(esq,frioDe(o));else if(jo>j)dir=Math.max(dir,frioDe(o))
+      }
+      return Math.max(0,Math.min(esq,dir)-f)
+    }
+    for(const c of celulas){
+      const mm=volume*c.peso/soma/(this.dx*this.dy)
+      const lista=this.camadas.get(c.k) ?? []
+      const ultima=lista[lista.length-1]
+      if(!ultima || _agora-this.tDeposito[c.k]>SOLIDIFICA_MS){
+        lista.push({passe:this.passe,tInicioMs:_agora,espessuraMm:0,vale:lista.length?valeEm(c):0,fundiu:null})
+        this.camadas.set(c.k,lista)
+      }
+      lista[lista.length-1].espessuraMm+=mm
+      this.metal[c.k]+=mm;this.tDeposito[c.k]=_agora
+    }
     this.volume+=volume;this.versao++
   }
 }

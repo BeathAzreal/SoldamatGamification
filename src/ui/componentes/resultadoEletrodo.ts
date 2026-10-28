@@ -6,7 +6,7 @@ import type { InspecaoEletrodo } from '../../pontuacao/defeitosEletrodo'
 
 type Resultado=ReturnType<typeof avaliarEletrodo>
 /** Mesmo fluxo do MIG: tentativa encerrada, placar, critérios e próxima tentativa. */
-export function resultadoEletrodo(r:Resultado,inspecao:InspecaoEletrodo,modo:string,aprovacao:ReturnType<typeof aprovacaoEletrodo>,op:{nova:()=>void;pecas:()=>void;camada:(oculta:boolean)=>void}){
+export function resultadoEletrodo(r:Resultado,inspecao:InspecaoEletrodo,modo:string,aprovacao:ReturnType<typeof aprovacaoEletrodo>,op:{nova:()=>void;pecas:()=>void;camada:(oculta:boolean)=>void;corte?:()=>void}){
   const minimo=aprovacao.exigencia,pct=(f:number)=>`${Math.round(f*100)} %`
   const letra=conceito(r.nota,aprovacao.aprovada,1000)
   // H90: Fácil é só nota; Difícil aprova com o mínimo em cada item.
@@ -53,6 +53,7 @@ export function resultadoEletrodo(r:Resultado,inspecao:InspecaoEletrodo,modo:str
     h('p',{class:'p15-descontos'},ajuste||r.penalidadeEscoria||r.penalidadeDefeitos?`Descontos: preenchimento −${ajuste} · escória −${r.penalidadeEscoria} · defeitos −${r.penalidadeDefeitos}`:'Sem descontos adicionais.'),
     h('div',{class:'p15-botoes-resultado'},
       h('button',{type:'button',on:{click:detalhes}},'Detalhes da avaliação'),
+      op.corte?h('button',{type:'button',title:'Corte transversal: passes e fusão entre eles',on:{click:op.corte}},'Corte'):null,
       h('button',{type:'button',class:'p15-botao-defeitos','data-graves':String(graves),title:resumoDefeitos,'aria-label':resumoDefeitos,on:{click:listaDefeitos}},`Defeitos (${inspecao.defeitos.length})`)),
     h('small',{},'Inspecione em 360° com o botão do meio. + / − controlam o zoom. A tentativa está encerrada.'),
     crosta,h('div',{class:'p15-proxima'},

@@ -970,3 +970,13 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
 - **Metal frio:** cada célula registra o metal já solidificado (sem receber metal há mais de 2 s). O registro serve para separar os passes no corte e na fusão entre passes.
 - **Limites:** o artigo é de GMAW pulsado, posição plana, cordão sobre chapa. A distância 2w/3 é referência, não garantia de fusão: os ensaios mostram que a superfície plana não garantiu união (Fig. 14).
 - **Testes:** `tests/sobreposicao.test.ts`.
+
+### H97 — camadas, fusão entre passes e corte (v2.0, Claude)
+
+- **Camadas:** cada célula do depósito (eletrodo e TIG) guarda as camadas que recebeu, de baixo para cima. Para cada uma: o passe, a espessura e o vale que ela encheu. Uma camada nova começa quando a célula recebe metal depois de solidificada.
+- **Vale:** quanto a célula estava abaixo do metal **depositado e frio** dos dois lados, na mesma seção. A chapa e a abertura da junta não contam como paredes, nem o simples flanco de um morro.
+- **Fusão entre passes (hipótese do jogo):** a camada funde na de baixo se o calor da passagem mais quente depois que ela começou chegar a 0,8 × o calor de referência da peça, mais 0,15 por mm de vale (até 2 mm). Camadas com menos de 0,2 mm não contam.
+- **Origem da regra:** vem do mecanismo descrito por Banaee et al. (2023, pp. 16–17): com calor, o metal do passe novo sobe e enche o vão; sem calor, espalha para os lados e não liga. Também confere com a observação do artigo de que a superfície plana por fora não garantiu união por dentro (Fig. 14). Os números são do jogo, e o artigo não dá um modelo geral de falta de fusão.
+- **Defeito:** "Falta de fusão entre passes" (pede reparo) onde mais de 30 % da interface de uma fatia não fundiu, num trecho de pelo menos 2 mm.
+- **Corte:** o botão **Corte** no resultado do eletrodo desenha, em escala real, a chapa, as camadas de cada passe (uma cor por passe) e em vermelho as interfaces sem fundir. É o mesmo estado que a análise usou, sem defeito inventado na tela.
+- **Testes:** em `tests/defeitosEletrodo.test.ts`, um segundo passe com calor funde no primeiro (menos de 10 % de interface sem fundir) e um passe rápido, frio, não liga (mais de 50 %, defeito grave). A técnica boa nas cinco peças continua sem defeito.
