@@ -6,7 +6,7 @@ import type { GeometriaJunta } from '../modelo/junta'
 import { MATERIAIS } from '../modelo/material'
 import { MODELO, PECA } from '../modelo/parametros'
 import type { Percurso } from '../modelo/percurso'
-import { juntaDe } from '../modelo/juntas'
+import { INFO_JUNTA, juntaDe } from '../modelo/juntas'
 import { dbcpDe, movimentoDe, oscilacaoVisual, tecnicaDe, type ContextoProcesso } from '../modelo/processo'
 import { sobreAPeca, type EventoTentativa, type PontoRegistro } from '../modelo/simulacao'
 import { Calor3D } from './calor3d'
@@ -116,12 +116,14 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
   palco.peca.add(calor.particulas)
   palco.relevo.add(calor.relevo)
   palco.guardarTexturas(...calor.texturas)
+  for (const m of calor.materiaisSobreACapa) palco.furarTambem(m)
   const necessario = aporteNecessario(op.contexto)
   // A tinta térmica lê uma cópia dos aportes: no máximo 10 vezes por segundo.
   let tTinta = -Infinity
   let tintaPendente = false
   let cordaoAtual: Cordao | null = null
   const emissor = { x: 0, y: 0, z: 0 }
+  const avessoVaza = { x: 0, y: 0, z: 0, vazamento: 0 }
   // Reaproveitado a cada quadro (sem alocar).
   const qt: QuadroTocha = { x: 0, dbcpMm: dbcpDe(op.contexto), z: 0, topoMm: 0, soldando: false, fora: false, desvio: 0, larguraMm: 0, rumo: 0, angulo: 0, inclinacao: 0, intensidadePoca: aparencia.brilhoFraco ? 0.5 : 1, calorPoca: 1.5, sentido: 1, gravidadeX: 0, gravidadeZ: 0 }
   // Defeitos visíveis (H50–H57): recalculados no máximo 4 vezes por segundo e ao fechar o arco.
@@ -250,7 +252,18 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
         const r = Math.round(4 / MODELO.passoMm)
         for (let k = Math.max(0, i - r); k <= Math.min(analise.n - 1, i + r); k++) gotejando = Math.max(gotejando, analise.gotejamento[k])
       }
-      calor.atualizarParticulas(d.agoraMs, emite ? emissor : null, taxaFaiscas(op.contexto, d.desvio), gPeca, gotejando)
+      // H101: metal passando para o avesso (ou caindo pelo buraco) pinga por baixo da chapa.
+      let vazando = 0
+      if (emite && analise && d.posicao && INFO_JUNTA[juntaDe(op.contexto)].familia !== 'filete') {
+        const i = d.cordao.indiceEm(d.posicao.x)
+        const r = Math.round(3 / MODELO.passoMm)
+        for (let k = Math.max(0, i - r); k <= Math.min(analise.n - 1, i + r); k++) vazando = Math.max(vazando, analise.furoMm[k] > 0 ? 1 : Math.min(1, Math.max(0, analise.penetracaoMm[k] - 0.6)))
+      }
+      avessoVaza.x = emissor.x
+      avessoVaza.y = -op.contexto.espessuraMm - 0.3
+      avessoVaza.z = emissor.z
+      avessoVaza.vazamento = vazando
+      calor.atualizarParticulas(d.agoraMs, emite ? emissor : null, taxaFaiscas(op.contexto, d.desvio), gPeca, gotejando, vazando > 0 ? avessoVaza : null)
       palco.desenhar(vista.camera)
     },
     destruir() {

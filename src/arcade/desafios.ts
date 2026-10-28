@@ -66,10 +66,10 @@ export function ajustePreDefinido(m: Missao, d: Dificuldade): { ajustes: Ajustes
   for (let mMin = MAQUINA.alimentacaoMinMMin; mMin <= MAQUINA.alimentacaoMaxMMin; mMin += MAQUINA.passoMMin) {
     const w = botaoDaAlimentacao(mMin)
     const vEq = tensaoV(equilibrioArco({ alimentacao: w, tensao: 5 }, ctx).tensaoEquilibrio)
-    const tensao = botaoDaTensao(Math.min(MAQUINA.tensaoMaxV, Math.max(MAQUINA.tensaoMinV, Math.round(vEq / MAQUINA.passoV) * MAQUINA.passoV)))
+    const tensao = botaoDaTensao(Math.min(MAQUINA.tensaoMaxV, Math.max(MAQUINA.tensaoAncoraV, Math.round(vEq / MAQUINA.passoV) * MAQUINA.passoV)))
     const a = { alimentacao: w, tensao }
     const modo = modoTransferencia(a, ctx)
-    if (modo === 'globular') continue
+    if (modo !== 'curto-circuito' && modo !== 'spray') continue
     const area = areaParaLargura(m.geometria.junta, ctx, larguraAlvo, razaoEfetiva(a, ctx))
     const erro = Math.abs(taxaDeposicao(a, ctx) / area - vAlvo)
     if (erro < melhores[modo].erro) melhores[modo] = { a, erro }

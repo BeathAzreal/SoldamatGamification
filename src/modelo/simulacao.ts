@@ -4,7 +4,8 @@ import { efeitoPosicao, gravidade, juntaDe, POSICAO_PLANA, type GravidadeJunta, 
 import type { GravidadePoca } from './cordao'
 import { MATERIAIS } from './material'
 import { analisarMovimento } from './movimento'
-import { EQUILIBRIO, MODELO, PECA, TRAJETORIA } from './parametros'
+import { EQUILIBRIO, MODELO, PECA, PICO_FUSAO, TRAJETORIA } from './parametros'
+import { registrarPicosFusao } from './fusao'
 import { Percurso } from './percurso'
 import {
   AJUSTES_PADRAO,
@@ -83,6 +84,11 @@ export function fatorFusaoAjustes(a: Ajustes, ctx: ContextoProcesso): number {
   return EFEITO_TRANSFERENCIA[modoTransferencia(a, ctx)].calor * (1 - 0.35 * Math.max(0, -instab))
 }
 
+/** H100: com a tensão abaixo do limite o gatilho solta arame, mas o arco não se forma (sem luz, som nem metal). */
+export function semArco(sim: { readonly ajustes: Ajustes; readonly contexto: ContextoProcesso }): boolean {
+  return modoTransferencia(sim.ajustes, sim.contexto) === 'sem-arco'
+}
+
 /** Gravidade nos eixos da poça (H50), com o mesmo sentido de avanço de efeitoPosicao (H47). */
 export function gravidadePoca(g: GravidadeJunta, sentido: number): GravidadePoca {
   return { cabeca: Math.max(0, g.w), lado: g.n, descida: g.t * Math.sign(sentido) }
@@ -146,6 +152,8 @@ export class Simulacao {
   /** Aquecimento acumulado T (H32) e o instante a que ele se refere. */
   private aquecimento = 0
   private tAquecimento: number | null = null
+  /** H101: próximo instante (tempo de arco) em que o pico de fusão perto da tocha é registrado. */
+  private proximoPicoMs: number = PICO_FUSAO.intervaloMs
   /** Posição da peça (H47): a atual e a última gravada nos eventos. */
   private posicaoAtual: PosicaoPeca
   private posicaoGravada: PosicaoPeca
@@ -239,6 +247,8 @@ export class Simulacao {
     a = { ...a, t: this.instanteDeProcesso(a.t) }
     // O 'mover' acima já registrou a posição final; 'fim' só fecha o arco.
     this.eventos.push({ tipo: 'fim', t: a.t, x: a.x, y: a.y })
+    // H101: o estado no fim do passe também conta como pico.
+    registrarPicosFusao(this.cordao, this.percurso, this.contexto, a.x, PICO_FUSAO.raioMm)
     this.arco = false
   }
 
@@ -326,6 +336,7 @@ export class Simulacao {
     this.encerrada = false
     this.aberturasDeArco = 0
     this.tempoArcoMs = 0
+    this.proximoPicoMs = PICO_FUSAO.intervaloMs
     this.estimador.limpar()
     if (this.ultima) this.estimador.adicionar(this.ultima)
   }
@@ -383,6 +394,14 @@ export class Simulacao {
     const ef = efeitoPosicao(this.gravidadeAtual, 0)
     this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto), gravidadePoca(this.gravidadeAtual, 0))
     this.percurso.registrar(p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
+    this.picoSePreciso(p.x)
+  }
+
+  /** H101: a cada intervalo de tempo de arco, guarda o índice de fusão perto da tocha. */
+  private picoSePreciso(xMm: number): void {
+    if (this.tempoArcoMs < this.proximoPicoMs) return
+    registrarPicosFusao(this.cordao, this.percurso, this.contexto, xMm, PICO_FUSAO.raioMm)
+    this.proximoPicoMs = (Math.floor(this.tempoArcoMs / PICO_FUSAO.intervaloMs) + 1) * PICO_FUSAO.intervaloMs
   }
 
   /** Divide o trecho em pedaços curtos e deposita um pouco em cada um. */
@@ -412,6 +431,7 @@ export class Simulacao {
       this.cordao.depositar(x, y + ef.desvioMm, volume, t0 + (j + 1) * dt, razao, sigma, instab, gp)
       this.percurso.registrar(x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
     }
+    this.picoSePreciso(p1.x)
   }
 
   private registrar(a: Amostra): void {

@@ -18,6 +18,8 @@ export class Percurso {
   private readonly aportes: Float64Array
   /** Σ potência × ∫(1 + e·T) dt (s). */
   private readonly aportesEfetivos: Float64Array
+  /** H101: maior índice de fusão que cada fatia já atingiu (o que derreteu não volta). */
+  private readonly picos: Float64Array
 
   constructor(
     readonly comprimentoMm: number = PECA.comprimentoMm,
@@ -28,6 +30,21 @@ export class Percurso {
     this.pertoDaJuntaMs = new Float64Array(this.nPosicoes)
     this.aportes = new Float64Array(this.nPosicoes)
     this.aportesEfetivos = new Float64Array(this.nPosicoes)
+    this.picos = new Float64Array(this.nPosicoes)
+  }
+
+  /** H101: guarda o índice de fusão da fatia i se for o maior até agora. */
+  registrarPico(i: number, indice: number): void {
+    if (i >= 0 && i < this.nPosicoes && indice > this.picos[i]) this.picos[i] = indice
+  }
+
+  picoEm(i: number): number {
+    return this.picos[i] ?? 0
+  }
+
+  /** Aporte efetivo bruto da fatia i (sem cópia), para a avaliação local do pico. */
+  aporteEfetivoEm(i: number): number {
+    return this.aportesEfetivos[i] ?? 0
   }
 
   registrar(xMm: number, yMm: number, duracaoMs: number, aporte = 0, aporteEfetivo = 0): void {

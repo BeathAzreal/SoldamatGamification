@@ -44,7 +44,8 @@ describe('H94: passar da chapa em níveis, até varar', () => {
   })
   it('no limite: a chapa vara e abre um furo', () => {
     const r = passe(2)
-    expect(r.furo).toBeGreaterThan(0.5)
+    // H101: o buraco nasce pequeno no ponto mais quente e alarga com mais calor (tests/consumoChapa.test.ts).
+    expect(r.furo).toBeGreaterThan(0)
     expect(r.tipos.has('furo')).toBe(true)
   })
   it('os níveis crescem juntos: metal no avesso, afundamento e furo nunca diminuem com mais calor', () => {
