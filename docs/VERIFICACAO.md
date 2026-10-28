@@ -313,3 +313,9 @@ desenhar com raio negativo quando o gráfico ainda não tinha largura.
   previamente publicados não foram substituídos.
 
 Validação final: TypeScript, 305 testes em 24 arquivos e build de produção aprovados.
+
+## v1.9 (Claude)
+
+- `npx tsc --noEmit` sem erros; `npx vitest run`: 479 testes passando.
+- Navegador (Chromium com renderização por software, sem GPU): "Cordões sobre chapa" no Difícil. O cordão aparece em relevo na chapa; o resultado mostra os 4 itens com o traço dos 20 % e o selo de aprovação. Uma tentativa com escória e defeitos teve itens acima de 20 % e nota final 0, o que levou a exigir também a nota final e a escória removida.
+- Não testado: mesa digitalizadora, gamepad e computadores dos alunos. O equilíbrio do eletrodo foi calibrado com o jogador simulado, não com pessoas.

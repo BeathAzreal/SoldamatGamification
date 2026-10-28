@@ -8,7 +8,7 @@ const publico=process.env.PUBLIC_DIR??resolve(dirname(fileURLToPath(import.meta.
 const app=criarServidor({publico,origens:process.env.ORIGENS_PERMITIDAS?.split(',').filter(Boolean)})
 app.servidor.on('error',erro=>{console.error('Não foi possível iniciar o servidor:',erro.message);process.exitCode=1})
 app.servidor.listen(porta,host,()=>{
- console.log('\nOFICINA DE SOLDAGEM v1.8 — X1 EM REDE\n')
+ console.log('\nOFICINA DE SOLDAGEM v1.9 — X1 EM REDE\n')
  console.log('Mantenha esta janela aberta. Nos dois PCs, abra um dos endereços abaixo no navegador:')
  for(const url of enderecos(porta))console.log('  '+url)
  if(process.env.ABRIR_NAVEGADOR==='1' && process.platform==='win32'){

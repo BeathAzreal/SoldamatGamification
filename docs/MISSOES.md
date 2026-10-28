@@ -119,3 +119,7 @@ O resumo de progressão deriva as contagens das aprovações existentes e recome
 ## v1.8 — História sem trava (H89)
 
 A missão seguinte da História libera quando a anterior é **entregue** no modo Fácil, aprovada ou não; o modo Difícil de uma missão libera quando ela é entregue no Fácil. Perfis antigos continuam valendo (a lista salva tem o mesmo nome e formato).
+
+## v1.9 — História só no Difícil, com 40 % por categoria (H90)
+
+A História passa a ser jogada só no Difícil. A missão seguinte abre quando a anterior é **aprovada** com pelo menos 40 % dos pontos em cada uma das 5 categorias. A lista salva no perfil tem o mesmo nome e formato; só contam as aprovações do Difícil, então quem passou missões só no Fácil numa versão anterior refaz essas missões no Difícil.

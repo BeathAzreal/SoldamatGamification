@@ -830,3 +830,26 @@ O jogador escolhe Fácil ou Difícil antes de soldar, no MIG/MAG e no eletrodo. 
 ### H89 — nota sem trava (v1.8, Claude)
 
 Pedido do dono: "considere todas as pontuações independente da nota". A condição essencial descumprida (integridade mínima, perfuração, trecho sem cordão, óxido) continua sendo mostrada como "não aprovada", mas não zera Controle térmico e Execução, não limita o conceito a C, não põe aprovadas à frente nos rankings e torneios, não faz perder o desafio do Arcade e não trava a História (a missão seguinte libera ao entregar). Versão da nota: `pontuacao-v9`.
+
+### H90 — Fácil só nota; Difícil com mínimo por categoria; desafios e História no Difícil (v1.9, Claude)
+
+Pedido do dono: "no fácil a pontuação vai ser desbloqueada e não tem aprovação, apenas pontuação pura (mesmo se tirar 0 em alguma categoria), já no difícil você precisa de pelo menos 20 % em cada um dos 5 tipos de avaliação. Nos desafios precisa ser difícil exclusivo… pelo menos 40 % em cada uma das avaliações, e o modo história também."
+
+- **Fácil** (`aprendiz`): `exigencia = null`. Não há condição essencial nem selo de aprovada/reprovada; vale a soma das 5 categorias.
+- **Difícil** (`profissional`): `exigencia = 0,2`. Aprovada só com pelo menos 20 % dos pontos em cada categoria (integridade, desenho, regularidade, deformação, eficiência). As condições essenciais antigas (E1–E4) saem; cada categoria vira uma condição com o id dela.
+- **Desafios do Arcade e Modo História**: sempre no Difícil, com `EXIGENCIA.desafio = 0,4`. O desafio é perdido abaixo de 40 % em qualquer categoria; na História a missão seguinte só abre com a anterior aprovada assim.
+- **Eletrodo**: Fácil só nota; Difícil pede 20 % em cada um dos 4 itens e também na nota final (escória e defeitos descontam dela), com a escória removida.
+
+A nota continua contando inteira, aprovada ou não (H89). Versão da nota: `pontuacao-v10`.
+
+### H91 — eletrodo sem assistência na altura (v1.9, Claude)
+
+Pedido do dono: "Ele tem uma assistência que faz ficar muito fácil, não está 3D como antes, precisa de um balanceamento para a mecânica de precisar fazer o movimento e descer enquanto vai consumindo o eletrodo."
+
+- A opção "Ajuda na altura" saiu da bancada. A descida é só a do jogador, com a mesma rampa de W (toque curto desce pouco, segurar acelera até 6 mm/s); não soma mais o consumo da vareta.
+- Consumo da vareta 1,5 mm/s na corrente base (era 3), para o jogador conseguir acompanhar com toques em S. Com 180 A a vareta queima a ~3,8 mm/s e segurar S ainda ganha.
+- `RENDIMENTO15.deposicao` de 0,7 para 2,8: com o consumo menor, o metal por mm de vareta sobe para o cordão aparecer em relevo.
+- Peça nova "Cordões sobre chapa" (chapa inteira, sem abertura): o cordão fica todo por cima. Alvo: miolo de um diâmetro de largura com pelo menos 1,5 mm de altura.
+- Teste com jogador simulado (`tests/eletrodoMao.test.ts`, reação de 0,15 s): com atenção ele solda a vareta inteira sem grudar a 80, 90 e 100 A; sem controle o arco apaga em menos de 4 s.
+
+Números do jogo, calibrados por simulação; não foram medidos com jogadores nem em equipamento real.

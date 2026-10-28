@@ -319,3 +319,19 @@ Perfuração e as condições essenciais valem igual nos dois modos (a integrida
 
 - **Sem trava (H89):** a condição essencial descumprida continua aparecendo ("não aprovada", com o motivo), mas não tira mais pontos: Controle térmico e Execução não são zerados, o conceito (S, A, B, C, D) vem só da nota, os rankings, a regra "melhor" do torneio e as classificações ordenam pela nota, o desafio do Arcade não é perdido por não aprovar, e a missão seguinte da História libera ao entregar.
 - **Física mais lenta (H87):** a solda certa pede metade da velocidade de antes (faixa verde de 4 a 8 mm/s na alimentação de referência). As faixas do Fácil e do Difícil não mudaram; mudou o que a física pede.
+
+## pontuacao-v10 — Fácil só nota, Difícil com mínimo por categoria (v1.9, H90)
+
+| Onde | Modo | Aprovação |
+|---|---|---|
+| Treino e missões MIG/MAG | Fácil | Nenhuma: só a nota |
+| Treino e missões MIG/MAG | Difícil | ≥ 20 % dos pontos em cada uma das 5 categorias |
+| Desafios do Arcade | só Difícil | ≥ 40 % em cada categoria; abaixo disso o desafio é perdido |
+| Modo História | só Difícil | ≥ 40 % em cada categoria para abrir a missão seguinte |
+| Eletrodo | Fácil | Nenhuma: só a nota |
+| Eletrodo | Difícil | ≥ 20 % em cada um dos 4 itens e na nota final, escória removida |
+
+- `EXIGENCIA = { dificil: 0.2, desafio: 0.4 }` e `exigenciaDe(d)` em `src/pontuacao/regras.ts`; `pontuarRegistro` aceita a exigência como último argumento.
+- `essenciais` traz uma condição por categoria (id = id da categoria). No Fácil é vazia.
+- O resultado mostra um traço no mínimo de cada barra e, no Fácil, o selo "pontuação pura, sem aprovação".
+- A nota é a mesma da v9 (nada nas categorias mudou); muda só quem é aprovado. Recordes antigos continuam lidos; os de versão anterior ficam marcados como tal.
