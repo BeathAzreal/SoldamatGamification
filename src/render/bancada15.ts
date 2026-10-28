@@ -6,9 +6,10 @@ import { criarDetalhesIndustriais15 } from './pecaIndustrial15'
 import * as THREE from 'three'
 import { Palco3D } from './palco3d'
 import { geometriaDa } from '../modelo/junta'
-import { CONTEXTO_PADRAO } from '../modelo/processo'
+import { CONTEXTO_PADRAO, type ContextoProcesso } from '../modelo/processo'
 import type { Cordao } from '../modelo/cordao'
 import type { Acionamento15 } from '../modelo/acionamento15'
+import type { ModeloTig } from '../modelo/tig'
 import { criarSuperficieEscoria15 } from './escoriaSuperficie15'
 import { girarFerramenta15, type Vetor15 } from '../entrada/giroFerramenta15'
 import type { FerramentaBancada15 } from '../modelo/escoria15'
@@ -35,11 +36,12 @@ function texturaBrilho(): THREE.CanvasTexture {
 }
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
-export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade' }) {
+export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade' }, op: { tig?: { material: ContextoProcesso['material'] } } = {}) {
   // A peça chega na posição plana (rolagem 0): no filete, o canto fica voltado para cima.
-  const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm } : CONTEXTO_PADRAO
+  const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm, ...(op.tig ? { material: op.tig.material } : {}) } : CONTEXTO_PADRAO
+  // TIG: chapa limpa e cordão brilhante (o acabamento do MIG), sem a crosta do eletrodo.
   const palco = Palco3D.criar({
-    larguraPecaMm: peca?.larguraMm, processo: 'eletrodo', contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
+    larguraPecaMm: peca?.larguraMm, processo: op.tig ? 'mig' : 'eletrodo', contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
     missao: peca ? { inicioMm: peca.inicioMm, fimMm: peca.fimMm } : undefined, regua: !!peca && !peca.larguraMm,
   })
   if (!palco) return null
@@ -120,6 +122,36 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   const bocal = cilindro(mig, 5, 16, 8, cobre)
   const punho = cilindro(mig, 7, 28, 30, isolante)
   const arame = cilindro(mig, 0.45, 1, 0, metal)
+  // TIG (H92): tocha com bocal cerâmico e tungstênio aparente; a vareta de adição fica na outra mão.
+  const tig = new THREE.Group()
+  ferramenta.add(tig)
+  tig.visible = false
+  const tungstenioMat = new THREE.MeshStandardMaterial({ color: '#8d9399', metalness: 0.9, roughness: 0.3 })
+  const ceramica = new THREE.MeshStandardMaterial({ color: '#d98b78', roughness: 0.9 })
+  const tungstenio = cilindro(tig, 0.8, 12, 6, tungstenioMat, 10)
+  const pontaTungstenio = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.6, 10), tungstenioMat)
+  pontaTungstenio.rotation.x = Math.PI
+  pontaTungstenio.position.y = -0.8
+  tig.add(pontaTungstenio)
+  const bocalTig = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 4.2, 14, 20, 1, true), ceramica)
+  bocalTig.material.side = THREE.DoubleSide
+  bocalTig.position.y = 11
+  tig.add(bocalTig)
+  cilindro(tig, 7, 22, 29, isolante)
+  const tampa = cilindro(tig, 3.2, 26, 50, borracha)
+  const empunhaduraTig = haste(tig, 6, 70, new THREE.Vector3(0, 26, 0), new THREE.Vector3(0.9, 0.42, 0).normalize(), borracha)
+  void tungstenio; void tampa; void empunhaduraTig
+  const varetaTig = new THREE.Group()
+  palco.peca.add(varetaTig)
+  varetaTig.visible = false
+  const varetaMat = new THREE.MeshStandardMaterial({ color: '#c9ccd0', metalness: 0.9, roughness: 0.25 })
+  const corpoVareta = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 10), varetaMat)
+  corpoVareta.castShadow = true
+  varetaTig.add(corpoVareta)
+  const pontaVaretaMat = new THREE.MeshBasicMaterial({ color: '#ffb35a', transparent: true, opacity: 0 })
+  const pontaVaretaMalha = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), pontaVaretaMat)
+  varetaTig.add(pontaVaretaMalha)
+  const dirVareta = new THREE.Vector3()
   const madeira = new THREE.MeshStandardMaterial({ color: '#996d3f', roughness: 0.85 })
   const martelo = new THREE.Group(), escova = new THREE.Group()
   palco.peca.add(martelo, escova)
@@ -273,6 +305,8 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       ferramenta.quaternion.setFromUnitVectors(normal, eixo).multiply(q.setFromAxisAngle(normal, m.rolamentoGraus * Math.PI / 180))
       eletrodo.visible = m.processo === 'eletrodo'
       mig.visible = m.processo === 'mig'
+      tig.visible = false
+      varetaTig.visible = false
       const r = m.diametroMm / 2
       alma.scale.set(r, m.restanteMm, r)
       alma.position.y = m.restanteMm / 2
@@ -352,6 +386,75 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       }
       escoria.atualizar(m.escoria, c)
       if (ocultarEscoria) escoria.malha.visible = false
+      palco.desenhar(camera)
+    },
+    /**
+     * TIG (H92): tocha, arco azulado, poça do tamanho calculado e vareta de adição
+     * entrando pela frente da poça, a ~20° da chapa.
+     */
+    desenharTig(m: ModeloTig, c: Cordao, dt = 0, inspecionando = false) {
+      const ligado = m.estado === 'arco'
+      const chao = superficie(m.yMm)
+      const topoMetal = (x: number, y: number) => {
+        let topo = superficie(y)
+        for (const cord of [c, ...c.soltos]) {
+          const s = cord.secao(cord.indiceEm(x))
+          if (s.larguraMm > 0 && Math.abs(s.yCentroMm - y) < Math.max(3, s.larguraMm / 2)) topo = Math.max(topo, cristaMm(s, junta))
+        }
+        return topo
+      }
+      const base = topoMetal(m.xMm, m.yMm)
+      ferramenta.visible = !inspecionando
+      eletrodo.visible = mig.visible = false
+      tig.visible = true
+      martelo.visible = escova.visible = false
+      ferramenta.position.set(m.xMm - 75, base + Math.max(0, m.distanciaMm), m.yMm)
+      const inc = m.inclinacaoGraus * Math.PI / 180, az = m.azimuteGraus * Math.PI / 180
+      eixo.set(Math.sin(inc) * Math.cos(az), Math.cos(inc), Math.sin(inc) * Math.sin(az))
+      ferramenta.quaternion.setFromUnitVectors(normal, eixo)
+      // Vareta: da mão (atrás e acima, do lado oposto à tocha) até a ponta na frente da poça.
+      const p = m.pontaVareta
+      const pontaY = topoMetal(p.x, p.y) + Math.max(0, m.alturaVaretaMm) + m.peca.varetaMm / 2
+      const comprimento = Math.min(140, 30 + m.varetaRestanteMm * 0.35)
+      dirVareta.set(m.sentido * Math.cos(0.35), Math.sin(0.35), 0).normalize()
+      const r = m.peca.varetaMm / 2
+      corpoVareta.scale.set(r, comprimento, r)
+      corpoVareta.quaternion.setFromUnitVectors(Y, dirVareta)
+      corpoVareta.position.copy(dirVareta).multiplyScalar(comprimento / 2)
+      varetaTig.position.set(p.x - 75, pontaY, p.y)
+      varetaTig.visible = !inspecionando && m.varetaRestanteMm > 0
+      const tocando = m.alturaVaretaMm <= 0.3 && ligado
+      pontaVaretaMat.opacity = tocando ? 0.95 : Math.max(0, pontaVaretaMat.opacity - dt * 2)
+      pontaVaretaMalha.scale.setScalar(r * 1.2)
+      pontaVaretaMalha.visible = pontaVaretaMat.opacity > 0.02
+      // Arco TIG: cone azulado curto e estável; contaminado, ele tremula e abre.
+      const tremor = m.contaminado ? 0.7 + 0.6 * Math.random() : 0.95 + 0.1 * Math.random()
+      const comprimentoArco = Math.max(0.3, m.distanciaMm)
+      coluna.visible = halo.visible = ligado
+      ;(coluna.material as THREE.MeshBasicMaterial).color.set(m.contaminado ? '#e9d6ff' : '#bcd8ff')
+      coluna.position.set(m.xMm - 75, base + comprimentoArco / 2, m.yMm)
+      coluna.scale.set(tremor * (0.6 + m.distanciaMm * 0.25), comprimentoArco, tremor * (0.6 + m.distanciaMm * 0.25))
+      palco.peca.worldToLocal(cameraLocal.copy(camera.position))
+      halo.position.set(m.xMm - 75, base + comprimentoArco * 0.4, m.yMm)
+      halo.lookAt(cameraLocal)
+      halo.scale.setScalar((6 + m.pedal * 10) * tremor)
+      const raioPoca = m.raioPocaMm
+      poca.visible = raioPoca > 0.2 && !inspecionando
+      poca.position.set(m.xMm - 75 - m.sentido * raioPoca * 0.25, base + 0.15, m.yMm)
+      poca.scale.set(Math.max(0.3, raioPoca), 0.35, Math.max(0.3, raioPoca * 0.9))
+      ;(poca.material as THREE.MeshBasicMaterial).color.set(ligado ? '#ffe2a8' : '#ff9a4a')
+      luz.position.set(m.xMm - 75, base + 6, m.yMm)
+      luz.intensity = ligado ? (250 + 500 * m.pedal) * tremor : 0
+      respingos.visible = false
+      escoria.malha.visible = false
+      lascas.visible = false
+      void chao
+      if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
+        metalLocal.malha.visible = false
+        palco.atualizarCordao(c)
+        cordaoAntes = c
+        volumeAntes = c.volumeTotal()
+      }
       palco.desenhar(camera)
     },
     /** Defeitos visíveis calculados pela análise do eletrodo (poros, crateras, mordedura, respingos, cor de calor), desenhados sobre o cordão 3D (H84, H86). */
