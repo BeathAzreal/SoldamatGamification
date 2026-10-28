@@ -110,17 +110,14 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
     corrente.addEventListener('input', () => { modelo.soltar(); modelo.regular(Number(corrente.value)) })
     const diametro = h('select', { 'aria-label': 'Diâmetro do eletrodo' }, [2.5, 3.2].map(d => h('option', { value: d }, `${n1(d)} mm`)))
     diametro.addEventListener('change', () => { modelo.soltar(); modelo.regular(modelo.correnteA, Number(diametro.value)); canvas.focus() })
-    // H70: quanto do consumo a bancada compensa. Parcial é o padrão: o arco cresce devagar e o jogador corrige.
-    const ajudaAltura = h('select', { 'aria-label': 'Ajuda na altura' },
-      ([['0.8', 'Parcial (recomendada)'], ['1', 'Total (arco não cresce)'], ['0', 'Manual (sem ajuda automática)']] as const).map(([v, t]) => h('option', { value: v }, t)))
-    const aplicarAjuda = () => { modelo.assistencia = Number(ajudaAltura.value); modelo.compensar = false }
-    ajudaAltura.addEventListener('change', () => { aplicarAjuda(); canvas.focus() })
+    // H91 (v1.9): sem ajuda na altura. A vareta queima e quem desce o alicate é o jogador (S).
+    const aplicarAjuda = () => { modelo.assistencia = 0; modelo.compensar = false }
     const referencia = h('small', { class: 'p15-dica' })
     const fisica = h('fieldset', { class: 'p15-fonte' }, h('legend', {}, 'Fonte e consumível'),
       h('label', {}, h('span', { class: 'p15-linha' }, 'Corrente', correnteValor), corrente),
       h('label', { class: 'p15-linha' }, 'Eletrodo didático', diametro),
       referencia,
-      h('label', { class: 'p15-linha', title: 'A vareta queima e o arco cresce. Parcial: a bancada desce o alicate 80% do consumo e segurar S acompanha o consumo e reduz a distância. Manual: o acompanhamento só ocorre enquanto você segura a descida.' }, 'Ajuda na altura', ajudaAltura))
+      h('small', { class: 'p15-dica' }, 'A vareta queima e o arco cresce: dê toques em S para descer enquanto avança com o mouse.'))
     const faixa = h('input', { type: 'range', min: 0, max: 35, step: 0.1, value: 10, 'aria-label': 'Distância da ponta à peça' })
     const altura = h('label', {}, h('span', { class: 'p15-linha' }, 'Altura manual', h('small', {}, 'W / S ou roda')), faixa)
     const orientacoes = [
