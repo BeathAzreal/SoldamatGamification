@@ -3,7 +3,7 @@ import { AJUSTES_PADRAO } from '../modelo/processo'
 import { VERSAO_PONTUACAO, type ResultadoPontuacao } from '../pontuacao/regras'
 import type { EventosCompactos } from '../dados/eventos'
 
-export const PROTOCOLO_REDE='soldagem-rede-1.7.1'
+export const PROTOCOLO_REDE='soldagem-rede-2.0.0'
 export const MODELO_REDE=VERSAO_PONTUACAO
 export const MISSOES_REDE=MISSOES.filter(m=>m.material==='aco-carbono')
 export type FaseRede='espera'|'contagem'|'partida'|'resultado'|'encerrada'

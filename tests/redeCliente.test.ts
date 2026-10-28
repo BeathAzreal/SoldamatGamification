@@ -3,6 +3,27 @@ import {ClienteRede} from '../src/rede/cliente'
 import {PROTOCOLO_REDE,MODELO_REDE,type SalaRede} from '../src/rede/contrato'
 function estado(fase:SalaRede['fase'],agora:number):SalaRede{return{codigo:'ABC234',protocolo:PROTOCOLO_REDE,modelo:MODELO_REDE,config:{processo:'mig',missaoId:'suporte-carbono',dificuldade:'aprendiz'},fase,rodada:1,jogadores:[],agora,inicioEm:100,fimEm:180100,vencedorId:null,motivo:''}}
 describe('cliente de rede',()=>{
+ it('verifica disponibilidade sem cache e com cancelamento, sem orientar um servidor no PC',async()=>{
+  const controle=new AbortController()
+  const pedir=vi.fn(async()=>new Response(JSON.stringify({protocolo:PROTOCOLO_REDE,modelo:MODELO_REDE,modo:'internet'})))
+  vi.stubGlobal('fetch',pedir)
+  try{
+   expect((await ClienteRede.verificar('https://oficina.test',controle.signal)).modo).toBe('internet')
+   const opcoes=(pedir.mock.calls[0] as unknown as [URL,RequestInit])[1]
+   expect(opcoes.cache).toBe('no-store');expect(opcoes.signal).toBeInstanceOf(AbortSignal)
+   controle.abort();expect(opcoes.signal?.aborted).toBe(true)
+  }finally{vi.unstubAllGlobals()}
+ })
+ it('explica falhas de rede e de hospedagem com opção de tentar novamente',async()=>{
+  try{
+   vi.stubGlobal('fetch',vi.fn(async()=>{throw new TypeError('Failed to fetch')}))
+   await expect(ClienteRede.verificar('https://oficina.test')).rejects.toThrow('Confira sua conexão')
+   vi.stubGlobal('fetch',vi.fn(async()=>new Response('Indisponível',{status:503})))
+   await expect(ClienteRede.verificar('https://oficina.test')).rejects.toThrow('serviço de salas')
+   vi.stubGlobal('fetch',vi.fn(async()=>new Response('<html>Site estático</html>')))
+   await expect(ClienteRede.verificar('https://oficina.test')).rejects.toThrow('não oferece salas online')
+  }finally{vi.unstubAllGlobals()}
+ })
  it('consulta o estado hospedado usando token no cabeçalho e para ao fechar',async()=>{
   const c=new ClienteRede({codigo:'ABC234',jogadorId:'A',token:'credencial',protocolo:PROTOCOLO_REDE,transporte:'consulta'},'https://oficina.test')
   const pedir=vi.fn(async(_url:RequestInfo|URL,_opcoes?:RequestInit)=>new Response(JSON.stringify(estado('contagem',20))))

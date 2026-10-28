@@ -10,7 +10,7 @@ export function telaCentralArcade(app: App): void {
   menuOficina(app, 'ARCADE', 'OFICINA / PARTIDAS', [
     { nome: 'HISTÓRIA', descricao: 'Missões e encomendas organizadas em capítulos.', abrir: () => telaHistoria(app) },
     { nome: 'DESAFIOS', descricao: 'Desafios sorteados, três vidas e recordes.', abrir: () => telaArcade(app) },
-    { nome: 'X1 EM REDE', descricao: 'Duas pessoas em computadores diferentes, com sala e código.', abrir: () => telaRede(app) },
+    { nome: 'X1 EM REDE', descricao: 'Jogue pelo navegador com outra pessoa: crie uma sala e compartilhe o convite, sem instalação.', abrir: () => telaRede(app) },
     { nome: 'VERSUS', descricao: 'Disputa local por turnos, com participantes e rodadas.', abrir: () => telaTorneios(app) },
   ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
 }
