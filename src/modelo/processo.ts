@@ -134,8 +134,9 @@ export const CONTEXTO_PADRAO: ContextoProcesso = {
 }
 
 export function limitarAjustes(a: Ajustes): Ajustes {
-  const limitar = (v: number) => Math.min(AJUSTES.maximo, Math.max(AJUSTES.minimo, v))
-  return { alimentacao: limitar(a.alimentacao), tensao: limitar(a.tensao) }
+  const limitar = (v: number, min: number) => Math.min(AJUSTES.maximo, Math.max(min, v))
+  // H100: a tensão desce até 0 V (abaixo do botão 1); a alimentação continua de 1 a 10.
+  return { alimentacao: limitar(a.alimentacao, AJUSTES.minimo), tensao: limitar(a.tensao, botaoDaTensao(MAQUINA.tensaoMinV)) }
 }
 
 /**
@@ -167,9 +168,21 @@ export function correnteRelativa(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PA
   return (-(1 - r) + Math.sqrt((1 - r) ** 2 + 4 * b * v)) / (2 * b)
 }
 
-/** H1 + H29: volume depositado por segundo ∝ volume de arame × rendimento do gás. Tensão e DBCP não entram. */
+/**
+ * H1 + H29: volume depositado por segundo ∝ volume de arame × rendimento do
+ * gás. Tensão e DBCP não entram, exceto (H100) abaixo de 14 V: com o arame
+ * batendo, parte vira pedaço solto e respingo; sem arco, nada funde.
+ */
 export function taxaDeposicao(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
-  return MODELO.taxaDeposicaoMm3s * volumeArameRelativo(a, ctx) * GASES[ctx.gas].rendimento
+  return MODELO.taxaDeposicaoMm3s * volumeArameRelativo(a, ctx) * GASES[ctx.gas].rendimento * fatorDeposicaoTensao(a)
+}
+
+/** H100: 1 de 14 V para cima; de 0,6 a 1 com o arame batendo (10–14 V); 0 sem arco. */
+export function fatorDeposicaoTensao(a: Ajustes): number {
+  if (a.tensao >= AJUSTES.minimo) return 1
+  const v = tensaoV(a.tensao)
+  if (v < MAQUINA.tensaoArcoMinV) return 0
+  return 0.6 + (0.4 * (v - MAQUINA.tensaoArcoMinV)) / (MAQUINA.tensaoAncoraV - MAQUINA.tensaoArcoMinV)
 }
 
 /**
@@ -177,7 +190,19 @@ export function taxaDeposicao(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRA
  * forma U·I da energia do arco; o aporte por mm divide pela velocidade, H33).
  */
 export function potenciaRelativa(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
-  return correnteRelativa(a, ctx) * (a.tensao / AJUSTES.tensaoReferencia)
+  return correnteRelativa(a, ctx) * fatorTensaoPotencia(a)
+}
+
+/**
+ * Tensão relativa na potência (H31). De 14 a 30 V é a posição do botão ÷ a
+ * de referência, como sempre. H100: abaixo de 14 V o arco mal se sustenta e
+ * o calor cai em linha até zero no limite em que o arco não se forma.
+ */
+export function fatorTensaoPotencia(a: Ajustes): number {
+  if (a.tensao >= AJUSTES.minimo) return a.tensao / AJUSTES.tensaoReferencia
+  const v = tensaoV(a.tensao)
+  const f = (v - MAQUINA.tensaoArcoMinV) / (MAQUINA.tensaoAncoraV - MAQUINA.tensaoArcoMinV)
+  return (AJUSTES.minimo / AJUSTES.tensaoReferencia) * Math.max(0, Math.min(1, f))
 }
 
 /** H9 + H38: forma da seção considerando também a técnica de deslocamento. */
@@ -192,7 +217,8 @@ export function razaoEfetiva(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO
  */
 export function razaoPelaTensao(a: Ajustes): number {
   const f = (a.tensao - AJUSTES.minimo) / (AJUSTES.maximo - AJUSTES.minimo)
-  return MODELO.razaoTensaoMinima + (MODELO.razaoTensaoMaxima - MODELO.razaoTensaoMinima) * f
+  // H100: abaixo de 14 V continua subindo (cordão alto e estreito, "corda"), até o limite do jogo.
+  return Math.min(MODELO.razaoTensaoBaixa, MODELO.razaoTensaoMinima + (MODELO.razaoTensaoMaxima - MODELO.razaoTensaoMinima) * f)
 }
 
 /**
@@ -264,7 +290,11 @@ export function faixaVelocidadeAlvo(a: Ajustes, ctx: ContextoProcesso = CONTEXTO
  * vira 7,2 m/min e 22 V, perto de ~170 A. Números do jogo, não de catálogo.
  */
 export const MAQUINA = {
-  tensaoMinV: 14,
+  /** H100: o painel vai de 0 V; o botão 1 continua sendo 14 V (âncora da escala). */
+  tensaoMinV: 0,
+  tensaoAncoraV: 14,
+  /** H100: abaixo disso o arco não se forma (o arame só bate na chapa); até a âncora, o arame bate e mergulha na poça. */
+  tensaoArcoMinV: 10,
   tensaoMaxV: 30,
   passoV: 0.5,
   alimentacaoMinMMin: 1,
@@ -279,10 +309,10 @@ export const MAQUINA = {
   tensaoCurtoMaxV: 22.5,
 } as const
 
-const escalaV = (MAQUINA.tensaoMaxV - MAQUINA.tensaoMinV) / (AJUSTES.maximo - AJUSTES.minimo)
+const escalaV = (MAQUINA.tensaoMaxV - MAQUINA.tensaoAncoraV) / (AJUSTES.maximo - AJUSTES.minimo)
 const escalaM = (MAQUINA.alimentacaoMaxMMin - MAQUINA.alimentacaoMinMMin) / (AJUSTES.maximo - AJUSTES.minimo)
-export const tensaoV = (botao: number): number => MAQUINA.tensaoMinV + (botao - AJUSTES.minimo) * escalaV
-export const botaoDaTensao = (v: number): number => AJUSTES.minimo + (v - MAQUINA.tensaoMinV) / escalaV
+export const tensaoV = (botao: number): number => MAQUINA.tensaoAncoraV + (botao - AJUSTES.minimo) * escalaV
+export const botaoDaTensao = (v: number): number => AJUSTES.minimo + (v - MAQUINA.tensaoAncoraV) / escalaV
 export const alimentacaoMMin = (botao: number): number => MAQUINA.alimentacaoMinMMin + (botao - AJUSTES.minimo) * escalaM
 export const botaoDaAlimentacao = (mMin: number): number => AJUSTES.minimo + (mMin - MAQUINA.alimentacaoMinMMin) / escalaM
 const fmt = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -291,12 +321,16 @@ export const textoAlimentacao = (botao: number): string => `${fmt(alimentacaoMMi
 
 /** H93: corrente estimada (A): a corrente relativa (H28/H48) na escala de uma máquina de oficina. */
 export function correnteA(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
+  // H100: sem arco não passa corrente (o arame só encosta e é empurrado).
+  if (tensaoV(a.tensao) < MAQUINA.tensaoArcoMinV) return 0
   return MAQUINA.correnteReferenciaA * correnteRelativa(a, ctx)
 }
 
-export type ModoTransferencia = 'curto-circuito' | 'globular' | 'spray'
-export const NOME_TRANSFERENCIA: Record<ModoTransferencia, string> = { 'curto-circuito': 'Curto-circuito', globular: 'Globular', spray: 'Spray (aerossol)' }
+export type ModoTransferencia = 'sem-arco' | 'arame-batendo' | 'curto-circuito' | 'globular' | 'spray'
+export const NOME_TRANSFERENCIA: Record<ModoTransferencia, string> = { 'sem-arco': 'Sem arco', 'arame-batendo': 'Arame batendo', 'curto-circuito': 'Curto-circuito', globular: 'Globular', spray: 'Spray (aerossol)' }
 export const EXPLICA_TRANSFERENCIA: Record<ModoTransferencia, string> = {
+  'sem-arco': 'Tensão baixa demais para abrir o arco: o arame sai do bico, bate na chapa e empurra a tocha. Nada funde. Suba a tensão.',
+  'arame-batendo': 'O arco quase não se sustenta: o arame mergulha na poça e bate na chapa aos trancos. Pouco calor, respingo grosso e um cordão alto e estreito que não funde as bordas. Suba a tensão.',
   'curto-circuito': 'Arame encosta na poça e funde em curtos: pouco calor, bom para chapa fina e fora da posição plana.',
   globular: 'Gotas grandes e irregulares caem pelo arco: mais respingo e cordão irregular. Suba a tensão e a alimentação para o spray (com argônio) ou desça para o curto-circuito.',
   spray: 'Gotas finas em jato, sem respingo e com muito calor: cordão liso e penetração funda. Fura chapa fina e escorre fora da posição plana.',
@@ -309,6 +343,8 @@ export const EXPLICA_TRANSFERENCIA: Record<ModoTransferencia, string> = {
  */
 export function modoTransferencia(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): ModoTransferencia {
   const v = tensaoV(a.tensao), i = correnteA(a, ctx)
+  if (v < MAQUINA.tensaoArcoMinV) return 'sem-arco'
+  if (v < MAQUINA.tensaoAncoraV) return 'arame-batendo'
   const transicao = MAQUINA.transicaoSprayA * ctx.diametroArameMm
   if (ctx.gas !== 'co2' && i >= transicao && v >= MAQUINA.tensaoSprayV) return 'spray'
   if (v <= MAQUINA.tensaoCurtoMaxV && i < transicao * 1.1) return 'curto-circuito'
@@ -320,6 +356,9 @@ export function modoTransferencia(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_P
  * funde e soma uma instabilidade mínima do arco: respingo, cordão irregular).
  */
 export const EFEITO_TRANSFERENCIA: Record<ModoTransferencia, { calor: number; instabilidade: number }> = {
+  // H100: o calor baixo já vem da potência (fatorTensaoPotencia); aqui só a instabilidade.
+  'sem-arco': { calor: 1, instabilidade: 0 },
+  'arame-batendo': { calor: 1, instabilidade: 0 },
   'curto-circuito': { calor: 1, instabilidade: 0 },
   globular: { calor: 1.05, instabilidade: 0.4 },
   spray: { calor: 1.25, instabilidade: 0 },

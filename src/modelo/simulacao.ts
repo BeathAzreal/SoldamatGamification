@@ -83,6 +83,11 @@ export function fatorFusaoAjustes(a: Ajustes, ctx: ContextoProcesso): number {
   return EFEITO_TRANSFERENCIA[modoTransferencia(a, ctx)].calor * (1 - 0.35 * Math.max(0, -instab))
 }
 
+/** H100: com a tensão abaixo do limite o gatilho solta arame, mas o arco não se forma (sem luz, som nem metal). */
+export function semArco(sim: { readonly ajustes: Ajustes; readonly contexto: ContextoProcesso }): boolean {
+  return modoTransferencia(sim.ajustes, sim.contexto) === 'sem-arco'
+}
+
 /** Gravidade nos eixos da poça (H50), com o mesmo sentido de avanço de efeitoPosicao (H47). */
 export function gravidadePoca(g: GravidadeJunta, sentido: number): GravidadePoca {
   return { cabeca: Math.max(0, g.w), lado: g.n, descida: g.t * Math.sign(sentido) }

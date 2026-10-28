@@ -994,3 +994,28 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
   - não há humping na corrente de referência andando rápido, nem com corrente alta no ritmo certo;
   - há humping com corrente alta andando rápido;
   - o resultado é o mesmo a 30 e a 144 quadros/s.
+
+### H99 — tocha parada fura a chapa (v2.0, Claude)
+
+- **O problema:** o amortecimento do H33 (`1 ÷ (1 + (seção ÷ 25 mm²)²)`) crescia sem limite com o metal acumulado. Com a tocha parada, o índice de fusão subia até uns 2 s e depois **caía**. A 22 V ele era 2,4 em 2 s e 1,4 em 8 s, e por isso a chapa nunca furava: o metal só escorria.
+- **A regra nova:** o metal acumulado protege só até 50 mm² de seção. Daí em diante o calor da tocha parada continua entrando e atravessa a chapa.
+- **O que vale nos testes:** chapa de 3 mm, alimentação de referência, tocha parada:
+  - a 22 V, fura em cerca de 7 s;
+  - a 26–30 V, fura em 1–2 s;
+  - a 18 V (curto-circuito, pouco calor), não fura em 2 s;
+  - na chapa de 8 mm, não fura em 8 s.
+- **O que continua igual:** andando devagar demais a penetração ainda cai, como na fonte do H33 (o teste de 1 mm/s contra 2,5 mm/s continua valendo). Os números são do jogo.
+
+### H100 — tensão de 0 a 30 V (v2.0, Claude)
+
+- **Painel e formato salvo:** o painel vai de 0 a 30 V. O botão 1 continua sendo 14 V e o 10 continua sendo 30 V, então registros salvos e replays valem o mesmo. Abaixo de 14 V o valor interno fica abaixo de 1, e o formato não muda.
+- **Abaixo de 10 V, sem arco:** o gatilho solta arame, mas o arco não se forma. Não há corrente, calor, metal, luz nem som de arco. O status avisa: "o arame só sai e bate na chapa".
+- **De 10 a 14 V, arame batendo (stubbing):** o arco quase não se sustenta.
+  - O calor cai em linha até zero em 10 V.
+  - O metal que vira cordão cai para 60–100 % (o resto vira pedaço solto e respingo).
+  - O cordão fica alto e estreito (razão até 0,45).
+  - Arco curto e frio deita o metal sem fundir as bordas (sobreposição) mesmo na velocidade certa, e respinga.
+- **De 14 V para cima:** nada mudou.
+- **Arcade:** a máquina pré-ajustada continua só em curto-circuito ou spray.
+- **Origem dos números:** a direção vem da prática do MIG/MAG (tensão baixa demais faz o arame bater e mergulhar na poça; sem tensão não abre arco). Os limites de 10 e 14 V são do jogo, não de catálogo de fabricante.
+- **Testes:** `tests/tensaoBaixa.test.ts` cobre o H99 e o H100.
