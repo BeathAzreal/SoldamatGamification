@@ -9,6 +9,8 @@ export interface OpcoesPasse {
   posicao?: PosicaoPeca
   /** +1 do início para o fim; −1 do fim para o início (subir, na junta vertical). */
   sentido?: 1 | -1
+  /** Mínimo por categoria (H90); ausente = o do modo. */
+  exigencia?: number | null
 }
 
 /** Executa um passe com velocidade que pode crescer linearmente (aceleração). */
@@ -30,7 +32,7 @@ export function executar(m: Missao, d: Dificuldade, preparo: Preparo, ajustes: A
     sim.moverTocha({ t, x, y: 0 })
   }
   sim.encerrarArco({ t, x, y: 0 })
-  return pontuar({ missao: m, dificuldade: d, contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.estado(t).tempoArcoMs })
+  return pontuar({ missao: m, dificuldade: d, contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.estado(t).tempoArcoMs, exigencia: op.exigencia })
 }
 
 /** Jeitos de soldar a missão que um jogador tentaria: como chegou ou na plana; ida ou volta. */
