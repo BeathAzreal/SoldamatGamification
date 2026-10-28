@@ -15,5 +15,6 @@ Cópia da branch [`claude/v1.9`](https://github.com/BeathAzreal/SoldamatGamifica
 - **Eletrodo sem assistência:** saiu a "Ajuda na altura". A vareta queima e o arco cresce; o jogador dá toques em **S** para descer enquanto avança com o mouse. A vareta queima mais devagar (1,5 mm/s) para dar tempo de acompanhar.
 - **Cordão em relevo no eletrodo:** mais metal por mm de vareta e uma peça nova, **Cordões sobre chapa** (primeira da lista), sem abertura, para o cordão ficar todo por cima.
 - **Eletrodo Fácil/Difícil:** Fácil só nota; Difícil pede 20 % em cada item e na nota final, com a escória removida.
+- **TIG novo (Treino → TIG):** tocha numa mão e vareta na outra. Com **mesa digitalizadora + mouse**, a caneta é a tocha (a pressão é o pedal) e o clique do mouse mergulha a vareta; ou **só mouse** (botão = pedal, Espaço = vareta). Três peças (inox 2 mm, inox 1,5 mm e T em aço carbono 3 mm), nota de 0 a 1000 com Fácil/Difícil e lista de defeitos. Guia em [`docs/TIG.md`](docs/TIG.md). A mesa e o mouse juntos ainda não foram testados num aparelho físico; no Windows, deixe o Windows Ink ligado.
 
-Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H90 e H91) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v10`). O equilíbrio do eletrodo foi calibrado com um jogador simulado, não com pessoas.
+Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H90, H91 e H92) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v10`). O equilíbrio do eletrodo foi calibrado com um jogador simulado, não com pessoas.

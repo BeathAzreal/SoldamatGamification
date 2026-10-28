@@ -17,6 +17,8 @@ O jogo mostra **ALPHA v1.9** no topo. Novidades:
   cada categoria.
 - **Eletrodo sem assistência:** a vareta queima e o jogador desce com toques em
   **S** enquanto avança. Cordão em relevo e peça nova **Cordões sobre chapa**.
+- **TIG novo** (Treino → TIG): **mesa digitalizadora + mouse** (a caneta é a tocha
+  e a pressão é o pedal; o clique do mouse mergulha a vareta) ou **só mouse**.
 
 **[BAIXAR PACOTE DE REDE v1.9 — para o X1 (Windows 64 bits, 41 MB)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip)**
 
@@ -32,7 +34,7 @@ abre ao tocar a peça com **S** e a vareta queima: continue descendo com toques 
 
 | Versão | Estado | Download |
 |---|---|---|
-| **Alpha v1.9** | **Mais nova — Fácil só nota, Difícil com mínimo por categoria, desafios e História no Difícil, eletrodo sem assistência** | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
+| **Alpha v1.9** | **Mais nova — TIG com mesa digitalizadora + mouse, Fácil só nota, Difícil com mínimo por categoria, desafios e História no Difícil, eletrodo sem assistência** | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
 | Alpha v1.8 | Anterior — modos Fácil e Difícil, solda mais lenta no MIG/MAG e nota sem trava | [ZIP da v1.8](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip) · [Pacote de rede (X1)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip) |
 | Alpha v1.7 | Anterior — x1 em rede (MIG/MAG), painel MIG maior e eletrodo com cordão 3D e lista de defeitos | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
 | Alpha v1.6 | Interface de máquina e eletrodo com nota 0–1000 (alpha-v1.6) + lista de defeitos com causa e correção, com o código organizado para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
@@ -80,6 +82,7 @@ Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 - **Fácil só nota, Difícil com mínimo:** no Fácil não há aprovação; no Difícil, pelo menos 20 % em cada uma das 5 categorias (`pontuacao-v10`).
 - **Desafios do Arcade e Modo História só no Difícil**, com pelo menos 40 % em cada categoria.
 - **Eletrodo sem assistência na altura**, com a vareta queimando mais devagar, cordão em relevo e a peça **Cordões sobre chapa**; no Difícil, 20 % em cada item e na nota final.
+- **TIG** no treino, com mesa digitalizadora + mouse (duas mãos) ou só mouse; guia em [`v1.9/docs/TIG.md`](v1.9/docs/TIG.md).
 
 ## O que mudou na v1.8?
 

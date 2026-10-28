@@ -19,6 +19,11 @@ ELETRODO REVESTIDO (novo na v1.9): Treino → Eletrodo → escolha a peça e o m
 - Fácil: só nota. Difícil: pelo menos 20 % em cada item e na nota final, com a escória removida.
 - Encerrar tentativa (botão ou Enter) mostra nota de 0 a 1000, os itens e o botão Defeitos (onde, causa e como corrigir).
 
+TIG (novo na v1.9): Treino → TIG → peça e modo. Tocha numa mão, vareta na outra.
+- Mesa + mouse: a caneta é a tocha (pressão = pedal); clique do mouse mergulha a vareta; roda do mouse sobe e desce a tocha. No Windows, deixe o Windows Ink ligado no programa da mesa.
+- Só mouse: segure o botão esquerdo para o pedal; Espaço mergulha a vareta; W/S ou roda: altura.
+- Espere a poça, toque a vareta na frente dela e avance um passo a cada toque. Tungstênio na poça contamina: use Afiar.
+
 Meio gira a câmera; direito orienta; I/K inclinam, J/L mudam a direção, Q/E giram o punho. Teclas em Controles.
 
 Modelo qualitativo. Números didáticos, não receita de soldagem.

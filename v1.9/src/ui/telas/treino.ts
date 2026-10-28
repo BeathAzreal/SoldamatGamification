@@ -16,12 +16,15 @@ import type { Tentativa } from '../../modelo/avaliacao'
 import { PECAS_ELETRODO } from '../../missoes/pecasEletrodo'
 import { INFO_JUNTA } from '../../modelo/juntas'
 import { telaTreinoEletrodo } from './treinoEletrodo'
+import { NOME_MATERIAL_TIG, PECAS_TIG } from '../../missoes/pecasTig'
+import { telaTreinoTig } from './treinoTig'
 
 /** Treino: navegação por processo e peça, sem ranking ou registro oficial. */
 export function telaTreino(app: App): void {
   menuOficina(app, 'TREINO', 'OFICINA / PRÁTICA LIVRE', [
     { nome: 'MIG/MAG', descricao: 'Abra a bancada livre. Escolha a junta, regule a máquina e pratique.', abrir: () => escolherModo(app, 'MIG/MAG', 'TREINO / BANCADA LIVRE', (d) => treinoLivre(app, d), () => telaTreino(app)) },
     { nome: 'ELETRODO', descricao: 'Escolha a peça e pratique o controle da distância e o consumo da vareta.', abrir: () => escolherPecaEletrodo(app) },
+    { nome: 'TIG', descricao: 'Tocha numa mão e vareta na outra: pedal, poça e toques de vareta. Mesa digitalizadora + mouse ou só mouse.', abrir: () => escolherPecaTig(app) },
     { nome: 'EXERCÍCIOS', descricao: 'Roteiros técnicos para experimentar, inspecionar e comparar tentativas.', abrir: () => { telaTreino(app); void escolherExercicio(app) } },
     { nome: 'TREINAR MISSÃO', descricao: 'Repita uma encomenda sem limite de tentativas.', abrir: () => escolherMissaoTreino(app) },
   ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
@@ -45,6 +48,14 @@ function escolherPecaEletrodo(app: App): void {
     nome: p.titulo,
     descricao: `${p.aplicacao} · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}. Avaliação visual e nota do treino.`,
     abrir: () => escolherModo(app, 'ELETRODO', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoEletrodo(app, p, d, () => escolherPecaEletrodo(app)), () => escolherPecaEletrodo(app)),
+  })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
+}
+
+function escolherPecaTig(app: App): void {
+  menuOficina(app, 'TIG', 'TREINO / ESCOLHA A PEÇA', PECAS_TIG.map(p => ({
+    nome: p.titulo,
+    descricao: `${p.aplicacao} · ${NOME_MATERIAL_TIG[p.material]} ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome} · vareta Ø ${n1(p.varetaMm)} mm.`,
+    abrir: () => escolherModo(app, 'TIG', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoTig(app, p, d, () => escolherPecaTig(app)), () => escolherPecaTig(app)),
   })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
 }
 

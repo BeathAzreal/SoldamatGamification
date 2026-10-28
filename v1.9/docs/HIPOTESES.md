@@ -853,3 +853,25 @@ Pedido do dono: "Ele tem uma assistência que faz ficar muito fácil, não está
 - Teste com jogador simulado (`tests/eletrodoMao.test.ts`, reação de 0,15 s): com atenção ele solda a vareta inteira sem grudar a 80, 90 e 100 A; sem controle o arco apaga em menos de 4 s.
 
 Números do jogo, calibrados por simulação; não foram medidos com jogadores nem em equipamento real.
+
+### H92 — TIG com mesa digitalizadora e mouse (v1.9, Claude)
+
+Pedido do dono: "Crie o TIG para o game, tente colocar a mesa digitalizadora junto com o mouse para isso."
+
+O TIG pede duas mãos: tocha numa, vareta de adição na outra, e o pé no pedal. No jogo:
+
+- **Mesa + mouse (duas mãos):** a caneta é a tocha (posição na peça; a pressão é o pedal; inclinar a caneta inclina a tocha). O mouse é a mão da vareta: o clique esquerdo mergulha a vareta na poça e a roda sobe e desce a tocha. O navegador separa os dois pelo tipo de ponteiro (`pen` e `mouse`), que chegam ao mesmo tempo. O jogo passa para este modo sozinho na primeira vez que vê a caneta.
+- **Só mouse:** o mouse é a tocha e segurar o botão esquerdo é o pedal (a corrente sobe em 0,35 s e desce em 0,6 s); Espaço mergulha a vareta; W/S ou a roda mudam a altura.
+- Um toque rápido (tecla ou clique) vale pelo menos 0,15 s de mergulho, para não se perder entre dois quadros.
+
+Modelo (`src/modelo/tig.ts`), todo didático:
+
+- Calor do arco = 0,65 × corrente × tensão (10 V + 0,6 V por mm de arco), espalhado como uma gaussiana que abre com o arco longo; condução no plano da chapa (campo de 150 × 40 mm, células de 1 × 0,5 mm) e perda para o resto da peça. A poça é onde a temperatura passa do ponto de fusão.
+- O tungstênio não se consome. Encostado na poça (≤ 0,3 mm) ele contamina: o arco fica instável até o jogador afiar (só com o arco apagado). Arco curto demais (< 1,1 mm) faz a vareta tocar o tungstênio.
+- A vareta desce para a borda da frente da poça. Só funde se tocar a poça; na chapa fria ela só bate (defeito). Fundir a vareta tira calor da poça.
+- Furo quando o calor passa do que a chapa fina aguenta; cratera quando o arco é cortado de uma vez com a poça grande.
+- O arco é medido até o topo do metal já posto: o cordão crescendo encurta o arco, e o jogador precisa subir a tocha.
+
+Nota de 0 a 1000: fusão no trecho 300, adição e reforço 200, largura regular 200, escamas regulares 150, limpeza do processo 150; furo desconta 40 (Fácil) ou 120 (Difícil). Fácil só nota; Difícil aprova com 20 % em cada item e na nota final, como no eletrodo (H90).
+
+Calibração: um soldador simulado (pedal cheio, 2 mm/s, toque de vareta a cada 0,7 s) faz as três peças com mais de 600 pontos e é aprovado no Difícil; sem vareta fica sem reforço nem escamas; andando a 9 mm/s não funde; corrente 25 A acima da faixa fura a chapa de 1,5 mm. Não foi testado com uma mesa digitalizadora de verdade: o caminho da caneta foi conferido no navegador com eventos de caneta simulados (com pressão).

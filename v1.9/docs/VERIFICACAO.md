@@ -319,3 +319,9 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
 - `npx tsc --noEmit` sem erros; `npx vitest run`: 479 testes passando.
 - Navegador (Chromium com renderização por software, sem GPU): "Cordões sobre chapa" no Difícil. O cordão aparece em relevo na chapa; o resultado mostra os 4 itens com o traço dos 20 % e o selo de aprovação. Uma tentativa com escória e defeitos teve itens acima de 20 % e nota final 0, o que levou a exigir também a nota final e a escória removida.
 - Não testado: mesa digitalizadora, gamepad e computadores dos alunos. O equilíbrio do eletrodo foi calibrado com o jogador simulado, não com pessoas.
+
+## v1.9 — TIG (Claude)
+
+- `tests/tig.test.ts` (15 testes): calor e poça, vareta só funde na poça, contaminação e afiar, furo acima da faixa, independência da taxa de quadros (30 e 144 qps), soldador simulado aprovado no Difícil nas três peças, sem vareta, rápido demais, cratera, mapa da pressão da caneta.
+- Navegador (Chromium sem GPU, ~4 quadros/s): modo Só mouse e modo Mesa + mouse com eventos de caneta simulados (`pointerType: 'pen'`, com pressão) e cliques reais do mouse para a vareta. O jogo trocou para Mesa + mouse ao ver a caneta, a pressão virou corrente (75 A), a vareta fundiu na poça e o cordão apareceu em 3D. Nota de 590 numa tentativa com o robô de teste.
+- Não testado: mesa digitalizadora física, Windows Ink, caneta e mouse físicos ao mesmo tempo.
