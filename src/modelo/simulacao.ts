@@ -4,12 +4,15 @@ import { efeitoPosicao, gravidade, juntaDe, POSICAO_PLANA, type GravidadeJunta, 
 import type { GravidadePoca } from './cordao'
 import { MATERIAIS } from './material'
 import { analisarMovimento } from './movimento'
-import { EQUILIBRIO, MODELO, PECA, TRAJETORIA } from './parametros'
+import { EQUILIBRIO, MODELO, PECA, PICO_FUSAO, TRAJETORIA } from './parametros'
+import { registrarPicosFusao } from './fusao'
 import { Percurso } from './percurso'
 import {
   AJUSTES_PADRAO,
   CONTEXTO_PADRAO,
   equilibrioArco,
+  EFEITO_TRANSFERENCIA,
+  modoTransferencia,
   espalhamentoDoMovimento,
   limitarAjustes,
   potenciaRelativa,
@@ -62,8 +65,28 @@ export interface EstadoTocha {
 export function instabilidadeArco(a: Ajustes, ctx: ContextoProcesso): number {
   const { desvio } = equilibrioArco(a, ctx)
   const excesso = Math.max(0, Math.abs(desvio) - EQUILIBRIO.tolerancia)
-  // Dentro da tolerância é exatamente 0 (nunca −0).
-  return excesso === 0 ? 0 : Math.sign(desvio) * Math.min(1, excesso / 3)
+  // H93 (v2.0): satura com 2 pontos de botão (~3,6 V) fora da tolerância (era 3): o desequilíbrio aparece mais cedo.
+  const doEquilibrio = excesso === 0 ? 0 : Math.sign(desvio) * Math.min(1, excesso / 2)
+  // H93: o globular é instável mesmo com o arco no equilíbrio.
+  const base = EFEITO_TRANSFERENCIA[modoTransferencia(a, ctx)].instabilidade
+  // Dentro da tolerância e sem base é exatamente 0 (nunca −0).
+  if (base === 0 || Math.abs(doEquilibrio) >= base) return doEquilibrio
+  return doEquilibrio < 0 ? -base : base
+}
+
+/**
+ * H93: fator do calor que funde a junta: o modo de transferência (o spray
+ * concentra o calor e penetra mais; a potência U·I já conta o resto) e o arco curto, em que o arame "afoga" na poça e o metal
+ * deita sobre a chapa sem fundir as bordas (colagem).
+ */
+export function fatorFusaoAjustes(a: Ajustes, ctx: ContextoProcesso): number {
+  const instab = instabilidadeArco(a, ctx)
+  return EFEITO_TRANSFERENCIA[modoTransferencia(a, ctx)].calor * (1 - 0.35 * Math.max(0, -instab))
+}
+
+/** H100: com a tensão abaixo do limite o gatilho solta arame, mas o arco não se forma (sem luz, som nem metal). */
+export function semArco(sim: { readonly ajustes: Ajustes; readonly contexto: ContextoProcesso }): boolean {
+  return modoTransferencia(sim.ajustes, sim.contexto) === 'sem-arco'
 }
 
 /** Gravidade nos eixos da poça (H50), com o mesmo sentido de avanço de efeitoPosicao (H47). */
@@ -129,6 +152,8 @@ export class Simulacao {
   /** Aquecimento acumulado T (H32) e o instante a que ele se refere. */
   private aquecimento = 0
   private tAquecimento: number | null = null
+  /** H101: próximo instante (tempo de arco) em que o pico de fusão perto da tocha é registrado. */
+  private proximoPicoMs: number = PICO_FUSAO.intervaloMs
   /** Posição da peça (H47): a atual e a última gravada nos eventos. */
   private posicaoAtual: PosicaoPeca
   private posicaoGravada: PosicaoPeca
@@ -222,6 +247,8 @@ export class Simulacao {
     a = { ...a, t: this.instanteDeProcesso(a.t) }
     // O 'mover' acima já registrou a posição final; 'fim' só fecha o arco.
     this.eventos.push({ tipo: 'fim', t: a.t, x: a.x, y: a.y })
+    // H101: o estado no fim do passe também conta como pico.
+    registrarPicosFusao(this.cordao, this.percurso, this.contexto, a.x, PICO_FUSAO.raioMm)
     this.arco = false
   }
 
@@ -309,6 +336,7 @@ export class Simulacao {
     this.encerrada = false
     this.aberturasDeArco = 0
     this.tempoArcoMs = 0
+    this.proximoPicoMs = PICO_FUSAO.intervaloMs
     this.estimador.limpar()
     if (this.ultima) this.estimador.adicionar(this.ultima)
   }
@@ -358,12 +386,22 @@ export class Simulacao {
       return
     }
     const potencia = potenciaRelativa(this.ajustesAtuais, this.contexto)
+    // H93: o modo de transferência e o arco curto mudam quanto do calor funde a junta, não o calor total da peça.
+    const fusaoAjustes = fatorFusaoAjustes(this.ajustesAtuais, this.contexto)
     const integral = this.aquecer(t0, t1, potencia)
     const volume = (taxaDeposicao(this.ajustesAtuais, this.contexto) * (t1 - t0)) / 1000
     // H47: parada, só pesa a gravidade de lado e para fora da face (sem subir nem descer).
     const ef = efeitoPosicao(this.gravidadeAtual, 0)
     this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto), gravidadePoca(this.gravidadeAtual, 0))
-    this.percurso.registrar(p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao)
+    this.percurso.registrar(p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
+    this.picoSePreciso(p.x)
+  }
+
+  /** H101: a cada intervalo de tempo de arco, guarda o índice de fusão perto da tocha. */
+  private picoSePreciso(xMm: number): void {
+    if (this.tempoArcoMs < this.proximoPicoMs) return
+    registrarPicosFusao(this.cordao, this.percurso, this.contexto, xMm, PICO_FUSAO.raioMm)
+    this.proximoPicoMs = (Math.floor(this.tempoArcoMs / PICO_FUSAO.intervaloMs) + 1) * PICO_FUSAO.intervaloMs
   }
 
   /** Divide o trecho em pedaços curtos e deposita um pouco em cada um. */
@@ -376,6 +414,8 @@ export class Simulacao {
     const ef = efeitoPosicao(this.gravidadeAtual, p1.x - p0.x)
     const razao = razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao
     const potencia = potenciaRelativa(this.ajustesAtuais, this.contexto)
+    // H93: o modo de transferência e o arco curto mudam quanto do calor funde a junta, não o calor total da peça.
+    const fusaoAjustes = fatorFusaoAjustes(this.ajustesAtuais, this.contexto)
     const sigma = espalhamentoDoMovimento(this.contexto)
     const instab = instabilidadeArco(this.ajustesAtuais, this.contexto)
     const gp = gravidadePoca(this.gravidadeAtual, p1.x - p0.x)
@@ -389,8 +429,9 @@ export class Simulacao {
       }
       const integral = this.aquecer(t0 + j * dt, t0 + (j + 1) * dt, potencia)
       this.cordao.depositar(x, y + ef.desvioMm, volume, t0 + (j + 1) * dt, razao, sigma, instab, gp)
-      this.percurso.registrar(x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao)
+      this.percurso.registrar(x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
     }
+    this.picoSePreciso(p1.x)
   }
 
   private registrar(a: Amostra): void {

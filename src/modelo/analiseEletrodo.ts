@@ -17,6 +17,24 @@ export const LIMITES = {
   fusaoExcessoAcima: 1.7,
   /** Aporte acima disto (× referência) perfura a borda fina ou a raiz aberta. */
   perfuracaoAcima: 2.3,
+  /**
+   * H94 (v2.0): níveis antes do furo, no mesmo aporte relativo. Raiz aparente
+   * (normal), metal pendurado no avesso, raiz afundada. Chapa sem abertura
+   * aguenta 15 % a mais em tudo (inclusive o furo).
+   */
+  raizAparenteAcima: 1.4,
+  penduradoAcima: 1.6,
+  afundaAcima: 2.1,
+  fatorChapaFechada: 1.15,
+  /**
+   * H97 (hipótese do jogo): a camada de um passe funde na de baixo se o calor da passagem
+   * mais quente depois que ela começou (× referência) chegar a `entrePassesBase` mais `entrePassesPorMm`
+   * por mm de vale que ela teve de encher (até 2 mm). Camadas finas (< 0,2 mm) não contam.
+   */
+  entrePassesBase: 0.8,
+  entrePassesPorMm: 0.15,
+  /** Fração da interface sem fundir (por espessura) que já é defeito. */
+  entrePassesDefeito: 0.3,
   /** Mordedura máxima pelo modelo e a partir de quanto vira defeito (mm, H84). */
   mordeduraMaxMm: 0.8,
   mordeduraLimiteMm: 0.5,
@@ -45,6 +63,8 @@ export interface AnaliseEletrodo {
   inclusao: Float32Array
   /** Poro de partida em cada fatia (0…1), já somado à porosidade. */
   partida: Float32Array
+  /** H97: fração (por espessura) das interfaces entre passes que não fundiu, em cada fatia. */
+  entrePasses: Float32Array
   aporteAlvoKJmm: number
 }
 
@@ -74,6 +94,7 @@ export function analisarEletrodo(peca: PecaEletrodo, dep: DepositoEletrodo, reg:
     caimento: novo(), rolos: novo(), gotejamento: novo(),
     mordeduraMenos: novo(), mordeduraMais: novo(), sobreposicaoMenos: novo(), sobreposicaoMais: novo(),
     cratera: novo(), porosidade: novo(), calor: novo(), escamaFase: novo(), escamaDir: new Int8Array(n),
+    penetracaoMm: novo(), afundamento: novo(), furoMm: novo(), gotasAvesso: [], larguraAvessoMm: novo(), humping: novo(),
     gotas: [], respingos: [], poros: [], empenoGraus: 0,
     limiteMordeduraMm: LIMITES.mordeduraLimiteMm, ocorrencias: [],
   }
@@ -149,9 +170,42 @@ export function analisarEletrodo(peca: PecaEletrodo, dep: DepositoEletrodo, reg:
       a.cratera[k] = Math.max(a.cratera[k], c0 * Math.exp(-(((x - pa.xMm) / 1.4) ** 2)))
     }
   }
+  // H94: passar da chapa em níveis. Na raiz aberta vale o primeiro passe (os seguintes já têm metal por baixo);
+  // na chapa fechada, o passe mais quente. No filete não há avesso livre.
+  if (!filete) {
+    const raizAberta = peca.aberturaMm > 0
+    const k = raizAberta ? 1 : LIMITES.fatorChapaFechada
+    for (let i = 0; i < n; i++) {
+      const f = (raizAberta ? fusaoPrimeiro[i] : fusaoMax[i]) / k
+      if (f <= 0) continue
+      const raiz = 0.3 * lim01((f - LIMITES.raizAparenteAcima) / (LIMITES.penduradoAcima - LIMITES.raizAparenteAcima))
+      const excesso = lim01((f - LIMITES.penduradoAcima) / (LIMITES.perfuracaoAcima - LIMITES.penduradoAcima))
+      a.penetracaoMm[i] = raiz + 1.6 * excesso
+      a.afundamento[i] = lim01((f - LIMITES.afundaAcima) / (LIMITES.perfuracaoAcima - LIMITES.afundaAcima))
+      if (f > LIMITES.perfuracaoAcima) a.furoMm[i] = Math.min(6, 1 + 4 * (f - LIMITES.perfuracaoAcima))
+      if (excesso > 0.3 && sorteioFixo(i, 170) < 0.4 * excesso * passo) {
+        a.gotasAvesso.push({ xMm: (i + 0.5) * passo, nMm: (sorteioFixo(i, 171) - 0.5) * 2, raioMm: 0.6 + excesso * (0.6 + 0.6 * sorteioFixo(i, 172)) })
+      }
+    }
+  }
   // Marcas de abertura fora da junta e de eletrodo grudado: um pingo de metal na chapa.
   const fora = (ab: { xMm: number; yMm: number }) => Math.abs(ab.yMm) > 6 || ab.xMm < peca.inicioMm - 4 || ab.xMm > peca.fimMm + 4
   for (const ab of reg.aberturas) if (!ab.aQuente && fora(ab)) a.respingos.push({ xMm: ab.xMm, nMm: ab.yMm, raioMm: 0.9 })
   for (const g of reg.grudadas) a.respingos.push({ xMm: g.xMm, nMm: g.yMm, raioMm: 1.1 })
-  return { defeitos: a, fusaoMin, fusaoMax, fusaoPrimeiro, inclusao, partida, aporteAlvoKJmm: alvo }
+  // H97: fusão entre passes, camada por camada (o corte mostra o mesmo resultado).
+  const entrePasses = novo(), pesoInterface = novo()
+  for (const [k, lista] of dep.camadas) {
+    const i = reg.indiceEm(dep.x(k % dep.nx))
+    for (let c = 1; c < lista.length; c++) {
+      const camada = lista[c]
+      if (camada.espessuraMm < 0.2) { camada.fundiu = true; continue }
+      // O calor que conta é o da passagem mais quente depois que a camada começou (ela pode refundir a interface).
+      const calor = reg.calorDepoisDe(i, camada.tInicioMs) / alvo
+      camada.fundiu = calor >= LIMITES.entrePassesBase + LIMITES.entrePassesPorMm * Math.min(2, camada.vale)
+      pesoInterface[i] += camada.espessuraMm
+      if (!camada.fundiu) entrePasses[i] += camada.espessuraMm
+    }
+  }
+  for (let i = 0; i < n; i++) entrePasses[i] = pesoInterface[i] > 0 ? entrePasses[i] / pesoInterface[i] : 0
+  return { defeitos: a, fusaoMin, fusaoMax, fusaoPrimeiro, inclusao, partida, entrePasses, aporteAlvoKJmm: alvo }
 }

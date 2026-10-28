@@ -1,5 +1,5 @@
 import { padraoIrregular, type FormaCordao, type SecaoLocal } from '../modelo/cordao'
-import { formaDomo, type AnaliseDefeitos } from '../modelo/defeitos'
+import { formaDomo, HUMPING, type AnaliseDefeitos } from '../modelo/defeitos'
 import type { GeometriaJunta } from '../modelo/junta'
 import { perfilNaJunta, pontoNaSuperficie, pontosDeBaixo, type DimensoesJunta, type TipoJunta } from '../modelo/juntas'
 import { DIVISOES_PERFIL, LARGURA_MINIMA_3D_MM, paraMundo } from './malha3d'
@@ -226,6 +226,10 @@ export class MalhaCordaoViva {
     if (!a) return 1
     // Ondas de metal escorrido com espaçamento irregular (padrão fixo, o mesmo do arco instável, H44).
     let f = 1 - 0.8 * a.cratera[i] + 0.25 * a.rolos[i] * Math.sin((2 * Math.PI * s) / 3.6 + 2.2 * padraoIrregular(s * 0.7))
+    // H94: a poça que caiu pela raiz deixa a face afundada; no furo quase não sobra metal em cima.
+    f *= (1 - 0.65 * a.afundamento[i]) * (a.furoMm[i] > 0 ? 0.15 : 1)
+    // H98: corcovas com pescoços estreitos entre elas (o volume médio fica o mesmo).
+    if (a.humping[i] > 0) f *= 1 + 0.6 * a.humping[i] * Math.cos((2 * Math.PI * s) / HUMPING.passoCorcovaMm)
     const dir = a.escamaDir[i]
     if (dir !== 0) {
       const p = this.passoMm

@@ -335,3 +335,7 @@ Perfuração e as condições essenciais valem igual nos dois modos (a integrida
 - `essenciais` traz uma condição por categoria (id = id da categoria). No Fácil é vazia.
 - O resultado mostra um traço no mínimo de cada barra e, no Fácil, o selo "pontuação pura, sem aprovação".
 - A nota é a mesma da v9 (nada nas categorias mudou); muda só quem é aprovado. Recordes antigos continuam lidos; os de versão anterior ficam marcados como tal.
+
+## pontuacao-v11 — máquina MIG com efeito na solda (v2.0, H93)
+
+As categorias e a regra de aprovação são as da v10. Muda o que chega nelas: o modo de transferência e o arco curto mudam a fusão (Integridade), o globular e o arco fora do equilíbrio aumentam respingo, mordedura e irregularidade (Desenho, Regularidade e defeitos). Registros da v10 continuam lidos e aparecem como de versão anterior.

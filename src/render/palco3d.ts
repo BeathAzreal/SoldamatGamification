@@ -11,6 +11,8 @@ import { MalhaCordaoViva } from './cordaoVivo'
 import { Defeitos3D } from './defeitos3d'
 import { chapasNaJunta, cristaMm, juntaDe, pontoNaSuperficie } from '../modelo/juntas'
 import { paraMundo } from './malha3d'
+import { CONSUMO, novoMapaConsumo, preencherMapaConsumo, type MapaConsumo } from '../modelo/consumoChapa'
+import { INFO_JUNTA } from '../modelo/juntas'
 import { criarOficinaTreino } from './oficinaTreino'
 import { criarSerralheria } from './serralheria'
 
@@ -189,6 +191,39 @@ function geometriaChapas(contexto: ContextoProcesso): THREE.BufferGeometry[] {
   })
 }
 
+/**
+ * H101: recorta o material pelo mapa de consumo da chapa (coordenadas do
+ * objeto: x ao longo da junta, z para o lado, as mesmas da chapa e do
+ * cordão). Onde o metal caiu o fragmento some: dá para ver através. Em volta,
+ * a borda queimada escurece; por dentro do buraco (faces de trás) fica a
+ * parede escura da chapa.
+ */
+function furarComMapa(mat: THREE.Material, textura: THREE.Texture, paredes: boolean): void {
+  const anterior = mat.onBeforeCompile
+  const chaveAnterior = mat.customProgramCacheKey()
+  if (paredes) mat.side = THREE.DoubleSide
+  mat.onBeforeCompile = (shader, renderer) => {
+    anterior.call(mat, shader, renderer)
+    shader.uniforms.mapaConsumo = { value: textura }
+    shader.vertexShader = 'varying vec3 vConsumo;\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvConsumo = position;\n#ifdef USE_INSTANCING\nvConsumo = (instanceMatrix * vec4(position, 1.0)).xyz;\n#endif')
+    shader.fragmentShader =
+      'uniform sampler2D mapaConsumo;\nvarying vec3 vConsumo;\n' +
+      shader.fragmentShader.replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+        vec2 uvConsumo = vec2((vConsumo.x + ${(PECA.comprimentoMm / 2).toFixed(1)}) / ${PECA.comprimentoMm.toFixed(1)}, (vConsumo.z + ${CONSUMO.meiaLarguraMm.toFixed(1)}) / ${(2 * CONSUMO.meiaLarguraMm).toFixed(1)});
+        if (uvConsumo.x > 0.0 && uvConsumo.x < 1.0 && uvConsumo.y > 0.0 && uvConsumo.y < 1.0) {
+          vec4 consumo = texture2D(mapaConsumo, uvConsumo);
+          if (consumo.r > 0.5) discard;
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.09, 0.07, 0.06), 0.85 * consumo.g);
+        }
+        ${paredes ? 'if (!gl_FrontFacing) diffuseColor.rgb *= 0.22;' : ''}`,
+      )
+  }
+  mat.customProgramCacheKey = () => `${chaveAnterior}|furo-v1${paredes ? 'p' : ''}`
+  mat.needsUpdate = true
+}
+
 /** Texto deitado sobre a chapa (rótulos da régua e da missão). */
 function rotuloDeitado(texto: string, alturaMm: number, cor: string): THREE.Mesh {
   const c = document.createElement('canvas')
@@ -236,6 +271,9 @@ export class Palco3D {
   private rolagemGraus = 0
   private suportePronto = false
   private chapasColisao: THREE.Mesh[] = []
+  /** H101: mapa da chapa consumida (buraco e borda queimada), só no topo e no V (há avesso livre). */
+  private readonly mapaConsumo: MapaConsumo | null
+  private readonly texturaConsumo: THREE.DataTexture | null
   private anguloGiro = 0
   private readonly cordao3d: THREE.Mesh
   private readonly cores: THREE.Color[]
@@ -319,10 +357,23 @@ export class Palco3D {
     const matChapa = new THREE.MeshStandardMaterial({ color: op.processo === 'eletrodo' ? '#525d63' : material.aparencia.chapaClara, map: op.processo === 'eletrodo' ? null : textura, ...ACABAMENTO[material.id], ...(op.processo === 'eletrodo' ? { roughness: 0.78, metalness: 0.45 } : {}) })
     const juntaPeca = juntaDe(op.contexto)
     const dobra = juntaPeca === 'topo' || juntaPeca === 'v'
+    if (INFO_JUNTA[juntaPeca].familia !== 'filete') {
+      this.mapaConsumo = novoMapaConsumo(PECA.comprimentoMm)
+      const t = new THREE.DataTexture(this.mapaConsumo.dados, this.mapaConsumo.nx, this.mapaConsumo.ny, THREE.RGBAFormat)
+      // Filtro linear: a borda do buraco sai redonda, não em degraus de célula.
+      t.magFilter = t.minFilter = THREE.LinearFilter
+      t.needsUpdate = true
+      this.texturaConsumo = t
+      this.texturas.push(t)
+    } else {
+      this.mapaConsumo = null
+      this.texturaConsumo = null
+    }
     geometriaChapas(op.contexto).forEach((g, k) => {
       if (op.larguraPecaMm) g.scale(op.larguraPecaMm / 150, 1, 1)
       const acabamento = op.processo === 'eletrodo' ? matChapa.clone() : matChapa
       if (op.processo === 'eletrodo') acabamento.color.set(k === 0 ? '#53636c' : '#738087')
+      if (this.texturaConsumo && (op.processo === 'eletrodo' || k === 0)) furarComMapa(acabamento, this.texturaConsumo, true)
       const m = new THREE.Mesh(g, acabamento)
       this.chapasColisao.push(m)
       m.receiveShadow = true
@@ -379,6 +430,7 @@ export class Palco3D {
       }
       matCordao.customProgramCacheKey = () => 'smaw-ondulado-v1'
     }
+    if (this.texturaConsumo) furarComMapa(matCordao, this.texturaConsumo, false)
     this.cordao3d = new THREE.Mesh(new THREE.BufferGeometry(), matCordao)
     this.cordao3d.castShadow = true
     this.cordao3d.receiveShadow = true
@@ -387,6 +439,7 @@ export class Palco3D {
     this.relevo.add(this.cordao3d)
     this.defeitos3d = new Defeitos3D(op.geometria, Math.ceil(PECA.comprimentoMm / MODELO.passoMm), MODELO.passoMm, juntaPeca, op.contexto, material.id, this.cores[2])
     this.relevo.add(this.defeitos3d.grupo)
+    if (this.texturaConsumo) furarComMapa(this.defeitos3d.materialAvesso, this.texturaConsumo, false)
 
     // Escala real: com 3× o cordão do topo reto parecia três vezes mais alto do que o modelo calcula.
     const inicial = op.contexto.posicaoInicial
@@ -648,6 +701,22 @@ export class Palco3D {
       if (viva.atualizar(this.cordaoAtual)) this.enviarCordao()
     }
     this.defeitos3d.atualizar(a, viva)
+    this.atualizarConsumo(a)
+  }
+
+  /** H101: recorta também outras malhas que cobrem o cordão (o brilho do metal quente). */
+  furarTambem(mat: THREE.Material): void {
+    if (this.texturaConsumo) furarComMapa(mat, this.texturaConsumo, false)
+  }
+
+  /** H101: buraco e borda queimada na chapa e no cordão, a partir da análise. */
+  private atualizarConsumo(a: AnaliseDefeitos | null): void {
+    const mapa = this.mapaConsumo
+    if (!mapa || !this.texturaConsumo) return
+    const viva = this.viva
+    if (a && viva) preencherMapaConsumo(mapa, a.passoMm, a.furoMm, viva.centro, a.afundamento)
+    else mapa.dados.fill(0)
+    this.texturaConsumo.needsUpdate = true
   }
 
   /** Empeno angular das chapas (graus, H57): no topo e no V, as pontas de fora sobem. */
@@ -684,6 +753,7 @@ export class Palco3D {
     const viva = (this.viva = new MalhaCordaoViva(cordao.nPosicoes, cordao.passoMm, this.op.geometria, undefined, cordao.forma))
     // Peça nova: os defeitos e os cordões soltos da anterior somem.
     this.defeitos3d.atualizar(null, null)
+    this.atualizarConsumo(null)
     this.limparSoltos()
     const g = this.geometriaViva(viva)
     this.cordao3d.geometry.dispose()

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ModeloTig, pedalDaPressao, TIG } from '../src/modelo/tig'
 import { PECAS_TIG, comoPecaBase, pecaTig, type PecaTig } from '../src/missoes/pecasTig'
 import { DepositoEletrodo } from '../src/modelo/depositoEletrodo'
-import { avaliarTig, inspecionarTig } from '../src/pontuacao/tig'
+import { analiseVisualTig, avaliarTig, inspecionarTig, niveisTig } from '../src/pontuacao/tig'
 import { aprovacaoEletrodo } from '../src/pontuacao/eletrodo'
 
 interface Jeito {
@@ -26,7 +26,7 @@ function soldar(p: PecaTig, j: Jeito = {}) {
   m.xMm = p.inicioMm - 2
   m.distanciaMm = j.distancia ?? 2.5
   m.pedal = 1
-  const depositar = (x: number, y: number, v: number) => dep.depositar(x, y, v)
+  const depositar = (x: number, y: number, v: number) => dep.depositar(x, y, v, 0, 0.25, 0, 0, m.larguraDepositoMm)
   let t = 0
   if (j.esperarPoca !== false) while (m.raioPocaMm < 1.5 && t < 5) { m.avancar(dt, depositar); t += dt }
   let andando = 0
@@ -166,3 +166,36 @@ describe('TIG (H92): nota de 0 a 1000', () => {
     expect(m.varetaRestanteMm).toBe(TIG.varetaInicialMm)
   })
 })
+
+describe('TIG (H94): passar da chapa em níveis', () => {
+  const soldarP = (p: PecaTig, j: Jeito) => ({ ...soldar(p, j), p })
+  const nomes = (r: ReturnType<typeof soldarP>) => inspecionarTig(r.p, r.m, r.dep).map((d) => d.nome)
+  it('no ritmo certo: só a raiz aparente, sem defeito', () => {
+    const r = soldarP(pecaTig('tig-chapa'), { cadencia: 0.7, corrente: 90 })
+    expect(niveisTig(r.p, r.m, 75).penduradoMm).toBeGreaterThan(0)
+    expect(nomes(r)).not.toContain('Penetração excessiva')
+    expect(nomes(r)).not.toContain('Raiz afundada')
+  })
+  it('mais corrente na chapa fina: o metal passa e pendura (sem furo), depois a chapa vara', () => {
+    const p = pecaTig('tig-topo')
+    const passes = [57.5, 70, 80, 95].map((corrente) => soldarP(p, { cadencia: 0.7, corrente }))
+    for (let k = 1; k < passes.length; k++) {
+      expect(niveisTig(p, passes[k].m, 75).penduradoMm).toBeGreaterThanOrEqual(niveisTig(p, passes[k - 1].m, 75).penduradoMm)
+      expect(niveisTig(p, passes[k].m, 75).afundamento).toBeGreaterThanOrEqual(niveisTig(p, passes[k - 1].m, 75).afundamento)
+    }
+    expect(nomes(passes[0]).filter((n) => /Penetração|Raiz|Furo/.test(n))).toEqual([])
+    expect(nomes(passes[2])).toContain('Penetração excessiva')
+    expect(passes[2].m.furos.length).toBe(0)
+    expect(passes[2].r.penalidadeNiveis).toBeGreaterThan(0)
+    expect(passes[3].m.furos.length).toBeGreaterThan(0)
+    const a = analiseVisualTig(p, passes[3].m, 300, 0.5)
+    expect(Math.max(...a.furoMm)).toBeGreaterThan(0)
+    expect(Math.max(...a.penetracaoMm)).toBeGreaterThan(1)
+  })
+  it('no T não há avesso livre: só o furo conta', () => {
+    const r = soldarP(pecaTig('tig-t'), { cadencia: 0.7, corrente: 150, velocidade: 0.8 })
+    expect(niveisTig(r.p, r.m, 75).penduradoMm).toBe(0)
+    expect(niveisTig(r.p, r.m, 75).afundamento).toBe(0)
+  })
+})
+

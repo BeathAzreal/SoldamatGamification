@@ -36,6 +36,15 @@ export const MODELO = {
   /** Razão altura/largura nos extremos do botão de tensão: 1 → 10 (H9). */
   razaoTensaoMinima: 0.34,
   razaoTensaoMaxima: 0.16,
+  /** H100: teto da razão com tensão abaixo de 14 V (cordão em corda). */
+  razaoTensaoBaixa: 0.45,
+  /**
+   * H98: razão × (alimentação ÷ referência)^−expoente, entre os limites.
+   * O artigo (Banaee et al. 2023, Tab. 3) dá ~0,35; o jogo usa menos.
+   */
+  formaAlimentacaoExpoente: 0.2,
+  formaAlimentacaoMin: 0.8,
+  formaAlimentacaoMax: 1.1,
   /** Resolução da discretização ao longo da junta (mm). */
   passoMm: 0.5,
   /** Espalhamento numérico do depósito ao longo da junta, em mm (H4). */
@@ -106,6 +115,16 @@ export const EXPLICACAO = {
 } as const
 
 /** Índice de fusão sintético (H33, H34). Números do jogo. */
+/**
+ * H101: de quanto em quanto tempo de arco (ms) a simulação guarda o índice de
+ * fusão perto da tocha, e até que distância dela (mm). O pico guardado não
+ * diminui: o que derreteu e furou não volta.
+ */
+export const PICO_FUSAO = {
+  intervaloMs: 100,
+  raioMm: 12,
+} as const
+
 export const FUSAO = {
   /**
    * Aporte necessário por mm de espessura (unidades relativas: potência × s ÷ mm).
@@ -115,6 +134,8 @@ export const FUSAO = {
   necessidadePorMm: 0.03354,
   /** Seção a partir da qual o metal acumulado amortece a fusão (mm²). */
   areaAmortecimentoMm2: 25,
+  /** H99: acima desta seção o metal acumulado não protege mais (mm²). */
+  areaAmortecimentoMaxMm2: 50,
   minimoAdequado: 1,
   maximoAdequado: 2,
   /** Acima disso: perfuração prevista. */

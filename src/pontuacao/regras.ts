@@ -20,7 +20,7 @@ import { requisitosEfetivos, type Dificuldade, type Missao } from '../missoes/ca
  * cada ponto de peso vale 10 pontos na nota.
  */
 
-export const VERSAO_PONTUACAO = 'pontuacao-v10'
+export const VERSAO_PONTUACAO = 'pontuacao-v11'
 
 /**
  * H90 (v1.9): aprovação por categoria. Fácil: só a nota, sem aprovação.

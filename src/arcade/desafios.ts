@@ -1,8 +1,7 @@
 import type { FormatoJunta } from '../modelo/junta'
 import { buscarMissao, contextoDaMissao, MISSOES, requisitosEfetivos, type Dificuldade, type Missao, type Preparo } from '../missoes/catalogo'
-import { AJUSTES } from '../modelo/parametros'
 import { areaParaLargura, INFO_JUNTA } from '../modelo/juntas'
-import { equilibrioArco, razaoEfetiva, taxaDeposicao, type Ajustes, type Tecnica } from '../modelo/processo'
+import { botaoDaAlimentacao, botaoDaTensao, equilibrioArco, MAQUINA, modoTransferencia, razaoEfetiva, taxaDeposicao, tensaoV, textoAlimentacao, textoTensao, type Ajustes, type Tecnica } from '../modelo/processo'
 import type { ResultadoPontuacao } from '../pontuacao/regras'
 
 /*
@@ -38,7 +37,7 @@ export function descreverCondicao(c: Condicao): { titulo: string; texto: string 
     case 'maquina-ajustada':
       return {
         titulo: 'Máquina pré-ajustada',
-        texto: `Tensão ${c.ajustes.tensao.toLocaleString('pt-BR')} e alimentação ${c.ajustes.alimentacao.toLocaleString('pt-BR')} travadas: acerte a velocidade com a mão.`,
+        texto: `Tensão ${textoTensao(c.ajustes.tensao)} e alimentação ${textoAlimentacao(c.ajustes.alimentacao)} travadas: acerte a velocidade com a mão.`,
       }
     case 'arco-unico':
       return { titulo: 'Arco único', texto: 'Solde o trecho inteiro sem fechar o arco: só uma abertura vale.' }
@@ -61,18 +60,22 @@ export function ajustePreDefinido(m: Missao, d: Dificuldade): { ajustes: Ajustes
   const ctx = contextoDaMissao(m, preparo)
   const larguraAlvo = (req.larguraMinMm + req.larguraMaxMm) / 2
   const vAlvo = INFO_JUNTA[m.geometria.junta].velocidadeReferenciaMms
-  let melhor: Ajustes = { alimentacao: 5, tensao: 5.5 }
-  let erro = Infinity
-  for (let w = AJUSTES.minimo; w <= AJUSTES.maximo; w += AJUSTES.passo) {
-    const tensao = Math.min(AJUSTES.maximo, Math.max(AJUSTES.minimo, Math.round(equilibrioArco({ alimentacao: w, tensao: 5 }, ctx).tensaoEquilibrio * 2) / 2))
+  const melhores: Record<'curto-circuito' | 'spray', { a: Ajustes; erro: number }> = { 'curto-circuito': { a: { alimentacao: 5, tensao: 5.5 }, erro: Infinity }, spray: { a: { alimentacao: 5, tensao: 5.5 }, erro: Infinity } }
+  // H93 (v2.0): o ajuste de fábrica fica nos passos do painel (0,5 m/min e 0,5 V) e fora do globular;
+  // prefere o curto-circuito (menos calor e penetração controlada); o spray só se nenhum curto servir.
+  for (let mMin = MAQUINA.alimentacaoMinMMin; mMin <= MAQUINA.alimentacaoMaxMMin; mMin += MAQUINA.passoMMin) {
+    const w = botaoDaAlimentacao(mMin)
+    const vEq = tensaoV(equilibrioArco({ alimentacao: w, tensao: 5 }, ctx).tensaoEquilibrio)
+    const tensao = botaoDaTensao(Math.min(MAQUINA.tensaoMaxV, Math.max(MAQUINA.tensaoAncoraV, Math.round(vEq / MAQUINA.passoV) * MAQUINA.passoV)))
     const a = { alimentacao: w, tensao }
+    const modo = modoTransferencia(a, ctx)
+    if (modo !== 'curto-circuito' && modo !== 'spray') continue
     const area = areaParaLargura(m.geometria.junta, ctx, larguraAlvo, razaoEfetiva(a, ctx))
-    const v = taxaDeposicao(a, ctx) / area
-    if (Math.abs(v - vAlvo) < erro) {
-      erro = Math.abs(v - vAlvo)
-      melhor = a
-    }
+    const erro = Math.abs(taxaDeposicao(a, ctx) / area - vAlvo)
+    if (erro < melhores[modo].erro) melhores[modo] = { a, erro }
   }
+  const curto = melhores['curto-circuito']
+  const melhor = Number.isFinite(curto.erro) ? curto.a : melhores.spray.a
   // A limpeza do óxido continua sendo escolha do jogador.
   return { ajustes: melhor, preparo: { diametroArameMm: preparo.diametroArameMm, gas: preparo.gas } }
 }

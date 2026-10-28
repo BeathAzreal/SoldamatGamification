@@ -1,6 +1,6 @@
 import type { Tentativa } from '../modelo/avaliacao'
 import { EXPLICACAO } from '../modelo/parametros'
-import { razaoAlturaLargura, taxaDeposicao, type Ajustes } from '../modelo/processo'
+import { fatorFormaAlimentacao, razaoPelaTensao, taxaDeposicao, textoAlimentacao, textoTensao, type Ajustes } from '../modelo/processo'
 import { exigeExplicacaoContextual } from './contexto'
 import { n1, pct, variacao } from './formato'
 
@@ -35,7 +35,7 @@ function julgar(anterior: number, atual: number, tolerancia: number, criterio: C
 }
 
 const mesmoAjuste = (a: Ajustes, b: Ajustes) => a.alimentacao === b.alimentacao && a.tensao === b.tensao
-const textoAjustes = (lista: Ajustes[]) => lista.map((a) => `${n1(a.alimentacao)} / ${n1(a.tensao)}`).join('; ') || '—'
+const textoAjustes = (lista: Ajustes[]) => lista.map((a) => `${textoAlimentacao(a.alimentacao)} / ${textoTensao(a.tensao)}`).join('; ') || '—'
 
 /** Devolve null se alguma das tentativas não tem medidas (nada a comparar). */
 export function comparar(anterior: Tentativa, atual: Tentativa): Comparacao | null {
@@ -168,8 +168,8 @@ export interface FatorLargura {
  */
 export function decomporLargura(a: Ajustes, b: Ajustes, vA: number, vB: number): FatorLargura[] {
   return [
-    { nome: `alimentação ${n1(a.alimentacao)} → ${n1(b.alimentacao)}`, fator: Math.sqrt(taxaDeposicao(b) / taxaDeposicao(a)) },
+    { nome: `alimentação ${textoAlimentacao(a.alimentacao)} → ${textoAlimentacao(b.alimentacao)}`, fator: Math.sqrt((taxaDeposicao(b) / taxaDeposicao(a)) * (fatorFormaAlimentacao(a) / fatorFormaAlimentacao(b))) },
     { nome: `velocidade média ${n1(vA)} → ${n1(vB)} mm/s`, fator: Math.sqrt(vA / vB) },
-    { nome: `tensão ${n1(a.tensao)} → ${n1(b.tensao)}`, fator: Math.sqrt(razaoAlturaLargura(a) / razaoAlturaLargura(b)) },
+    { nome: `tensão ${textoTensao(a.tensao)} → ${textoTensao(b.tensao)}`, fator: Math.sqrt(razaoPelaTensao(a) / razaoPelaTensao(b)) },
   ]
 }

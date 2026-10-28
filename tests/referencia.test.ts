@@ -260,7 +260,7 @@ describe('nota, replay e relatório técnico', () => {
     andar(95, 143, 5)
     const resultado = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs })
     const r = relatorioTecnico({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, eventos: sim.eventos, tempoArcoMs: sim.tempoDeArcoMs, resultado })
-    expect(r.versaoPontuacao).toBe('pontuacao-v10')
+    expect(r.versaoPontuacao).toBe('pontuacao-v11')
     expect(r.preparo).toMatchObject({ dbcpMm: 15, tecnica: 'neutra', anguloAvancoGraus: 0, junta: 'topo' })
     expect(r.regulagens).toHaveLength(1)
     expect(r.regulagens[0].correnteRelativa).toBeCloseTo(1, 9)
@@ -298,7 +298,7 @@ describe('nota, replay e relatório técnico', () => {
       sim.encerrarArco({ t, x: x1, y: 0 })
     }
     const r = pontuar({ missao: MISSAO, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs, aberturasDeArco: 2 })
-    expect(r.versao).toBe('pontuacao-v10')
+    expect(r.versao).toBe('pontuacao-v11')
     expect(r.categorias.reduce((s, c) => s + c.maximo, 0)).toBe(1000)
     const desenho = r.categorias.find((c) => c.id === 'desenho')!
     const pct = (rotulo: string) => Number.parseInt(desenho.detalhes.find((d) => d.rotulo === rotulo)!.valor, 10)

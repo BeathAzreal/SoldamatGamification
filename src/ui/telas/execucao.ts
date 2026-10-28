@@ -9,8 +9,8 @@ import { NOME_DISPOSITIVO, type Dispositivo } from '../../entrada/tipos'
 import { requisitosEfetivos, type Dificuldade, type Missao } from '../../missoes/catalogo'
 import { MATERIAIS } from '../../modelo/material'
 import { EQUILIBRIO, PECA } from '../../modelo/parametros'
-import { dbcpDe, equilibrioArco, INFO_TECNICA, razaoEfetiva, taxaDeposicao, tecnicaDe, type Ajustes, type ContextoProcesso } from '../../modelo/processo'
-import { Simulacao } from '../../modelo/simulacao'
+import { dbcpDe, equilibrioArco, INFO_TECNICA, modoTransferencia, textoTensao, razaoEfetiva, taxaDeposicao, tecnicaDe, type Ajustes, type ContextoProcesso } from '../../modelo/processo'
+import { semArco, Simulacao } from '../../modelo/simulacao'
 import { desenharCena } from '../../render/cena'
 import { Escamas, Particulas } from '../../render/efeitos'
 import { geometriaDa } from '../../modelo/junta'
@@ -52,6 +52,14 @@ const TEXTO_ARCO = {
   curto: 'arco curto demais: tensão baixa para esta alimentação (cordão irregular)',
   longo: 'arco longo demais: tensão alta para esta alimentação (cordão irregular)',
 } as const
+
+/** H100: com tensão baixa demais o gatilho não abre arco; entre 10 e 14 V o arame bate. */
+function textoArcoAberto(sim: Simulacao): string {
+  const modo = modoTransferencia(sim.ajustes, sim.contexto)
+  if (modo === 'sem-arco') return `Sem arco: com ${textoTensao(sim.ajustes.tensao)} o arame só sai e bate na chapa. Solte o gatilho e suba a tensão.`
+  if (modo === 'arame-batendo') return 'Arco aberto · arame batendo: tensão baixa demais, o arame mergulha na poça aos trancos e não funde as bordas'
+  return `Arco aberto · ${TEXTO_ARCO[equilibrioArco(sim.ajustes, sim.contexto).condicao]}`
+}
 
 const INSTRUCOES: Record<Dispositivo, string> = {
   mouse: 'Segure o botão esquerdo para abrir o arco e mova ao longo da junta.',
@@ -293,9 +301,9 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         ctx.clearRect(0, 0, vista.larguraCss, vista.alturaCss)
         const p = posicao ?? estado.posicao
         const desvio = equilibrioArco(estado.ajustes, op.contexto).desvio
-        visual.desenhar({ cordao: sim.cordao, registro: sim.registro, eventos: sim.eventos, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: instanteProcesso, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: posicao !== null && !pausado, angulo: vista.angulo })
+        visual.desenhar({ cordao: sim.cordao, registro: sim.registro, eventos: sim.eventos, posicao: p, arcoAberto: estado.arcoAberto && !semArco(sim), sobreAPeca: estado.sobreAPeca, desvio, agoraMs: instanteProcesso, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: posicao !== null && !pausado, angulo: vista.angulo })
         // Som do arco (H45) com a mesma regra de cena.ts.
-        if (!pausado) somArco.atualizar(!!(p && estado.arcoAberto && estado.sobreAPeca), desvio, EQUILIBRIO.tolerancia)
+        if (!pausado) somArco.atualizar(!!(p && estado.arcoAberto && !semArco(sim) && estado.sobreAPeca), desvio, EQUILIBRIO.tolerancia)
       } else desenharCena(ctx, vista, {
         cordao: sim.cordao,
         estado: { ...estado, posicao: posicao ?? estado.posicao },
@@ -317,7 +325,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         largura.textContent = s.larguraMm > 0.3 ? `${n1(s.larguraMm)} mm` : '—'
       }
       tempo.textContent = `${n1(sim.tempoDeArcoMs / 1000)} s`
-      status.textContent = sim.arcoAberto ? `Arco aberto · ${TEXTO_ARCO[equilibrioArco(op.ajustes, op.contexto).condicao]}` : sim.tempoDeArcoMs > 0 ? 'Arco fechado — continue ou encerre a tentativa.' : 'Pronto: abra o arco perto da marca de INÍCIO.'
+      status.textContent = sim.arcoAberto ? textoArcoAberto(sim) : sim.tempoDeArcoMs > 0 ? 'Arco fechado — continue ou encerre a tentativa.' : 'Pronto: abra o arco perto da marca de INÍCIO.'
       botaoEncerrar.disabled = sim.arcoAberto || sim.tempoDeArcoMs <= 0 || pausado
       pedido = requestAnimationFrame(quadro)
     }

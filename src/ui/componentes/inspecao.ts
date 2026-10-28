@@ -7,7 +7,7 @@ import { analisarDefeitos, CONSELHO_DEFEITO, NOME_DEFEITO, type AnaliseDefeitos 
 import type { Cordao } from '../../modelo/cordao'
 import { GASES, MATERIAIS } from '../../modelo/material'
 import { analisarMovimento } from '../../modelo/movimento'
-import { correnteRelativa, type Ajustes, type ContextoProcesso, INFO_TECNICA, tecnicaDe } from '../../modelo/processo'
+import { correnteA, modoTransferencia, NOME_TRANSFERENCIA, textoAlimentacao, textoTensao, type Ajustes, type ContextoProcesso, INFO_TECNICA, tecnicaDe } from '../../modelo/processo'
 import { reproduzir } from '../../modelo/replay'
 import { Simulacao, type EventoTentativa } from '../../modelo/simulacao'
 import { desenharCena } from '../../render/cena'
@@ -155,6 +155,7 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
     { class: 'linha-controles', hidden: true },
     h('button', { type: 'button', title: 'Câmera de frente para a face da junta (por baixo, se a peça foi soldada de cabeça para baixo)', on: { click: () => cena3d?.vistaDeCima() } }, 'Olhar a face'),
     h('button', { type: 'button', on: { click: () => cena3d?.vistaInicial() } }, 'Vista inclinada'),
+    h('button', { type: 'button', title: 'Avesso da junta: raiz, metal que passou e furos', on: { click: () => cena3d?.vistaAvesso() } }, 'Ver o avesso'),
     h('label', { for: exagero.id }, 'Exagero vertical ', rotuloExagero),
     exagero,
   )
@@ -288,8 +289,9 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
       ['Gás', GASES[d.contexto.gas].nome],
       ['Arame', `${n1(d.contexto.diametroArameMm)} mm`],
       ['Polaridade', 'CC+ (fixa)'],
-      ['Tensão / alimentação', `${n1(d.ajustes.tensao)} / ${n1(d.ajustes.alimentacao)} (botões 1–10)`],
-      ['Corrente relativa (derivada)', n1(correnteRelativa(d.ajustes, d.contexto))],
+      ['Tensão / alimentação', `${textoTensao(d.ajustes.tensao)} / ${textoAlimentacao(d.ajustes.alimentacao)}`],
+      ['Transferência', NOME_TRANSFERENCIA[modoTransferencia(d.ajustes, d.contexto)]],
+      ['Corrente estimada', `≈ ${n1(correnteA(d.ajustes, d.contexto)).replace(/,\d$/, '')} A`],
       ['Técnica', INFO_TECNICA[tecnicaDe(d.contexto)].nome],
       ['Junta', INFO_JUNTA[juntaDe(d.contexto)].nome],
       ['Posição no último passe', (() => {
@@ -317,7 +319,7 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
               'li',
               {},
               h('strong', {}, NOME_DEFEITO[o.tipo]),
-              ` · de ${n1mm(o.inicioMm)} a ${n1mm(o.fimMm)} · ${o.unidade === 'mm' ? `${n1(o.valor)} mm (limite do jogo ${n1(o.limiar)} mm)` : o.unidade === 'por 10 mm' ? `${n1(o.valor)} por 10 mm` : `índice ${n1(o.valor)}`}`,
+              ` · de ${n1mm(o.inicioMm)} a ${n1mm(o.fimMm)} · ${o.unidade === 'mm' ? `${n1(o.valor)} mm (limite do jogo ${n1(o.limiar)} mm)` : o.unidade === 'por 10 mm' ? `${n1(o.valor)} por 10 mm` : o.unidade === 'mm no avesso' ? `${n1(o.valor)} mm de metal no avesso (limite do jogo ${n1(o.limiar)} mm)` : o.unidade === 'mm de largura' ? `buraco de até ${n1(o.valor)} mm` : `índice ${n1(o.valor)}`}`,
               h('br', {}),
               h('span', { class: 'dica' }, CONSELHO_DEFEITO[o.tipo]),
             ),

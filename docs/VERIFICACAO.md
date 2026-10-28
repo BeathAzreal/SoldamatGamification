@@ -325,3 +325,28 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
 - `tests/tig.test.ts` (15 testes): calor e poça, vareta só funde na poça, contaminação e afiar, furo acima da faixa, independência da taxa de quadros (30 e 144 qps), soldador simulado aprovado no Difícil nas três peças, sem vareta, rápido demais, cratera, mapa da pressão da caneta.
 - Navegador (Chromium sem GPU, ~4 quadros/s): modo Só mouse e modo Mesa + mouse com eventos de caneta simulados (`pointerType: 'pen'`, com pressão) e cliques reais do mouse para a vareta. O jogo trocou para Mesa + mouse ao ver a caneta, a pressão virou corrente (75 A), a vareta fundiu na poça e o cordão apareceu em 3D. Nota de 590 numa tentativa com o robô de teste.
 - Não testado: mesa digitalizadora física, Windows Ink, caneta e mouse físicos ao mesmo tempo.
+
+## v2.0 (Claude)
+
+- `npx tsc --noEmit` sem erros; `npx vitest run`: 488 testes passando (`tests/maquina.test.ts`: unidades, corrente, modos de transferência, arco curto, respingo no globular, fusão no spray, largura com a tensão).
+- Navegador: painel com tensão em V e alimentação em m/min, corrente em A, modo de transferência (curto-circuito, globular, spray) e tensão de equilíbrio em V.
+- Não testado em aparelho físico (mesa, gamepad, PCs dos alunos).
+- H94: `tests/penetracao.test.ts` (7 testes) — com os ajustes de referência na chapa de 3 mm: 6 mm/s nada no avesso; 4 mm/s raiz aparente sem defeito; 3 mm/s metal pendurado; 2,5 mm/s raiz afundada; 2 mm/s furo; os níveis só crescem com o calor; filete sem avesso.
+- Navegador: passe com 6, 3 e 1,8 mm/s; lista de defeitos com penetração excessiva, raiz afundada e furo nos trechos lentos; "Ver o avesso" mostra o metal pendurado.
+- H94 no eletrodo: `tests/defeitosEletrodo.test.ts` — nas peças de raiz aberta e de chapa inteira, conforme o avanço fica mais lento: nada → penetração excessiva → raiz afundada → furo. No TIG: `tests/tig.test.ts` — na chapa de 1,5 mm, conforme a corrente sobe: limpo → metal pendurado (sem furo, com desconto) → furo; no T, só o furo. Navegador: eletrodo lento sobre a chapa mostra "Furo (a chapa varou)" e o buraco no 3D.
+- H95–H98 (artigo de Banaee et al. 2023 como fonte): `npx vitest run` com 519 testes passando.
+  - `tests/perfilParabola.test.ts`: seção parabólica, área de 2wh/3 e volume conservado a 30 e 144 quadros/s.
+  - `tests/sobreposicao.test.ts`: o passo de 2w/3 dá quase plano; mais perto, morro; mais longe, vale.
+  - `tests/defeitosEletrodo.test.ts`: um passe quente funde no anterior; um passe frio e rápido deixa falta de fusão entre passes.
+  - `tests/humping.test.ts`: a forma muda com a alimentação e as corcovas aparecem só com avanço rápido e corrente alta.
+- Navegador: no eletrodo, "Unir duas chapas" com dois passes; o botão Corte mostra a chapa, a abertura e as camadas de cada passe em escala real. O humping no 3D do MIG não foi conferido no navegador, só nos testes.
+- H99/H100: `npx vitest run` com 529 testes passando (`tests/tensaoBaixa.test.ts`). Em `tests/processo.test.ts`, o teste do limite dos botões mudou de propósito: a tensão agora desce até 0 V.
+- Navegador, no treino MIG/MAG da chapa de 3 mm:
+  - 28 V com a tocha parada: a peça soldada mostra o furo, e a lista de defeitos traz penetração excessiva e raiz afundada;
+  - 0 V: painel com 0 A e "Sem arco", sem luz de arco, e o status explica;
+  - 12 V: "Arame batendo", caroço frio, sobreposição e respingos.
+- H101: `npx vitest run` com 538 testes passando (`tests/consumoChapa.test.ts`). Navegador, no treino MIG/MAG da chapa de 3 mm, a 28 V com a tocha parada:
+  - de cima: buraco vazado no meio da poça, com borda queimada;
+  - por baixo (câmera da execução girada): dá para ver através do buraco, e o metal pendurado fica em volta dele;
+  - no resultado: "Ver o avesso" mostra o furo.
+- Eletrodo ("Unir duas chapas") continua sem erros com o novo recorte das chapas.

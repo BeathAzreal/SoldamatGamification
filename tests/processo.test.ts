@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { AJUSTES, MODELO } from '../src/modelo/parametros'
 import {
+  tensaoV,
   AJUSTES_PADRAO,
   equilibrioArco,
   faixaVelocidadeAlvo,
@@ -99,7 +100,11 @@ describe('ajustes travados com o arco aberto (H12)', () => {
 
   it('limita os valores à faixa dos botões', () => {
     const sim = new Simulacao()
-    sim.definirAjustes({ alimentacao: 50, tensao: -3 })
-    expect(sim.ajustes).toEqual({ alimentacao: AJUSTES.maximo, tensao: AJUSTES.minimo })
+    sim.definirAjustes({ alimentacao: 50, tensao: -30 })
+    // H100: a tensão desce até 0 V (abaixo do botão 1); a alimentação para no 1.
+    expect(sim.ajustes.alimentacao).toBe(AJUSTES.maximo)
+    expect(tensaoV(sim.ajustes.tensao)).toBeCloseTo(0, 9)
+    sim.definirAjustes({ alimentacao: -5, tensao: 50 })
+    expect(sim.ajustes).toEqual({ alimentacao: AJUSTES.minimo, tensao: AJUSTES.maximo })
   })
 })

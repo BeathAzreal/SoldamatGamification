@@ -3,7 +3,8 @@ import { analisarFusao, indiceDeformacao, suavizar, type PontoFusao } from './fu
 import { INFO_JUNTA, juntaDe } from './juntas'
 import { DEFEITOS } from './parametros'
 import type { Percurso } from './percurso'
-import { dbcpDe, type ContextoProcesso } from './processo'
+import { correnteA, dbcpDe, type ContextoProcesso } from './processo'
+import { larguraFuroMm, LIMIARES_PENETRACAO } from './consumoChapa'
 import type { EventoTentativa, PontoRegistro } from './simulacao'
 
 /*
@@ -19,7 +20,7 @@ import type { EventoTentativa, PontoRegistro } from './simulacao'
  * fatia (hash), não de Math.random: repetir a tentativa repete o desenho.
  */
 
-export type TipoDefeito = 'escorrimento' | 'gotejamento' | 'caimento' | 'mordedura' | 'sobreposicao' | 'respingos' | 'cratera' | 'porosidade'
+export type TipoDefeito = 'escorrimento' | 'gotejamento' | 'caimento' | 'mordedura' | 'sobreposicao' | 'respingos' | 'cratera' | 'porosidade' | 'penetracao-excessiva' | 'raiz-afundada' | 'furo' | 'humping'
 
 export const NOME_DEFEITO: Record<TipoDefeito, string> = {
   escorrimento: 'Cordão escorrido (embarrigado)',
@@ -30,6 +31,10 @@ export const NOME_DEFEITO: Record<TipoDefeito, string> = {
   respingos: 'Respingos presos na chapa',
   cratera: 'Cratera no fim do cordão',
   porosidade: 'Porosidade prevista',
+  'penetracao-excessiva': 'Penetração excessiva (metal passou e pendurou no avesso)',
+  'raiz-afundada': 'Raiz afundada (a poça caiu e a face ficou côncava)',
+  furo: 'Furo (a chapa varou)',
+  humping: 'Cordão em corcovas (humping)',
 }
 
 /** Causa típica e correção, em poucas palavras (a didática completa fica com quem exibe). */
@@ -42,6 +47,45 @@ export const CONSELHO_DEFEITO: Record<TipoDefeito, string> = {
   respingos: 'Arco fora do equilíbrio (tensão × alimentação) ou CO₂ puro: equilibre a máquina.',
   cratera: 'Ao terminar, segure a tocha parada um instante antes de fechar o arco para encher a cratera.',
   porosidade: 'Gás mal protegido: arco longo, distância bico-peça grande ou óxido não removido (alumínio).',
+  'penetracao-excessiva': 'Calor demais para a espessura: o metal atravessou e ficou pendurado do outro lado. Ande mais rápido ou baixe a alimentação.',
+  'raiz-afundada': 'A poça ficou pesada demais e caiu pela raiz: a face afunda. Menos corrente, avanço mais rápido ou curto-circuito em vez de spray.',
+  furo: 'O calor atravessou a chapa e abriu um buraco. Em chapa fina: curto-circuito, avanço constante e sem parar a tocha no lugar.',
+  humping: 'Rápido demais com corrente alta: a poça estica e o metal se junta em corcovas, com pescoços estreitos entre elas. Ande mais devagar ou baixe a alimentação.',
+}
+
+/**
+ * H94 (v2.0): níveis de passar da chapa, pelo índice de fusão F (o calor já
+ * relativo à espessura). Da raiz aparente (normal) ao metal pendurado no
+ * avesso, à raiz afundada e ao furo. Números do jogo.
+ */
+export const PENETRACAO = {
+  /** Raiz começa a aparecer no avesso (ainda adequado). */
+  raizAparente: 1.6,
+  /** Metal passa e pendura no avesso. */
+  excesso: 2.1,
+  /** Altura máxima do metal pendurado no avesso (mm). */
+  penduradoMaxMm: 1.6,
+  /** A poça cai: a face afunda. */
+  afunda: 2.35,
+  /** Metal no avesso que já é defeito (mm), na ordem do limite de raiz da ISO 5817. */
+  limiteAvessoMm: 1,
+}
+
+/**
+ * H98 (v2.0): humping. Com avanço rápido E corrente alta, a poça fica longa
+ * e fina e o metal se junta em corcovas. Banaee et al. (2023) citam o
+ * humping como limite da velocidade alta; a regra (produto das duas
+ * tendências) e os números são do jogo.
+ */
+export const HUMPING = {
+  /** Velocidade relativa (à de referência da junta) em que começa e a faixa até o máximo. */
+  vRelInicio: 1.5,
+  vRelFaixa: 0.8,
+  /** Corrente em que começa, por mm de diâmetro do arame (A/mm), e a faixa até o máximo (A/mm). */
+  correnteInicioAPorMm: 190,
+  correnteFaixaAPorMm: 70,
+  /** Distância entre corcovas (mm). */
+  passoCorcovaMm: 7,
 }
 
 export interface OcorrenciaDefeito {
@@ -101,6 +145,18 @@ export interface AnaliseDefeitos {
   gotas: Bolinha[]
   respingos: Bolinha[]
   poros: Poro[]
+  /** H94: metal no avesso da junta (mm): raiz aparente e, com calor demais, pendurado. */
+  penetracaoMm: Float32Array
+  /** H94: 0…1, quanto a face afundou porque a poça caiu pela raiz. */
+  afundamento: Float32Array
+  /** H94: largura do furo na fatia (mm); 0 sem furo. */
+  furoMm: Float32Array
+  /** H94: gotas grandes penduradas no avesso. */
+  gotasAvesso: Bolinha[]
+  /** H101: largura (mm) da faixa do avesso onde o metal vazou (calor acima do limite de vazar); 0 = só a raiz no meio. */
+  larguraAvessoMm: Float32Array
+  /** H98: 0…1, tendência a corcovas (avanço rápido com corrente alta). */
+  humping: Float32Array
   /** Empeno angular previsto das chapas (graus, H57). */
   empenoGraus: number
   /** Mordedura a partir da qual vira ocorrência (mm). */
@@ -156,6 +212,12 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
     cratera: novo(),
     porosidade: novo(),
     calor: novo(),
+    penetracaoMm: novo(),
+    afundamento: novo(),
+    furoMm: novo(),
+    gotasAvesso: [],
+    larguraAvessoMm: novo(),
+    humping: novo(),
     escamaFase: novo(),
     escamaDir: new Int8Array(n),
     gotas: [],
@@ -180,6 +242,11 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
   const porosidadeBase = (aluminioSujo ? 0.55 : 0) + (dbcp >= 20 ? 0.2 : dbcp > 17 ? 0.1 : 0) + (ctx.gas === 'ar' && ctx.material !== 'aluminio' ? 0.15 : 0)
   const respingoGas = ctx.gas === 'co2' ? 1.6 : 1
   const respingoDbcp = dbcp >= 20 ? 0.1 : 0
+  const lim = LIMIARES_PENETRACAO[ctx.material]
+  // H98: corrente de cada fatia pelos ajustes de quando a tocha passou (sem registro, sem humping).
+  const corrente = e.registro ? correntePorFatia(n, passo, e.registro, ctx) : null
+  const iInicio = HUMPING.correnteInicioAPorMm * ctx.diametroArameMm
+  const iFaixa = HUMPING.correnteFaixaAPorMm * ctx.diametroArameMm
 
   for (let i = 0; i < n; i++) {
     const s = secoes[i]
@@ -213,13 +280,32 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
 
     // Sobreposição (H53): devagar e frio; descendo, o metal corre à frente; na horizontal, a borda de baixo.
     // Arco curto (arame demais para o calor) e devagar também deita o metal sem fundir.
-    const o = lim01((0.7 - vRel) / 0.4) * lim01((2.1 - F) / 0.6) + 0.5 * lim01(-instab / 0.8) * lim01((0.9 - vRel) / 0.5) + 0.6 * desc
+    // H100: arco curto e frio (tensão baixa, arame batendo) deita o metal sem molhar as bordas em qualquer velocidade.
+    const o = lim01((0.7 - vRel) / 0.4) * lim01((2.1 - F) / 0.6) + 0.5 * lim01(-instab / 0.8) * lim01((0.9 - vRel) / 0.5) + 0.6 * lim01(-instab / 0.8) * lim01((0.8 - F) / 0.4) + 0.6 * desc
     a.sobreposicaoMenos[i] = lim01(o + (caim < 0 ? 0.6 * Math.abs(caim) : 0))
     a.sobreposicaoMais[i] = lim01(o + (caim > 0 ? 0.6 * Math.abs(caim) : 0))
 
     // Porosidade (H57).
     const p = lim01(porosidadeBase + 0.5 * lim01((instab - 0.2) / 0.6) + 0.15 * f.cabeca)
     a.porosidade[i] = p
+
+    // H94: passar da chapa, em níveis. No filete não há avesso livre: só o furo conta.
+    if (INFO_JUNTA[junta].familia !== 'filete') {
+      // H101: estágios pelo material (o alumínio quase não avisa antes de cair).
+      const raiz = 0.3 * lim01((F - lim.raizAparente) / (lim.excesso - lim.raizAparente))
+      const excesso = lim01((F - lim.excesso) / (lim.furo - lim.excesso))
+      a.penetracaoMm[i] = raiz + PENETRACAO.penduradoMaxMm * excesso
+      a.afundamento[i] = lim01((F - lim.afunda) / (lim.furo - lim.afunda))
+      if (excesso > 0.3 && sorteioFixo(i, 60) < 0.4 * excesso * passo) {
+        a.gotasAvesso.push({ xMm: s.xMm, nMm: s.yCentroMm + (sorteioFixo(i, 61) - 0.5) * 0.4 * s.larguraMm, raioMm: 0.5 + 0.9 * excesso * (0.6 + 0.6 * sorteioFixo(i, 62)) })
+      }
+    }
+    // H98: humping, só onde a tocha passou rápido e com corrente alta.
+    if (corrente && corrente[i] > 0) a.humping[i] = lim01((vRel - HUMPING.vRelInicio) / HUMPING.vRelFaixa) * lim01((corrente[i] - iInicio) / iFaixa)
+
+    // H101: o buraco nasce no meio da poça (o ponto mais quente) e alarga com o calor.
+    a.furoMm[i] = larguraFuroMm(F, s.larguraMm, lim.furo)
+    if (INFO_JUNTA[junta].familia !== 'filete') a.larguraAvessoMm[i] = larguraFuroMm(F, s.larguraMm, lim.excesso)
 
     // Objetos com sorteio fixo por fatia.
     const meia = s.larguraMm / 2
@@ -255,6 +341,21 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
 
   a.ocorrencias = ocorrencias(a, secoes)
   return a
+}
+
+/** H98: corrente (A) com que a tocha passou por cada fatia (a última passada vale; 0 onde não passou). */
+function correntePorFatia(n: number, passo: number, registro: readonly PontoRegistro[], ctx: ContextoProcesso): Float32Array {
+  const r = new Float32Array(n)
+  for (let k = 0; k + 1 < registro.length; k++) {
+    const p = registro[k]
+    const q = registro[k + 1]
+    if (q.tempoArcoMs <= p.tempoArcoMs) continue
+    const I = correnteA(p.ajustes, ctx)
+    const i0 = Math.max(0, Math.round(Math.min(p.x, q.x) / passo - 0.5))
+    const i1 = Math.min(n - 1, Math.round(Math.max(p.x, q.x) / passo - 0.5))
+    for (let i = i0; i <= i1; i++) r[i] = I
+  }
+  return r
 }
 
 /** H56: fase das escamas pelo tempo de arco em que a tocha passou por cada fatia (a última passada vale). */
@@ -361,6 +462,10 @@ function ocorrencias(a: AnaliseDefeitos, secoes: { xMm: number; larguraMm: numbe
   trechos('sobreposicao', (i) => Math.max(a.sobreposicaoMenos[i], a.sobreposicaoMais[i]), 0.3, 'índice 0–1')
   trechos('porosidade', (i) => a.porosidade[i], 0.3, 'índice 0–1')
   trechos('cratera', (i) => a.cratera[i], 0.3, 'índice 0–1', 0.5)
+  trechos('penetracao-excessiva', (i) => a.penetracaoMm[i], PENETRACAO.limiteAvessoMm, 'mm no avesso')
+  trechos('raiz-afundada', (i) => a.afundamento[i], 0.3, 'índice 0–1')
+  trechos('furo', (i) => a.furoMm[i], 0, 'mm de largura', 0.5)
+  trechos('humping', (i) => a.humping[i], 0.3, 'índice 0–1', 3)
   const comprimento = secoes.filter((s) => s.larguraMm >= 1).length * a.passoMm
   const por10 = comprimento > 0 ? (a.respingos.length / comprimento) * 10 : 0
   if (por10 > 2) {
@@ -388,13 +493,19 @@ export function notaSuperficie(a: AnaliseDefeitos, i: number): number {
     0.7 * a.rolos[i] +
     0.8 * a.gotejamento[i] +
     0.6 * a.cratera[i] +
-    0.5 * lim01((Math.abs(a.caimento[i]) - 0.3) / 0.7)
+    0.5 * lim01((Math.abs(a.caimento[i]) - 0.3) / 0.7) +
+    // H94: metal pendurado no avesso tira um pouco; face afundada tira mais; furo tira tudo.
+    0.4 * lim01((a.penetracaoMm[i] - PENETRACAO.limiteAvessoMm) / 1) +
+    0.7 * a.afundamento[i] +
+    (a.furoMm[i] > 0 ? 1 : 0) +
+    // H98: corcovas tiram como o escorrimento.
+    0.7 * a.humping[i]
   return lim01(1 - perda)
 }
 
 /** Quanto da fusão prevista vale na fatia (H53, H57): poros e sobreposição tiram integridade. */
 export function fatorIntegridade(a: AnaliseDefeitos, i: number): number {
-  return (1 - 0.6 * a.porosidade[i]) * (1 - 0.4 * Math.max(a.sobreposicaoMenos[i], a.sobreposicaoMais[i]))
+  return (1 - 0.6 * a.porosidade[i]) * (1 - 0.4 * Math.max(a.sobreposicaoMenos[i], a.sobreposicaoMais[i])) * (1 - 0.5 * a.afundamento[i])
 }
 
 /**

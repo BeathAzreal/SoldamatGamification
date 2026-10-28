@@ -8,15 +8,18 @@ import type { PecaEletrodo } from '../missoes/pecasEletrodo'
 import type { RegistroPasse } from '../modelo/registroPasse'
 
 export type TipoDefeitoEletrodo =
-  | 'falta-de-fusao' | 'fusao-fraca' | 'excesso-de-calor' | 'perfuracao'
+  | 'falta-de-fusao' | 'falta-de-fusao-entre-passes' | 'fusao-fraca' | 'excesso-de-calor' | 'penetracao-excessiva' | 'raiz-afundada' | 'perfuracao'
   | 'mordedura' | 'sobreposicao' | 'porosidade' | 'cratera' | 'inclusao-de-escoria'
   | 'respingos' | 'abertura-fora' | 'grudou'
 
 export const TEXTO: Record<TipoDefeitoEletrodo, { nome: string; causa: string; corrigir: string }> = {
   'falta-de-fusao': { nome: 'Falta de fusão (colagem)', causa: 'Calor de menos para a junta: avanço rápido ou corrente baixa. O metal "colou" sem fundir a chapa.', corrigir: 'Avance mais devagar ou suba a corrente para a faixa sugerida.' },
+  'falta-de-fusao-entre-passes': { nome: 'Falta de fusão entre passes', causa: 'O passe novo não teve calor para fundir o passe de baixo: o metal deitou por cima, sem ligar. Vale fundo entre passes pede ainda mais calor.', corrigir: 'Passe seguinte mais lento ou com mais corrente, e passes mais próximos para não deixar vale fundo.' },
   'fusao-fraca': { nome: 'Fusão fraca', causa: 'Calor no limite de baixo: o cordão fica alto e mal ligado às bordas.', corrigir: 'Reduza um pouco a velocidade de avanço.' },
   'excesso-de-calor': { nome: 'Calor em excesso', causa: 'Avanço muito lento ou corrente alta: cordão largo, mordedura e deformação.', corrigir: 'Avance mais rápido ou baixe a corrente.' },
-  'perfuracao': { nome: 'Perfuração prevista', causa: 'Calor demais na raiz aberta: o metal atravessa a junta.', corrigir: 'Avance mais rápido, encurte o arco e baixe a corrente.' },
+  'penetracao-excessiva': { nome: 'Penetração excessiva', causa: 'Calor demais na raiz: o metal atravessou e ficou pendurado no avesso.', corrigir: 'Avance um pouco mais rápido ou baixe a corrente.' },
+  'raiz-afundada': { nome: 'Raiz afundada', causa: 'A poça ficou pesada e caiu pela raiz: a face do cordão afundou.', corrigir: 'Avance mais rápido, encurte o arco e baixe a corrente.' },
+  'perfuracao': { nome: 'Furo (a chapa varou)', causa: 'Calor demais: o metal atravessou a junta e abriu um buraco.', corrigir: 'Avance mais rápido, encurte o arco e baixe a corrente.' },
   'mordedura': { nome: 'Mordedura', causa: 'Arco longo ou calor demais cavam a borda da chapa ao lado do cordão.', corrigir: 'Mantenha o arco perto do diâmetro da alma e não demore no mesmo ponto.' },
   'sobreposicao': { nome: 'Sobreposição', causa: 'Metal frio e lento rolou sobre a chapa sem fundir a borda.', corrigir: 'Aumente o calor do passe: mais corrente ou avanço constante, sem parar.' },
   'porosidade': { nome: 'Porosidade', causa: 'Arco longo deixa ar entrar na poça; abrir o arco a frio e seguir em frente também deixa poros no começo.', corrigir: 'Arco curto. Na abertura, abra um pouco à frente e volte por cima do início.' },
@@ -28,7 +31,7 @@ export const TEXTO: Record<TipoDefeitoEletrodo, { nome: string; causa: string; c
 }
 
 /** Defeitos que, numa inspeção visual de verdade, pediriam reparo do trecho. */
-const GRAVES = new Set<TipoDefeitoEletrodo>(['falta-de-fusao', 'perfuracao', 'inclusao-de-escoria', 'sobreposicao'])
+const GRAVES = new Set<TipoDefeitoEletrodo>(['falta-de-fusao', 'falta-de-fusao-entre-passes', 'raiz-afundada', 'perfuracao', 'inclusao-de-escoria', 'sobreposicao'])
 
 export interface DefeitoEncontrado {
   tipo: TipoDefeitoEletrodo
@@ -90,12 +93,16 @@ export function inspecionarDefeitos(peca: PecaEletrodo, dep: DepositoEletrodo, r
     passes.push(p.passes)
   }
   for (const [x, y] of trechos((i) => tem(i) && analise.fusaoMax[i] < LIMITES.fusaoFaltaAbaixo, 2)) add('falta-de-fusao', x, y)
+  for (const [x, y] of trechos((i) => analise.entrePasses[i] > LIMITES.entrePassesDefeito, 2)) add('falta-de-fusao-entre-passes', x, y)
   for (const [x, y] of trechos((i) => tem(i) && analise.fusaoMax[i] >= LIMITES.fusaoFaltaAbaixo && analise.fusaoMax[i] < LIMITES.fusaoFracaAbaixo, 3)) add('fusao-fraca', x, y)
-  // Só a raiz aberta fura, e só no primeiro passe: os seguintes já têm metal por baixo.
-  const raizAberta = peca.aberturaMm > 0
-  const fura = (i: number) => raizAberta && analise.fusaoPrimeiro[i] > LIMITES.perfuracaoAcima
+  // H94: passar da chapa em níveis (a análise já escolheu o passe que conta: o primeiro na raiz aberta).
+  const fura = (i: number) => a.furoMm[i] > 0
+  const pendura = (i: number) => a.penetracaoMm[i] > 1
+  const afunda = (i: number) => a.afundamento[i] > 0.3 && !fura(i)
   for (const [x, y] of trechos(fura, 1)) add('perfuracao', x, y)
-  for (const [x, y] of trechos((i) => tem(i) && analise.fusaoMax[i] > LIMITES.fusaoExcessoAcima && !fura(i), 5)) add('excesso-de-calor', x, y)
+  for (const [x, y] of trechos(afunda, 1)) add('raiz-afundada', x, y)
+  for (const [x, y] of trechos((i) => pendura(i) && !fura(i), 1)) add('penetracao-excessiva', x, y)
+  for (const [x, y] of trechos((i) => tem(i) && analise.fusaoMax[i] > LIMITES.fusaoExcessoAcima && !fura(i) && !pendura(i), 5)) add('excesso-de-calor', x, y)
 
   // Defeitos de superfície (H84).
   for (const [x, y] of trechos((i) => Math.max(a.mordeduraMenos[i], a.mordeduraMais[i]) > LIMITES.mordeduraLimiteMm, 1)) add('mordedura', x, y)
