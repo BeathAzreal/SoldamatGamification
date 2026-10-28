@@ -17,6 +17,8 @@ export interface PecaEletrodo {
   porque: string
   larguraMm?: number
   conjunto?: 'grade'
+  /** H91: chapa inteira (sem abertura) para treinar cordões em relevo. */
+  sobreChapa?: boolean
   junta: TipoJunta
   espessuraMm: number
   aberturaMm: number
@@ -90,6 +92,17 @@ export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
     junta: 'sobreposta', espessuraMm: 10, aberturaMm: 0, diametroMm: 3.2, correnteA: { min: 105, max: 130 },
     inicioMm: 10, fimMm: 140,
     objetivo: 'Filete contínuo na borda da chapa de cima; limpe toda a escória.',
+  },
+  // H91 (v1.9): fica no fim da lista (os índices das outras peças não mudam) e aparece primeiro no menu.
+  {
+    id: 'cordao-sobre-chapa',
+    titulo: 'Cordões sobre chapa — treino de arco',
+    aplicacao: 'Primeiro exercício do soldador: cordões retos sobre uma chapa inteira.',
+    porque: 'Sem abertura para encher, o metal fica todo por cima e o cordão aparece em relevo.',
+    sobreChapa: true,
+    junta: 'topo', espessuraMm: 6.3, aberturaMm: 0, diametroMm: 2.5, correnteA: { min: 75, max: 95 },
+    inicioMm: 20, fimMm: 130,
+    objetivo: 'Um cordão reto e contínuo do INÍCIO ao FIM: avance com o mouse e desça a vareta (S) enquanto ela queima. Limpe a escória no fim.',
   },
 ]
 

@@ -1,6 +1,8 @@
 import type { Acionamento15 } from '../modelo/acionamento15'
 import type { PecaEletrodo } from '../missoes/pecasEletrodo'
 import { DepositoEletrodo, alvoEletrodo, trechoEletrodo } from '../modelo/depositoEletrodo'
+import type { Dificuldade } from '../missoes/catalogo'
+import { exigenciaDe } from './regras'
 
 export type NivelISO = 'B' | 'C' | 'D'
 /** ISO 5817:2023, tabela 1, itens 1.9/1.10. Só h/b; ver docs/AVALIACAO-SMAW.md. */
@@ -77,10 +79,10 @@ export function avaliarEletrodo(p:PecaEletrodo,c:DepositoEletrodo,m:Acionamento1
   const limpeza=m.escoria.gerada>0?Math.max(0,1-m.escoria.cobertura/m.escoria.gerada):0
   const inspecaoPendente=executado && m.escoria.cobertura>.01
   const itens=[
-    {nome:'União das duas bordas',maximo:300,fracao:cobertura,explicacao:`${Math.round(cobertura*100)}% dos ${p.fimMm-p.inicioMm} mm solicitados atingem o perfil-alvo nas duas bordas e no centro.`},
+    {nome:p.sobreChapa?'Cordão na largura e altura':'União das duas bordas',maximo:300,fracao:cobertura,explicacao:`${Math.round(cobertura*100)}% dos ${p.fimMm-p.inicioMm} mm solicitados atingem o perfil-alvo ${p.sobreChapa?'em toda a largura do cordão':'nas duas bordas e no centro'}.`},
     {nome:'Preenchimento e perfil',maximo:400,fracao:.5*preenchimento+.5*(total?dentro/total:0),explicacao:inspecaoPendente?'Perfil estimado pelo jogo. Há escória: a inspeção visual ISO não está liberada.':`${Math.round(preenchimento*100)}% do preenchimento-alvo. `+(alvo.raiz?'Passe de raiz: camada-alvo 2 mm, teto didático 4 mm; não é o reforço final ISO.':medidas?`Comparação parcial ISO 5817 · ${alvo.filete?'503':'502'} · ${nivel}: h=${pior.h.toFixed(2)} mm, b=${pior.b.toFixed(2)} mm, limite h=${pior.limite.toFixed(2)} mm.`:'A face ainda não foi preenchida para comparar o reforço ISO.')},
     {nome:'Metal na região solicitada',maximo:150,fracao:metal?alinhado/metal:0,explicacao:'Metal entre INÍCIO e FIM, próximo à emenda. Depósitos fora desse trecho não preenchem o objetivo.'},
-    {nome:'Continuidade da união',maximo:150,fracao:total?maior/total:0,explicacao:'Maior trecho unido sem lacunas, medido sobre a mesma superfície 3D.'},
+    {nome:p.sobreChapa?'Continuidade do cordão':'Continuidade da união',maximo:150,fracao:total?maior/total:0,explicacao:'Maior trecho unido sem lacunas, medido sobre a mesma superfície 3D.'},
   ].map(i=>({...i,pontos:executado?Math.round(i.fracao*i.maximo):0}))
   const fator=Math.min(1,preenchimento/(ajuste?.preenchimentoCheio??.8))
   const penalidadeEscoria=inspecaoPendente?Math.round((ajuste?.escoriaMax??200)*(1-limpeza)):0
@@ -91,4 +93,17 @@ export function avaliarEletrodo(p:PecaEletrodo,c:DepositoEletrodo,m:Acionamento1
     criterioISO:inspecaoPendente?'Remova a escória antes da inspeção.':alvo.raiz?'Avaliação do passe de raiz; não exige encher todo o chanfro nem declara aprovação ISO.':!medidas?'Complete a união das bordas e o preenchimento da face; o reforço ainda não pode ser comparado.':dentro===medidas?'Dimensão h/b dentro do limite selecionado, nas seções preenchidas.':'Há seções fora do limite dimensional selecionado.',
     dicas:`${alvo.descricao}. Arco adequado: ${tempo?Math.round(arco.adequado/tempo*100):0}% do tempo. Eletrodo grudou ${m.grudadas} vez(es). Técnica e metas de preenchimento são critérios didáticos.`,
     limites:'Verificação parcial: não avalia transição suave, trincas, porosidade, fusão, penetração ou inclusões internas. Não declara conformidade global nem qualifica soldador.'}
+}
+
+/**
+ * H90 no eletrodo (v1.9): Fácil é só nota, sem aprovação; Difícil exige pelo
+ * menos 20 % dos pontos em cada um dos quatro itens da avaliação e também na
+ * nota final (escória e defeitos descontam dela), com a escória removida.
+ */
+export function aprovacaoEletrodo(r:{itens:readonly {nome:string;pontos:number;maximo:number}[];nota:number;inspecaoPendente:boolean},modo:Dificuldade){
+  const exigencia=exigenciaDe(modo)
+  if(exigencia===null)return {exigencia,aprovada:true,abaixo:[] as string[],escoria:false}
+  const abaixo=r.itens.filter(i=>i.maximo>0 && i.pontos<exigencia*i.maximo-1e-9).map(i=>i.nome)
+  if(r.nota<exigencia*1000-1e-9)abaixo.push('Nota final')
+  return {exigencia,aprovada:abaixo.length===0 && !r.inspecaoPendente,abaixo,escoria:r.inspecaoPendente}
 }

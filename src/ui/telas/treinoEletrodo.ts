@@ -1,4 +1,4 @@
-import { avaliarEletrodo, descontoDefeitos, MODOS_ELETRODO } from '../../pontuacao/eletrodo'
+import { aprovacaoEletrodo, avaliarEletrodo, descontoDefeitos, MODOS_ELETRODO } from '../../pontuacao/eletrodo'
 import { NOME_DIFICULDADE, type Dificuldade } from '../../missoes/catalogo'
 import { resultadoEletrodo } from '../componentes/resultadoEletrodo'
 import { painelMaquina } from '../componentes/painelMaquina'
@@ -192,7 +192,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       vista.atualizarDefeitos(analise.defeitos)
       const inspecao = inspecionarDefeitos(peca, cordao, registro, analise)
       const r = avaliarEletrodo(peca,cordao,modelo,regras.nivel,{ preenchimentoCheio: regras.preenchimentoCheio, escoriaMax: regras.escoriaMax, descontoDefeitos: descontoDefeitos(modo, inspecao.defeitos) })
-      const resultado = resultadoEletrodo(r, inspecao, NOME_DIFICULDADE[modo], {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta}})
+      const resultado = resultadoEletrodo(r, inspecao, NOME_DIFICULDADE[modo], aprovacaoEletrodo(r, modo), {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta}})
       const painel = conteudo.querySelector<HTMLElement>('.p15-painel')!
       painel.hidden = true
       painelResultado = resultado.painel

@@ -41,7 +41,7 @@ function escolherModo(app: App, titulo: string, caminho: string, abrir: (d: Difi
 }
 
 function escolherPecaEletrodo(app: App): void {
-  menuOficina(app, 'ELETRODO', 'TREINO / ESCOLHA A PEÇA', PECAS_ELETRODO.map(p => ({
+  menuOficina(app, 'ELETRODO', 'TREINO / ESCOLHA A PEÇA', [...PECAS_ELETRODO.filter(p => p.sobreChapa), ...PECAS_ELETRODO.filter(p => !p.sobreChapa)].map(p => ({
     nome: p.titulo,
     descricao: `${p.aplicacao} · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}. Avaliação visual e nota do treino.`,
     abrir: () => escolherModo(app, 'ELETRODO', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoEletrodo(app, p, d, () => escolherPecaEletrodo(app)), () => escolherPecaEletrodo(app)),
