@@ -4,7 +4,13 @@ import type { AnaliseMovimento, TrechoMovimento } from '../modelo/movimento'
 import { AJUSTES, EXPLICACAO } from '../modelo/parametros'
 import {
   areaAlvo,
+  correnteA,
   equilibrioArco,
+  modoTransferencia,
+  NOME_TRANSFERENCIA,
+  tensaoV,
+  textoAlimentacao,
+  textoTensao,
   faixaVelocidadeAlvo,
   razaoAlturaLargura,
   taxaDeposicao,
@@ -71,7 +77,7 @@ export function explicar(t: Tentativa): ItemExplicacao[] {
 }
 
 function descreverAjustes(a: Ajustes): string {
-  return `alimentação ${n1(a.alimentacao)} e tensão ${n1(a.tensao)}`
+  return `alimentação ${textoAlimentacao(a.alimentacao)} e tensão ${textoTensao(a.tensao)}`
 }
 
 /** H1 + H2: quanto metal entrou e por quanto comprimento se espalhou. */
@@ -105,7 +111,7 @@ function quantidade(m: Medidas, mov: AnaliseMovimento, ajustes: Ajustes[]): Item
     tema: 'quantidade',
     titulo: 'Quanto metal entrou',
     texto:
-      `Com alimentação ${n1(a.alimentacao)} (${n2(a.alimentacao / AJUSTES.alimentacaoReferencia)} × a referência), ` +
+      `Com alimentação ${textoAlimentacao(a.alimentacao)} (${n2(a.alimentacao / AJUSTES.alimentacaoReferencia)} × a referência, ≈ ${n0(correnteA(a))} A), ` +
       `entram ${n0(taxaDeposicao(a))} mm³/s do jogo. ` +
       resultado +
       ` Com essa alimentação, a faixa de velocidade que leva ao alvo é de ${n1(faixa.minMms)} a ${n1(faixa.maxMms)} mm/s.` +
@@ -229,13 +235,13 @@ function forma(m: Medidas, a: Ajustes): ItemExplicacao {
   }
   const r = razaoAlturaLargura(a)
   const alternativas: string[] = []
-  if (a.tensao - 2 >= AJUSTES.minimo) alternativas.push(`tensão ${n1(a.tensao - 2)} daria cerca de ${dimensoes(a.tensao - 2)} (mais estreito e alto)`)
-  if (a.tensao + 2 <= AJUSTES.maximo) alternativas.push(`tensão ${n1(a.tensao + 2)}, cerca de ${dimensoes(a.tensao + 2)} (mais largo e baixo)`)
+  if (a.tensao - 2 >= AJUSTES.minimo) alternativas.push(`${textoTensao(a.tensao - 2)} daria cerca de ${dimensoes(a.tensao - 2)} (mais estreito e alto)`)
+  if (a.tensao + 2 <= AJUSTES.maximo) alternativas.push(`${textoTensao(a.tensao + 2)}, cerca de ${dimensoes(a.tensao + 2)} (mais largo e baixo)`)
   return {
     tema: 'forma',
     titulo: 'Forma da seção (tensão)',
     texto:
-      `Com tensão ${n1(a.tensao)}, o modelo usa altura = ${n2(r)} × largura: a seção média ficou com cerca de ` +
+      `Com ${textoTensao(a.tensao)}, o modelo usa altura = ${n2(r)} × largura: a seção média ficou com cerca de ` +
       `${dimensoes(a.tensao)} (largura × altura). A tensão não muda a quantidade de metal, só a forma. ` +
       (alternativas.length ? `Com a mesma seção, ${alternativas.join('; ')}.` : ''),
   }
@@ -248,8 +254,11 @@ function equilibrio(a: Ajustes): ItemExplicacao | null {
     tema: 'equilibrio',
     titulo: `Arco ${e.condicao} (aviso do jogo)`,
     texto:
-      `Com ${descreverAjustes(a)}, o arco fica "${e.condicao}" pela reta do jogo (tensão de equilíbrio ≈ ${n1(e.tensaoEquilibrio)}). ` +
-      'No jogo, o desequilíbrio pode aumentar a irregularidade do cordão (H44). Essa previsão não mede respingos reais.',
+      `Com ${descreverAjustes(a)}, o arco fica "${e.condicao}" pela reta do jogo (tensão de equilíbrio ≈ ${textoTensao(e.tensaoEquilibrio)}). ` +
+      (e.condicao === 'curto'
+        ? 'Arco curto: o arame bate na poça, respinga e o metal deita sem fundir bem as bordas (H44, H93).'
+        : 'Arco longo: respingo, cordão achatado, mais mordedura e poros (H44, H93).') +
+      ' Números do jogo, não de procedimento.',
   }
 }
 
@@ -301,7 +310,7 @@ function explicarContextual(t: Tentativa, m: Medidas, mov: AnaliseMovimento): It
   if (unico) {
     const e = equilibrioArco(unico, ctx)
     itens.push({ tema: 'equilibrio', titulo: `Arco ${e.condicao} (modelo)`,
-      texto: `Desvio de ${n1(e.desvio)} pontos em relação ao equilíbrio previsto para este preparo. ` +
+      texto: `Desvio de ${n1(tensaoV(unico.tensao) - tensaoV(e.tensaoEquilibrio))} V em relação ao equilíbrio previsto para este preparo (${NOME_TRANSFERENCIA[modoTransferencia(unico, ctx)].toLowerCase()}). ` +
         'A DBCP influencia a corrente relativa; tensão, consumíveis e técnica devem ser considerados na comparação.' })
   }
   itens.push(limites())

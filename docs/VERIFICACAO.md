@@ -325,3 +325,9 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
 - `tests/tig.test.ts` (15 testes): calor e poça, vareta só funde na poça, contaminação e afiar, furo acima da faixa, independência da taxa de quadros (30 e 144 qps), soldador simulado aprovado no Difícil nas três peças, sem vareta, rápido demais, cratera, mapa da pressão da caneta.
 - Navegador (Chromium sem GPU, ~4 quadros/s): modo Só mouse e modo Mesa + mouse com eventos de caneta simulados (`pointerType: 'pen'`, com pressão) e cliques reais do mouse para a vareta. O jogo trocou para Mesa + mouse ao ver a caneta, a pressão virou corrente (75 A), a vareta fundiu na poça e o cordão apareceu em 3D. Nota de 590 numa tentativa com o robô de teste.
 - Não testado: mesa digitalizadora física, Windows Ink, caneta e mouse físicos ao mesmo tempo.
+
+## v2.0 (Claude)
+
+- `npx tsc --noEmit` sem erros; `npx vitest run`: 488 testes passando (`tests/maquina.test.ts`: unidades, corrente, modos de transferência, arco curto, respingo no globular, fusão no spray, largura com a tensão).
+- Navegador: painel com tensão em V e alimentação em m/min, corrente em A, modo de transferência (curto-circuito, globular, spray) e tensão de equilíbrio em V.
+- Não testado em aparelho físico (mesa, gamepad, PCs dos alunos).

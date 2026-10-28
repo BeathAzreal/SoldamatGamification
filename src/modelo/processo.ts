@@ -211,7 +211,10 @@ export interface EquilibrioArco {
  */
 export function equilibrioArco(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): EquilibrioArco {
   const alimentacaoEquivalente = correnteRelativa(a, ctx) * AJUSTES.alimentacaoReferencia
-  const tensaoEquilibrio = EQUILIBRIO.base + EQUILIBRIO.inclinacao * alimentacaoEquivalente
+  const reta = EQUILIBRIO.base + EQUILIBRIO.inclinacao * alimentacaoEquivalente
+  // H93: acima da corrente de transição, com argônio, o arco certo é o do spray (~1 V acima do limiar).
+  const spray = ctx.gas !== 'co2' && correnteA(a, ctx) >= MAQUINA.transicaoSprayA * ctx.diametroArameMm
+  const tensaoEquilibrio = spray ? Math.max(reta, botaoDaTensao(MAQUINA.tensaoSprayV + 1)) : reta
   const desvio = a.tensao - tensaoEquilibrio
   const condicao: CondicaoArco =
     desvio < -EQUILIBRIO.tolerancia ? 'curto' : desvio > EQUILIBRIO.tolerancia ? 'longo' : 'equilibrado'
@@ -234,3 +237,73 @@ export function faixaVelocidadeAlvo(a: Ajustes, ctx: ContextoProcesso = CONTEXTO
   const fator = taxaDeposicao(a, ctx) / MODELO.taxaDeposicaoMm3s
   return { minMms: VELOCIDADE.alvoMinMms * fator, maxMms: VELOCIDADE.alvoMaxMms * fator }
 }
+
+/*
+ * H93 (v2.0): a máquina em unidades reais. Por dentro o jogo continua com as
+ * posições de botão de 1 a 10 (o que fica salvo nos registros não muda); o
+ * painel mostra e regula em volts e m/min, numa escala linear de máquina de
+ * oficina: 14–30 V e 1–15 m/min. Com arame de 1,0 mm, a referência (5 / 5,5)
+ * vira 7,2 m/min e 22 V, perto de ~170 A. Números do jogo, não de catálogo.
+ */
+export const MAQUINA = {
+  tensaoMinV: 14,
+  tensaoMaxV: 30,
+  passoV: 0.5,
+  alimentacaoMinMMin: 1,
+  alimentacaoMaxMMin: 15,
+  passoMMin: 0.5,
+  /** Corrente na alimentação de referência com arame de 1,0 mm (A). */
+  correnteReferenciaA: 170,
+  /** Corrente de transição para spray com arame de 1,0 mm e mistura com argônio (A); proporcional ao diâmetro. */
+  transicaoSprayA: 190,
+  /** Spray pede arco longo o bastante; curto-circuito só com tensão baixa. */
+  tensaoSprayV: 24,
+  tensaoCurtoMaxV: 22.5,
+} as const
+
+const escalaV = (MAQUINA.tensaoMaxV - MAQUINA.tensaoMinV) / (AJUSTES.maximo - AJUSTES.minimo)
+const escalaM = (MAQUINA.alimentacaoMaxMMin - MAQUINA.alimentacaoMinMMin) / (AJUSTES.maximo - AJUSTES.minimo)
+export const tensaoV = (botao: number): number => MAQUINA.tensaoMinV + (botao - AJUSTES.minimo) * escalaV
+export const botaoDaTensao = (v: number): number => AJUSTES.minimo + (v - MAQUINA.tensaoMinV) / escalaV
+export const alimentacaoMMin = (botao: number): number => MAQUINA.alimentacaoMinMMin + (botao - AJUSTES.minimo) * escalaM
+export const botaoDaAlimentacao = (mMin: number): number => AJUSTES.minimo + (mMin - MAQUINA.alimentacaoMinMMin) / escalaM
+const fmt = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+export const textoTensao = (botao: number): string => `${fmt(tensaoV(botao))} V`
+export const textoAlimentacao = (botao: number): string => `${fmt(alimentacaoMMin(botao))} m/min`
+
+/** H93: corrente estimada (A): a corrente relativa (H28/H48) na escala de uma máquina de oficina. */
+export function correnteA(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): number {
+  return MAQUINA.correnteReferenciaA * correnteRelativa(a, ctx)
+}
+
+export type ModoTransferencia = 'curto-circuito' | 'globular' | 'spray'
+export const NOME_TRANSFERENCIA: Record<ModoTransferencia, string> = { 'curto-circuito': 'Curto-circuito', globular: 'Globular', spray: 'Spray (aerossol)' }
+export const EXPLICA_TRANSFERENCIA: Record<ModoTransferencia, string> = {
+  'curto-circuito': 'Arame encosta na poça e funde em curtos: pouco calor, bom para chapa fina e fora da posição plana.',
+  globular: 'Gotas grandes e irregulares caem pelo arco: mais respingo e cordão irregular. Suba a tensão e a alimentação para o spray (com argônio) ou desça para o curto-circuito.',
+  spray: 'Gotas finas em jato, sem respingo e com muito calor: cordão liso e penetração funda. Fura chapa fina e escorre fora da posição plana.',
+}
+
+/**
+ * H93: modo de transferência pelo par tensão × corrente e pelo gás. Spray só
+ * com argônio na mistura, corrente acima da transição (proporcional ao
+ * diâmetro do arame) e arco longo o bastante; CO₂ puro fica no globular.
+ */
+export function modoTransferencia(a: Ajustes, ctx: ContextoProcesso = CONTEXTO_PADRAO): ModoTransferencia {
+  const v = tensaoV(a.tensao), i = correnteA(a, ctx)
+  const transicao = MAQUINA.transicaoSprayA * ctx.diametroArameMm
+  if (ctx.gas !== 'co2' && i >= transicao && v >= MAQUINA.tensaoSprayV) return 'spray'
+  if (v <= MAQUINA.tensaoCurtoMaxV && i < transicao * 1.1) return 'curto-circuito'
+  return 'globular'
+}
+
+/**
+ * H93: o que o modo de transferência faz na solda (multiplica o calor que
+ * funde e soma uma instabilidade mínima do arco: respingo, cordão irregular).
+ */
+export const EFEITO_TRANSFERENCIA: Record<ModoTransferencia, { calor: number; instabilidade: number }> = {
+  'curto-circuito': { calor: 1, instabilidade: 0 },
+  globular: { calor: 1.05, instabilidade: 0.4 },
+  spray: { calor: 1.25, instabilidade: 0 },
+}
+

@@ -62,7 +62,7 @@ export const DIAMETROS_ARAME_MM = [0.8, 1, 1.2]
 
 const GEOMETRIA_BASE = { comprimentoMm: PECA.comprimentoMm, larguraChapaMm: PECA.larguraChapaMm }
 const EQUIPAMENTOS = [
-  'Fonte de tensão constante (botões de tensão e de alimentação, de 1 a 10)',
+  'Fonte de tensão constante (tensão de 14 a 30 V, alimentação de 1 a 15 m/min)',
   'Tocha MIG/MAG com bico e regulador de gás',
   'Polaridade fixa: corrente contínua, eletrodo positivo (CC+)',
 ]

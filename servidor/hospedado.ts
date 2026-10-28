@@ -46,7 +46,7 @@ export class SalasHospedadas {
    const url=new URL(r.url),caminho=url.pathname
    const origem=r.headers.get('Origin')
    if(origem&&origem!==url.origin)throw new ErroSala('Origem não autorizada.',403)
-   if(caminho==='/api/rede/info'&&r.method==='GET')return json({protocolo:PROTOCOLO_REDE,modelo:MODELO_REDE,versao:'1.9',processos:['mig'],modo:'internet',transporte:'consulta',enderecos:[url.origin]})
+   if(caminho==='/api/rede/info'&&r.method==='GET')return json({protocolo:PROTOCOLO_REDE,modelo:MODELO_REDE,versao:'2.0',processos:['mig'],modo:'internet',transporte:'consulta',enderecos:[url.origin]})
    if(!['GET','POST'].includes(r.method))return json({erro:'Método não permitido.'},405)
    if(caminho==='/api/salas'&&r.method==='POST'){
     const d=await corpo(r);await this.limitar(r.headers.get('CF-Connecting-IP')??'local')

@@ -36,7 +36,7 @@ export function criarServidor(op                                                
     if(!anterior||agora-anterior.inicio>60000)taxa.set(ip,{inicio:agora,n:1})
     else if(++anterior.n>120)throw new ErroSala('Muitas solicitações. Aguarde um minuto.',429)
     salas.atualizar()
-    if(p==='/api/rede/info'&&req.method==='GET'){json(res,200,{protocolo:PROTOCOLO_REDE,modelo:MODELO_REDE,versao:'1.9',processos:['mig'],enderecos:enderecos(req.socket.localPort??5197)});return}
+    if(p==='/api/rede/info'&&req.method==='GET'){json(res,200,{protocolo:PROTOCOLO_REDE,modelo:MODELO_REDE,versao:'2.0',processos:['mig'],enderecos:enderecos(req.socket.localPort??5197)});return}
     if(p==='/api/salas'&&req.method==='POST'){
      const d=await lerJson(req);json(res,201,salas.criar(d.nome,d.config              ,d.protocolo));publicar();return
     }

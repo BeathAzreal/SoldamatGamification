@@ -3276,3 +3276,8 @@ canvas.tela-solda-3d[hidden] {
   border-color: #e23b2e;
   box-shadow: 0 0 0 2px rgba(226, 59, 46, 0.35);
 }
+
+/* H93: modo de transferência no painel da máquina MIG */
+.leitura-transferencia strong[data-modo='curto-circuito'] { color: #8fd18a; }
+.leitura-transferencia strong[data-modo='globular'] { color: #f2b45a; }
+.leitura-transferencia strong[data-modo='spray'] { color: #7ec8ff; }

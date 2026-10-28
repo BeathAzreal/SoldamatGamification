@@ -31,7 +31,9 @@ const cv = (sim: Simulacao) => {
 describe('arco fora do equilíbrio (H44)', () => {
   it('instabilidade é zero dentro da tolerância e cresce até ±1 fora dela', () => {
     expect(instabilidadeArco({ alimentacao: 5, tensao: 5.5 }, CONTEXTO_PADRAO)).toBe(0)
-    expect(instabilidadeArco({ alimentacao: 5, tensao: 6.4 }, CONTEXTO_PADRAO)).toBe(0)
+    expect(instabilidadeArco({ alimentacao: 5, tensao: 4.6 }, CONTEXTO_PADRAO)).toBe(0)
+    // H93 (v2.0): 7,2 m/min com 23,6 V cai no globular, instável mesmo dentro da tolerância do equilíbrio.
+    expect(instabilidadeArco({ alimentacao: 5, tensao: 6.4 }, CONTEXTO_PADRAO)).toBe(0.4)
     expect(instabilidadeArco({ alimentacao: 5, tensao: 2 }, CONTEXTO_PADRAO)).toBeLessThan(0)
     expect(instabilidadeArco({ alimentacao: 5, tensao: 10 }, CONTEXTO_PADRAO)).toBe(1)
   })

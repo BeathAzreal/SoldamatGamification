@@ -20,9 +20,18 @@ import {
 import { analisarFusao, DESCRICAO_ESTADO, type EstadoFusao } from '../../modelo/fusao'
 import { analisarDefeitos, CONSELHO_DEFEITO, NOME_DEFEITO } from '../../modelo/defeitos'
 import { GASES, MATERIAIS } from '../../modelo/material'
-import { AJUSTES, DBCP, EQUILIBRIO, PECA } from '../../modelo/parametros'
+import { DBCP, EQUILIBRIO, PECA } from '../../modelo/parametros'
 import {
-  correnteRelativa,
+  alimentacaoMMin,
+  botaoDaAlimentacao,
+  botaoDaTensao,
+  correnteA,
+  EXPLICA_TRANSFERENCIA,
+  MAQUINA,
+  modoTransferencia,
+  NOME_TRANSFERENCIA,
+  tensaoV,
+  textoTensao,
   equilibrioArco,
   INFO_TECNICA,
   razaoEfetiva,
@@ -39,7 +48,7 @@ import { geometriaDa } from '../../modelo/junta'
 import { INFO_JUNTA, TIPOS_JUNTA, type TipoJunta } from '../../modelo/juntas'
 import { Vista } from '../../render/vista'
 import type { App } from '../app'
-import { h, n1, pct, substituir } from '../dom'
+import { h, n0, n1, pct, substituir } from '../dom'
 import { controlesConectados, montarCalibracao, type Calibracao } from './calibracao'
 import { somArco } from '../som'
 import { montarGiro } from './giro'
@@ -208,16 +217,22 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       })()
     : null
 
+  // H93 (v2.0): o painel regula em volts e m/min; por dentro (e no registro) continuam as posições de botão.
+  const ESCALAS = {
+    tensao: { min: MAQUINA.tensaoMinV, max: MAQUINA.tensaoMaxV, passo: MAQUINA.passoV, unidade: 'V', real: tensaoV, botao: botaoDaTensao },
+    alimentacao: { min: MAQUINA.alimentacaoMinMMin, max: MAQUINA.alimentacaoMaxMMin, passo: MAQUINA.passoMMin, unidade: 'm/min', real: alimentacaoMMin, botao: botaoDaAlimentacao },
+  } as const
   const mostrador = (rotulo: string, chave: keyof Ajustes) => {
     const travado = !!travas.ajustes
-    const led = h('output', { class: 'led' }, n1(ajustes[chave]))
-    const entrada = h('input', { type: 'range', id: `bc-${chave}-${id}`, min: String(AJUSTES.minimo), max: String(AJUSTES.maximo), step: String(AJUSTES.passo), value: String(ajustes[chave]), disabled: travado, 'aria-label': rotulo })
-    const aplicar = (v: number) => {
+    const e = ESCALAS[chave]
+    const led = h('output', { class: 'led' }, n1(e.real(ajustes[chave])))
+    const entrada = h('input', { type: 'range', id: `bc-${chave}-${id}`, min: String(e.min), max: String(e.max), step: String(e.passo), value: String(e.real(ajustes[chave])), disabled: travado, 'aria-label': `${rotulo} (${e.unidade})` })
+    const aplicar = (real: number) => {
       if (sim.arcoAberto) return
-      const novo = Math.min(AJUSTES.maximo, Math.max(AJUSTES.minimo, v))
-      ajustes = { ...ajustes, [chave]: novo }
-      entrada.value = String(novo)
-      led.textContent = n1(novo)
+      const valor = Math.min(e.max, Math.max(e.min, Math.round(real / e.passo) * e.passo))
+      ajustes = { ...ajustes, [chave]: e.botao(valor) }
+      entrada.value = String(valor)
+      led.textContent = n1(valor)
       sim.definirAjustes(ajustes)
       atualizarLeituras()
       avisar()
@@ -225,31 +240,37 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     entrada.addEventListener('input', () => aplicar(Number(entrada.value)))
     const menos = h('button', { type: 'button', class: 'botao-redondo', disabled: travado, 'aria-label': `Diminuir ${rotulo}` }, '−')
     const mais = h('button', { type: 'button', class: 'botao-redondo', disabled: travado, 'aria-label': `Aumentar ${rotulo}` }, '+')
-    menos.addEventListener('click', () => aplicar(ajustes[chave] - AJUSTES.passo))
-    mais.addEventListener('click', () => aplicar(ajustes[chave] + AJUSTES.passo))
+    menos.addEventListener('click', () => aplicar(e.real(ajustes[chave]) - e.passo))
+    mais.addEventListener('click', () => aplicar(e.real(ajustes[chave]) + e.passo))
     entradasAjuste.push(entrada, menos, mais)
-    return h('div', { class: 'mostrador' }, h('label', { for: entrada.id, class: 'rotulo-maquina' }, rotulo), h('div', { class: 'mostrador-linha' }, menos, led, mais), entrada)
+    return h('div', { class: 'mostrador' }, h('label', { for: entrada.id, class: 'rotulo-maquina' }, `${rotulo} (${e.unidade})`), h('div', { class: 'mostrador-linha' }, menos, led, mais), entrada)
   }
   const entradasAjuste: (HTMLInputElement | HTMLButtonElement)[] = []
   const tensao = mostrador('Tensão', 'tensao')
-  const alimentacao = mostrador('Alimentação', 'alimentacao')
+  const alimentacao = mostrador('Alimentação do arame', 'alimentacao')
 
   const medCorrente = h('div', { class: 'medidor-preenchimento' })
   const txtCorrente = h('span', {})
   const txtMetal = h('span', {})
   const agulha = h('div', { class: 'agulha' })
   const txtEquilibrio = h('span', {})
+  const txtTransferencia = h('strong', {})
   const forma = h('div', { class: 'forma-secao' })
   const atualizarLeituras = () => {
     const ctx = contextoDaMissao(m, preparo)
-    const i = correnteRelativa(ajustes, ctx)
-    medCorrente.style.width = `${Math.min(100, (i / 3) * 100)}%`
-    txtCorrente.textContent = `${n1(i)} ×`
+    const i = correnteA(ajustes, ctx)
+    medCorrente.style.width = `${Math.min(100, (i / 350) * 100)}%`
+    txtCorrente.textContent = `≈ ${n0(i)} A`
     txtMetal.textContent = `${n1(taxaDeposicao(ajustes, ctx))} mm³/s`
     const eq = equilibrioArco(ajustes, ctx)
     agulha.style.left = `${Math.min(100, Math.max(0, 50 + (eq.desvio / 4) * 50))}%`
-    txtEquilibrio.textContent = eq.condicao === 'equilibrado' ? 'equilibrado' : `arco ${eq.condicao}`
+    const vEq = textoTensao(eq.tensaoEquilibrio)
+    txtEquilibrio.textContent = eq.condicao === 'equilibrado' ? `equilibrado (≈ ${vEq})` : `arco ${eq.condicao} · equilíbrio ≈ ${vEq}`
     txtEquilibrio.dataset.condicao = eq.condicao
+    const modo = modoTransferencia(ajustes, ctx)
+    txtTransferencia.textContent = NOME_TRANSFERENCIA[modo]
+    txtTransferencia.dataset.modo = modo
+    txtTransferencia.title = EXPLICA_TRANSFERENCIA[modo]
     // Mini corte: domo com a forma atual (altura relativa à largura).
     const r = razaoEfetiva(ajustes, ctx)
     forma.innerHTML = `<svg viewBox="0 0 100 40" aria-hidden="true"><line x1="0" y1="32" x2="100" y2="32" stroke="currentColor" opacity=".5"/><path d="M15 32 Q50 ${32 - 2 * r * 70} 85 32 Z" fill="currentColor" opacity=".85"/></svg><span>altura ≈ ${pct(r)} da largura</span>`
@@ -270,7 +291,8 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     h(
       'div',
       { class: 'leituras' },
-      h('div', { class: 'leitura' }, h('span', { class: 'rotulo-maquina', title: 'Derivada da alimentação e do arame: não é um botão' }, 'Corrente (relativa)'), h('div', { class: 'medidor' }, medCorrente), txtCorrente),
+      h('div', { class: 'leitura' }, h('span', { class: 'rotulo-maquina', title: 'Numa fonte de tensão constante a corrente vem da alimentação, do arame e da DBCP: não é um botão' }, 'Corrente'), h('div', { class: 'medidor' }, medCorrente), txtCorrente),
+      h('div', { class: 'leitura leitura-transferencia' }, h('span', { class: 'rotulo-maquina' }, 'Transferência'), txtTransferencia),
       h('div', { class: 'leitura' }, h('span', { class: 'rotulo-maquina' }, 'Metal por segundo'), txtMetal),
       h('div', { class: 'leitura' }, h('span', { class: 'rotulo-maquina' }, 'Equilíbrio do arco'), h('div', { class: 'escala-equilibrio' }, h('span', {}, 'curto'), h('div', { class: 'trilho' }, h('div', { class: 'zona-ok' }), agulha), h('span', {}, 'longo')), txtEquilibrio),
       h('div', { class: 'leitura' }, h('span', { class: 'rotulo-maquina' }, 'Forma da seção'), forma),
@@ -396,7 +418,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
         const eq = equilibrioArco(ajustes, ctx)
         return eq.condicao === 'equilibrado'
           ? null
-          : h('p', { class: 'dica dica-arco' }, eq.condicao === 'curto' ? `Arco curto demais (tensão ${n1(ajustes.tensao)}, equilíbrio perto de ${n1(eq.tensaoEquilibrio)}): estalos e cordão irregular. Suba a tensão ou baixe a alimentação.` : `Arco longo demais (tensão ${n1(ajustes.tensao)}, equilíbrio perto de ${n1(eq.tensaoEquilibrio)}): chiado agudo e cordão irregular e achatado. Baixe a tensão ou suba a alimentação.`)
+          : h('p', { class: 'dica dica-arco' }, eq.condicao === 'curto' ? `Arco curto demais (${textoTensao(ajustes.tensao)}, equilíbrio perto de ${textoTensao(eq.tensaoEquilibrio)}): o arame bate na poça, estala, respinga e o metal deita sem fundir as bordas. Suba a tensão ou baixe a alimentação.` : `Arco longo demais (${textoTensao(ajustes.tensao)}, equilíbrio perto de ${textoTensao(eq.tensaoEquilibrio)}): chiado, respingo, cordão achatado com mordedura e poros. Baixe a tensão ou suba a alimentação.`)
       })(),
       tiposDefeito.length ? h('p', { class: 'dica dica-defeitos' }, `Defeitos visíveis: ${tiposDefeito.map((t) => NOME_DEFEITO[t].toLowerCase()).join('; ')}. ${CONSELHO_DEFEITO[tiposDefeito[0]]}`) : null,
       principal !== 'adequada' ? h('p', { class: 'dica' }, `Previsão predominante: ${DESCRICAO_ESTADO[principal]}. ${principal === 'falta' ? `Mais calor por mm: mais tensão, mais alimentação, andar mais devagar ou puxar a tocha${sim.contexto.posicaoFixa ? '' : '; ou posicione a peça na plana ou subindo'}.` : principal === 'excessiva' || principal === 'perfuracao' ? 'Menos calor por mm: reduza alimentação ou tensão, ande mais rápido ou empurre a tocha.' : principal === 'borda' ? (INFO_JUNTA[m.geometria.junta].familia === 'filete' ? 'Mire na raiz (o canto): fora dela uma perna fica curta.' : 'Mantenha a tocha sobre a linha da junta ou alargue o cordão (mais devagar).') : principal === 'enchimento' ? 'O V não encheu: ande mais devagar ou faça outro passe por cima.' : ''}`) : null,

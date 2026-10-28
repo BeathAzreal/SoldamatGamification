@@ -875,3 +875,23 @@ Modelo (`src/modelo/tig.ts`), todo didático:
 Nota de 0 a 1000: fusão no trecho 300, adição e reforço 200, largura regular 200, escamas regulares 150, limpeza do processo 150; furo desconta 40 (Fácil) ou 120 (Difícil). Fácil só nota; Difícil aprova com 20 % em cada item e na nota final, como no eletrodo (H90).
 
 Calibração: um soldador simulado (pedal cheio, 2 mm/s, toque de vareta a cada 0,7 s) faz as três peças com mais de 600 pontos e é aprovado no Difícil; sem vareta fica sem reforço nem escamas; andando a 9 mm/s não funde; corrente 25 A acima da faixa fura a chapa de 1,5 mm. Não foi testado com uma mesa digitalizadora de verdade: o caminho da caneta foi conferido no navegador com eventos de caneta simulados (com pressão).
+
+### H93 — máquina MIG em volts e m/min, com efeito na solda (v2.0, Claude)
+
+Pedido do dono: "Precisamos melhorar a configuração... deixar mais realista que faça efeito na solda, um principal problema é a tensão e alimentação... já que vai até 30 V."
+
+- **Unidades reais no painel.** Tensão de 14 a 30 V e alimentação de 1 a 15 m/min, em passos de 0,5. Por dentro o jogo continua com as posições de botão de 1 a 10 (escala linear: 1 → 14 V e 1 m/min; 10 → 30 V e 15 m/min), então o que fica salvo nos registros não muda. A referência antiga (5 / 5,5) vira 7,2 m/min e 22 V.
+- **Corrente em ampères.** A corrente relativa (H28/H48) passa a aparecer em A: 170 A na referência com arame de 1,0 mm. Ela continua não sendo um botão: vem da alimentação, do diâmetro do arame e da DBCP.
+- **Modo de transferência** (`modoTransferencia`):
+  - **curto-circuito:** até 22,5 V, abaixo da corrente de transição;
+  - **spray:** com argônio na mistura, corrente acima da transição (190 A × diâmetro do arame em mm) e pelo menos 24 V;
+  - **globular:** o resto. Com CO₂ puro nunca há spray.
+- **Efeitos na solda:**
+  - **globular:** instabilidade mínima de 0,4 no arco, então mais respingo e cordão irregular;
+  - **spray:** 25 % a mais do calor vai para a fusão (penetração), sem aumentar o calor total da peça (U·I já conta);
+  - **arco curto** (tensão baixa para o arame): até 35 % a menos de fusão, o metal deita sem fundir as bordas;
+  - **desequilíbrio:** o efeito do arco fora do equilíbrio satura em 2 pontos de botão (~3,6 V), e não mais em 3;
+  - **tensão de equilíbrio no spray:** com argônio e acima da transição, sobe para ~25 V.
+- **Arcade:** a "máquina pré-ajustada" fica nos passos do painel, nunca no globular, e prefere o curto-circuito.
+
+Calibração por simulação (`tests/maquina.test.ts`). Números do jogo, não de catálogo de fabricante nem de procedimento; as direções (o que piora o quê) seguem a literatura de MIG/MAG. Versão da nota: `pontuacao-v11`.

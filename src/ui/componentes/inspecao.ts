@@ -7,7 +7,7 @@ import { analisarDefeitos, CONSELHO_DEFEITO, NOME_DEFEITO, type AnaliseDefeitos 
 import type { Cordao } from '../../modelo/cordao'
 import { GASES, MATERIAIS } from '../../modelo/material'
 import { analisarMovimento } from '../../modelo/movimento'
-import { correnteRelativa, type Ajustes, type ContextoProcesso, INFO_TECNICA, tecnicaDe } from '../../modelo/processo'
+import { correnteA, modoTransferencia, NOME_TRANSFERENCIA, textoAlimentacao, textoTensao, type Ajustes, type ContextoProcesso, INFO_TECNICA, tecnicaDe } from '../../modelo/processo'
 import { reproduzir } from '../../modelo/replay'
 import { Simulacao, type EventoTentativa } from '../../modelo/simulacao'
 import { desenharCena } from '../../render/cena'
@@ -288,8 +288,9 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
       ['Gás', GASES[d.contexto.gas].nome],
       ['Arame', `${n1(d.contexto.diametroArameMm)} mm`],
       ['Polaridade', 'CC+ (fixa)'],
-      ['Tensão / alimentação', `${n1(d.ajustes.tensao)} / ${n1(d.ajustes.alimentacao)} (botões 1–10)`],
-      ['Corrente relativa (derivada)', n1(correnteRelativa(d.ajustes, d.contexto))],
+      ['Tensão / alimentação', `${textoTensao(d.ajustes.tensao)} / ${textoAlimentacao(d.ajustes.alimentacao)}`],
+      ['Transferência', NOME_TRANSFERENCIA[modoTransferencia(d.ajustes, d.contexto)]],
+      ['Corrente estimada', `≈ ${n1(correnteA(d.ajustes, d.contexto)).replace(/,\d$/, '')} A`],
       ['Técnica', INFO_TECNICA[tecnicaDe(d.contexto)].nome],
       ['Junta', INFO_JUNTA[juntaDe(d.contexto)].nome],
       ['Posição no último passe', (() => {

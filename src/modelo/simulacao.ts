@@ -10,6 +10,8 @@ import {
   AJUSTES_PADRAO,
   CONTEXTO_PADRAO,
   equilibrioArco,
+  EFEITO_TRANSFERENCIA,
+  modoTransferencia,
   espalhamentoDoMovimento,
   limitarAjustes,
   potenciaRelativa,
@@ -62,8 +64,23 @@ export interface EstadoTocha {
 export function instabilidadeArco(a: Ajustes, ctx: ContextoProcesso): number {
   const { desvio } = equilibrioArco(a, ctx)
   const excesso = Math.max(0, Math.abs(desvio) - EQUILIBRIO.tolerancia)
-  // Dentro da tolerância é exatamente 0 (nunca −0).
-  return excesso === 0 ? 0 : Math.sign(desvio) * Math.min(1, excesso / 3)
+  // H93 (v2.0): satura com 2 pontos de botão (~3,6 V) fora da tolerância (era 3): o desequilíbrio aparece mais cedo.
+  const doEquilibrio = excesso === 0 ? 0 : Math.sign(desvio) * Math.min(1, excesso / 2)
+  // H93: o globular é instável mesmo com o arco no equilíbrio.
+  const base = EFEITO_TRANSFERENCIA[modoTransferencia(a, ctx)].instabilidade
+  // Dentro da tolerância e sem base é exatamente 0 (nunca −0).
+  if (base === 0 || Math.abs(doEquilibrio) >= base) return doEquilibrio
+  return doEquilibrio < 0 ? -base : base
+}
+
+/**
+ * H93: fator do calor que funde a junta: o modo de transferência (o spray
+ * concentra o calor e penetra mais; a potência U·I já conta o resto) e o arco curto, em que o arame "afoga" na poça e o metal
+ * deita sobre a chapa sem fundir as bordas (colagem).
+ */
+export function fatorFusaoAjustes(a: Ajustes, ctx: ContextoProcesso): number {
+  const instab = instabilidadeArco(a, ctx)
+  return EFEITO_TRANSFERENCIA[modoTransferencia(a, ctx)].calor * (1 - 0.35 * Math.max(0, -instab))
 }
 
 /** Gravidade nos eixos da poça (H50), com o mesmo sentido de avanço de efeitoPosicao (H47). */
@@ -358,12 +375,14 @@ export class Simulacao {
       return
     }
     const potencia = potenciaRelativa(this.ajustesAtuais, this.contexto)
+    // H93: o modo de transferência e o arco curto mudam quanto do calor funde a junta, não o calor total da peça.
+    const fusaoAjustes = fatorFusaoAjustes(this.ajustesAtuais, this.contexto)
     const integral = this.aquecer(t0, t1, potencia)
     const volume = (taxaDeposicao(this.ajustesAtuais, this.contexto) * (t1 - t0)) / 1000
     // H47: parada, só pesa a gravidade de lado e para fora da face (sem subir nem descer).
     const ef = efeitoPosicao(this.gravidadeAtual, 0)
     this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto), gravidadePoca(this.gravidadeAtual, 0))
-    this.percurso.registrar(p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao)
+    this.percurso.registrar(p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
   }
 
   /** Divide o trecho em pedaços curtos e deposita um pouco em cada um. */
@@ -376,6 +395,8 @@ export class Simulacao {
     const ef = efeitoPosicao(this.gravidadeAtual, p1.x - p0.x)
     const razao = razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao
     const potencia = potenciaRelativa(this.ajustesAtuais, this.contexto)
+    // H93: o modo de transferência e o arco curto mudam quanto do calor funde a junta, não o calor total da peça.
+    const fusaoAjustes = fatorFusaoAjustes(this.ajustesAtuais, this.contexto)
     const sigma = espalhamentoDoMovimento(this.contexto)
     const instab = instabilidadeArco(this.ajustesAtuais, this.contexto)
     const gp = gravidadePoca(this.gravidadeAtual, p1.x - p0.x)
@@ -389,7 +410,7 @@ export class Simulacao {
       }
       const integral = this.aquecer(t0 + j * dt, t0 + (j + 1) * dt, potencia)
       this.cordao.depositar(x, y + ef.desvioMm, volume, t0 + (j + 1) * dt, razao, sigma, instab, gp)
-      this.percurso.registrar(x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao)
+      this.percurso.registrar(x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
     }
   }
 
