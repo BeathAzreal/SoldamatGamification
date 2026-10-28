@@ -4,7 +4,7 @@ Abra o HTML no Chrome ou Edge. Sem instalação ou internet.
 
 X1 em rede: use o pacote de rede e ABRIR-OFICINA.bat (ou INICIAR-REDE.bat) no PC anfitrião. Nos dois navegadores abra o endereço mostrado pelo servidor. Arcade → X1 em rede. O HTML portátil continua offline; ele não hospeda salas.
 
-MÁQUINA MIG/MAG (novo na v2.0): tensão em volts (14 a 30 V) e alimentação do arame em m/min (1 a 15). O painel mostra a corrente em A e o modo de transferência: curto-circuito (pouca tensão, bom para chapa fina), globular (respinga e fica irregular) e spray (com argônio, corrente e tensão altas: liso e penetra muito, fura chapa fina). Tensão baixa para o arame deita o metal sem fundir as bordas; tensão alta demais respinga, achata e morde a borda.
+MÁQUINA MIG/MAG (novo na v2.0): tensão em volts (0 a 30 V) e alimentação do arame em m/min (1 a 15). O painel mostra a corrente em A e o modo de transferência: curto-circuito (pouca tensão, bom para chapa fina), globular (respinga e fica irregular) e spray (com argônio, corrente e tensão altas: liso e penetra muito, fura chapa fina). Tensão baixa para o arame deita o metal sem fundir as bordas; tensão alta demais respinga, achata e morde a borda. Abaixo de 14 V o arame bate e mergulha na poça (frio, sem fundir); abaixo de 10 V o arco nem abre. Parar a tocha no mesmo lugar acaba furando a chapa fina, mais cedo quanto maior a tensão.
 
 PASSAR DA CHAPA (novo na v2.0): calor demais aparece em níveis. Primeiro a raiz aparece no avesso (normal), depois o metal passa e fica pendurado do outro lado, depois a poça cai e a face afunda e, no limite, a chapa vara e abre um furo. No resultado, use Ver o avesso. Vale para o MIG/MAG, o eletrodo e o TIG.
 

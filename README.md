@@ -10,10 +10,12 @@ Entre na sua conta do GitHub para baixar os arquivos deste repositório privado.
 
 O jogo mostra **ALPHA v2.0** no topo. Novidades:
 
-- **Máquina MIG/MAG em volts e m/min:** tensão de 14 a 30 V, alimentação de 1 a
+- **Máquina MIG/MAG em volts e m/min:** tensão de 0 a 30 V, alimentação de 1 a
   15 m/min, corrente em A e modo de transferência (curto-circuito, globular, spray).
 - **Os ajustes mudam a solda:** o globular respinga, o spray penetra e fura chapa
   fina, o arco curto deita o metal sem fundir e a tensão alta morde a borda.
+  Abaixo de 14 V o arame bate, abaixo de 10 V o arco não abre, e a tocha parada
+  fura a chapa fina.
 - **Passar da chapa em níveis:** raiz aparente, metal pendurado no avesso, face
   afundada e, no limite, furo, no MIG/MAG, no eletrodo e no TIG. No resultado:
   **Ver o avesso**.
@@ -86,7 +88,7 @@ Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 
 ## O que mudou na v2.0?
 
-- **Máquina MIG/MAG em unidades reais:** tensão de 14 a 30 V, alimentação de 1 a 15 m/min, corrente em A e modo de transferência.
+- **Máquina MIG/MAG em unidades reais:** tensão de 0 a 30 V, alimentação de 1 a 15 m/min, corrente em A e modo de transferência. Abaixo de 14 V o arame bate; abaixo de 10 V o arco não abre; tocha parada fura a chapa fina.
 - **Efeito na solda:** globular respinga; spray (só com argônio) penetra e fura chapa fina; arco curto deita o metal sem fundir; tensão alta respinga, achata e morde a borda (`pontuacao-v11`).
 - **Passar da chapa em níveis** no MIG/MAG, no eletrodo e no TIG (raiz aparente, metal pendurado, face afundada, furo).
 - **Passes sobrepostos** (a partir de Banaee et al. 2023): seção de parábola, morro/plano/vale pelo passo, falta de fusão entre passes no eletrodo e o **Corte** da peça; no MIG/MAG, forma pela alimentação e humping.

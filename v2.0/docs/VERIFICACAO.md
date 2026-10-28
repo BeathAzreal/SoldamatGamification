@@ -340,3 +340,8 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
   - `tests/defeitosEletrodo.test.ts`: um passe quente funde no anterior; um passe frio e rápido deixa falta de fusão entre passes.
   - `tests/humping.test.ts`: a forma muda com a alimentação e as corcovas aparecem só com avanço rápido e corrente alta.
 - Navegador: no eletrodo, "Unir duas chapas" com dois passes; o botão Corte mostra a chapa, a abertura e as camadas de cada passe em escala real. O humping no 3D do MIG não foi conferido no navegador, só nos testes.
+- H99/H100: `npx vitest run` com 529 testes passando (`tests/tensaoBaixa.test.ts`). Em `tests/processo.test.ts`, o teste do limite dos botões mudou de propósito: a tensão agora desce até 0 V.
+- Navegador, no treino MIG/MAG da chapa de 3 mm:
+  - 28 V com a tocha parada: a peça soldada mostra o furo, e a lista de defeitos traz penetração excessiva e raiz afundada;
+  - 0 V: painel com 0 A e "Sem arco", sem luz de arco, e o status explica;
+  - 12 V: "Arame batendo", caroço frio, sobreposição e respingos.

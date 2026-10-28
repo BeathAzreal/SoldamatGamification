@@ -275,7 +275,8 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
 
     // Sobreposição (H53): devagar e frio; descendo, o metal corre à frente; na horizontal, a borda de baixo.
     // Arco curto (arame demais para o calor) e devagar também deita o metal sem fundir.
-    const o = lim01((0.7 - vRel) / 0.4) * lim01((2.1 - F) / 0.6) + 0.5 * lim01(-instab / 0.8) * lim01((0.9 - vRel) / 0.5) + 0.6 * desc
+    // H100: arco curto e frio (tensão baixa, arame batendo) deita o metal sem molhar as bordas em qualquer velocidade.
+    const o = lim01((0.7 - vRel) / 0.4) * lim01((2.1 - F) / 0.6) + 0.5 * lim01(-instab / 0.8) * lim01((0.9 - vRel) / 0.5) + 0.6 * lim01(-instab / 0.8) * lim01((0.8 - F) / 0.4) + 0.6 * desc
     a.sobreposicaoMenos[i] = lim01(o + (caim < 0 ? 0.6 * Math.abs(caim) : 0))
     a.sobreposicaoMais[i] = lim01(o + (caim > 0 ? 0.6 * Math.abs(caim) : 0))
 

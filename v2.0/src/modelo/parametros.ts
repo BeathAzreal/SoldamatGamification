@@ -36,6 +36,8 @@ export const MODELO = {
   /** Razão altura/largura nos extremos do botão de tensão: 1 → 10 (H9). */
   razaoTensaoMinima: 0.34,
   razaoTensaoMaxima: 0.16,
+  /** H100: teto da razão com tensão abaixo de 14 V (cordão em corda). */
+  razaoTensaoBaixa: 0.45,
   /**
    * H98: razão × (alimentação ÷ referência)^−expoente, entre os limites.
    * O artigo (Banaee et al. 2023, Tab. 3) dá ~0,35; o jogo usa menos.
@@ -122,6 +124,8 @@ export const FUSAO = {
   necessidadePorMm: 0.03354,
   /** Seção a partir da qual o metal acumulado amortece a fusão (mm²). */
   areaAmortecimentoMm2: 25,
+  /** H99: acima desta seção o metal acumulado não protege mais (mm²). */
+  areaAmortecimentoMaxMm2: 50,
   minimoAdequado: 1,
   maximoAdequado: 2,
   /** Acima disso: perfuração prevista. */

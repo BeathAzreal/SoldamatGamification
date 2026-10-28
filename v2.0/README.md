@@ -9,13 +9,16 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
 
 ## O que mudou na v2.0
 
-- **Máquina MIG/MAG em unidades reais:** tensão de **14 a 30 V** e alimentação do arame de **1 a 15 m/min**, em passos de 0,5. O painel mostra a **corrente em A** e o **modo de transferência**.
+- **Máquina MIG/MAG em unidades reais:** tensão de **0 a 30 V** e alimentação do arame de **1 a 15 m/min**, em passos de 0,5. O painel mostra a **corrente em A** e o **modo de transferência**.
 - **Os ajustes mudam a solda:**
   - **curto-circuito** (tensão baixa): pouco calor, bom para chapa fina;
   - **globular:** respinga e deixa o cordão irregular;
   - **spray** (só com argônio, corrente e tensão altas): liso, penetra muito e fura chapa fina;
   - **tensão baixa demais para o arame:** o metal deita sem fundir as bordas;
   - **tensão alta demais:** respinga, achata o cordão e morde a borda.
+  - **abaixo de 14 V:** o arame bate e mergulha na poça: cordão frio, alto, sem fundir as bordas e com respingo;
+  - **abaixo de 10 V:** o arco não abre; o arame só sai e bate na chapa;
+  - **tocha parada no mesmo lugar:** acaba furando a chapa fina, mais cedo quanto maior a tensão.
 - **Passar da chapa em níveis:** com calor demais, primeiro a raiz aparece no avesso (normal), depois o metal passa e fica pendurado do outro lado, depois a poça cai e a face afunda e, no limite, a chapa vara e abre um furo. No resultado, o botão **Ver o avesso** mostra tudo isso. Vale para o MIG/MAG, o eletrodo e o TIG (no filete, só o furo conta).
 - **Passes sobrepostos mais reais** (a partir de Banaee et al. 2023, sobre cordões sobrepostos):
   - cada cordão tem seção de parábola, e passes lado a lado somam. Com o passo certo (cerca de 2/3 da largura) a superfície fica quase plana; mais perto vira morro, mais longe deixa vale;
@@ -26,4 +29,4 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
 - Novo exercício técnico: **4. Curto-circuito, globular e spray**.
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil, eletrodo sem assistência.
 
-Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H98) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.
+Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H100) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.

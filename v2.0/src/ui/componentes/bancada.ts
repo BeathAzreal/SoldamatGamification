@@ -41,7 +41,7 @@ import {
   type ContextoProcesso,
   type Tecnica,
 } from '../../modelo/processo'
-import { Simulacao } from '../../modelo/simulacao'
+import { semArco, Simulacao } from '../../modelo/simulacao'
 import { desenharCena } from '../../render/cena'
 import { Escamas, Particulas } from '../../render/efeitos'
 import { geometriaDa } from '../../modelo/junta'
@@ -592,9 +592,9 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       ctx2d.clearRect(0, 0, vista.larguraCss, vista.alturaCss)
       const p = pos ?? estado.posicao
       const desvio = equilibrioArco(estado.ajustes, sim.contexto).desvio
-      visual.desenhar({ cordao: sim.cordao, registro: sim.registro, eventos: sim.eventos, posicao: p, arcoAberto: estado.arcoAberto, sobreAPeca: estado.sobreAPeca, desvio, agoraMs: agora, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: pos !== null, angulo: vista.angulo })
+      visual.desenhar({ cordao: sim.cordao, registro: sim.registro, eventos: sim.eventos, posicao: p, arcoAberto: estado.arcoAberto && !semArco(sim), sobreAPeca: estado.sobreAPeca, desvio, agoraMs: agora, aquecimento: estado.aquecimento, percurso: sim.percurso, rolagemGraus: giro.posicao.rolagemGraus, ponteiroDentro: pos !== null, angulo: vista.angulo })
       // Som do arco (H45) com a mesma regra de cena.ts.
-      somArco.atualizar(!!(p && estado.arcoAberto && estado.sobreAPeca), desvio, EQUILIBRIO.tolerancia)
+      somArco.atualizar(!!(p && estado.arcoAberto && !semArco(sim) && estado.sobreAPeca), desvio, EQUILIBRIO.tolerancia)
     } else desenharCena(ctx2d, vista, {
       cordao: sim.cordao,
       estado: { ...estado, posicao: pos ?? estado.posicao },

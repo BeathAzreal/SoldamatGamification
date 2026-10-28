@@ -59,7 +59,11 @@ export function aporteNecessario(ctx: ContextoProcesso): number {
 
 /** Metal acumulado sob o arco amortece a fusão (H33). */
 export function amortecimento(areaMm2: number): number {
-  return 1 / (1 + (areaMm2 / FUSAO.areaAmortecimentoMm2) ** 2)
+  // H99: o metal acumulado protege a chapa só até certo ponto. Com a tocha
+  // parada o calor continua entrando e atravessa (antes o índice caía com o
+  // tempo parado e a chapa nunca furava).
+  const a = Math.min(areaMm2, FUSAO.areaAmortecimentoMaxMm2)
+  return 1 / (1 + (a / FUSAO.areaAmortecimentoMm2) ** 2)
 }
 
 export function analisarFusao(cordao: Cordao, percurso: Percurso, ctx: ContextoProcesso): PontoFusao[] {
