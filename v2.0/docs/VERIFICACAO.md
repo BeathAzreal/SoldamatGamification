@@ -345,3 +345,8 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
   - 28 V com a tocha parada: a peça soldada mostra o furo, e a lista de defeitos traz penetração excessiva e raiz afundada;
   - 0 V: painel com 0 A e "Sem arco", sem luz de arco, e o status explica;
   - 12 V: "Arame batendo", caroço frio, sobreposição e respingos.
+- H101: `npx vitest run` com 538 testes passando (`tests/consumoChapa.test.ts`). Navegador, no treino MIG/MAG da chapa de 3 mm, a 28 V com a tocha parada:
+  - de cima: buraco vazado no meio da poça, com borda queimada;
+  - por baixo (câmera da execução girada): dá para ver através do buraco, e o metal pendurado fica em volta dele;
+  - no resultado: "Ver o avesso" mostra o furo.
+- Eletrodo ("Unir duas chapas") continua sem erros com o novo recorte das chapas.

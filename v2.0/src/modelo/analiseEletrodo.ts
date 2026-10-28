@@ -94,7 +94,7 @@ export function analisarEletrodo(peca: PecaEletrodo, dep: DepositoEletrodo, reg:
     caimento: novo(), rolos: novo(), gotejamento: novo(),
     mordeduraMenos: novo(), mordeduraMais: novo(), sobreposicaoMenos: novo(), sobreposicaoMais: novo(),
     cratera: novo(), porosidade: novo(), calor: novo(), escamaFase: novo(), escamaDir: new Int8Array(n),
-    penetracaoMm: novo(), afundamento: novo(), furoMm: novo(), gotasAvesso: [], humping: novo(),
+    penetracaoMm: novo(), afundamento: novo(), furoMm: novo(), gotasAvesso: [], larguraAvessoMm: novo(), humping: novo(),
     gotas: [], respingos: [], poros: [], empenoGraus: 0,
     limiteMordeduraMm: LIMITES.mordeduraLimiteMm, ocorrencias: [],
   }

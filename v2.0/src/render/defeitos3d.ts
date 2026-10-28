@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { AnaliseDefeitos } from '../modelo/defeitos'
+import { PENETRACAO, type AnaliseDefeitos } from '../modelo/defeitos'
 import type { GeometriaJunta } from '../modelo/junta'
 import { INFO_JUNTA, perfilNaJunta, pontoAoLadoDe, type DimensoesJunta, type TipoJunta } from '../modelo/juntas'
 import type { MaterialId } from '../modelo/material'
@@ -172,6 +172,11 @@ export class Defeitos3D {
     this.furos = new Bolinhas(this.grupo, tubo, new THREE.MeshBasicMaterial({ color: '#07080a' }))
   }
 
+  /** Material do metal no avesso: o buraco do H101 recorta ele também. */
+  get materialAvesso(): THREE.Material {
+    return this.avesso.malha.material as THREE.Material
+  }
+
   /** Ponto (s, n, w) da junta no mundo. */
   private mundo(s: number, n: number, w: number): THREE.Vector3 {
     const p = this.geo.pontoEm(s, n)
@@ -284,27 +289,30 @@ export class Defeitos3D {
 
     // H94: avesso da junta (só topo e V). Raiz contínua a cada 1 mm e gotas grandes penduradas.
     const esp = this.dim.espessuraMm
-    const raiz: [number, number, number, number][] = []
+    const raiz: [number, number, number, number, boolean][] = []
     if (!this.filete) {
       const cada = Math.max(1, Math.round(1 / this.passoMm))
       for (let i = 0; i < this.n; i += cada) {
         const mm = a.penetracaoMm[i]
-        if (mm < 0.12 || a.furoMm[i] > 0 || viva.visivel[i] !== 1) continue
-        raiz.push([(i + 0.5) * this.passoMm, viva.centro[i], 0.7 + 0.5 * mm, mm])
+        if (mm < 0.12 || viva.visivel[i] !== 1) continue
+        // H101: a faixa que vazou acompanha o calor para os lados; o buraco é recortado dela (lábio em volta).
+        raiz.push([(i + 0.5) * this.passoMm, viva.centro[i], Math.max(0.7 + 0.5 * mm, a.larguraAvessoMm[i] / 2), Math.max(mm, a.furoMm[i] > 0 ? PENETRACAO.penduradoMaxMm : 0), false])
       }
-      for (const g of a.gotasAvesso) raiz.push([g.xMm, g.nMm, g.raioMm, 1.6 * g.raioMm])
+      for (const g of a.gotasAvesso) raiz.push([g.xMm, g.nMm, g.raioMm, 1.6 * g.raioMm, true])
     }
     this.avesso.garantir(raiz.length)
-    raiz.forEach(([x, n, larg, altura], k) => {
+    raiz.forEach(([x, n, larg, altura, gota], k) => {
       const p = this.mundo(x, n, -esp - 0.4 * altura)
-      this.m.compose(p, this.q.identity(), this.e.set(Math.max(0.6, this.passoMm * 1.4), Math.max(0.15, altura), larg))
+      // Ao longo da junta, largo o bastante para as fatias se fundirem numa massa só (sem serrilhado).
+      this.m.compose(p, this.q.identity(), this.e.set(gota ? larg : Math.max(0.6, this.passoMm * 1.4, 0.35 * larg), Math.max(0.15, altura), larg))
       this.avesso.malha.setMatrixAt(k, this.m)
     })
     this.avesso.malha.count = raiz.length
     this.avesso.malha.instanceMatrix.needsUpdate = true
 
     const furos: [number, number, number][] = []
-    for (let i = 0; i < this.n; i++) if (a.furoMm[i] > 0 && viva.visivel[i] === 1) furos.push([(i + 0.5) * this.passoMm, viva.centro[i], a.furoMm[i]])
+    // H101: no topo e no V o buraco é recortado de verdade na chapa (palco3d); o cilindro escuro fica só no filete.
+    if (this.filete) for (let i = 0; i < this.n; i++) if (a.furoMm[i] > 0 && viva.visivel[i] === 1) furos.push([(i + 0.5) * this.passoMm, viva.centro[i], a.furoMm[i]])
     this.furos.garantir(furos.length)
     furos.forEach(([x, n, larg], k) => {
       // Do avesso até um pouco acima da face, para aparecer por cima do pouco metal que sobrou.

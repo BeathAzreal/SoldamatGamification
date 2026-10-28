@@ -18,7 +18,7 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
   - **tensão alta demais:** respinga, achata o cordão e morde a borda.
   - **abaixo de 14 V:** o arame bate e mergulha na poça: cordão frio, alto, sem fundir as bordas e com respingo;
   - **abaixo de 10 V:** o arco não abre; o arame só sai e bate na chapa;
-  - **tocha parada no mesmo lugar:** acaba furando a chapa fina, mais cedo quanto maior a tensão.
+  - **tocha parada no mesmo lugar:** consome a chapa em estágios: a raiz aparece embaixo, o metal vaza e pinga pelo avesso, a face afunda e, no ponto mais quente, abre um **buraco de verdade**, que alarga com o calor. Dá para ver através, de cima e por baixo. Chapa grossa aguenta mais; o alumínio quase não avisa antes de cair.
 - **Passar da chapa em níveis:** com calor demais, primeiro a raiz aparece no avesso (normal), depois o metal passa e fica pendurado do outro lado, depois a poça cai e a face afunda e, no limite, a chapa vara e abre um furo. No resultado, o botão **Ver o avesso** mostra tudo isso. Vale para o MIG/MAG, o eletrodo e o TIG (no filete, só o furo conta).
 - **Passes sobrepostos mais reais** (a partir de Banaee et al. 2023, sobre cordões sobrepostos):
   - cada cordão tem seção de parábola, e passes lado a lado somam. Com o passo certo (cerca de 2/3 da largura) a superfície fica quase plana; mais perto vira morro, mais longe deixa vale;
@@ -29,4 +29,4 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
 - Novo exercício técnico: **4. Curto-circuito, globular e spray**.
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil, eletrodo sem assistência.
 
-Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H100) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.
+Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H101) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.

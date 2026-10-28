@@ -62,7 +62,9 @@ describe('índice de fusão sintético (H31–H34)', () => {
   it('devagar demais não aumenta a fusão sem limite (amortecimento)', () => {
     const lento = noMeio(passe({ velocidade: () => 1 })).indice
     const medio = noMeio(passe({ velocidade: () => 2.5 })).indice
-    expect(lento).toBeLessThan(medio)
+    // H101: o que derreteu não volta, então o metal que chega depois não baixa mais o índice.
+    // Mesmo assim, com 2,5× o calor por mm, a fusão sobe muito menos que 2,5× (amortecimento).
+    expect(lento / medio).toBeLessThan(1.25)
   })
 
   it('tocha fora da junta → borda não coberta', () => {
