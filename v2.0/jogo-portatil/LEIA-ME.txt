@@ -6,7 +6,7 @@ X1 em rede: use o pacote de rede e ABRIR-OFICINA.bat (ou INICIAR-REDE.bat) no PC
 
 MÁQUINA MIG/MAG (novo na v2.0): tensão em volts (14 a 30 V) e alimentação do arame em m/min (1 a 15). O painel mostra a corrente em A e o modo de transferência: curto-circuito (pouca tensão, bom para chapa fina), globular (respinga e fica irregular) e spray (com argônio, corrente e tensão altas: liso e penetra muito, fura chapa fina). Tensão baixa para o arame deita o metal sem fundir as bordas; tensão alta demais respinga, achata e morde a borda.
 
-PASSAR DA CHAPA (novo na v2.0): calor demais aparece em níveis. Primeiro a raiz aparece no avesso (normal), depois o metal passa e fica pendurado do outro lado, depois a poça cai e a face afunda e, no limite, a chapa vara e abre um furo. No resultado, use Ver o avesso.
+PASSAR DA CHAPA (novo na v2.0): calor demais aparece em níveis. Primeiro a raiz aparece no avesso (normal), depois o metal passa e fica pendurado do outro lado, depois a poça cai e a face afunda e, no limite, a chapa vara e abre um furo. No resultado, use Ver o avesso. Vale para o MIG/MAG, o eletrodo e o TIG.
 
 PONTUAÇÃO. Antes de soldar, escolha o modo:
 - FÁCIL: só nota, sem aprovação. Vale a soma das 5 categorias, mesmo com zero em alguma.

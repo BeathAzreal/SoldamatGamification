@@ -17,7 +17,7 @@ export function resultadoTig(r: ResultadoTig, defeitos: DefeitoTig[], modo: stri
   const detalhes = () => abrirPainel('Avaliação da tentativa', h('section', { class: 'resultado-smaw' },
     h('p', {}, `Nota automática do jogo, de 0 a 1000. ${r.descricao}.`),
     h('ul', {}, ...r.itens.map((i) => h('li', {}, h('strong', {}, `${i.nome}: ${i.pontos}/${i.maximo}`), h('small', {}, i.explicacao)))),
-    h('p', {}, `Modo ${modo}. Furos: −${r.penalidadeFuros}. Total limitado a 0–1000.`),
+    h('p', {}, `Modo ${modo}. Furos: −${r.penalidadeFuros}. Metal pendurado e raiz afundada: −${r.penalidadeNiveis}. Total limitado a 0–1000.`),
     h('small', {}, 'Modelo didático de calor na chapa: não avalia penetração na raiz, cor de oxidação do inox nem porosidade. Não qualifica soldador.')))
   const graves = defeitos.filter((d) => d.grave).length
   const resumo = defeitos.length ? `${defeitos.length} defeito(s)${graves ? `, ${graves} pedindo reparo` : ''}: ${defeitos.map((d) => d.nome).join(', ')}.` : 'Nenhum defeito visível no trecho.'
@@ -38,7 +38,7 @@ export function resultadoTig(r: ResultadoTig, defeitos: DefeitoTig[], modo: stri
       h('div', { class: 'barra-trilho', role: 'meter', 'aria-label': i.nome, 'aria-valuemin': '0', 'aria-valuemax': String(i.maximo), 'aria-valuenow': String(i.pontos) },
         h('div', { class: 'barra-valor', style: `width:${(100 * i.pontos) / i.maximo}%` }),
         minimo !== null ? h('div', { class: 'barra-minimo', title: `Mínimo do Difícil: ${pct(minimo)}`, style: `left:${minimo * 100}%` }) : null)))),
-    h('p', { class: 'p15-descontos' }, r.penalidadeFuros ? `Descontos: furos −${r.penalidadeFuros}` : 'Sem descontos adicionais.'),
+    h('p', { class: 'p15-descontos' }, r.penalidadeFuros || r.penalidadeNiveis ? `Descontos: furos −${r.penalidadeFuros} · passar da chapa −${r.penalidadeNiveis}` : 'Sem descontos adicionais.'),
     h('div', { class: 'p15-botoes-resultado' },
       h('button', { type: 'button', on: { click: detalhes } }, 'Detalhes da avaliação'),
       h('button', { type: 'button', class: 'p15-botao-defeitos', 'data-graves': String(graves), title: resumo, 'aria-label': resumo, on: { click: listaDefeitos } }, `Defeitos (${defeitos.length})`)),

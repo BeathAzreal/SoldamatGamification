@@ -15,7 +15,8 @@ O jogo mostra **ALPHA v2.0** no topo. Novidades:
 - **Os ajustes mudam a solda:** o globular respinga, o spray penetra e fura chapa
   fina, o arco curto deita o metal sem fundir e a tensão alta morde a borda.
 - **Passar da chapa em níveis:** raiz aparente, metal pendurado no avesso, face
-  afundada e, no limite, furo. No resultado: **Ver o avesso**.
+  afundada e, no limite, furo, no MIG/MAG, no eletrodo e no TIG. No resultado:
+  **Ver o avesso**.
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil e
   eletrodo sem assistência.
 
