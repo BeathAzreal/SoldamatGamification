@@ -18,7 +18,7 @@ O jogo mostra **ALPHA v1.9** no topo. Novidades:
 - **Eletrodo sem assistência:** a vareta queima e o jogador desce com toques em
   **S** enquanto avança. Cordão em relevo e peça nova **Cordões sobre chapa**.
 
-**[BAIXAR PACOTE DE REDE v1.9 — para o X1 (Windows 64 bits, 39 MB)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip)**
+**[BAIXAR PACOTE DE REDE v1.9 — para o X1 (Windows 64 bits, 41 MB)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip)**
 
 No PC anfitrião, extraia a pasta inteira e abra **ABRIR-OFICINA.bat** (não precisa
 instalar nada; o Node.js vai junto). Deixe a janela do servidor aberta. No segundo

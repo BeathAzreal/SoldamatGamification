@@ -3250,3 +3250,29 @@ canvas.tela-solda-3d[hidden] {
   background: #f4efdf;
   box-shadow: 0 0 0 1px #0008;
 }
+
+/* Fase escondida do Arcade */
+.tela-segredo {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: #000;
+}
+.video-segredo {
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.pular-segredo {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+}
+.cartao-urgente {
+  border-color: #e23b2e;
+  box-shadow: 0 0 0 2px rgba(226, 59, 46, 0.35);
+}

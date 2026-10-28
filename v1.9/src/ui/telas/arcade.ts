@@ -1,4 +1,5 @@
 import { etapaArcade } from '../../arcade/desafios'
+import { detectorSenha, TEXTO_SEGREDO } from '../../arcade/segredo'
 import { seloMaterial } from '../componentes/material'
 import {
   avaliarDesafio,
@@ -141,7 +142,127 @@ function apresentarDesafio(app: App, p: Partida): void {
         h('button', { type: 'button', class: 'primario grande', on: { click: () => bancada(app, p) } }, 'Para a bancada'),
       ),
     )
+    // Senha escondida nesta tela: abre a fase urgente (não mexe em placar, vidas ou recordes).
+    const senha = detectorSenha()
+    const teclas = (ev: KeyboardEvent) => {
+      if (ev.repeat || ev.target instanceof HTMLInputElement) return
+      if (senha(ev.code)) videoSegredo(app, p)
+    }
+    window.addEventListener('keydown', teclas)
+    return () => window.removeEventListener('keydown', teclas)
   }, `${CONTEXTO} · desafio ${p.desafio.numero}`)
+}
+
+/** Vídeo da fase escondida: qualquer .mp4/.webm em src/assets/segredo entra embutido no HTML. */
+const VIDEO_SEGREDO = Object.values(import.meta.glob<string>('../../assets/segredo/*.{mp4,webm}', { eager: true, query: '?inline', import: 'default' }))[0]
+
+function videoSegredo(app: App, p: Partida): void {
+  if (!VIDEO_SEGREDO) {
+    desafioUrgente(app, p)
+    return
+  }
+  app.ir((app) => {
+    let foi = false
+    const seguir = () => {
+      if (foi) return
+      foi = true
+      desafioUrgente(app, p)
+    }
+    const video = h('video', { class: 'video-segredo', src: VIDEO_SEGREDO, autoplay: '', playsinline: '', controls: '', on: { ended: seguir, error: seguir } }) as HTMLVideoElement
+    // Fora da raiz do app: a tela inteira, por cima do topo e do fundo.
+    const camada = h('div', { class: 'tela-segredo' }, video, h('button', { type: 'button', class: 'pular-segredo', on: { click: seguir } }, 'Pular ▸'))
+    document.body.append(camada)
+    video.play().catch(() => {})
+    return () => {
+      video.pause()
+      camada.remove()
+    }
+  }, `${CONTEXTO} · ???`)
+}
+
+function desafioUrgente(app: App, p: Partida): void {
+  app.ir((app) => {
+    const m = missaoDoDesafio(p.desafio)
+    anexar(
+      app.raiz,
+      h(
+        'section',
+        { class: 'cartao-desafio cartao-urgente', 'aria-labelledby': 'titulo-urgente' },
+        h('p', { class: 'desafio-num piscar' }, `⚠ ${TEXTO_SEGREDO.titulo} ⚠`),
+        h('h2', { id: 'titulo-urgente', class: 'tela-titulo', tabindex: '-1' }, m.titulo),
+        h('p', { class: 'desafio-material' }, seloMaterial(m.material, m.geometria.espessuraMm), ` ${NOME_DIFICULDADE.profissional}`),
+        ...TEXTO_SEGREDO.historia.map((t) => h('p', {}, t)),
+        h('p', { class: 'dica' }, descreverJunta(m)),
+        h('div', { class: 'condicao condicao-livre' }, h('strong', {}, 'Salve o gato'), h('span', {}, TEXTO_SEGREDO.regra)),
+        h(
+          'div',
+          { class: 'acoes centro' },
+          h('button', { type: 'button', class: 'primario grande', on: { click: () => bancadaUrgente(app, p) } }, 'Para a bancada'),
+          h('button', { type: 'button', on: { click: () => apresentarDesafio(app, p) } }, 'Voltar ao desafio'),
+        ),
+      ),
+    )
+  }, `${CONTEXTO} · desafio urgente`)
+}
+
+function bancadaUrgente(app: App, p: Partida): void {
+  app.ir((app) => {
+    const m = missaoDoDesafio(p.desafio)
+    const prep = montarPreparacao(app, {
+      missao: m,
+      dificuldade: 'profissional',
+      oficial: 'Soldar (1 tentativa)',
+      treino: false,
+      dispositivos: p.dispositivo ? [p.dispositivo] : undefined,
+      inicial: p.ultimaConfig,
+      destaque: h('div', { class: 'condicao condicao-livre' }, h('strong', {}, TEXTO_SEGREDO.titulo), h('span', {}, TEXTO_SEGREDO.regra)),
+      aoIniciar: (config) => soldarUrgente(app, p, config),
+    })
+    anexar(app.raiz, h('div', { class: 'linha-titulo-arcade' }, titulo('Bancada', `${TEXTO_SEGREDO.titulo} · ${m.titulo}`), placarTopo(p)), prep.elemento)
+    return prep.destruir
+  }, `${CONTEXTO} · bancada`)
+}
+
+function soldarUrgente(app: App, p: Partida, config: ConfiguracaoTentativa): void {
+  const m = missaoDoDesafio(p.desafio)
+  app.ir(
+    telaExecucao({
+      missao: m,
+      dificuldade: 'profissional',
+      contexto: config.contexto,
+      ajustes: config.ajustes,
+      dispositivo: config.dispositivo,
+      preferencias: app.preferencias,
+      oficial: true,
+      rotulo: TEXTO_SEGREDO.titulo,
+      aoConcluir: ({ eventos }) => fimUrgente(app, p, pontuarRegistro(m, 'profissional', config.contexto, eventos, undefined, EXIGENCIA.desafio).resultado),
+      aoSair: () => fimUrgente(app, p, null),
+    }),
+    `${CONTEXTO} · solda`,
+  )
+}
+
+function fimUrgente(app: App, p: Partida, resultado: ResultadoPontuacao | null): void {
+  const salvou = !!resultado?.aprovada
+  app.ir((app) => {
+    anexar(
+      app.raiz,
+      h(
+        'section',
+        { class: `cartao-desafio ${salvou ? 'sucesso' : 'falha'}` },
+        h('p', { class: 'desafio-num' }, TEXTO_SEGREDO.titulo),
+        h('h2', { class: 'tela-titulo', tabindex: '-1' }, salvou ? 'GATO SALVO!' : 'AINDA NÃO…'),
+        h('p', {}, salvou ? TEXTO_SEGREDO.vitoria : TEXTO_SEGREDO.derrota),
+        h(
+          'div',
+          { class: 'acoes centro' },
+          salvou ? null : h('button', { type: 'button', on: { click: () => desafioUrgente(app, p) } }, 'Tentar de novo'),
+          h('button', { type: 'button', class: 'primario grande', on: { click: () => apresentarDesafio(app, p) } }, icone('continuar'), ` Voltar ao desafio ${p.desafio.numero}`),
+        ),
+      ),
+      resultado ? h('details', { class: 'detalhes-resultado' }, h('summary', {}, 'Ver a pontuação detalhada desta solda'), montarPontuacao(resultado)) : null,
+    )
+  }, `${CONTEXTO} · desafio urgente`)
 }
 
 function bancada(app: App, p: Partida): void {
