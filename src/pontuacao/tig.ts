@@ -30,7 +30,7 @@ export const MODOS_TIG = {
  * cada seção em fração do limite de furo: raiz aparente (normal), metal
  * pendurado no avesso, raiz afundada e furo. No T não há avesso livre.
  */
-export const NIVEIS_TIG = { raizAparente: 0.8, pendurado: 0.86, afunda: 0.93, limiteAvessoMm: 1 } as const
+export const NIVEIS_TIG = { raizAparente: 0.78, pendurado: 0.86, afunda: 0.93, limiteAvessoMm: 1 } as const
 
 export function niveisTig(p: PecaTig, m: ModeloTig, x: number): { penduradoMm: number; afundamento: number; furo: boolean } {
   const furo = m.furos.some((f) => Math.abs(f.xMm - x) <= 1.5)

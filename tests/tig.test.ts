@@ -110,6 +110,42 @@ describe('TIG (H92): modelo de calor, poça e vareta', () => {
   })
 })
 
+describe('TIG (H102): a vareta funde no ritmo do jogador', () => {
+  /** Avança um passo de uma vez (salto do mouse ou da caneta), toca a vareta 150 ms e espera o resto do ciclo. */
+  function passoEToque(p: PecaTig, passoMm: number, esperaS: number) {
+    const dt = 1 / 60
+    const m = new ModeloTig(p), dep = new DepositoEletrodo(comoPecaBase(p))
+    m.correnteA = (p.correnteA.min + p.correnteA.max) / 2
+    m.xMm = p.inicioMm
+    m.pedal = 1
+    m.distanciaMm = 2.5
+    let t = 0
+    const depositar = (x: number, y: number, v: number) => dep.depositar(x, y, v, t * 1000, 0.25, 0, 0, m.larguraDepositoMm)
+    const rodar = (s: number, mergulhar: boolean) => { m.mergulhar = mergulhar; for (let k = 0; k < s / dt; k++) { m.avancar(dt, depositar); t += dt } }
+    rodar(2, false)
+    while (m.xMm < p.fimMm) { m.xMm += passoMm; rodar(esperaS, false); rodar(0.15, true); rodar(0.55 - esperaS, false) }
+    return { m, r: avaliarTig(p, m, dep, 'profissional') }
+  }
+  for (const p of PECAS_TIG) {
+    it(`avançar 2 mm e tocar logo: a vareta vai à poça que ficou atrás e funde (${p.titulo})`, () => {
+      const { m, r } = passoEToque(p, 2, 0)
+      expect(m.varetaFria).toBe(0)
+      expect(m.toques.length).toBeGreaterThan(30)
+      // Reforço dentro da faixa da peça na maior parte do trecho.
+      expect(r.itens[1].pontos).toBeGreaterThan(150)
+    })
+  }
+  it('sem poça nenhuma, a vareta continua batendo na chapa fria', () => {
+    const p = PECAS_TIG[0]
+    const m = new ModeloTig(p)
+    m.xMm = 75
+    m.distanciaMm = 2.5
+    m.mergulhar = true
+    m.avancar(0.3)
+    expect(m.varetaFria).toBe(1)
+  })
+})
+
 describe('TIG (H92): nota de 0 a 1000', () => {
   for (const p of PECAS_TIG) {
     it(`soldador atento vai bem e é aprovado no Difícil: ${p.titulo}`, () => {

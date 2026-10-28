@@ -1045,3 +1045,16 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
   - o mapa recortando o ponto mais quente.
 - O teste de `tests/penetracao.test.ts` que pedia furo maior que 0,5 mm a 2 mm/s agora pede furo maior que 0, porque o buraco nasce pequeno.
 - Os números são do jogo; não é simulação de metal líquido.
+
+### H102 — a vareta do TIG funde no ritmo do jogador (v2.0, Claude)
+
+- **O defeito:** a ponta da vareta ficava a 0,8 mm à frente da *tocha*. Quem segue a instrução ("avance um passo a cada toque") move a tocha e toca logo depois. A poça ainda ficou para trás, e a vareta batia na chapa fria. Com passo de 2 mm, quase todo toque virava "vareta na chapa fria" e o reforço ficava em zero.
+- **Onde a vareta vai agora:** como o soldador faz, a vareta vai à borda da frente da *poça*.
+  - Se o ponto de antes, logo à frente do tungstênio, estiver fundido, ela fica nele, como antes.
+  - Se estiver frio, ela procura a poça logo atrás, até 4 mm atrás do tungstênio.
+  - Sem poça nenhuma, continua batendo na chapa fria.
+  - Durante um mergulho a vareta fica no mesmo ponto.
+- **Folga ao fundir:** um toque que já começou fundindo continua enquanto a ponta estiver a pelo menos 85 % da temperatura de fusão. Antes, o metal frio da vareta esfriava a célula e cortava o toque em 40–80 ms, e cada toque punha menos de 1 mm de vareta.
+- **Calibração:** com mais metal frio entrando, a poça esfria um pouco. Por isso a raiz aparente no avesso (H94) passou de 0,80 para 0,78 do limite de furo.
+- **Testes:** em `tests/tig.test.ts`, "avançar 2 mm e tocar logo" funde a vareta sem nenhum toque frio e com reforço na faixa nas três peças, e falha no código antigo. "Sem poça, a vareta bate" continua valendo.
+- Os números são do jogo.
