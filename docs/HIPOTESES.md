@@ -980,3 +980,17 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
 - **Defeito:** "Falta de fusão entre passes" (pede reparo) onde mais de 30 % da interface de uma fatia não fundiu, num trecho de pelo menos 2 mm.
 - **Corte:** o botão **Corte** no resultado do eletrodo desenha, em escala real, a chapa, as camadas de cada passe (uma cor por passe) e em vermelho as interfaces sem fundir. É o mesmo estado que a análise usou, sem defeito inventado na tela.
 - **Testes:** em `tests/defeitosEletrodo.test.ts`, um segundo passe com calor funde no primeiro (menos de 10 % de interface sem fundir) e um passe rápido, frio, não liga (mais de 50 %, defeito grave). A técnica boa nas cinco peças continua sem defeito.
+
+### H98 — forma pela alimentação e humping no MIG (v2.0, Claude)
+
+- **Forma pela alimentação:** a razão altura/largura passa a ser `razão pela tensão (H9) × fator da alimentação`. O fator é `(alimentação ÷ referência)^−0,2`, limitado entre 0,8 e 1,1. Na alimentação de referência ele vale 1, e nada muda.
+- **Origem:** a direção vem da Tabela 3 de Banaee et al. (2023). Na mesma velocidade, h/w caiu de 0,39 (1,8 m/min) para 0,28 (4,6 m/min), um expoente de cerca de 0,35. O jogo usa 0,2 e um teto de 1,1 porque o arame e a máquina são outros. Com o teto de 1,25, a condição "puxando" do inox-equipamento no Arcade ficou sem solução no Difícil. Os coeficientes das regressões do artigo **não** foram transferidos.
+- **Comparação de tentativas:** a decomposição da largura (H25) põe o efeito da alimentação na forma junto com o da taxa, e o fator da tensão usa só a parte da tensão. O produto continua exato.
+- **Humping (hipótese do jogo):** corcovas com pescoços estreitos entre elas, onde a tocha passou rápido **e** com corrente alta. O índice por fatia é o produto de `(vRel − 1,5) ÷ 0,8` e `(I − 190·d) ÷ (70·d)`, cada parte limitada a 0…1. Aqui vRel é a velocidade relativa à de referência da junta, I a corrente dos ajustes de quando a tocha passou (pelo registro) e d o diâmetro do arame em mm. O artigo cita o humping como limite da velocidade alta, mas a regra e os números são do jogo.
+- **Defeito:** "Cordão em corcovas (humping)" quando o índice passa de 0,3 num trecho de pelo menos 3 mm. Tira da nota de superfície como o escorrimento. No 3D, a altura do cordão ondula com período de 7 mm, e o volume médio fica o mesmo.
+- **Testes:** os testes ficam em `tests/humping.test.ts` e verificam:
+  - o fator vale 1 na referência e cai com a alimentação;
+  - um cordão com o dobro de arame no dobro da velocidade sai mais baixo para a largura;
+  - não há humping na corrente de referência andando rápido, nem com corrente alta no ritmo certo;
+  - há humping com corrente alta andando rápido;
+  - o resultado é o mesmo a 30 e a 144 quadros/s.

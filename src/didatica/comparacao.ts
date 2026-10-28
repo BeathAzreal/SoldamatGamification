@@ -1,6 +1,6 @@
 import type { Tentativa } from '../modelo/avaliacao'
 import { EXPLICACAO } from '../modelo/parametros'
-import { razaoAlturaLargura, taxaDeposicao, textoAlimentacao, textoTensao, type Ajustes } from '../modelo/processo'
+import { fatorFormaAlimentacao, razaoPelaTensao, taxaDeposicao, textoAlimentacao, textoTensao, type Ajustes } from '../modelo/processo'
 import { exigeExplicacaoContextual } from './contexto'
 import { n1, pct, variacao } from './formato'
 
@@ -168,8 +168,8 @@ export interface FatorLargura {
  */
 export function decomporLargura(a: Ajustes, b: Ajustes, vA: number, vB: number): FatorLargura[] {
   return [
-    { nome: `alimentação ${textoAlimentacao(a.alimentacao)} → ${textoAlimentacao(b.alimentacao)}`, fator: Math.sqrt(taxaDeposicao(b) / taxaDeposicao(a)) },
+    { nome: `alimentação ${textoAlimentacao(a.alimentacao)} → ${textoAlimentacao(b.alimentacao)}`, fator: Math.sqrt((taxaDeposicao(b) / taxaDeposicao(a)) * (fatorFormaAlimentacao(a) / fatorFormaAlimentacao(b))) },
     { nome: `velocidade média ${n1(vA)} → ${n1(vB)} mm/s`, fator: Math.sqrt(vA / vB) },
-    { nome: `tensão ${textoTensao(a.tensao)} → ${textoTensao(b.tensao)}`, fator: Math.sqrt(razaoAlturaLargura(a) / razaoAlturaLargura(b)) },
+    { nome: `tensão ${textoTensao(a.tensao)} → ${textoTensao(b.tensao)}`, fator: Math.sqrt(razaoPelaTensao(a) / razaoPelaTensao(b)) },
   ]
 }

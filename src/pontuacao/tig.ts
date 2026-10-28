@@ -50,7 +50,7 @@ export function analiseVisualTig(p: PecaTig, m: ModeloTig, n: number, passoMm: n
   const a: AnaliseDefeitos = {
     n, passoMm, caimento: novo(), rolos: novo(), gotejamento: novo(), mordeduraMenos: novo(), mordeduraMais: novo(),
     sobreposicaoMenos: novo(), sobreposicaoMais: novo(), cratera: novo(), porosidade: novo(), calor: novo(),
-    penetracaoMm: novo(), afundamento: novo(), furoMm: novo(), gotasAvesso: [],
+    penetracaoMm: novo(), afundamento: novo(), furoMm: novo(), gotasAvesso: [], humping: novo(),
     escamaFase: novo(), escamaDir: new Int8Array(n), gotas: [], respingos: [], poros: [], empenoGraus: 0, limiteMordeduraMm: 1, ocorrencias: [],
   }
   for (let i = 0; i < n; i++) {
