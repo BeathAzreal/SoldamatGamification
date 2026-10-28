@@ -169,7 +169,7 @@ export class App {
     const paginaArcade = rota === 'arcade' && !imersivo && !document.body.classList.contains('menu-grafico')
     document.body.classList.toggle('arcade-interno', paginaArcade)
     if (paginaArcade) this.raiz.prepend(h('button', { type: 'button', class: 'arcade-voltar', on: { click: () => this.voltarArcade() } }, '← VOLTAR AO ARCADE'))
-    if (imersivo) this.raiz.append(h('button', { type: 'button', class: 'atalho-pause', on: { click: () => this.abrirPausa() } }, 'Esc · Pausa'))
+    if (imersivo) this.raiz.append(h('button', { type: 'button', class: 'atalho-pause', 'aria-label': 'Menu / voltar', title: 'Pausar e abrir opções para voltar ou continuar', on: { click: () => this.abrirPausa() } }, '← Menu / voltar', h('kbd', {}, 'Esc')))
     if (typeof r === 'function') this.limpeza = r
     this.raiz.querySelector<HTMLElement>('.tela-titulo')?.focus()
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
