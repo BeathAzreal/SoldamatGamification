@@ -11,6 +11,9 @@ export function baseEletrodo(p: PecaEletrodo, y: number): number {
   return Math.min(0,-p.espessuraMm+faceRaizMm(p)+(n-a)/Math.tan(Math.PI/6))
 }
 
+/** H96: tempo sem receber metal para a célula contar como solidificada (ms). */
+export const SOLIDIFICA_MS=2000
+
 /** Depósito SMAW em células locais: sem deslocar metal para uma junta pré-fixada. */
 export class DepositoEletrodo {
   readonly nx=150
@@ -18,6 +21,9 @@ export class DepositoEletrodo {
   readonly dx=1
   readonly dy=.5
   readonly metal=new Float64Array(this.nx*this.ny)
+  /** H96: metal já solidificado em cada célula (passes anteriores) e quando a célula recebeu metal pela última vez (ms). */
+  readonly solido=new Float64Array(this.nx*this.ny)
+  private readonly tDeposito=new Float64Array(this.nx*this.ny).fill(-Infinity)
   readonly limitesX
   readonly alcanceY
   versao=0
@@ -73,7 +79,9 @@ export class DepositoEletrodo {
         if(!this.naPeca(cx,cy))continue
         const ax=((cx-x)/sx)**2,n=(cy-y)/meia,perfil=1-n*n
         if(ax>9 || perfil<=0)continue
-        const k=j*this.nx+i,altura=baseEletrodo(this.peca,cy)+this.metal[k]
+        const k=j*this.nx+i,base=baseEletrodo(this.peca,cy),altura=base+this.metal[k]
+        // H96: metal que não recebe nada há mais de SOLIDIFICA_MS já endureceu.
+        if(_agora-this.tDeposito[k]>SOLIDIFICA_MS)this.solido[k]=this.metal[k]
         minimo=Math.min(minimo,altura)
         celulas.push({k,peso:Math.exp(-.5*ax)*perfil,altura})
       }
@@ -82,9 +90,12 @@ export class DepositoEletrodo {
     // Dentro da junta (abaixo da face) o metal novo procura os pontos baixos: enche a abertura e o chanfro.
     // H95: acima da face vale só a parábola (a coroa não é achatada). No filete, o nível é o do canto.
     const nivel=Math.min(0,alvoEletrodo(this.peca).altura)
+    // H96: acima da face, o passe novo assenta a sua parábola sobre a superfície que encontra (passes
+    // anteriores incluídos), sem regra extra de escorrimento: a soma já dá vale, plano ou morro conforme
+    // a distância entre passes, como nos ensaios de Banaee et al. (2023, Fig. 10 e 13).
     for(const c of celulas){c.peso/=1+2*Math.max(0,Math.min(nivel,c.altura)-Math.min(nivel,minimo));soma+=c.peso}
     if(!soma)return
-    for(const c of celulas)this.metal[c.k]+=volume*c.peso/soma/(this.dx*this.dy)
+    for(const c of celulas){this.metal[c.k]+=volume*c.peso/soma/(this.dx*this.dy);this.tDeposito[c.k]=_agora}
     this.volume+=volume;this.versao++
   }
 }

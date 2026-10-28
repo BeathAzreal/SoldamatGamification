@@ -951,3 +951,22 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
   - volume exato;
   - o mesmo resultado a 30 e a 144 quadros/s;
   - largura maior com diâmetro maior e com arco longo.
+
+### H96 — passes lado a lado: vale, plano ou morro (v2.0, Claude)
+
+- **No jogo (eletrodo e TIG):** o passe novo assenta a sua parábola (H95) sobre a superfície que encontra, inclusive sobre os passes anteriores. O volume é conservado, e acima da face não há regra extra de escorrimento.
+- **Resultado** com dois passes iguais e o primeiro frio (60 s, como no artigo), medido no meio entre os centros:
+
+| Distância entre centros | Meio ÷ pico | Leitura |
+|---|---|---|
+| 2w/3 | +9 % | morro leve |
+| 0,75 × 2w/3 | +48 % | morro |
+| 1,3 × 2w/3 | −53 % | vale |
+
+- **Comparação com o artigo** (Banaee et al., 2023):
+  - distância menor que a crítica dá morro e maior dá vale (Fig. 10, p. 12);
+  - na distância do MMFOM, d = (w₁ + w₂)/3, que com materiais iguais é 2w/3 (eq. 6), os ensaios "invariavelmente" deram um morro leve (Fig. 13, p. 15).
+- **Regra descartada:** testei uma regra de escorrimento para os vales. Ela compensava demais (transformava 2w/3 em vale) e foi retirada.
+- **Metal frio:** cada célula registra o metal já solidificado (sem receber metal há mais de 2 s). O registro serve para separar os passes no corte e na fusão entre passes.
+- **Limites:** o artigo é de GMAW pulsado, posição plana, cordão sobre chapa. A distância 2w/3 é referência, não garantia de fusão: os ensaios mostram que a superfície plana não garantiu união (Fig. 14).
+- **Testes:** `tests/sobreposicao.test.ts`.
