@@ -32,6 +32,8 @@ export interface Cena3D {
   definirPosicao(p: PosicaoPeca): void
   vistaDeCima(): void
   vistaInicial(): void
+  /** H94: olha o avesso da junta (raiz, metal pendurado, furos). */
+  vistaAvesso(): void
   ajustarTamanho(largura: number, altura: number): void
   /** Fora da tela nada é desenhado (nem agendado). */
   definirVisivel(visivel: boolean): void
@@ -60,7 +62,8 @@ export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
   controles.minDistance = 25
   controles.maxDistance = 900
   // Não deixa a câmera passar para baixo do piso da sala (palco3d.ts).
-  controles.maxPolarAngle = Math.PI * 0.6
+  // H94 (v2.0): a câmera pode descer até o avesso da peça (raiz, metal pendurado e furos).
+  controles.maxPolarAngle = Math.PI * 0.97
 
   // Tocha simplificada (bocal) e o clarão do arco: só durante o replay.
   const tocha = new THREE.Mesh(new THREE.CylinderGeometry(7, 5, 28, 24, 1, true), new THREE.MeshStandardMaterial({ color: '#b08a4a', metalness: 0.9, roughness: 0.3 }))
@@ -171,6 +174,12 @@ export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
       const polar = f.polar < 1.2 ? f.polar + 0.95 : f.polar > 1.95 ? f.polar - 0.95 : f.polar - 0.35
       posicionarCamera(polar, (f.polar < 0.01 ? 0 : f.azimute) - 0.45, 0.95)
     },
+    vistaAvesso() {
+      medirPeca()
+      const f = deFrente()
+      // Do lado oposto à face, um pouco inclinado para ver o relevo da raiz.
+      posicionarCamera(Math.PI - f.polar - 0.35, (f.polar < 0.01 ? 0 : f.azimute) - 0.45, 0.95)
+    },
     definirPosicao(p) {
       if (p.rolagemGraus === posicao.rolagemGraus && p.giroGraus === posicao.giroGraus) return
       posicao = { ...p }
@@ -178,7 +187,6 @@ export function criarCena3D(op: OpcoesCena3D): Cena3D | null {
       palco.definirRolagem(p.rolagemGraus)
       medirPeca()
       // Peça virada para baixo ou de lado: a câmera precisa poder olhar por baixo.
-      controles.maxPolarAngle = normal.y < 0.5 ? Math.PI * 0.97 : Math.PI * 0.6
       if (jaEnquadrou) api.vistaInicial()
       pedir()
     },
