@@ -87,8 +87,10 @@ export function gerarDesafio(numero: number, aleatorio: () => number, anterior?:
   const introdutorias = MISSOES.slice(0, numero === 1 ? 1 : numero === 2 ? 2 : numero <= 4 ? 4 : MISSOES.length)
   const candidatas = introdutorias.filter((m) => m.material !== materialAnterior)
   const missao = sortear(candidatas.length ? candidatas : introdutorias)
-  const chanceProfissional = Math.min(0.75, Math.max(0, (numero - 4) * 0.15))
-  const dificuldade: Dificuldade = aleatorio() < chanceProfissional ? 'profissional' : 'aprendiz'
+  // H90 (v1.9): desafios só no Difícil (40 % em cada categoria). O sorteio antigo do nível
+  // continua consumindo o mesmo número aleatório, para o resto da sequência não mudar.
+  aleatorio()
+  const dificuldade: Dificuldade = 'profissional'
   let condicao: Condicao = { tipo: 'livre' }
   if (numero > 2) {
     const tipos: Condicao['tipo'][] = ['livre', 'maquina-ajustada', 'arco-unico']
@@ -131,7 +133,8 @@ export function multiplicador(combo: number): number {
 
 export function avaliarDesafio(d: Desafio, r: ResultadoPontuacao, e: DadosExecucao, combo: number): ResultadoDesafio {
   let motivo = ''
-  if (!r.aprovada) motivo = 'A solda não foi aprovada (condição essencial da missão).'
+  // H90 (v1.9): o desafio pede pelo menos 40 % em cada categoria (pontuarRegistro com EXIGENCIA.desafio).
+  if (!r.aprovada) motivo = `Abaixo de 40 % em: ${r.essenciais.filter((c) => !c.cumprida).map((c) => r.categorias.find((k) => k.id === c.id)?.nome.toLowerCase() ?? c.id).join(', ')}.`
   else if (d.condicao.tipo === 'arco-unico' && e.aberturasDeArco > 1) motivo = `O arco foi aberto ${e.aberturasDeArco} vezes.`
   else if (d.condicao.tipo === 'tempo-arco' && e.tempoArcoS > d.condicao.maximoS) motivo = `Tempo de arco de ${e.tempoArcoS.toFixed(1).replace('.', ',')} s, acima de ${d.condicao.maximoS} s.`
   else if (d.condicao.tipo === 'tecnica' && e.tecnica !== d.condicao.tecnica) motivo = 'A técnica exigida não foi usada.'
@@ -151,5 +154,5 @@ export function missaoDoDesafio(d: Desafio): Missao {
 
 /** Ritmo anunciado antes de começar, sem alterar vidas, combo ou nota física. */
 export function etapaArcade(numero: number): string {
-  return numero <= 2 ? 'Aquecimento: missão livre, nível Aprendiz' : numero <= 4 ? 'Controle: arco único ou máquina ajustada' : numero <= 6 ? 'Adaptação: técnica e dificuldade progressiva' : 'Desafio completo: tempo de arco e todas as condições'
+  return numero <= 2 ? 'Aquecimento: missão livre, no Difícil' : numero <= 4 ? 'Controle: arco único ou máquina ajustada' : numero <= 6 ? 'Adaptação: técnica e dificuldade progressiva' : 'Desafio completo: tempo de arco e todas as condições'
 }

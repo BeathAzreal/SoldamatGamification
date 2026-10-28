@@ -102,3 +102,11 @@ Somam-se ao depósito do GPT (H79–H80) e à nota de 0 a 1000 (H81). Não mudam
 **H86 — cordão 3D na tela:** o cordão que aparece é o cordão 3D (o mesmo do MIG, com seção arredondada, escamas e brilho de metal), alimentado com o mesmo metal, no mesmo lugar e ao mesmo tempo que o depósito do GPT (H79). O depósito continua decidindo o comprimento do arco, a nota de 0 a 1000 e a lista de defeitos; o cordão 3D é só o desenho, e a escória, a ponta e o martelinho seguem a sua superfície. A malha do depósito (`src/render/metalEletrodo.ts`) não aparece mais.
 
 Calibração (`tests/defeitosEletrodo.test.ts`, soldador simulado a 60 quadros/s): técnica boa (arco ≈ diâmetro, avanço de 2,5 mm/s, parada no fim, recuo na abertura, limpeza entre passes) não deixa defeito grave; avanço rápido demais dá falta de fusão; lento demais dá calor em excesso e, na raiz aberta, perfuração; arco longo dá mordedura, poros e respingos; não parar no fim deixa cratera; soldar por cima da escória sem limpar dá inclusão.
+
+## v1.9 — eletrodo sem assistência e cordões sobre chapa (H90 e H91, Claude)
+
+- Sem "Ajuda na altura": a vareta queima (1,5 mm/s na corrente base) e o jogador desce com toques em S enquanto avança com o mouse. Descida com a rampa de W, até 6 mm/s. `assistencia`/`compensar` continuam no modelo, mas a bancada os deixa em 0/false.
+- `RENDIMENTO15.deposicao` 2,8 (era 0,7): metal suficiente para o cordão sair em relevo com o consumo menor.
+- Peça "Cordões sobre chapa" (`cordao-sobre-chapa`, `sobreChapa: true`): chapa de 6,3 mm sem abertura; alvo com miolo de um diâmetro e 1,5 mm de altura. Fica no fim de `PECAS_ELETRODO` (os índices das peças antigas não mudam) e aparece primeiro no menu. Itens com nome próprio: "Cordão na largura e altura" e "Continuidade do cordão".
+- Resultado: Fácil sem aprovação; Difícil com ≥ 20 % em cada item e na nota final, e escória removida (`aprovacaoEletrodo`).
+- Testes: `tests/eletrodoMao.test.ts` (jogador simulado), `tests/aprovacaoEletrodo.test.ts`; os de consumo/compensação antigos foram ajustados ao H91 com comentário.

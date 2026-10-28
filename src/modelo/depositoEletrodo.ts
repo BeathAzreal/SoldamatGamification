@@ -74,6 +74,8 @@ export class DepositoEletrodo {
 /** A região avaliada vem do trabalho solicitado, não da altura global da chapa. */
 export function alvoEletrodo(p:PecaEletrodo){
   const filete=INFO_JUNTA[p.junta].familia==='filete',raiz=p.junta==='v'
+  // H91: cordão sobre chapa — miolo de um diâmetro de largura com pelo menos 1,5 mm de altura.
+  if(p.sobreChapa)return {raiz:false,filete:false,meia:p.diametroMm/2,faixa:p.diametroMm+2,altura:1.5,descricao:'Cordão em relevo sobre a chapa (pelo menos 1,5 mm de altura no miolo, sem falhas)'}
   const meia=filete?2.8:Math.max(.6,p.aberturaMm/2)
   return {raiz,filete,meia,faixa:meia+2,
     altura:raiz?-p.espessuraMm+2:filete?2.8:0,

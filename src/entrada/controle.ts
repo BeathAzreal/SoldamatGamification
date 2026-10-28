@@ -49,8 +49,8 @@ export const CONFIG_CONTROLE_PADRAO: ConfigControle = {
   inverterY: false,
 }
 
-/** Velocidade da tocha com o analógico no fim do curso e sensibilidade 1 (mm/s). */
-export const VELOCIDADE_MAXIMA_MMS = 30
+/** Velocidade da tocha com o analógico no fim do curso e sensibilidade 1 (mm/s). H87 (v1.8): metade (era 30), porque a solda certa pede metade da velocidade. */
+export const VELOCIDADE_MAXIMA_MMS = 15
 /** Com o botão de precisão pressionado. */
 export const FATOR_PRECISAO = 0.4
 /** Passo fixo de integração da posição (ms). */

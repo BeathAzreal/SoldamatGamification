@@ -63,7 +63,8 @@ describe('acionamento e consumo da v1.5', () => {
   })
   it('fim da vareta para o consumo; troca explícita não apaga o depósito', () => {
     const m = abrir()
-    m.avancar(40, -3)
+    // H91: descer no ritmo do consumo (1,5 mm/s na corrente base) gasta a vareta em ~63 s.
+    m.avancar(80, -m.consumoMmS)
     expect(m.restanteMm).toBe(VARETA15.reservaMm)
     expect(m.estado).toBe('fim')
     expect(m.trocarVareta()).toBe(false)

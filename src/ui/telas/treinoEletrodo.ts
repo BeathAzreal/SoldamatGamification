@@ -1,4 +1,5 @@
-import { avaliarEletrodo, type NivelISO } from '../../pontuacao/eletrodo'
+import { aprovacaoEletrodo, avaliarEletrodo, descontoDefeitos, MODOS_ELETRODO } from '../../pontuacao/eletrodo'
+import { NOME_DIFICULDADE, type Dificuldade } from '../../missoes/catalogo'
 import { resultadoEletrodo } from '../componentes/resultadoEletrodo'
 import { painelMaquina } from '../componentes/painelMaquina'
 import { Acionamento15, RENDIMENTO15, VARETA15, velocidadeAltura15, velocidadeDescida15, type FaixaArco15 } from '../../modelo/acionamento15'
@@ -30,7 +31,7 @@ const TEXTO_FAIXA: Record<FaixaArco15, string> = {
  * botão de soldar. O porta-eletrodo está energizado; o arco abre quando a
  * ponta toca a peça e o soldador controla altura, avanço e orientação.
  */
-export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => void): void {
+export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificuldade, voltar: () => void): void {
   app.ir((app) => {
     app.raiz.classList.add('app-cheia')
     app.escolherOutraPeca = voltar
@@ -109,17 +110,14 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     corrente.addEventListener('input', () => { modelo.soltar(); modelo.regular(Number(corrente.value)) })
     const diametro = h('select', { 'aria-label': 'Diâmetro do eletrodo' }, [2.5, 3.2].map(d => h('option', { value: d }, `${n1(d)} mm`)))
     diametro.addEventListener('change', () => { modelo.soltar(); modelo.regular(modelo.correnteA, Number(diametro.value)); canvas.focus() })
-    // H70: quanto do consumo a bancada compensa. Parcial é o padrão: o arco cresce devagar e o jogador corrige.
-    const ajudaAltura = h('select', { 'aria-label': 'Ajuda na altura' },
-      ([['0.8', 'Parcial (recomendada)'], ['1', 'Total (arco não cresce)'], ['0', 'Manual (sem ajuda automática)']] as const).map(([v, t]) => h('option', { value: v }, t)))
-    const aplicarAjuda = () => { modelo.assistencia = Number(ajudaAltura.value); modelo.compensar = false }
-    ajudaAltura.addEventListener('change', () => { aplicarAjuda(); canvas.focus() })
+    // H91 (v1.9): sem ajuda na altura. A vareta queima e quem desce o alicate é o jogador (S).
+    const aplicarAjuda = () => { modelo.assistencia = 0; modelo.compensar = false }
     const referencia = h('small', { class: 'p15-dica' })
     const fisica = h('fieldset', { class: 'p15-fonte' }, h('legend', {}, 'Fonte e consumível'),
       h('label', {}, h('span', { class: 'p15-linha' }, 'Corrente', correnteValor), corrente),
       h('label', { class: 'p15-linha' }, 'Eletrodo didático', diametro),
       referencia,
-      h('label', { class: 'p15-linha', title: 'A vareta queima e o arco cresce. Parcial: a bancada desce o alicate 80% do consumo e segurar S acompanha o consumo e reduz a distância. Manual: o acompanhamento só ocorre enquanto você segura a descida.' }, 'Ajuda na altura', ajudaAltura))
+      h('small', { class: 'p15-dica' }, 'A vareta queima e o arco cresce: dê toques em S para descer enquanto avança com o mouse.'))
     const faixa = h('input', { type: 'range', min: 0, max: 35, step: 0.1, value: 10, 'aria-label': 'Distância da ponta à peça' })
     const altura = h('label', {}, h('span', { class: 'p15-linha' }, 'Altura manual', h('small', {}, 'W / S ou roda')), faixa)
     const orientacoes = [
@@ -184,17 +182,17 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
     const zoomMenos=h('button',{type:'button','aria-label':'Afastar câmera',on:{click:()=>{vista.aproximar(150);canvas.focus()}}},'−')
     const area = h('div', { class: 'p15-vista' }, canvas, hud, teclasVista,
       h('div',{class:'zoom-bancada',role:'group','aria-label':'Zoom da câmera'},h('span',{title:'Teclas + e −'},'ZOOM'),zoomMenos,zoomValor,zoomMais))
-    const nivelISO: NivelISO = 'C' // Referência fixa do exercício; detalhes aparecem depois da tentativa.
+    const regras = MODOS_ELETRODO[modo] // H88: modo escolhido antes de soldar (Fácil ou Difícil).
     const encerrar = () => {
       if (encerrada || pausado || modal || modelo.tempoArcoS < .1) return
       soltar(); encerrada = true
       hud.hidden = true; teclasVista.hidden = true
-      const r = avaliarEletrodo(peca,cordao,modelo,nivelISO)
       registro.fimArco(modelo.xMm, modelo.yMm, performance.now(), 'soltou')
       const analise = analisarEletrodo(peca, cordao, registro)
       vista.atualizarDefeitos(analise.defeitos)
       const inspecao = inspecionarDefeitos(peca, cordao, registro, analise)
-      const resultado = resultadoEletrodo(r, inspecao, {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta}})
+      const r = avaliarEletrodo(peca,cordao,modelo,regras.nivel,{ preenchimentoCheio: regras.preenchimentoCheio, escoriaMax: regras.escoriaMax, descontoDefeitos: descontoDefeitos(modo, inspecao.defeitos) })
+      const resultado = resultadoEletrodo(r, inspecao, NOME_DIFICULDADE[modo], aprovacaoEletrodo(r, modo), {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta}})
       const painel = conteudo.querySelector<HTMLElement>('.p15-painel')!
       painel.hidden = true
       painelResultado = resultado.painel
@@ -215,7 +213,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, voltar: () => v
       h('header', { class: 'p15-cabecalho' },
         h('div', {},
           h('h2', { class: 'tela-titulo', tabindex: '-1' }, peca.titulo),
-          h('p', {}, `Eletrodo revestido · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · ${peca.aplicacao}`)),
+          h('p', {}, `Eletrodo revestido · modo ${NOME_DIFICULDADE[modo]} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · ${peca.aplicacao}`)),
         h('div', { class: 'p15-processos navegacao-de-partida' }, controles, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
       h('div', { class: 'p15-grade' }, area,
         h('aside', { class: 'p15-painel' },

@@ -756,15 +756,11 @@ function linhaDaRodada(b: BaseTorneio, pid: string, rodada: number): LinhaClassi
   }
 }
 
-function ordenar(c: ConfigTorneio, linhas: LinhaClassificacao[], aprovadasPorId?: Map<string, number>): LinhaClassificacao[] {
+function ordenar(c: ConfigTorneio, linhas: LinhaClassificacao[], _aprovadasPorId?: Map<string, number>): LinhaClassificacao[] {
   const desempate = c.desempate === 'integridade-desenho' ? (['integridade', 'desenho'] as const) : (['desenho', 'integridade'] as const)
   const automaticoPuro = c.modo === 'automatico'
   const comparar = (x: LinhaClassificacao, y: LinhaClassificacao): number => {
-    if (automaticoPuro) {
-      const ax = aprovadasPorId ? aprovadasPorId.get(x.participanteId)! : Number(x.aprovada)
-      const ay = aprovadasPorId ? aprovadasPorId.get(y.participanteId)! : Number(y.aprovada)
-      if (ax !== ay) return ay - ax
-    }
+    // v1.8 (H89): aprovação não passa à frente da nota; a classificação é pela nota.
     if (x.nota !== y.nota) return y.nota - x.nota
     if (!automaticoPuro && x.automatico !== y.automatico) return y.automatico - x.automatico
     for (const k of desempate) if (x[k] !== y[k]) return y[k] - x[k]

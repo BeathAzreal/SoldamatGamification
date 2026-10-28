@@ -110,12 +110,14 @@ trecho exigido **menos 2 mm em cada ponta** (H37).
 
 Cada missão lista suas condições essenciais (iguais desde a v1):
 
-| Código | Condição | Aprendiz | Profissional |
+| Código | Condição | Fácil | Difícil |
 |---|---|---|---|
 | E1 | Integridade prevista no trecho avaliado | ≥ 85 % | ≥ 95 % |
 | E2 | Nenhuma perfuração prevista (F > 2,6 em 1 mm ou mais) | sim | sim |
 | E3 | Cordão contínuo no trecho exigido (sem trecho de 1 mm ou mais sem cordão) | sim | sim |
 | E4 | Óxido removido antes de soldar (só missões de alumínio) | sim | sim |
+
+> **Desde a v1.8 (`pontuacao-v9`, H89) não há mais trava:** a entrega não aprovada recebe todos os pontos que fez, o conceito vem só da nota, os rankings e torneios ordenam pela nota e o Arcade e a História não bloqueiam por aprovação. O texto abaixo descreve as regras até a `pontuacao-v8`.
 
 **Se alguma condição essencial falhar, a entrega é "não aprovada"** e:
 
@@ -283,3 +285,53 @@ trecho no aproveitamento da **Execução**. Antes ele esticava o cordão da
 junta até o lugar novo. A mesma tentativa pode mudar de nota, então a versão
 subiu para pontuacao-v7.
 
+## pontuacao-v8 — modos Fácil e Difícil (v1.8, H88)
+
+O jogador escolhe o modo antes de soldar (missões, treino livre, treino de missão, Arcade e X1 já pediam o nível; agora os nomes são Fácil e Difícil). Os ids salvos continuam `aprendiz` (Fácil) e `profissional` (Difícil), então recordes antigos continuam legíveis; como as regras mudaram, a versão da nota passou para `pontuacao-v8` e tentativas antigas não são reavaliadas.
+
+| Parâmetro (`src/pontuacao/regras.ts`) | Fácil (`TOLERANCIAS_FACIL`) | Difícil (`TOLERANCIAS`) |
+|---|---|---|
+| Largura fora da faixa até zerar | 3 mm | 1,5 mm |
+| Reforço acima do máximo / falta de enchimento até zerar | 2 mm | 1 mm |
+| Alinhamento fora até zerar | 2 mm | 1 mm |
+| Índice de fusão que zera a posição (falta) | 0,4 | 0,6 |
+| Nota mínima de uma posição com fusão excessiva (antes de perfurar) | 0,5 | 0 |
+| Variação da largura que zera a regularidade | 30 % | 20 % |
+| Índice de deformação que zera o controle térmico | 3 | 2 |
+| Tempo de arco sobre a junta abaixo do qual zera essa parte da execução | 50 % | 70 % |
+| Reinícios até zerar | 6 | 3 |
+| Metal no trecho abaixo do qual zera | 60 % | 80 % |
+| Folga na faixa de largura e no alinhamento pedidos | 1 mm | 0 |
+
+Perfuração e as condições essenciais valem igual nos dois modos (a integridade mínima já era diferente por missão). Na referência (`tests/referencia.test.ts`), a mesma solda nunca vale menos no Fácil, e um passe lento demais vale cerca de 130 pontos a mais no Fácil.
+
+**Eletrodo (`src/pontuacao/eletrodo.ts`, `MODOS_ELETRODO`):** a nota de 0 a 1000 da v1.6 recebe o modo escolhido antes de soldar.
+
+| | Fácil | Difícil |
+|---|---|---|
+| Comparação ISO 5817 (reforço h/b) | nível D | nível B |
+| Preenchimento a partir do qual a nota não é reduzida | 60 % | 90 % |
+| Desconto máximo pela escória que restar | 100 | 200 |
+| Desconto por defeito grave (falta de fusão, perfuração, inclusão, sobreposição) | 25 cada, até 75 | 100 cada, até 300 |
+| Desconto por defeito leve | 0 | 15 cada, até 90 |
+
+## pontuacao-v9 — física mais lenta e sem trava (v1.8, H87 e H89)
+
+- **Sem trava (H89):** a condição essencial descumprida continua aparecendo ("não aprovada", com o motivo), mas não tira mais pontos: Controle térmico e Execução não são zerados, o conceito (S, A, B, C, D) vem só da nota, os rankings, a regra "melhor" do torneio e as classificações ordenam pela nota, o desafio do Arcade não é perdido por não aprovar, e a missão seguinte da História libera ao entregar.
+- **Física mais lenta (H87):** a solda certa pede metade da velocidade de antes (faixa verde de 4 a 8 mm/s na alimentação de referência). As faixas do Fácil e do Difícil não mudaram; mudou o que a física pede.
+
+## pontuacao-v10 — Fácil só nota, Difícil com mínimo por categoria (v1.9, H90)
+
+| Onde | Modo | Aprovação |
+|---|---|---|
+| Treino e missões MIG/MAG | Fácil | Nenhuma: só a nota |
+| Treino e missões MIG/MAG | Difícil | ≥ 20 % dos pontos em cada uma das 5 categorias |
+| Desafios do Arcade | só Difícil | ≥ 40 % em cada categoria; abaixo disso o desafio é perdido |
+| Modo História | só Difícil | ≥ 40 % em cada categoria para abrir a missão seguinte |
+| Eletrodo | Fácil | Nenhuma: só a nota |
+| Eletrodo | Difícil | ≥ 20 % em cada um dos 4 itens e na nota final, escória removida |
+
+- `EXIGENCIA = { dificil: 0.2, desafio: 0.4 }` e `exigenciaDe(d)` em `src/pontuacao/regras.ts`; `pontuarRegistro` aceita a exigência como último argumento.
+- `essenciais` traz uma condição por categoria (id = id da categoria). No Fácil é vazia.
+- O resultado mostra um traço no mínimo de cada barra e, no Fácil, o selo "pontuação pura, sem aprovação".
+- A nota é a mesma da v9 (nada nas categorias mudou); muda só quem é aprovado. Recordes antigos continuam lidos; os de versão anterior ficam marcados como tal.

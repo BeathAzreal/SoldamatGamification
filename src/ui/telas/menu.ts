@@ -80,7 +80,7 @@ export function telaMenu(app: App): void {
     const vez = torneio ? vezAtual(app.baseDoTorneio(torneio.id)) : null
     anexar(app.raiz,
       h('header', { class: 'grafico-titulo' }, h('h2', { class: 'tela-titulo', tabindex: '-1' }, 'OFICINA DE', h('br'), h('strong', {}, 'SOLDAGEM'))),
-      h('span', { class: 'grafico-versao' }, 'ALPHA / 1.7'),
+      h('span', { class: 'grafico-versao' }, 'ALPHA / 1.9'),
       h('nav', { class: 'grafico-lista', 'aria-label': 'Escolher modo de jogo' }, ...botoes),
       h('div', { class: 'grafico-legenda' }, descricao,
         torneio ? h('button', { class: 'grafico-retomar', type: 'button', on: { click: () => painelTorneio(app, torneio.id) } }, `↗ Retomar ${torneio.config.nome}${vez ? ' · rodada em andamento' : ''}`) : null),

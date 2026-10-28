@@ -24,7 +24,7 @@ function passe(ctx: ContextoProcesso, op: { ajustes?: Ajustes; v?: number; pos?:
   const sim = new Simulacao(ctx)
   sim.definirAjustes(op.ajustes ?? REF)
   if (op.pos) sim.definirPosicao(op.pos)
-  const v = op.v ?? 10
+  const v = op.v ?? 5 // v1.8 (H87): metade da velocidade de antes
   let t = 1000
   let x = 6
   sim.iniciarArco({ t, x, y: 0 })
@@ -54,7 +54,7 @@ const tipos = (a: AnaliseDefeitos): TipoDefeito[] => [...new Set(a.ocorrencias.m
 
 describe('defeitos visíveis (H50–H57)', () => {
   it('referência na plana, parando no fim: nenhum defeito e superfície perfeita', () => {
-    const a = analisar(passe(ctxRef(), { pararMs: 400 }))
+    const a = analisar(passe(ctxRef(), { pararMs: 800 }))
     expect(a.ocorrencias).toEqual([])
     expect(a.gotas).toHaveLength(0)
     expect(a.respingos).toHaveLength(0)
@@ -64,7 +64,7 @@ describe('defeitos visíveis (H50–H57)', () => {
 
   it('cratera (H55): fechar o arco andando deixa cratera; parar um instante enche', () => {
     expect(tipos(analisar(passe(ctxRef())))).toEqual(['cratera'])
-    expect(tipos(analisar(passe(ctxRef(), { pararMs: 400 })))).toEqual([])
+    expect(tipos(analisar(passe(ctxRef(), { pararMs: 800 })))).toEqual([])
     const a = analisar(passe(ctxRef()))
     const c = a.ocorrencias.find((o) => o.tipo === 'cratera')!
     expect(c.inicioMm).toBeGreaterThan(138)
@@ -89,26 +89,26 @@ describe('defeitos visíveis (H50–H57)', () => {
   })
 
   it('gravidade (H50): sobrecabeça com poça grande pinga; a mesma solda na plana não', () => {
-    const cabeca = analisar(passe(ctxRef(), { v: 7, pos: SOBRECABECA }))
-    const plana = analisar(passe(ctxRef(), { v: 7, pos: PLANA }))
+    const cabeca = analisar(passe(ctxRef(), { v: 3.5, pos: SOBRECABECA }))
+    const plana = analisar(passe(ctxRef(), { v: 3.5, pos: PLANA }))
     expect(tipos(cabeca)).toContain('gotejamento')
     expect(cabeca.gotas.length).toBeGreaterThan(10)
     expect(plana.gotas).toHaveLength(0)
     expect(meio(plana.gotejamento)).toBe(0)
     // Poça pequena (mais rápido) na sobrecabeça: sem gotas.
-    expect(analisar(passe(ctxRef(), { v: 10, pos: SOBRECABECA })).gotas).toHaveLength(0)
+    expect(analisar(passe(ctxRef(), { v: 5, pos: SOBRECABECA })).gotas).toHaveLength(0)
   })
 
   it('gravidade (H50): na vertical descendente a poça grande escorre e sobrepõe', () => {
-    const a = analisar(passe(ctxRef(), { v: 7, pos: VERTICAL_DESCENDO }))
+    const a = analisar(passe(ctxRef(), { v: 3.5, pos: VERTICAL_DESCENDO }))
     expect(tipos(a)).toEqual(expect.arrayContaining(['escorrimento', 'sobreposicao']))
     expect(meio(a.rolos)).toBeGreaterThan(0.5)
     // Mais rápido, poça menor: quase nada.
-    expect(meio(analisar(passe(ctxRef(), { v: 10, pos: VERTICAL_DESCENDO })).rolos)).toBeLessThan(0.1)
+    expect(meio(analisar(passe(ctxRef(), { v: 5, pos: VERTICAL_DESCENDO })).rolos)).toBeLessThan(0.1)
   })
 
   it('gravidade (H50): na horizontal o metal cai para a chapa de baixo; a de cima fica mordida', () => {
-    const a = analisar(passe(ctxRef(), { v: 7, pos: HORIZONTAL }))
+    const a = analisar(passe(ctxRef(), { v: 3.5, pos: HORIZONTAL }))
     // Rolagem 90° com giro 0: a gravidade puxa para +n.
     expect(meio(a.caimento)).toBeGreaterThan(0.5)
     expect(meio(a.mordeduraMenos)).toBeGreaterThan(meio(a.mordeduraMais))
@@ -123,7 +123,7 @@ describe('defeitos visíveis (H50–H57)', () => {
   })
 
   it('sobreposição (H53): devagar com arco curto deita o metal sem fundir', () => {
-    const a = analisar(passe(ctxRef(), { ajustes: { alimentacao: 2.5, tensao: 3.5 }, v: 3 }))
+    const a = analisar(passe(ctxRef(), { ajustes: { alimentacao: 2.5, tensao: 3.5 }, v: 1.5 }))
     expect(tipos(a)).toContain('sobreposicao')
     expect(meio(analisar(passe(ctxRef())).sobreposicaoMenos)).toBe(0)
   })
@@ -151,21 +151,21 @@ describe('defeitos visíveis (H50–H57)', () => {
   })
 
   it('empeno (H57): mais calor por mm, mais empeno', () => {
-    expect(analisar(passe(ctxRef(), { v: 5 })).empenoGraus).toBeGreaterThan(analisar(passe(ctxRef(), { v: 10 })).empenoGraus)
+    expect(analisar(passe(ctxRef(), { v: 2.5 })).empenoGraus).toBeGreaterThan(analisar(passe(ctxRef(), { v: 5 })).empenoGraus)
     expect(analisar(passe(ctxRef())).empenoGraus).toBeGreaterThan(0)
   })
 
   it('escamas (H56): espaçamento acompanha a velocidade (devagar → juntas)', () => {
     const fase = (a: AnaliseDefeitos) => Math.abs(a.escamaFase[260] - a.escamaFase[60]) / 100
-    const devagar = analisar(passe(ctxRef(), { v: 5 }))
-    const rapido = analisar(passe(ctxRef(), { v: 10 }))
+    const devagar = analisar(passe(ctxRef(), { v: 2.5 }))
+    const rapido = analisar(passe(ctxRef(), { v: 5 }))
     // Ciclos por mm: o dobro devagar.
     expect(fase(devagar) / fase(rapido)).toBeCloseTo(2, 1)
     expect(rapido.escamaDir[100]).toBe(1)
   })
 
   it('o mesmo registro dá os mesmos defeitos: replay e qualquer taxa de quadros', () => {
-    const sim = passe(ctxRef({ gas: 'co2' }), { v: 7, pos: SOBRECABECA, ajustes: { alimentacao: 5, tensao: 3.5 } })
+    const sim = passe(ctxRef({ gas: 'co2' }), { v: 3.5, pos: SOBRECABECA, ajustes: { alimentacao: 5, tensao: 3.5 } })
     const a = analisar(sim)
     const r = reproduzir(sim.contexto, sim.eventos)
     const b = analisar(r)
@@ -174,7 +174,7 @@ describe('defeitos visíveis (H50–H57)', () => {
     expect(b.respingos).toEqual(a.respingos)
     // Mesmas leituras com quadros de 7 ms e de 33 ms: o mesmo desenho.
     for (const quadrosMs of [7, 33]) {
-      const c = analisar(passe(ctxRef({ gas: 'co2' }), { v: 7, pos: SOBRECABECA, ajustes: { alimentacao: 5, tensao: 3.5 }, quadrosMs }))
+      const c = analisar(passe(ctxRef({ gas: 'co2' }), { v: 3.5, pos: SOBRECABECA, ajustes: { alimentacao: 5, tensao: 3.5 }, quadrosMs }))
       expect(c.gotas).toEqual(a.gotas)
       expect(c.ocorrencias).toEqual(a.ocorrencias)
     }
@@ -209,33 +209,34 @@ describe('defeitos visíveis (H50–H57)', () => {
     const sup = (r: ReturnType<typeof nota>) => cat(r, 'desenho').detalhes.find((d) => d.rotulo === 'Superfície')!.valor
 
     it('referência parando no fim: superfície 100 %', () => {
-      expect(sup(nota(passe(ctxRef(), { pararMs: 400 })))).toBe('100%')
+      expect(sup(nota(passe(ctxRef(), { pararMs: 800 })))).toBe('100%')
     })
 
     it('gotas na sobrecabeça baixam a geometria; a mesma solda na plana não', () => {
-      const cabeca = nota(passe(ctxRef(), { v: 7, pos: SOBRECABECA }))
-      const plana = nota(passe(ctxRef(), { v: 7, pos: PLANA }))
+      const cabeca = nota(passe(ctxRef(), { v: 3.5, pos: SOBRECABECA }))
+      const plana = nota(passe(ctxRef(), { v: 3.5, pos: PLANA }))
       expect(Number.parseInt(sup(cabeca), 10)).toBeLessThan(50)
       expect(sup(plana)).not.toBe(sup(cabeca))
     })
 
-    it('porosidade tira nota de fusão; os essenciais continuam os mesmos', () => {
+    it('porosidade tira nota de fusão; no Fácil não há aprovação (H90)', () => {
       const al = MISSOES.find((m) => m.id === 'aluminio-componente')!
       const base = { diametroArameMm: 1, gas: 'ar' as const, tecnica: 'neutra' as const, dbcpMm: 15 }
       const r = (oxidoRemovido: boolean) => {
         const ctx = contextoDaMissao(al, { ...base, oxidoRemovido })
-        const sim = passe(ctx, { pararMs: 400 })
+        const sim = passe(ctx, { pararMs: 800 })
         return pontuar({ missao: al, dificuldade: 'aprendiz', contexto: ctx, cordao: sim.cordao, percurso: sim.percurso, tempoArcoMs: sim.tempoDeArcoMs, eventos: sim.eventos })
       }
       const sujo = r(false)
       const limpo = r(true)
       expect(cat(sujo, 'integridade').pontos).toBeLessThan(cat(limpo, 'integridade').pontos)
-      expect(sujo.essenciais.map((e) => e.id)).toEqual(['E1', 'E2', 'E3', 'E4'])
+      expect(sujo.essenciais).toEqual([])
+      expect(sujo.exigencia).toBeNull()
     })
 
     it('cratera no fim custa pouco (é só a ponta), mas aparece', () => {
       const com = nota(passe(ctxRef()))
-      const sem = nota(passe(ctxRef(), { pararMs: 400 }))
+      const sem = nota(passe(ctxRef(), { pararMs: 800 }))
       expect(cat(sem, 'desenho').pontos - cat(com, 'desenho').pontos).toBeLessThanOrEqual(5)
     })
   })

@@ -11,7 +11,7 @@ function passe(
   sim: Simulacao,
   x0: number,
   x1: number,
-  velocidade: (x: number) => number = () => 12,
+  velocidade: (x: number) => number = () => 6, // v1.8 (H87): metade da velocidade de antes
   lateral: (x: number) => number = () => 0,
   t0 = 0,
 ): number {
@@ -50,7 +50,7 @@ describe('avaliação geométrica (H13–H17)', () => {
 
   it('velocidade oscilando → irregular', () => {
     const sim = new Simulacao()
-    passe(sim, 10, 140, (x) => (Math.floor(x / 10) % 2 === 0 ? 6 : 18))
+    passe(sim, 10, 140, (x) => (Math.floor(x / 10) % 2 === 0 ? 3 : 9))
     const m = sim.finalizar()!.avaliacao.medidas!
     expect(m.regularidade).toBe('irregular')
     expect(m.fracaoNoAlvo).toBeLessThan(0.8)
@@ -58,7 +58,7 @@ describe('avaliação geométrica (H13–H17)', () => {
 
   it('tocha fora da junta → deslocado e linha da junta descoberta', () => {
     const sim = new Simulacao()
-    passe(sim, 10, 140, () => 12, () => 5)
+    passe(sim, 10, 140, () => 6, () => 5)
     const a = sim.finalizar()!.avaliacao
     expect(a.medidas!.alinhamento).toBe('deslocado')
     expect(a.medidas!.desvioCentro.medioAbsMm).toBeCloseTo(5, 1)
@@ -68,7 +68,7 @@ describe('avaliação geométrica (H13–H17)', () => {
   it('cordão interrompido conta uma interrupção', () => {
     const sim = new Simulacao()
     const t = passe(sim, 10, 60)
-    passe(sim, 80, 140, () => 12, () => 0, t + 500)
+    passe(sim, 80, 140, () => 6, () => 0, t + 500)
     const tentativa = sim.finalizar()!
     expect(tentativa.avaliacao.medidas!.interrupcoes.quantidade).toBe(1)
     expect(tentativa.aberturasDeArco).toBe(2)
@@ -103,12 +103,12 @@ describe('encerramento da tentativa (H19)', () => {
     const t = passe(sim, 10, 60)
     sim.finalizar()
     const volume = sim.cordao.volumeTotal()
-    passe(sim, 70, 100, () => 12, () => 0, t + 100)
+    passe(sim, 70, 100, () => 6, () => 0, t + 100)
     expect(sim.cordao.volumeTotal()).toBe(volume)
     expect(sim.arcoAberto).toBe(false)
     sim.reiniciar()
     expect(sim.tentativaEncerrada).toBe(false)
-    passe(sim, 70, 100, () => 12, () => 0, t + 5000)
+    passe(sim, 70, 100, () => 6, () => 0, t + 5000)
     expect(sim.cordao.volumeTotal()).toBeGreaterThan(0)
   })
 
@@ -116,7 +116,7 @@ describe('encerramento da tentativa (H19)', () => {
     const sim = new Simulacao()
     const t = passe(sim, 10, 60)
     sim.definirAjustes({ alimentacao: 8, tensao: 8 })
-    passe(sim, 60, 120, () => 12, () => 0, t + 100)
+    passe(sim, 60, 120, () => 6, () => 0, t + 100)
     expect(sim.finalizar()!.ajustesUsados).toEqual([
       { alimentacao: 5, tensao: 5.5 },
       { alimentacao: 8, tensao: 8 },

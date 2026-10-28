@@ -1,14 +1,20 @@
 import { h } from '../dom'
 import { abrirPainel } from '../dialogo'
 import { conceito } from './pontuacao'
-import type { avaliarEletrodo } from '../../pontuacao/eletrodo'
+import type { avaliarEletrodo, aprovacaoEletrodo } from '../../pontuacao/eletrodo'
 import type { InspecaoEletrodo } from '../../pontuacao/defeitosEletrodo'
 
 type Resultado=ReturnType<typeof avaliarEletrodo>
 /** Mesmo fluxo do MIG: tentativa encerrada, placar, critérios e próxima tentativa. */
-export function resultadoEletrodo(r:Resultado,inspecao:InspecaoEletrodo,op:{nova:()=>void;pecas:()=>void;camada:(oculta:boolean)=>void}){
-  const meta=r.cobertura>=.95 && r.preenchimento>=.95 && !r.inspecaoPendente
-  const letra=conceito(r.nota,meta,1000)
+export function resultadoEletrodo(r:Resultado,inspecao:InspecaoEletrodo,modo:string,aprovacao:ReturnType<typeof aprovacaoEletrodo>,op:{nova:()=>void;pecas:()=>void;camada:(oculta:boolean)=>void}){
+  const minimo=aprovacao.exigencia,pct=(f:number)=>`${Math.round(f*100)} %`
+  const letra=conceito(r.nota,aprovacao.aprovada,1000)
+  // H90: Fácil é só nota; Difícil aprova com o mínimo em cada item.
+  const selo=minimo===null
+    ?h('p',{class:'selo selo-livre'},'Modo Fácil — pontuação pura, sem aprovação')
+    :aprovacao.aprovada
+      ?h('p',{class:'selo selo-ok'},`✔ Aprovada — pelo menos ${pct(minimo)} em cada item e na nota`)
+      :h('p',{class:'selo selo-falha'},'✖ Não aprovada — '+[aprovacao.abaixo.length?`abaixo de ${pct(minimo)} em: ${aprovacao.abaixo.join(', ')}`:'',aprovacao.escoria?'remova a escória para a inspeção':''].filter(Boolean).join('; '))
   const totalBase=r.itens.reduce((s,i)=>s+i.pontos,0),ajuste=totalBase-Math.round(totalBase*r.fator)
   const titulo=h('h2',{tabindex:'-1'},'RESULTADO DA TENTATIVA')
   const crosta=h('button',{type:'button','aria-pressed':'false',on:{click:()=>{
@@ -19,7 +25,7 @@ export function resultadoEletrodo(r:Resultado,inspecao:InspecaoEletrodo,op:{nova
   const detalhes=()=>abrirPainel('Avaliação da tentativa',h('section',{class:'resultado-smaw'},
     h('p',{},'Nota automática do jogo, de 0 a 1000. Critérios geométricos adaptados ao eletrodo revestido.'),
     h('ul',{},...r.itens.map(i=>h('li',{},h('strong',{},`${i.nome}: ${i.pontos}/${i.maximo}`),h('small',{},i.explicacao)))),
-    h('p',{},`Ajuste por preenchimento: −${ajuste}. Escória remanescente: −${r.penalidadeEscoria}. Total limitado a 0–1000.`),
+    h('p',{},`Modo ${modo} (H88): referência ISO 5817 nível ${r.nivel}. Ajuste por preenchimento: −${ajuste}. Escória remanescente: −${r.penalidadeEscoria}. Defeitos: −${r.penalidadeDefeitos}. Total limitado a 0–1000.`),
     h('p',{},r.criterioISO),h('p',{},r.dicas),h('small',{},r.limites)))
   // H85: o que se vê no cordão, onde está, por que aconteceu e como corrigir. Não entra na nota.
   const mm=(v:number)=>String(Math.round(v))
@@ -38,12 +44,13 @@ export function resultadoEletrodo(r:Resultado,inspecao:InspecaoEletrodo,op:{nova
   const painel=h('aside',{class:'p15-painel p15-resultado','aria-label':'Resultado da tentativa'},
     titulo,h('div',{class:'placar'},
       h('span',{class:`conceito conceito-${letra}`,'aria-label':`Conceito ${letra}`},letra),
-      h('div',{},h('span',{class:'placar-rotulo'},'PONTUAÇÃO AUTOMÁTICA'),h('div',{},h('span',{class:'placar-numero'},String(r.nota)),h('span',{class:'placar-max'},' / 1000')))),
-    h('p',{class:meta?'selo selo-ok':'selo selo-falha'},meta?'Meta do exercício atingida':'Há pontos para melhorar'),
+      h('div',{},h('span',{class:'placar-rotulo'},`PONTUAÇÃO · ${modo.toUpperCase()}`),h('div',{},h('span',{class:'placar-numero'},String(r.nota)),h('span',{class:'placar-max'},' / 1000')))),
+    selo,
     h('ul',{class:'barras-categorias','aria-label':'Notas por categoria'},...r.itens.map(i=>h('li',{},
       h('div',{class:'barra-cabeca'},h('span',{},i.nome),h('strong',{},`${i.pontos}/${i.maximo}`)),
-      h('div',{class:'barra-trilho',role:'meter','aria-label':i.nome,'aria-valuemin':'0','aria-valuemax':String(i.maximo),'aria-valuenow':String(i.pontos)},h('div',{class:'barra-valor',style:`width:${100*i.pontos/i.maximo}%`}))))),
-    h('p',{class:'p15-descontos'},ajuste||r.penalidadeEscoria?`Descontos: preenchimento −${ajuste} · escória −${r.penalidadeEscoria}`:'Sem descontos adicionais.'),
+      h('div',{class:'barra-trilho',role:'meter','aria-label':i.nome,'aria-valuemin':'0','aria-valuemax':String(i.maximo),'aria-valuenow':String(i.pontos)},h('div',{class:'barra-valor',style:`width:${100*i.pontos/i.maximo}%`}),
+        minimo!==null?h('div',{class:'barra-minimo',title:`Mínimo do Difícil: ${pct(minimo)}`,style:`left:${minimo*100}%`}):null)))),
+    h('p',{class:'p15-descontos'},ajuste||r.penalidadeEscoria||r.penalidadeDefeitos?`Descontos: preenchimento −${ajuste} · escória −${r.penalidadeEscoria} · defeitos −${r.penalidadeDefeitos}`:'Sem descontos adicionais.'),
     h('div',{class:'p15-botoes-resultado'},
       h('button',{type:'button',on:{click:detalhes}},'Detalhes da avaliação'),
       h('button',{type:'button',class:'p15-botao-defeitos','data-graves':String(graves),title:resumoDefeitos,'aria-label':resumoDefeitos,on:{click:listaDefeitos}},`Defeitos (${inspecao.defeitos.length})`)),

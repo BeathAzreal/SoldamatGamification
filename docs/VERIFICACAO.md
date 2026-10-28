@@ -1,5 +1,13 @@
 # Verificação
 
+## Alpha v1.8 — modos Fácil e Difícil, solda mais lenta e nota sem trava (branch `claude/v1.8`)
+
+- H87: o limite de 12 mm/s no mouse e na caneta foi retirado (o ponteiro voltou a ser o da v1.7). A física do MIG foi desacelerada: metade do metal por segundo, o dobro do calor necessário por mm, o dobro do tempo de aquecimento da peça, faixa verde de 4–8 mm/s. Todos os testes de solda simulada foram refeitos com metade da velocidade e o dobro das pausas e passam com os mesmos critérios de antes.
+- H88: modos Fácil e Difícil escolhidos antes de soldar (MIG e eletrodo); a mesma solda nunca vale menos no Fácil (`tests/referencia.test.ts`, `tests/defeitosEletrodo.test.ts`).
+- H89: sem trava da nota (`pontuacao-v9`). Testes ajustados de propósito: torneio ("melhor" e classificações pela nota), Arcade (não aprovar não perde o desafio) e um teste novo de que a condição essencial descumprida não zera categorias nem limita o conceito.
+- `npm run typecheck` e `npm test`: 46 arquivos, 470 testes passando.
+- Não testado em aparelhos físicos (mesa digitalizadora, controle, dois PCs).
+
 ## Alpha v1.7 — lista de defeitos e cordão 3D do eletrodo (branch `claude/v1.7`)
 
 - Trazidas da v1.6 organizada (pasta `v1.6/` da página inicial, PRs #25 e #26) para a alpha-v1.7 do GPT, no layout `src/`: registro do calor por passe, análise do cordão e lista de defeitos com lugar, causa e correção (H82–H85), e o cordão 3D do MIG desenhado no eletrodo no lugar da malha do depósito (H86). A nota de 0 a 1000, o depósito, o x1 em rede e o painel MIG do GPT não mudaram.
@@ -305,3 +313,15 @@ desenhar com raio negativo quando o gráfico ainda não tinha largura.
   previamente publicados não foram substituídos.
 
 Validação final: TypeScript, 305 testes em 24 arquivos e build de produção aprovados.
+
+## v1.9 (Claude)
+
+- `npx tsc --noEmit` sem erros; `npx vitest run`: 479 testes passando.
+- Navegador (Chromium com renderização por software, sem GPU): "Cordões sobre chapa" no Difícil. O cordão aparece em relevo na chapa; o resultado mostra os 4 itens com o traço dos 20 % e o selo de aprovação. Uma tentativa com escória e defeitos teve itens acima de 20 % e nota final 0, o que levou a exigir também a nota final e a escória removida.
+- Não testado: mesa digitalizadora, gamepad e computadores dos alunos. O equilíbrio do eletrodo foi calibrado com o jogador simulado, não com pessoas.
+
+## v1.9 — TIG (Claude)
+
+- `tests/tig.test.ts` (15 testes): calor e poça, vareta só funde na poça, contaminação e afiar, furo acima da faixa, independência da taxa de quadros (30 e 144 qps), soldador simulado aprovado no Difícil nas três peças, sem vareta, rápido demais, cratera, mapa da pressão da caneta.
+- Navegador (Chromium sem GPU, ~4 quadros/s): modo Só mouse e modo Mesa + mouse com eventos de caneta simulados (`pointerType: 'pen'`, com pressão) e cliques reais do mouse para a vareta. O jogo trocou para Mesa + mouse ao ver a caneta, a pressão virou corrente (75 A), a vareta fundiu na poça e o cordão apareceu em 3D. Nota de 590 numa tentativa com o robô de teste.
+- Não testado: mesa digitalizadora física, Windows Ink, caneta e mouse físicos ao mesmo tempo.

@@ -41,18 +41,19 @@ peça escolhida para a rodada, a mesma para todos. Com posicionador, a peça
 pode ser girada e tombada com o arco fechado (H47); presa na estrutura, não.
 
 O **Treino livre** usa a mesma interface das missões (bancada, execução,
-pontuação, inspeção), com a peça padrão (aço carbono 3 mm, Aprendiz, trecho
+pontuação, inspeção), com a peça padrão (aço carbono 3 mm, no modo escolhido antes — Fácil ou Difícil —, trecho
 10–140 mm) e o tipo de junta escolhido na bancada (cada um com a espessura de teste dele: o V em chapa de 6 mm), mais a explicação e a
 comparação com a tentativa anterior da etapa 4. Não conta. A interface
 antiga das etapas 1–4 foi removida (etapa 8).
 
-Cada missão tem duas dificuldades:
+Cada missão tem dois modos de pontuação, escolhidos antes de soldar (v1.8, H88; os ids salvos continuam `aprendiz` e `profissional`):
 
-| | Aprendiz | Profissional |
+| | Fácil | Difícil |
 |---|---|---|
 | Tentativas | 5 (alumínio: 6) | 3 (alumínio: 4) |
-| Faixa de largura | a do desenho, ampliada 0,5 mm de cada lado | a do desenho |
-| Tolerância de alinhamento | a do desenho + 0,5 mm | a do desenho |
+| Faixa de largura | a do desenho, ampliada 1 mm de cada lado | a do desenho |
+| Tolerância de alinhamento | a do desenho + 1 mm | a do desenho |
+| Faixas da nota graduada | duas vezes mais largas (`TOLERANCIAS_FACIL`) | `TOLERANCIAS` |
 | Integridade mínima (E1) | 85 % | 95 % |
 
 O que diferencia os materiais **não é cor nem multiplicador de dificuldade**:
@@ -114,3 +115,11 @@ deve ser acompanhada de revisão desses roteiros.
 As seis encomendas agora têm habilidade principal, preparação, execução, inspeção e um experimento de treino em `src/missoes/aprendizagem.ts`. O roteiro aparece na ficha comum e pode ser consultado antes do desbloqueio. Não muda limites, tentativas ou requisitos físicos.
 
 O resumo de progressão deriva as contagens das aprovações existentes e recomenda a próxima missão Aprendiz liberada. Depois recomenda os níveis Profissional pendentes. Missões inexistentes não são liberadas; dados antigos e chaves desconhecidas são preservados e não contam como capítulo concluído. Completar todas as etapas permite repetir o catálogo. Aprovação não equivale a certificação.
+
+## v1.8 — História sem trava (H89)
+
+A missão seguinte da História libera quando a anterior é **entregue** no modo Fácil, aprovada ou não; o modo Difícil de uma missão libera quando ela é entregue no Fácil. Perfis antigos continuam valendo (a lista salva tem o mesmo nome e formato).
+
+## v1.9 — História só no Difícil, com 40 % por categoria (H90)
+
+A História passa a ser jogada só no Difícil. A missão seguinte abre quando a anterior é **aprovada** com pelo menos 40 % dos pontos em cada uma das 5 categorias. A lista salva no perfil tem o mesmo nome e formato; só contam as aprovações do Difícil, então quem passou missões só no Fácil numa versão anterior refaz essas missões no Difícil.

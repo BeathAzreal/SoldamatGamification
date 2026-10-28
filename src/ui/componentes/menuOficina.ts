@@ -63,7 +63,7 @@ export function menuOficina(app: App, titulo: string, caminho: string, opcoes: O
     frame = requestAnimationFrame(controle)
     anexar(app.raiz,
       h('header', { class: 'grafico-titulo' }, h('p', {}, caminho), h('h2', { class: 'tela-titulo', tabindex: '-1' }, titulo)),
-      h('span', { class: 'grafico-versao' }, 'ALPHA / 1.7'),
+      h('span', { class: 'grafico-versao' }, 'ALPHA / 1.9'),
       h('nav', { class: 'grafico-lista', 'aria-label': titulo }, ...botoes),
       h('div', { class: 'grafico-legenda' }, descricao),
       h('footer', { class: 'grafico-rodape' }, h('span', {}, 'OFICINA DE SOLDAGEM'), h('span', {}, '↑ ↓ ESCOLHER    ENTER CONFIRMAR    ESC VOLTAR')))

@@ -11,7 +11,7 @@ import { DIFICULDADES, MISSOES } from '../src/missoes/catalogo'
 import { areaParaLargura, INFO_JUNTA } from '../src/modelo/juntas'
 import { equilibrioArco, razaoEfetiva, taxaDeposicao, type Tecnica } from '../src/modelo/processo'
 import { contextoDaMissao, requisitosEfetivos } from '../src/missoes/catalogo'
-import type { ResultadoPontuacao } from '../src/pontuacao/regras'
+import { EXIGENCIA, type ResultadoPontuacao } from '../src/pontuacao/regras'
 import { executar, jeitosDeSoldar } from './util'
 
 function semente(s = 42) {
@@ -26,7 +26,7 @@ describe('geração de desafios', () => {
     for (const n of [1, 2]) {
       const d = gerarDesafio(n, semente(n))
       expect(d.condicao.tipo).toBe('livre')
-      expect(d.dificuldade).toBe('aprendiz')
+      expect(d.dificuldade).toBe('profissional') // H90: desafios só no Difícil
     }
   })
 
@@ -43,12 +43,13 @@ describe('geração de desafios', () => {
 })
 
 /** Procura velocidade (e aceleração, no alumínio) que aprova com ajustes dados. */
-function aprovaCom(m: (typeof MISSOES)[number], d: (typeof DIFICULDADES)[number], ajustes: { alimentacao: number; tensao: number }, tecnica: Tecnica = 'neutra', vMin = 4) {
+function aprovaCom(m: (typeof MISSOES)[number], d: (typeof DIFICULDADES)[number], ajustes: { alimentacao: number; tensao: number }, tecnica: Tecnica = 'neutra', vMin = 2) {
   const preparo = { diametroArameMm: m.consumiveis.diametrosMm[m.consumiveis.diametrosMm.length - 1], gas: m.consumiveis.gases[0], oxidoRemovido: true, tecnica }
-  for (let v = vMin; v <= 30; v += 0.5) {
+  // v1.8 (H87): metade das velocidades de antes (era de 4 a 30 mm/s, de 0,5 em 0,5).
+  for (let v = vMin; v <= 15; v += 0.25) {
     for (const acel of m.material === 'aluminio' ? [0, 0.3, 0.5] : [0]) {
       for (const jeito of jeitosDeSoldar(m)) {
-        const r = executar(m, d, preparo, ajustes, v, acel, jeito)
+        const r = executar(m, d, preparo, ajustes, v, acel, { ...jeito, exigencia: EXIGENCIA.desafio })
         if (r.aprovada) return { v, acel, total: r.total }
       }
     }
@@ -56,9 +57,10 @@ function aprovaCom(m: (typeof MISSOES)[number], d: (typeof DIFICULDADES)[number]
   return null
 }
 
-describe('cada condição sorteável tem solução', () => {
+// H90 (v1.9): o Arcade só sorteia o Difícil e pede 40 % em cada categoria; a solução tem de existir nessa regra.
+describe('cada condição sorteável tem solução (Difícil, 40 % em cada categoria)', () => {
   for (const m of MISSOES) {
-    for (const d of DIFICULDADES) {
+    for (const d of ['profissional'] as const) {
       it(`máquina pré-ajustada: ${m.id} / ${d}`, () => {
         const { ajustes } = ajustePreDefinido(m, d)
         expect(aprovaCom(m, d, ajustes)).not.toBeNull()
@@ -81,7 +83,7 @@ describe('cada condição sorteável tem solução', () => {
               for (const f of [0.9, 1, 1.1]) {
                 for (const acel of m.material === 'aluminio' ? [0, 0.3, 0.5] : [0]) {
                   for (const jeito of jeitosDeSoldar(m)) {
-                    if (!achou && executar(m, d, preparo, a, v * f, acel, jeito).aprovada) achou = true
+                    if (!achou && executar(m, d, preparo, a, v * f, acel, { ...jeito, exigencia: EXIGENCIA.desafio }).aprovada) achou = true
                   }
                 }
               }
@@ -101,16 +103,18 @@ describe('cada condição sorteável tem solução', () => {
   }
 })
 
-const resultado = (total: number, aprovada = true) => ({ total, aprovada }) as ResultadoPontuacao
+const resultado = (total: number, aprovada = true) =>
+  ({ total, aprovada, exigencia: 0.4, categorias: [{ id: 'integridade', nome: 'Fusão prevista', pontos: aprovada ? 300 : 100, maximo: 400 }], essenciais: [{ id: 'integridade', descricao: '', cumprida: aprovada, justificativa: '' }] }) as unknown as ResultadoPontuacao
 
 describe('avaliação do desafio e combo', () => {
   const base = { numero: 3, missaoId: MISSOES[0].id, dificuldade: 'aprendiz' } as const
   const exec = { aberturasDeArco: 1, tempoArcoS: 10, tecnica: 'neutra' as Tecnica, ajustes: { alimentacao: 5, tensao: 5.5 } }
 
-  it('falha se não aprovar a missão, mesmo cumprindo a condição', () => {
+  it('perde o desafio com alguma categoria abaixo de 40 %, mesmo cumprindo a condição (H90)', () => {
     const r = avaliarDesafio({ ...base, condicao: { tipo: 'livre' } }, resultado(90, false), exec, 0)
     expect(r.concluido).toBe(false)
     expect(r.pontos).toBe(0)
+    expect(r.motivo).toContain('40 %')
   })
 
   it('verifica cada condição', () => {
@@ -176,5 +180,38 @@ describe('variedade de material no Arcade', () => {
 describe('variedade de material no modo História', () => {
   it('capítulos seguidos têm materiais diferentes', () => {
     for (let i = 1; i < MISSOES.length; i++) expect(MISSOES[i].material).not.toBe(MISSOES[i - 1].material)
+  })
+})
+
+// H90 de ponta a ponta, com solda simulada de verdade (sem resultado montado à mão).
+describe('vida no Arcade: abaixo de 40 % em qualquer categoria perde o desafio', () => {
+  it('uma solda que passa no 20 % do treino mas não no 40 % do desafio custa a vida', () => {
+    const m = MISSOES[0]
+    const { ajustes, preparo } = ajustePreDefinido(m, 'profissional')
+    const prep = { diametroArameMm: preparo.diametroArameMm!, gas: preparo.gas!, oxidoRemovido: true, tecnica: 'neutra' as const }
+    const dados = { aberturasDeArco: 1, tempoArcoS: 30, tecnica: 'neutra' as const, ajustes }
+    const desafio: Desafio = { numero: 1, missaoId: m.id, dificuldade: 'profissional', condicao: { tipo: 'livre' } }
+    let achou = false
+    for (let v = 2; v <= 30 && !achou; v += 0.25) {
+      const treino = executar(m, 'profissional', prep, ajustes, v, 0, { exigencia: 0.2 })
+      const arcade = executar(m, 'profissional', prep, ajustes, v, 0, { exigencia: EXIGENCIA.desafio })
+      if (!treino.aprovada || arcade.aprovada) continue
+      achou = true
+      const fraca = arcade.categorias.find((c) => c.pontos < 0.4 * c.maximo)!
+      expect(fraca.pontos).toBeGreaterThanOrEqual(0.2 * fraca.maximo)
+      const r = avaliarDesafio(desafio, arcade, dados, 3)
+      expect(r.concluido).toBe(false)
+      expect(r.pontos).toBe(0)
+      expect(r.motivo).toContain('40 %')
+      expect(r.motivo).toContain(fraca.nome.toLowerCase())
+    }
+    expect(achou, 'nenhuma velocidade ficou entre 20 % e 40 %').toBe(true)
+  })
+
+  it('com 40 % em tudo o desafio é concluído e soma pontos', () => {
+    const m = MISSOES[0]
+    const { ajustes } = ajustePreDefinido(m, 'profissional')
+    const ok = aprovaCom(m, 'profissional', ajustes)
+    expect(ok).not.toBeNull()
   })
 })

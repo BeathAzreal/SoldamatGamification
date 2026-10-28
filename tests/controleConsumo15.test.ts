@@ -14,12 +14,16 @@ describe('H74: acompanhar a vareta sem interromper o arco', () => {
     }
     return {m,inicial}
   }
-  it('até uma preferência antiga de 1 mm/s consegue reduzir o arco com corrente alta',()=>{
+  // H91 (v1.9): a descida não soma mais o consumo; um toque curto (0,15 s) com
+  // corrente alta só segura o arco, mas segurar S ganha da queima em qualquer corrente.
+  it('com corrente alta, segurar S ganha da queima da vareta (sem ajuda automática, segurando 0,5 s)',()=>{
     for(const ajuda of [0,0.8,1]) {
       const {m,inicial}=ensaio(120,180,ajuda)
-      expect(m.distanciaMm).toBeLessThan(inicial-0.2)
+      expect(m.distanciaMm).toBeLessThan(inicial+0.5)
       expect(m.estado).toBe('arco');expect(m.grudadas).toBe(0)
     }
+    const m=new Acionamento15('eletrodo');m.regular(180)
+    expect(velocidadeDescida15(0.5,1,m.consumoMmS,0,1,true)).toBeGreaterThan(m.consumoMmS)
   })
   it('sem comando não há compensação manual nem movimento de aproximação',()=>{
     expect(velocidadeDescida15(0,1,8,0,1,true)).toBe(0)
@@ -35,7 +39,8 @@ describe('H74: acompanhar a vareta sem interromper o arco', () => {
       const m=new Acionamento15('eletrodo');m.regular(corrente);m.assistencia=ajuda
       m.abrirAoTocar=true;m.pressionado=true;m.definirDistancia(.2);m.avancar(1/120);m.definirDistancia(2.5)
       let descendo=false,segurado=0,tempo=0
-      while(tempo<60 && m.estado!=='fim') {
+      // H91: consumo de 1,5 mm/s → a vareta dura mais; dá até 120 s para chegar ao fim.
+      while(tempo<120 && m.estado!=='fim') {
         if(m.distanciaMm>=3)descendo=true
         if(m.distanciaMm<=2.2)descendo=false
         segurado=descendo?segurado+1/fps:0

@@ -9,7 +9,7 @@ import {
   type Preparo, descreverJunta } from '../../missoes/catalogo'
 import { MATERIAIS } from '../../modelo/material'
 import type { Ajustes } from '../../modelo/processo'
-import { CATEGORIAS, ESCALA_PONTUACAO, NOME_CATEGORIA, PESOS_PADRAO, type Pesos } from '../../pontuacao/regras'
+import { CATEGORIAS, ESCALA_PONTUACAO, exigenciaDe, NOME_CATEGORIA, PESOS_PADRAO, type Pesos } from '../../pontuacao/regras'
 import type { App } from '../app'
 import { montarBancada, type ConfiguracaoTentativa } from '../componentes/bancada'
 import { icone } from '../componentes/icones'
@@ -18,17 +18,16 @@ import { h, n1, pct } from '../dom'
 export type { ConfiguracaoTentativa } from '../componentes/bancada'
 
 /** Ficha da missão: situação, desenho, requisitos, condições essenciais e critérios. */
-export function montarBriefing(m: Missao, d: Dificuldade, extras: { tentativas?: string; regra?: string; pesos?: Pesos } = {}): HTMLElement {
+export function montarBriefing(m: Missao, d: Dificuldade, extras: { tentativas?: string; regra?: string; pesos?: Pesos; exigencia?: number | null } = {}): HTMLElement {
   const roteiro = roteiroDaMissao(m)
   const req = requisitosEfetivos(m, d)
   const material = MATERIAIS[m.material]
   const pesos = extras.pesos ?? PESOS_PADRAO
-  const essenciais = [
-    `Integridade prevista em pelo menos ${pct(req.integridadeMinima)} do trecho`,
-    'Evitar perfuração',
-    'Cordão contínuo no trecho exigido',
-    ...(material.exigeLimpeza ? ['Óxido removido antes de soldar'] : []),
-  ]
+  // H90: aprovação por categoria (Fácil: nenhuma; Difícil: 20 %; desafios e História: 40 %).
+  const exigencia = extras.exigencia === undefined ? exigenciaDe(d) : extras.exigencia
+  const essenciais = exigencia === null
+    ? ['Modo Fácil: não há aprovação, vale só a nota']
+    : [`Pelo menos ${pct(exigencia)} dos pontos em cada uma das cinco categorias`]
   const item = (rotulo: string, valor: string) => [h('dt', {}, rotulo), h('dd', {}, valor)]
   return h(
     'article',

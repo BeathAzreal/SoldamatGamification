@@ -17,6 +17,8 @@ export function pontuarRegistro(
   contexto: ContextoProcesso,
   eventos: EventosCompactos,
   pesos: Pesos = PESOS_PADRAO,
+  /** H90: mínimo por categoria (desafios e História: 0,4). Ausente = o do modo. */
+  exigencia?: number | null,
 ): { sim: Simulacao; resultado: ResultadoPontuacao } {
   const sim = reproduzir(contexto, descompactar(eventos))
   const resultado = pontuar(
@@ -31,6 +33,7 @@ export function pontuarRegistro(
       aberturasDeArco: sim.eventos.filter((ev) => ev.tipo === 'inicio').length,
       // v6: crateras nos fins de passe.
       eventos: sim.eventos,
+      exigencia,
     },
     pesos,
   )

@@ -809,3 +809,69 @@ O eletrodo passa a seguir o fluxo do MIG: soldar, encerrar por botão ou Enter, 
 ### H82–H86 — calor por passe, defeitos e cordão 3D do eletrodo (v1.6, Claude)
 
 Somados ao depósito (H79) e à nota de 0 a 1000 (H81), sem mudar nenhum dos dois: o calor que cada passe pôs em cada meio milímetro da junta (aporte em kJ/mm) comparado com o calor de referência da peça; daí falta de fusão, fusão fraca, calor em excesso e perfuração da raiz aberta; defeitos de superfície (mordedura, sobreposição, poros, cratera, inclusão de escória, respingos, abertura fora da junta, eletrodo grudado) desenhados sobre o metal; e a lista, no resultado, com o lugar, a causa e como corrigir; o cordão na tela é o cordão 3D do MIG, alimentado com o mesmo metal (H86). Detalhes e calibração em [PROTOTIPO-V15.md](PROTOTIPO-V15.md).
+
+### H87 — solda mais lenta pela física, não pelo mouse (v1.8, Claude)
+
+O mouse e a caneta continuam como antes: o ponto da tela é o ponto da peça, sem limite nem redução. O que mudou foi a física do MIG/MAG, para a solda certa pedir metade da velocidade de avanço:
+
+- `MODELO.taxaDeposicaoMm3s` de 100 para 50: o arame deposita metade do metal por segundo, então o mesmo cordão pede metade da velocidade;
+- `FUSAO.necessidadePorMm` de 0,01677 para 0,03354: cada mm de junta pede o dobro de calor para fundir, então a fusão certa pede o dobro de tempo sobre cada mm;
+- `tauAquecimentoS` de cada material em dobro (aço 24 s, inox 36 s, alumínio 16 s): a peça aquece e esfria no ritmo de um passe que agora dura o dobro;
+- faixa verde de velocidade (`VELOCIDADE.alvoMinMms`/`alvoMaxMms`) de 8–16 para 4–8 mm/s, velocidade típica de cada junta pela metade, escala do velocímetro de 40 para 20 mm/s;
+- escamas a cada 240 ms (eram 120) e 500 ms para encher a cratera (eram 250), para o cordão sair igual ao de antes na velocidade nova;
+- controle (gamepad): velocidade máxima de 15 mm/s (era 30), para o mesmo ponto do analógico dar a mesma solda.
+
+Andar na velocidade antiga agora deixa cordão fino e falta de fusão. Todos os testes de solda simulada foram refeitos com metade da velocidade e o dobro das pausas e dão os mesmos resultados de antes: o modelo é o mesmo, só com o tempo esticado em duas vezes. Números do jogo, não de norma.
+
+### H88 — modos de pontuação Fácil e Difícil (v1.8, Claude)
+
+O jogador escolhe Fácil ou Difícil antes de soldar, no MIG/MAG e no eletrodo. No MIG os dois níveis já existiam (Aprendiz e Profissional) com pouca diferença na nota; agora têm esses nomes e o Fácil tem faixas de tolerância duas vezes mais largas. No eletrodo, o Fácil compara com o nível D da ISO 5817 e desconta pouco pelos defeitos; o Difícil, com o nível B, e cada defeito grave custa 100 pontos. Tabelas em [PONTUACAO.md](PONTUACAO.md). Critérios do jogo, didáticos, não de norma.
+
+### H89 — nota sem trava (v1.8, Claude)
+
+Pedido do dono: "considere todas as pontuações independente da nota". A condição essencial descumprida (integridade mínima, perfuração, trecho sem cordão, óxido) continua sendo mostrada como "não aprovada", mas não zera Controle térmico e Execução, não limita o conceito a C, não põe aprovadas à frente nos rankings e torneios, não faz perder o desafio do Arcade e não trava a História (a missão seguinte libera ao entregar). Versão da nota: `pontuacao-v9`.
+
+### H90 — Fácil só nota; Difícil com mínimo por categoria; desafios e História no Difícil (v1.9, Claude)
+
+Pedido do dono: "no fácil a pontuação vai ser desbloqueada e não tem aprovação, apenas pontuação pura (mesmo se tirar 0 em alguma categoria), já no difícil você precisa de pelo menos 20 % em cada um dos 5 tipos de avaliação. Nos desafios precisa ser difícil exclusivo… pelo menos 40 % em cada uma das avaliações, e o modo história também."
+
+- **Fácil** (`aprendiz`): `exigencia = null`. Não há condição essencial nem selo de aprovada/reprovada; vale a soma das 5 categorias.
+- **Difícil** (`profissional`): `exigencia = 0,2`. Aprovada só com pelo menos 20 % dos pontos em cada categoria (integridade, desenho, regularidade, deformação, eficiência). As condições essenciais antigas (E1–E4) saem; cada categoria vira uma condição com o id dela.
+- **Desafios do Arcade e Modo História**: sempre no Difícil, com `EXIGENCIA.desafio = 0,4`. O desafio é perdido abaixo de 40 % em qualquer categoria; na História a missão seguinte só abre com a anterior aprovada assim.
+- **Eletrodo**: Fácil só nota; Difícil pede 20 % em cada um dos 4 itens e também na nota final (escória e defeitos descontam dela), com a escória removida.
+
+A nota continua contando inteira, aprovada ou não (H89). Versão da nota: `pontuacao-v10`.
+
+### H91 — eletrodo sem assistência na altura (v1.9, Claude)
+
+Pedido do dono: "Ele tem uma assistência que faz ficar muito fácil, não está 3D como antes, precisa de um balanceamento para a mecânica de precisar fazer o movimento e descer enquanto vai consumindo o eletrodo."
+
+- A opção "Ajuda na altura" saiu da bancada. A descida é só a do jogador, com a mesma rampa de W (toque curto desce pouco, segurar acelera até 6 mm/s); não soma mais o consumo da vareta.
+- Consumo da vareta 1,5 mm/s na corrente base (era 3), para o jogador conseguir acompanhar com toques em S. Com 180 A a vareta queima a ~3,8 mm/s e segurar S ainda ganha.
+- `RENDIMENTO15.deposicao` de 0,7 para 2,8: com o consumo menor, o metal por mm de vareta sobe para o cordão aparecer em relevo.
+- Peça nova "Cordões sobre chapa" (chapa inteira, sem abertura): o cordão fica todo por cima. Alvo: miolo de um diâmetro de largura com pelo menos 1,5 mm de altura.
+- Teste com jogador simulado (`tests/eletrodoMao.test.ts`, reação de 0,15 s): com atenção ele solda a vareta inteira sem grudar a 80, 90 e 100 A; sem controle o arco apaga em menos de 4 s.
+
+Números do jogo, calibrados por simulação; não foram medidos com jogadores nem em equipamento real.
+
+### H92 — TIG com mesa digitalizadora e mouse (v1.9, Claude)
+
+Pedido do dono: "Crie o TIG para o game, tente colocar a mesa digitalizadora junto com o mouse para isso."
+
+O TIG pede duas mãos: tocha numa, vareta de adição na outra, e o pé no pedal. No jogo:
+
+- **Mesa + mouse (duas mãos):** a caneta é a tocha (posição na peça; a pressão é o pedal; inclinar a caneta inclina a tocha). O mouse é a mão da vareta: o clique esquerdo mergulha a vareta na poça e a roda sobe e desce a tocha. O navegador separa os dois pelo tipo de ponteiro (`pen` e `mouse`), que chegam ao mesmo tempo. O jogo passa para este modo sozinho na primeira vez que vê a caneta.
+- **Só mouse:** o mouse é a tocha e segurar o botão esquerdo é o pedal (a corrente sobe em 0,35 s e desce em 0,6 s); Espaço mergulha a vareta; W/S ou a roda mudam a altura.
+- Um toque rápido (tecla ou clique) vale pelo menos 0,15 s de mergulho, para não se perder entre dois quadros.
+
+Modelo (`src/modelo/tig.ts`), todo didático:
+
+- Calor do arco = 0,65 × corrente × tensão (10 V + 0,6 V por mm de arco), espalhado como uma gaussiana que abre com o arco longo; condução no plano da chapa (campo de 150 × 40 mm, células de 1 × 0,5 mm) e perda para o resto da peça. A poça é onde a temperatura passa do ponto de fusão.
+- O tungstênio não se consome. Encostado na poça (≤ 0,3 mm) ele contamina: o arco fica instável até o jogador afiar (só com o arco apagado). Arco curto demais (< 1,1 mm) faz a vareta tocar o tungstênio.
+- A vareta desce para a borda da frente da poça. Só funde se tocar a poça; na chapa fria ela só bate (defeito). Fundir a vareta tira calor da poça.
+- Furo quando o calor passa do que a chapa fina aguenta; cratera quando o arco é cortado de uma vez com a poça grande.
+- O arco é medido até o topo do metal já posto: o cordão crescendo encurta o arco, e o jogador precisa subir a tocha.
+
+Nota de 0 a 1000: fusão no trecho 300, adição e reforço 200, largura regular 200, escamas regulares 150, limpeza do processo 150; furo desconta 40 (Fácil) ou 120 (Difícil). Fácil só nota; Difícil aprova com 20 % em cada item e na nota final, como no eletrodo (H90).
+
+Calibração: um soldador simulado (pedal cheio, 2 mm/s, toque de vareta a cada 0,7 s) faz as três peças com mais de 600 pontos e é aprovado no Difícil; sem vareta fica sem reforço nem escamas; andando a 9 mm/s não funde; corrente 25 A acima da faixa fura a chapa de 1,5 mm. Não foi testado com uma mesa digitalizadora de verdade: o caminho da caneta foi conferido no navegador com eventos de caneta simulados (com pressão).

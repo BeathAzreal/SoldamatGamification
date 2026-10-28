@@ -56,7 +56,8 @@ describe('refino da bancada SMAW (H68–H70)', () => {
     expect(livre.estado).not.toBe('arco')
     expect(assistido.estado).toBe('arco')
     expect(assistido.distanciaMm).toBeCloseTo(2.5, 1)
-    expect(assistido.restanteMm).toBeLessThan(115)
+    // H91: consumo de 1,5 mm/s → 3 s gastam ~4,5 mm.
+    expect(assistido.restanteMm).toBeLessThan(116)
   })
 
   it('mede o avanço da ponta e posicionar não conta como deslocamento', () => {

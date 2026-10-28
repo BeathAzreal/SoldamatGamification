@@ -11,7 +11,7 @@ import {
 import { Simulacao } from '../src/modelo/simulacao'
 
 /** Um passe reto a velocidade constante, com leituras a cada 8 ms. */
-function passe(ajustes: Ajustes, vMms = 12): Simulacao {
+function passe(ajustes: Ajustes, vMms = 6): Simulacao { // v1.8 (H87): metade da velocidade de antes
   const sim = new Simulacao()
   sim.definirAjustes(ajustes)
   let t = 0
@@ -44,8 +44,8 @@ describe('alimentação do arame (H1)', () => {
   })
 
   it('o dobro de alimentação no dobro da velocidade dá a mesma seção', () => {
-    const a = meio(passe({ alimentacao: 4, tensao: 5 }, 8)).areaMm2
-    const b = meio(passe({ alimentacao: 8, tensao: 5 }, 16)).areaMm2
+    const a = meio(passe({ alimentacao: 4, tensao: 5 }, 4)).areaMm2
+    const b = meio(passe({ alimentacao: 8, tensao: 5 }, 8)).areaMm2
     expect(b / a).toBeCloseTo(1, 2)
   })
 })
@@ -82,8 +82,8 @@ describe('equilíbrio tensão × alimentação (H10)', () => {
 describe('faixa-alvo (H11)', () => {
   it('acompanha a alimentação', () => {
     const f = faixaVelocidadeAlvo({ alimentacao: 10, tensao: 5 })
-    expect(f.minMms).toBeCloseTo(16, 9)
-    expect(f.maxMms).toBeCloseTo(32, 9)
+    expect(f.minMms).toBeCloseTo(8, 9)
+    expect(f.maxMms).toBeCloseTo(16, 9)
   })
 })
 

@@ -2,7 +2,11 @@
 export type Processo15 = 'mig' | 'eletrodo'
 import { Escoria15 } from './escoria15'
 export type EstadoArco15 = 'desligado' | 'pronto' | 'contato' | 'arco' | 'afastado' | 'fim' | 'grudado'
-export const VARETA15 = { inicialMm: 120, reservaMm: 25, consumoMmS: 3, contatoMm: 0.35, arcoMaxMm: 5 }
+/**
+ * H91 (v1.9): a vareta queima a 1,5 mm/s na corrente de referência (era 3), para o
+ * jogador conseguir avançar com o mouse e descer com S ao mesmo tempo, sem ajuda.
+ */
+export const VARETA15 = { inicialMm: 120, reservaMm: 25, consumoMmS: 1.5, contatoMm: 0.35, arcoMaxMm: 5 }
 const PASSO = 1 / 120
 /** H68: ponta deslizando acima desta velocidade conta como "riscar" a abertura. */
 export const RISCO15 = { velocidadeMmS: 8, fatorAderencia: 0.25 }
@@ -19,11 +23,16 @@ export function velocidadeAltura15(seguradoS: number, maximaMmS: number): number
   const minima = Math.min(2, maximaMmS)
   return minima + (maximaMmS - minima) * Math.min(1, seguradoS / 0.5)
 }
-/** H74: descida inclui o consumo vertical restante, além da correção pedida pelo jogador. */
-export function velocidadeDescida15(seguradoS: number, maximaMmS: number, consumoMmS: number, assistencia: number, cosInclinado: number, arcoAberto: boolean): number {
+/**
+ * H74 (v1.6) somava o consumo da vareta à descida enquanto S estava apertado.
+ * H91 (v1.9): sem essa ajuda. A descida é só a do jogador (mesma rampa de W); quem
+ * acompanha o consumo é a mão, com toques em S. Os parâmetros antigos ficaram para
+ * não mudar quem chama.
+ */
+export function velocidadeDescida15(seguradoS: number, maximaMmS: number, _consumoMmS: number, _assistencia: number, _cosInclinado: number, _arcoAberto: boolean): number {
   if (!(seguradoS > 0)) return 0
-  const compensacao = arcoAberto ? Math.max(0, consumoMmS) * Math.max(0, Math.min(1, cosInclinado)) * (1 - Math.max(0, Math.min(1, assistencia))) : 0
-  return velocidadeAltura15(seguradoS, Math.max(3, maximaMmS)) + compensacao
+  // Teto de 6 mm/s: segurando S a mão sempre ganha da queima, mesmo a 180 A (~3,8 mm/s).
+  return velocidadeAltura15(seguradoS, Math.max(6, maximaMmS))
 }
 /** H69: forma do depósito pelo comprimento do arco (razão altura/largura e instabilidade). */
 export interface FormaDeposito15 {
@@ -41,7 +50,15 @@ export interface FormaDeposito15 {
  * Metal depositado ÷ volume da alma consumida e, para a análise do calor
  * (H82), rendimento térmico do arco: a fração da energia que entra na peça.
  */
-export const RENDIMENTO15 = { deposicao: 0.7, termico: 0.8 }
+export const RENDIMENTO15 = {
+  /**
+   * H91 (v1.9): metal depositado por volume de alma queimada (era 0,7). Inclui o pó de
+   * ferro do revestimento e a escala do jogo: a vareta queima mais devagar que a real,
+   * mas o metal por segundo (≈ 21 mm³/s com Ø 2,5 a 90 A) fica perto do de um eletrodo real.
+   */
+  deposicao: 2.8,
+  termico: 0.8,
+}
 
 export class Acionamento15 {
   pressionado = false

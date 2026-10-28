@@ -6,27 +6,29 @@ import { montarAbas } from './abas'
 
 /**
  * Conceito estilo arcade (S, A, B, C, D) — só APRESENTAÇÃO da nota total.
- * Entrega não aprovada fica no máximo com C, para o conceito não esconder um
- * requisito essencial descumprido (docs/PONTUACAO.md).
+ * Desde a v1.8 (H89) vale a nota, aprovada ou não; `aprovada` fica para
+ * quem chama, sem efeito no conceito.
  */
-export function conceito(total: number, aprovada: boolean, escala = ESCALA_PONTUACAO): string {
+export function conceito(total: number, _aprovada: boolean, escala = ESCALA_PONTUACAO): string {
   // Limites em fração da escala (S ≥ 95 %, A ≥ 85 %, B ≥ 70 %, C ≥ 50 %).
   const f = total / escala
-  const c = f >= 0.95 ? 'S' : f >= 0.85 ? 'A' : f >= 0.7 ? 'B' : f >= 0.5 ? 'C' : 'D'
-  return !aprovada && 'SAB'.includes(c) ? 'C' : c
+  return f >= 0.95 ? 'S' : f >= 0.85 ? 'A' : f >= 0.7 ? 'B' : f >= 0.5 ? 'C' : 'D'
 }
 
-/** O que mais provavelmente fez a solda não ser aprovada, em linguagem de bancada. */
+/** O que mais provavelmente fez a solda não ser aprovada, em linguagem de bancada (H90). */
 function dicaReprovada(r: ResultadoPontuacao): string {
   const falhas = r.essenciais.filter((e) => !e.cumprida).map((e) => e.id)
   // O problema que ocupa mais junta.
   const problema = [...r.problemas].sort((a, b) => b.fimMm - b.inicioMm - (a.fimMm - a.inicioMm))[0]?.descricao ?? ''
-  const base = 'Enquanto a solda não for aprovada, deformação e eficiência ficam em zero: economia não compensa um requisito essencial.'
-  if (falhas.includes('E4')) return `${base} Marque a remoção do óxido na preparação.`
-  if (falhas.includes('E2') || /perfura|excessiv/.test(problema)) return `${base} Calor demais por mm: ande mais rápido ou reduza alimentação/tensão.`
-  if (falhas.includes('E3')) return `${base} Houve trecho sem cordão: não feche o arco no meio e cubra do INÍCIO ao FIM.`
-  if (/falta/.test(problema)) return `${base} Falta de fusão: ande mais devagar (fique na faixa verde de velocidade) ou aumente alimentação/tensão.`
-  if (/borda/.test(problema)) return `${base} O cordão saiu da junta: mantenha a tocha sobre a linha.`
+  const nomes = r.categorias.filter((c) => falhas.includes(c.id)).map((c) => c.nome.toLowerCase()).join(', ')
+  const base = `Abaixo do mínimo do Difícil em: ${nomes}.`
+  if (falhas.includes('integridade') && /perfura|excessiv/.test(problema)) return `${base} Calor demais por mm: ande mais rápido ou reduza alimentação/tensão.`
+  if (falhas.includes('integridade') && /falta/.test(problema)) return `${base} Falta de fusão: ande mais devagar (fique na faixa verde de velocidade) ou aumente alimentação/tensão.`
+  if (falhas.includes('desenho') && /borda/.test(problema)) return `${base} O cordão saiu da junta: mantenha a tocha sobre a linha.`
+  if (falhas.includes('desenho')) return `${base} Cubra o trecho do INÍCIO ao FIM, sem interrupções, com a largura do desenho.`
+  if (falhas.includes('regularidade')) return `${base} Mantenha o mesmo ritmo do começo ao fim.`
+  if (falhas.includes('deformacao')) return `${base} Calor demais na peça: ande um pouco mais rápido.`
+  if (falhas.includes('eficiencia')) return `${base} Mantenha o arco sobre a junta, sem reabrir à toa.`
   return base
 }
 
@@ -45,6 +47,9 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
   if (opcoes.animar) contarAte(total, r.total, casas)
   const escala = escalaDaPontuacao(r.versao)
   const letra = conceito(r.total, r.aprovada, escala)
+  // H90: no Fácil (exigencia null) não há aprovação; tentativas antigas (sem o campo) mostram como antes.
+  const semAprovacao = r.exigencia === null
+  const minimo = typeof r.exigencia === 'number' ? r.exigencia : null
 
   const categorias = h(
     'ul',
@@ -62,6 +67,7 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
           { class: 'barra-trilho', role: 'meter', 'aria-valuemin': '0', 'aria-valuemax': String(c.maximo), 'aria-valuenow': String(c.pontos), 'aria-label': c.nome },
           zerada ? h('div', { class: 'barra-valeria', style: `width:${(valeria / c.maximo) * 100}%` }) : null,
           h('div', { class: 'barra-valor', style: `width:${c.maximo ? (c.pontos / c.maximo) * 100 : 0}%` }),
+          minimo !== null && c.maximo > 0 ? h('div', { class: 'barra-minimo', title: `Mínimo do Difícil: ${Math.round(minimo * 100)} %`, style: `left:${minimo * 100}%` }) : null,
         ),
       )
     }),
@@ -72,8 +78,8 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
     const resumo = h(
       'section',
       { class: 'cartao' },
-      h('h4', {}, 'Condições essenciais'),
-      h('ul', { class: 'lista-essenciais' }, r.essenciais.map((e) => h('li', { class: e.cumprida ? 'ok' : 'falha' }, h('strong', {}, `${e.cumprida ? '✔' : '✖'} ${e.descricao}. `), e.justificativa))),
+      h('h4', {}, semAprovacao ? 'Modo Fácil: só a nota, sem aprovação' : minimo !== null ? `Para aprovar: pelo menos ${Math.round(minimo * 100)} % em cada categoria` : 'Condições essenciais'),
+      r.essenciais.length ? h('ul', { class: 'lista-essenciais' }, r.essenciais.map((e) => h('li', { class: e.cumprida ? 'ok' : 'falha' }, h('strong', {}, `${e.cumprida ? '✔' : '✖'} ${e.descricao}. `), e.justificativa))) : null,
       r.penalidades.length ? h('h4', {}, 'Penalidades') : null,
       r.penalidades.length ? h('ul', { class: 'lista-penalidades' }, r.penalidades.map((p) => h('li', {}, h('strong', {}, `${p.descricao} (${nota(p.pontos)})`), ` — ${p.justificativa}`))) : null,
       h('h4', {}, 'Trechos com problema (previsão sintética)'),
@@ -108,13 +114,16 @@ export function montarPontuacao(r: ResultadoPontuacao, opcoes: { animar?: boolea
       h('span', { class: `conceito conceito-${letra}`, 'aria-label': `Conceito ${letra}` }, letra),
       h('div', {}, h('span', { class: 'placar-rotulo' }, opcoes.rotulo ?? 'PONTUAÇÃO AUTOMÁTICA'), h('div', {}, total, h('span', { class: 'placar-max' }, `/ ${escala}`))),
     ),
-    r.aprovada
-      ? h('p', { class: 'selo selo-ok' }, '✔ Aprovada — condições essenciais cumpridas')
-      : h('p', { class: 'selo selo-falha' }, '✖ Não aprovada — condição essencial descumprida'),
-    r.aprovada ? null : h('p', { class: 'dica dica-reprovada' }, dicaReprovada(r)),
+    semAprovacao
+      ? h('p', { class: 'selo selo-livre' }, 'Modo Fácil — pontuação pura, sem aprovação')
+      : r.aprovada
+        ? h('p', { class: 'selo selo-ok' }, minimo !== null ? `✔ Aprovada — pelo menos ${Math.round(minimo * 100)} % em cada categoria` : '✔ Aprovada — condições essenciais cumpridas')
+        : h('p', { class: 'selo selo-falha' }, minimo !== null ? `✖ Não aprovada — categoria abaixo de ${Math.round(minimo * 100)} %` : '✖ Não aprovada — condição essencial descumprida'),
+    semAprovacao || r.aprovada || minimo === null ? null : h('p', { class: 'dica dica-reprovada' }, dicaReprovada(r)),
     h('button', { type: 'button', class: 'botao-secundario', on: { click: () => abrirPainel('Plano para a próxima tentativa', h('section', {}, h('h3', {}, devolutiva.prioridade), h('h4', {}, 'O que foi registrado'), h('p', {}, devolutiva.evidencia), h('h4', {}, 'O que tentar'), h('p', {}, devolutiva.proximaAcao), h('h4', {}, 'Como conferir'), h('p', {}, devolutiva.verificar), h('p', { class: 'nota' }, 'Mude uma variável por vez, mantendo missão, dificuldade e dispositivo. Previsão didática; não diagnostica defeitos reais.'))) } }, 'Próxima tentativa: ', devolutiva.prioridade),
     categorias,
-    h('ul', { class: 'essenciais-curtos', 'aria-label': 'Condições essenciais' }, r.essenciais.map((e) => h('li', { class: e.cumprida ? 'ok' : 'falha', title: e.justificativa }, `${e.cumprida ? '✔' : '✖'} ${e.descricao}`))),
+    // No Difícil, a linha de cada categoria já tem a marca do mínimo; a lista só aparece em tentativas antigas.
+    minimo === null && r.essenciais.length ? h('ul', { class: 'essenciais-curtos', 'aria-label': 'Condições essenciais' }, r.essenciais.map((e) => h('li', { class: e.cumprida ? 'ok' : 'falha', title: e.justificativa }, `${e.cumprida ? '✔' : '✖'} ${e.descricao}`))) : null,
     h(
       'button',
       { type: 'button', class: 'botao-fantasma botao-detalhe', on: { click: () => abrirPainel('O que aconteceu e como é calculado', detalhe()) } },

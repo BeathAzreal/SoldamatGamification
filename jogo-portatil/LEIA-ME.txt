@@ -1,12 +1,14 @@
-OFICINA DE SOLDAGEM — ALPHA v1.7
+OFICINA DE SOLDAGEM — ALPHA v1.8
 
 Abra o HTML no Chrome ou Edge. Sem instalação ou internet.
 
 X1 em rede: use o pacote de rede e INICIAR-REDE.bat no PC anfitrião. Nos dois navegadores abra o endereço mostrado pelo servidor. Arcade → X1 em rede. O HTML portátil continua offline; ele não hospeda salas.
 
-MIG/MAG: jogo completo (missões, arcade, treino, torneio), como na v1.4.
+MIG/MAG: jogo completo (missões, arcade, treino, torneio). A solda certa agora pede metade da velocidade de antes (faixa verde de 4 a 8 mm/s): o arame deposita menos por segundo e a junta pede mais calor por mm. O mouse e a caneta respondem como antes. A nota conta inteira mesmo quando a solda não é aprovada.
 
-Eletrodo revestido: Treino → Processo: Eletrodo revestido → escolha a peça.
+Modo de pontuação: antes de soldar, escolha FÁCIL (tolerâncias largas) ou DIFÍCIL (tolerâncias apertadas; defeitos custam caro), no MIG/MAG e no eletrodo.
+
+Eletrodo revestido: Treino → Eletrodo → escolha a peça e o modo.
 Não há botão para soldar: leve a ponta com o mouse até o INÍCIO e desça com S até tocar; o arco abre sozinho.
 A vareta queima: segure S para acompanhar o consumo e reduzir o arco; solte para manter a distância (o medidor mostra curto, adequado ou longo). W sobe.
 Ajuda na altura: Parcial (padrão), Total ou Manual (sem ajuda automática). Empurrar contra a poça gruda: use Desgrudar.
