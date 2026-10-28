@@ -5,7 +5,7 @@ import { DepositoEletrodo } from '../../modelo/depositoEletrodo'
 import { INFO_JUNTA } from '../../modelo/juntas'
 import { ModeloTig, pedalDaPressao, TIG } from '../../modelo/tig'
 import { aprovacaoEletrodo } from '../../pontuacao/eletrodo'
-import { alvoTig, avaliarTig, inspecionarTig, trechoTig } from '../../pontuacao/tig'
+import { alvoTig, analiseVisualTig, avaliarTig, inspecionarTig, trechoTig } from '../../pontuacao/tig'
 import { criarBancada15 } from '../../render/bancada15'
 import type { App } from '../app'
 import { painelMaquina } from '../componentes/painelMaquina'
@@ -47,7 +47,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
     let varetaAte = 0
     const TOQUE_MINIMO_MS = 150
     let pausado = false, encerrada = false, foco = true
-    let pedido = 0, anterior = performance.now()
+    let pedido = 0, anterior = performance.now(), analiseMs = 0
     let painelResultado: HTMLElement | null = null
     let gestoCamera = false, ultimaTela = { x: 0, y: 0 }
     let avisoCaneta = ''
@@ -131,6 +131,8 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       dep = new DepositoEletrodo(base)
       cordao3D = novoCordao3D()
       alturaTocha = ALTURA.inicial
+      vista.atualizarDefeitos(null)
+      analiseMs = 0
     }
     corrente.addEventListener('input', () => { modelo.correnteA = Number(corrente.value) })
     const encerrar = () => {
@@ -335,6 +337,11 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
         : 'Leve o mouse ao INÍCIO e segure o botão esquerdo (pedal). Espere a poça, toque a vareta com Espaço na frente da poça e avance um passo a cada toque. No fim, um último toque e solte o botão.')
       if (ajuda.textContent !== instrucao) ajuda.textContent = instrucao
       atualizarObjetivo(agora)
+      // H94: metal no avesso, raiz afundada e furos aparecem no cordão 3D (a cada meio segundo e ao encerrar).
+      if ((agora - analiseMs > 500 && modelo.tempoArcoS > 0 && !encerrada) || (encerrada && analiseMs >= 0)) {
+        analiseMs = encerrada ? -1 : agora
+        vista.atualizarDefeitos(analiseVisualTig(peca, modelo, cordao3D.nPosicoes, cordao3D.passoMm))
+      }
       vista.desenharTig(modelo, cordao3D, pode ? dt : 0, encerrada)
       pedido = requestAnimationFrame(quadro)
     }

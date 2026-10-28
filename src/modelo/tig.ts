@@ -293,12 +293,23 @@ export class ModeloTig {
     if (this.estado !== 'arco') return
     const k = this.indice(this.xMm, this.yMm), t = this.peca.espessuraMm
     if (k < 0) return
-    const quente = this.temperatura[k] > TIG.furoK + TIG.furoPorMmK * t
+    const quente = this.temperatura[k] > this.limiteFuroK
     const larga = 2 * this.raioPocaMm > TIG.furoLargura * t + 3
     if (!quente && !larga) return
     if (this.furos.some((f) => Math.abs(f.xMm - this.xMm) < 4)) return
     this.furos.push({ xMm: this.xMm, yMm: this.yMm })
     eventos?.('furo')
+  }
+
+  /** Limite de temperatura que fura esta chapa (K acima do ambiente). */
+  get limiteFuroK(): number { return TIG.furoK + TIG.furoPorMmK * this.peca.espessuraMm }
+  /** H94: maior temperatura que a seção x já viu, em fração do limite de furo. */
+  picoRelativo(x: number): number {
+    const i = Math.round(x / DX - 0.5)
+    if (i < 0 || i >= NX) return 0
+    let pico = 0
+    for (let j = 0; j < NY; j++) pico = Math.max(pico, this.maxima[j * NX + i])
+    return pico / this.limiteFuroK
   }
 
   /** Afiar o tungstênio (só com o arco apagado): tira a contaminação. */

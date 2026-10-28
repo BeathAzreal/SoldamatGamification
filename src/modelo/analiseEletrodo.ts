@@ -17,6 +17,15 @@ export const LIMITES = {
   fusaoExcessoAcima: 1.7,
   /** Aporte acima disto (× referência) perfura a borda fina ou a raiz aberta. */
   perfuracaoAcima: 2.3,
+  /**
+   * H94 (v2.0): níveis antes do furo, no mesmo aporte relativo. Raiz aparente
+   * (normal), metal pendurado no avesso, raiz afundada. Chapa sem abertura
+   * aguenta 15 % a mais em tudo (inclusive o furo).
+   */
+  raizAparenteAcima: 1.4,
+  penduradoAcima: 1.6,
+  afundaAcima: 2.1,
+  fatorChapaFechada: 1.15,
   /** Mordedura máxima pelo modelo e a partir de quanto vira defeito (mm, H84). */
   mordeduraMaxMm: 0.8,
   mordeduraLimiteMm: 0.5,
@@ -148,6 +157,24 @@ export function analisarEletrodo(peca: PecaEletrodo, dep: DepositoEletrodo, reg:
     for (let k = Math.max(0, i - r); k <= Math.min(n - 1, i + r); k++) {
       const x = (k + 0.5) * passo
       a.cratera[k] = Math.max(a.cratera[k], c0 * Math.exp(-(((x - pa.xMm) / 1.4) ** 2)))
+    }
+  }
+  // H94: passar da chapa em níveis. Na raiz aberta vale o primeiro passe (os seguintes já têm metal por baixo);
+  // na chapa fechada, o passe mais quente. No filete não há avesso livre.
+  if (!filete) {
+    const raizAberta = peca.aberturaMm > 0
+    const k = raizAberta ? 1 : LIMITES.fatorChapaFechada
+    for (let i = 0; i < n; i++) {
+      const f = (raizAberta ? fusaoPrimeiro[i] : fusaoMax[i]) / k
+      if (f <= 0) continue
+      const raiz = 0.3 * lim01((f - LIMITES.raizAparenteAcima) / (LIMITES.penduradoAcima - LIMITES.raizAparenteAcima))
+      const excesso = lim01((f - LIMITES.penduradoAcima) / (LIMITES.perfuracaoAcima - LIMITES.penduradoAcima))
+      a.penetracaoMm[i] = raiz + 1.6 * excesso
+      a.afundamento[i] = lim01((f - LIMITES.afundaAcima) / (LIMITES.perfuracaoAcima - LIMITES.afundaAcima))
+      if (f > LIMITES.perfuracaoAcima) a.furoMm[i] = Math.min(6, 1 + 4 * (f - LIMITES.perfuracaoAcima))
+      if (excesso > 0.3 && sorteioFixo(i, 170) < 0.4 * excesso * passo) {
+        a.gotasAvesso.push({ xMm: (i + 0.5) * passo, nMm: (sorteioFixo(i, 171) - 0.5) * 2, raioMm: 0.6 + excesso * (0.6 + 0.6 * sorteioFixo(i, 172)) })
+      }
     }
   }
   // Marcas de abertura fora da junta e de eletrodo grudado: um pingo de metal na chapa.

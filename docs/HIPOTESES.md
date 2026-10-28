@@ -913,3 +913,19 @@ Pelo índice de fusão F de cada fatia (H33, já relativo à espessura), no topo
 No filete não há avesso livre: só o furo conta. Os três defeitos entram na nota de superfície (Desenho) e a raiz afundada tira até metade da integridade da fatia; o furo já zerava a fusão da fatia (perfuração).
 
 No resultado, o botão **Ver o avesso** mostra a raiz, o metal pendurado e os furos; a câmera da inspeção agora pode descer abaixo da peça. Números do jogo, não de procedimento.
+
+**Eletrodo e TIG (H94, continuação).** Os mesmos níveis, com o 3D e a lista de defeitos de cada processo:
+
+- **Eletrodo:** pelo calor do passe em relação ao da peça (H82). Na raiz aberta vale o primeiro passe; na chapa fechada, o mais quente, com 15 % a mais de folga.
+  - raiz aparente a partir de 1,4×;
+  - metal pendurado de 1,6× até 2,3×;
+  - raiz afundada a partir de 2,1×;
+  - furo acima de 2,3×.
+  - "Raiz afundada" e "Furo" pedem reparo.
+- **TIG:** pelo pico de temperatura de cada seção em fração do limite de furo.
+  - raiz aparente a partir de 0,80;
+  - metal pendurado a partir de 0,86;
+  - raiz afundada a partir de 0,93;
+  - furo no limite (como antes).
+  - Metal pendurado e raiz afundada descontam por trecho: 10 e 25 pontos no Fácil, 30 e 60 no Difícil, com teto de 60 e 180.
+- **Filete:** em nenhum dos dois há avesso livre; só o furo conta.

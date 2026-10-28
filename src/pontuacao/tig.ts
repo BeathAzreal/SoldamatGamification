@@ -2,6 +2,7 @@ import type { Dificuldade } from '../missoes/catalogo'
 import type { PecaTig } from '../missoes/pecasTig'
 import type { DepositoEletrodo } from '../modelo/depositoEletrodo'
 import type { ModeloTig } from '../modelo/tig'
+import type { AnaliseDefeitos } from '../modelo/defeitos'
 
 /*
  * Nota do TIG (H92), de 0 a 1000, nos mesmos moldes da do eletrodo:
@@ -18,11 +19,48 @@ export function alvoTig(p: PecaTig) {
       : { reforcoMin: 0.2, reforcoMax: 2, larguraMin: 2.5, descricao: 'As duas bordas fundidas juntas, com um pouco de reforço (0,2 a 2 mm)' }
 }
 
-/** Descontos por furo: graves (pedem reparo), com teto. */
+/** Descontos por furo (graves, com teto) e pelos níveis antes do furo (H94), por trecho. */
 export const MODOS_TIG = {
-  aprendiz: { porFuro: 40, maxFuros: 120 },
-  profissional: { porFuro: 120, maxFuros: 360 },
+  aprendiz: { porFuro: 40, maxFuros: 120, porPendurado: 10, porAfundado: 25, maxNiveis: 60 },
+  profissional: { porFuro: 120, maxFuros: 360, porPendurado: 30, porAfundado: 60, maxNiveis: 180 },
 } as const
+
+/**
+ * H94 (v2.0): passar da chapa em níveis no TIG, pelo pico de temperatura de
+ * cada seção em fração do limite de furo: raiz aparente (normal), metal
+ * pendurado no avesso, raiz afundada e furo. No T não há avesso livre.
+ */
+export const NIVEIS_TIG = { raizAparente: 0.8, pendurado: 0.86, afunda: 0.93, limiteAvessoMm: 1 } as const
+
+export function niveisTig(p: PecaTig, m: ModeloTig, x: number): { penduradoMm: number; afundamento: number; furo: boolean } {
+  const furo = m.furos.some((f) => Math.abs(f.xMm - x) <= 1.5)
+  if (p.junta === 't') return { penduradoMm: 0, afundamento: 0, furo }
+  const r = m.picoRelativo(x)
+  const raiz = 0.3 * limitar((r - NIVEIS_TIG.raizAparente) / (NIVEIS_TIG.pendurado - NIVEIS_TIG.raizAparente))
+  return {
+    penduradoMm: raiz + 1.6 * limitar((r - NIVEIS_TIG.pendurado) / (1 - NIVEIS_TIG.pendurado)),
+    afundamento: limitar((r - NIVEIS_TIG.afunda) / (1 - NIVEIS_TIG.afunda)),
+    furo,
+  }
+}
+
+/** Defeitos visíveis do TIG no formato que a bancada 3D já desenha (só o avesso, o afundamento e os furos). */
+export function analiseVisualTig(p: PecaTig, m: ModeloTig, n: number, passoMm: number): AnaliseDefeitos {
+  const novo = () => new Float32Array(n)
+  const a: AnaliseDefeitos = {
+    n, passoMm, caimento: novo(), rolos: novo(), gotejamento: novo(), mordeduraMenos: novo(), mordeduraMais: novo(),
+    sobreposicaoMenos: novo(), sobreposicaoMais: novo(), cratera: novo(), porosidade: novo(), calor: novo(),
+    penetracaoMm: novo(), afundamento: novo(), furoMm: novo(), gotasAvesso: [],
+    escamaFase: novo(), escamaDir: new Int8Array(n), gotas: [], respingos: [], poros: [], empenoGraus: 0, limiteMordeduraMm: 1, ocorrencias: [],
+  }
+  for (let i = 0; i < n; i++) {
+    const nv = niveisTig(p, m, (i + 0.5) * passoMm)
+    a.penetracaoMm[i] = nv.penduradoMm
+    a.afundamento[i] = nv.afundamento
+    if (nv.furo) a.furoMm[i] = 2.5
+  }
+  return a
+}
 
 const limitar = (v: number) => Math.max(0, Math.min(1, v))
 function coeficienteVariacao(v: readonly number[]): number {
@@ -64,8 +102,12 @@ export function avaliarTig(p: PecaTig, m: ModeloTig, dep: DepositoEletrodo, modo
   ].map((i) => ({ ...i, pontos: executado ? Math.round(i.fracao * i.maximo) : 0 }))
   const regras = MODOS_TIG[modo]
   const penalidadeFuros = executado ? Math.min(regras.maxFuros, m.furos.length * regras.porFuro) : 0
-  const nota = executado ? Math.max(0, Math.min(1000, itens.reduce((a, i) => a + i.pontos, 0) - penalidadeFuros)) : 0
-  return { nota, itens, penalidadeFuros, cobertura, toques: toques.length, inspecaoPendente: false, descricao: alvo.descricao }
+  // H94: cada trecho com metal pendurado ou raiz afundada (fora dos furos) desconta, com teto.
+  const nPendurado = trechosNivel(p, m, (nv) => nv.penduradoMm > NIVEIS_TIG.limiteAvessoMm && !nv.furo).length
+  const nAfundado = trechosNivel(p, m, (nv) => nv.afundamento > 0.3 && !nv.furo).length
+  const penalidadeNiveis = executado ? Math.min(regras.maxNiveis, nPendurado * regras.porPendurado + nAfundado * regras.porAfundado) : 0
+  const nota = executado ? Math.max(0, Math.min(1000, itens.reduce((a, i) => a + i.pontos, 0) - penalidadeFuros - penalidadeNiveis)) : 0
+  return { nota, itens, penalidadeFuros, penalidadeNiveis, cobertura, toques: toques.length, inspecaoPendente: false, descricao: alvo.descricao }
 }
 
 export type ResultadoTig = ReturnType<typeof avaliarTig>
@@ -76,6 +118,11 @@ export interface DefeitoTig {
   causa: string
   corrigir: string
   grave: boolean
+}
+
+/** Trechos (mm) do trecho exigido em que um nível de passar da chapa aparece. */
+function trechosNivel(p: PecaTig, m: ModeloTig, cond: (nv: ReturnType<typeof niveisTig>) => boolean): [number, number][] {
+  return trechos(p, (x) => cond(niveisTig(p, m, x)))
 }
 
 /** Trechos contínuos (mm) em que `falta(x)` é verdadeiro, dentro do trecho exigido. */
@@ -97,6 +144,12 @@ export function inspecionarTig(p: PecaTig, m: ModeloTig, dep: DepositoEletrodo):
   const d: DefeitoTig[] = []
   if (m.furos.length) d.push({ nome: `Furo na chapa${m.furos.length > 1 ? ` (${m.furos.length}×)` : ''}`, onde: m.furos.map((f) => `${mm(f.xMm)} mm`).join(', '), grave: true,
     causa: 'Calor demais para a espessura: corrente alta ou a tocha parada sobre a poça.', corrigir: 'Alivie o pedal assim que a poça se formar e avance; em chapa fina, use a corrente do meio da faixa.' })
+  const afundado = trechosNivel(p, m, (nv) => nv.afundamento > 0.3 && !nv.furo)
+  if (afundado.length) d.push({ nome: 'Raiz afundada', onde: ondeTrechos(afundado), grave: true,
+    causa: 'A poça ficou pesada demais e caiu pela raiz: a face do cordão afundou.', corrigir: 'Alivie o pedal assim que a poça abrir e avance; corrente no meio da faixa.' })
+  const pendurado = trechosNivel(p, m, (nv) => nv.penduradoMm > NIVEIS_TIG.limiteAvessoMm && !nv.furo)
+  if (pendurado.length) d.push({ nome: 'Penetração excessiva', onde: ondeTrechos(pendurado), grave: false,
+    causa: 'Calor demais: o metal atravessou a chapa e ficou pendurado no avesso.', corrigir: 'Avance um pouco mais rápido ou pise menos no pedal.' })
   const semFusao = trechos(p, (x) => !trechoTig(p, m, dep, x).fundido)
   if (semFusao.length && m.tempoArcoS > 0) d.push({ nome: 'Falta de fusão', onde: ondeTrechos(semFusao), grave: true,
     causa: 'A tocha passou sem formar poça (avanço rápido, pedal baixo ou arco longo).', corrigir: 'Espere a poça brilhar antes de avançar e mantenha o tungstênio a 2–3 mm.' })
