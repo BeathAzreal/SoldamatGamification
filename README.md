@@ -1,32 +1,29 @@
 # Oficina de Soldagem — versões e downloads
 
-## Alpha v1.9 disponível para teste
+## Alpha v2.0 disponível para teste
 
-**[BAIXAR ALPHA v1.9 — jogo pronto em ZIP](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip)**
+**[BAIXAR ALPHA v2.0 — jogo pronto em ZIP](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip)**
 
 Extraia o ZIP inteiro e abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html**
 no Chrome ou Edge. Não precisa instalar nada nem ter internet para jogar.
 Entre na sua conta do GitHub para baixar os arquivos deste repositório privado.
 
-O jogo mostra **ALPHA v1.9** no topo. Novidades:
+O jogo mostra **ALPHA v2.0** no topo. Novidades:
 
-- **Fácil = só nota:** sem aprovação; vale a soma das 5 categorias, mesmo com
-  zero em alguma.
-- **Difícil = pelo menos 20 % em cada categoria** para a solda ser aprovada.
-- **Desafios do Arcade e Modo História só no Difícil**, com pelo menos 40 % em
-  cada categoria.
-- **Eletrodo sem assistência:** a vareta queima e o jogador desce com toques em
-  **S** enquanto avança. Cordão em relevo e peça nova **Cordões sobre chapa**.
-- **TIG novo** (Treino → TIG): **mesa digitalizadora + mouse** (a caneta é a tocha
-  e a pressão é o pedal; o clique do mouse mergulha a vareta) ou **só mouse**.
+- **Máquina MIG/MAG em volts e m/min:** tensão de 14 a 30 V, alimentação de 1 a
+  15 m/min, corrente em A e modo de transferência (curto-circuito, globular, spray).
+- **Os ajustes mudam a solda:** o globular respinga, o spray penetra e fura chapa
+  fina, o arco curto deita o metal sem fundir e a tensão alta morde a borda.
+- Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil e
+  eletrodo sem assistência.
 
-**[BAIXAR PACOTE DE REDE v1.9 — para o X1 (Windows 64 bits, 41 MB)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip)**
+**[BAIXAR PACOTE DE REDE v2.0 — para o X1 (Windows 64 bits, 41 MB)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip)**
 
 No PC anfitrião, extraia a pasta inteira e abra **ABRIR-OFICINA.bat** (não precisa
 instalar nada; o Node.js vai junto). Deixe a janela do servidor aberta. No segundo
 PC, abra no navegador o endereço com IP mostrado nessa janela (ex.:
 `http://192.168.0.10:5197/?rede=1`). Nos dois: Arcade → X1 em rede, um cria a sala
-e o outro entra com o código. Os dois PCs precisam estar na v1.9.
+e o outro entra com o código. Os dois PCs precisam estar na v2.0.
 
 No **eletrodo revestido** (Treino → Eletrodo → escolha a peça e o modo), o arco
 abre ao tocar a peça com **S** e a vareta queima: continue descendo com toques em **S**; **Encerrar tentativa** ou **Enter** mostra a nota de
@@ -34,7 +31,8 @@ abre ao tocar a peça com **S** e a vareta queima: continue descendo com toques 
 
 | Versão | Estado | Download |
 |---|---|---|
-| **Alpha v1.9** | **Mais nova — TIG com mesa digitalizadora + mouse, Fácil só nota, Difícil com mínimo por categoria, desafios e História no Difícil, eletrodo sem assistência** | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
+| **Alpha v2.0** | **Mais nova — máquina MIG em volts e m/min com efeito na solda (curto-circuito, globular, spray)** | [ZIP da v2.0](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip) · [Pacote de rede (X1)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip) |
+| Alpha v1.9 | Anterior — TIG com mesa digitalizadora + mouse, Fácil só nota, Difícil com mínimo por categoria, desafios e História no Difícil, eletrodo sem assistência | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
 | Alpha v1.8 | Anterior — modos Fácil e Difícil, solda mais lenta no MIG/MAG e nota sem trava | [ZIP da v1.8](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip) · [Pacote de rede (X1)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip) |
 | Alpha v1.7 | Anterior — x1 em rede (MIG/MAG), painel MIG maior e eletrodo com cordão 3D e lista de defeitos | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
 | Alpha v1.6 | Interface de máquina e eletrodo com nota 0–1000 (alpha-v1.6) + lista de defeitos com causa e correção, com o código organizado para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
@@ -67,6 +65,7 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
+- [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; ainda não há `alpha-v2.0`)
 - [`v1.9/`](v1.9/) ← [`alpha-v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.9) (`claude/v1.9`, com a v1.8 junto)
 - [`v1.8/`](v1.8/) ← [`claude/v1.8`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v1.8) (feita a partir da `alpha-v1.7`; ainda não há `alpha-v1.8`)
 - [`v1.7/`](v1.7/) ← [`alpha-v1.7`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.7) (`gpt/v1.7` + `claude/v1.7`)
@@ -76,6 +75,11 @@ entrega correspondente, que junta o trabalho do GPT e do Claude por pull request
 
 Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 [`v1.5/docs/PROTOTIPO-V15.md`](v1.5/docs/PROTOTIPO-V15.md).
+
+## O que mudou na v2.0?
+
+- **Máquina MIG/MAG em unidades reais:** tensão de 14 a 30 V, alimentação de 1 a 15 m/min, corrente em A e modo de transferência.
+- **Efeito na solda:** globular respinga; spray (só com argônio) penetra e fura chapa fina; arco curto deita o metal sem fundir; tensão alta respinga, achata e morde a borda (`pontuacao-v11`).
 
 ## O que mudou na v1.9?
 
