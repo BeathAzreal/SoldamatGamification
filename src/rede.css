@@ -39,3 +39,6 @@
 .rede-caixa [hidden] { display:none!important; }
 .rede-caixa .rede-conexao:empty,.rede-caixa .rede-erro:empty { display:none; }
 @media(max-height:740px){.rede-caixa{gap:8px}.rede-pagina .grafico-titulo .tela-titulo{font-size:38px}.rede-jogador{padding:7px 10px}.rede-codigo input{height:46px;font-size:28px}}
+
+/* O estado da disputa fica fora da faixa dos controles de camera. */
+.rede-hud { top:auto;bottom:10px;font-size:13px;max-width:min(400px,calc(100% - 20px)); }

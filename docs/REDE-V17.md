@@ -45,7 +45,7 @@ Na versão online, os dois PCs abrem o mesmo link HTTPS, entram em Arcade → X1
 
 Validação adicional: persistência entre instâncias, prontidão concorrente, replay e ocultação de entregas, saída de visitante, autenticação, origem HTTP, expiração, W/O e limite de criação em SQLite real executando o SQL do D1. Cliente de consulta também testado. Total: 455 testes em 45 arquivos, typecheck e builds aprovados. Na prévia do Worker, dois clientes de navegador entraram por código e iniciaram a mesma partida. Ainda é necessário testar em dois PCs físicos; não há matchmaking ou proteção antifraude para torneio público.
 
-Endereço publicado: https://oficina-soldagem-x1.yummycamel20.chatgpt.site
+Endereço publicado: https://oficina-soldagem-x1.beath.chatgpt.site
 
 O checkout de publicação é separado do repositório do jogo e contém o Worker autocontido. Para atualizar: gerar novamente o Worker nesta branch, atualizar worker/index.js no checkout de hospedagem e publicar pelo fluxo Sites. Não copiar credenciais ou dados de salas para o código-fonte.
 
@@ -63,3 +63,5 @@ O protocolo `soldagem-rede-2.0.0` separa as partidas das versões antigas. Crede
 Limites: multiplayer somente MIG/MAG; o servidor sincroniza sala, início e resultado, sem transmitir cada movimento da tocha. Treinos, recordes locais e TIG/eletrodo continuam disponíveis no jogo. Internet é necessária para salas online; a pausa não interrompe o prazo, e recarregar durante a soldagem interrompe a tentativa.
 
 A confirmação de abandono fica acima da pausa, evitando que o clique em Sair da sala seja interceptado por Voltar ao menu. Verificação do fluxo online inclui cancelamento e confirmação de saída.
+
+Validação online da v2.0: dois clientes no endereço público abriram um convite, confirmaram prontidão, fizeram tentativas pela interface e entregaram ao servidor. As duas telas receberam 349 e 348 pontos, com vitória do primeiro cliente. Cópia do convite também verificada por HTTPS. Este teste usa duas sessões no mesmo computador, não dois PCs físicos.
