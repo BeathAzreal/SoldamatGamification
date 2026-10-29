@@ -1,3 +1,5 @@
+import {gravarAtalhoOnline} from './atalho-online.mjs'
+import {OFICINA_ONLINE} from '../src/rede/convite.ts'
 import {createHash} from 'node:crypto'
 import {mkdirSync,cpSync,readFileSync,writeFileSync,existsSync,rmSync} from 'node:fs'
 import {resolve,join,dirname,sep} from 'node:path'
@@ -51,8 +53,8 @@ Recarregar a página durante uma tentativa interrompe a participação. Queda r�
 USO OFFLINE
 Os outros modos continuam no mesmo jogo. O pacote HTML portátil separado pode ser aberto sem servidor, mas o x1 precisa desta conexão local.
 
-INTERNET NO FUTURO
-A interface já usa um contrato versionado e uma API de mesma origem. O mesmo servidor pode ser colocado atrás de HTTPS; o cliente usa o endereço de onde o jogo foi aberto. PORT muda a porta (padrão 5197) e HOST a interface (padrão 0.0.0.0). Contas, matchmaking, persistência e proteção antifraude pública não fazem parte deste primeiro protótipo.
+ONLINE SEM SERVIDOR LOCAL
+Para jogar pela internet, abra JOGAR ONLINE.html ou ${OFICINA_ONLINE}/?rede=1. Nesse modo, nenhum jogador precisa iniciar este servidor. Crie a sala e compartilhe o convite. Este pacote local é apenas uma alternativa para a mesma rede. PORT muda a porta local (padrão 5197) e HOST a interface local (padrão 0.0.0.0).
 
 RUNTIME INCLUÍDO
 A pasta runtime contém o executável oficial do Node.js para Windows x64, a licença integral e a origem com hash SHA-256 conferido. Não é necessário instalar ou configurar o runtime no computador.
@@ -62,4 +64,5 @@ Consulte docs/REDE-V17.md no código-fonte para testes e limitações. Dois clie
 `
 writeFileSync(join(saida,'LEIA-ME.txt'),leia.replace(/\n/g,'\r\n'))
 if(existsSync('portatil/Oficina de Soldagem v2.0/Oficina de Soldagem.html'))cpSync('portatil/Oficina de Soldagem v2.0/Oficina de Soldagem.html',join(saida,'Oficina-de-Soldagem-v2.0-offline.html'))
+gravarAtalhoOnline(saida)
 console.log(`Pacote de rede gerado: ${saida}`)
