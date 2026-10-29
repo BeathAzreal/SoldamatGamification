@@ -8,6 +8,10 @@ MÁQUINA MIG/MAG (novo na v2.0): tensão em volts (0 a 30 V) e alimentação do 
 
 PASSAR DA CHAPA (novo na v2.0): calor demais aparece em níveis. Primeiro a raiz aparece no avesso (normal), depois o metal passa e fica pendurado do outro lado, depois a poça cai e a face afunda e, no limite, a chapa vara e abre um furo. No resultado, use Ver o avesso. Vale para o MIG/MAG, o eletrodo e o TIG.
 
+TUBO COM TUBO (novo na v2.0): emenda de topo de dois tubos, soldada em volta. MIG/MAG: missão "Tubulação da horta comunitária". Eletrodo e TIG: peça "Tubo com tubo". Solde perto do alto, apague o arco e gire o tubo (⟲ ⟳). No MIG/MAG a posição muda em volta: plana em cima, vertical no lado, sobrecabeça embaixo.
+
+TIG: a vareta vai à borda da poça mesmo se você avançar antes de tocar, e toques rápidos não se perdem em PC lento.
+
 PASSES SOBREPOSTOS (novo na v2.0): cada cordão tem a seção de uma parábola, e passes lado a lado somam. Com o passo certo (cerca de 2/3 da largura) a superfície fica quase plana; muito perto vira morro, muito longe deixa vale. No eletrodo, cada passe vira uma camada: um passe frio ou rápido sobre o anterior não funde nele (falta de fusão entre passes). No resultado, o botão Corte mostra a seção em escala real, com uma cor por passe.
 
 MIG/MAG: mais arame deixa o cordão mais achatado. Andar rápido demais com corrente alta faz corcovas (humping).

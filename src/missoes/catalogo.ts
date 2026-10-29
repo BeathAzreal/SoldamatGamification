@@ -1,7 +1,7 @@
 import { ARAMES, GASES, MATERIAIS, gasCompativel, type GasId, type MaterialId } from '../modelo/material'
 import { DBCP, PECA } from '../modelo/parametros'
 import type { FormatoJunta } from '../modelo/junta'
-import { INFO_JUNTA, TIPOS_JUNTA, type TipoJunta } from '../modelo/juntas'
+import { GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA, TIPOS_JUNTA, type TipoJunta } from '../modelo/juntas'
 import type { ContextoProcesso, Movimento, Tecnica } from '../modelo/processo'
 
 /*
@@ -29,7 +29,7 @@ export interface Missao {
   material: MaterialId
   condicaoFornecimento: string
   /** `formato` só existe em dados antigos (H41): a junta agora é sempre reta. */
-  geometria: { comprimentoMm: number; larguraChapaMm: number; espessuraMm: number; aberturaMm: number; junta: TipoJunta; formato?: FormatoJunta }
+  geometria: { comprimentoMm: number; larguraChapaMm: number; espessuraMm: number; aberturaMm: number; junta: TipoJunta; formato?: FormatoJunta; tubo?: { diametroMm: number } }
   /** Como a peça chega para soldar e se pode ser tombada/girada (H47). */
   montagem: { rolagemGraus: number; giroGraus: number; fixa: boolean }
   processo: 'MIG/MAG'
@@ -217,15 +217,36 @@ export const MISSOES: Missao[] = [
     integridadeMinima: { aprendiz: 0.8, profissional: 0.9 },
     desafio: 'Na vertical a poça escorre: subindo funde mais; descendo funde pouco. A peça não gira.',
   },
+  {
+    id: 'tubulacao-horta',
+    versao: 1,
+    titulo: 'Tubulação da horta comunitária',
+    setor: 'Sociedade',
+    contexto:
+      'A irrigação da horta comunitária do bairro usa tubos de aço. ' +
+      'Você emenda dois tubos de topo, soldando a volta inteira da junta.',
+    finalidade: 'Emenda de tubo de irrigação, sem vazamento.',
+    material: 'aco-carbono',
+    condicaoFornecimento: 'Tubo de aço carbono de 1½" (no jogo, Ø 47,7 mm), parede de 3 mm, cortado reto e com as pontas limpas.',
+    // H103: a junta de 150 mm é a volta do tubo desenrolada; o tubo chega com a emenda da volta no alto.
+    geometria: { ...GEOMETRIA_BASE, espessuraMm: 3, aberturaMm: 1, junta: 'topo', tubo: { diametroMm: PECA.comprimentoMm / Math.PI } },
+    montagem: { rolagemGraus: 0, giroGraus: GIRO_INICIAL_TUBO_GRAUS, fixa: false },
+    ...COMUM,
+    junta: 'Emenda de topo de dois tubos (bordas frente a frente, com abertura)',
+    tipoSolda: 'Solda circunferencial em chanfro reto, por fora',
+    posicao: 'Tubo deitado num posicionador (1G): gire o tubo para soldar sempre perto do alto',
+    trecho: { inicioMm: 2, fimMm: 148 },
+    requisitos: { larguraMinMm: 6, larguraMaxMm: 9, reforcoMaxMm: 3, alinhamentoMm: 1.5 },
+    consumiveis: { diametrosMm: DIAMETROS_ARAME_MM, gases: ['ar-co2', 'co2'] },
+    tentativas: { aprendiz: 5, profissional: 3 },
+    integridadeMinima: { aprendiz: 0.85, profissional: 0.95 },
+    // Oito trechos de ~45°: entre um e outro o tubo gira com o arco fechado.
+    aberturasPlanejadas: 8,
+    desafio: 'Dar a volta inteira no tubo: solde um trecho perto do alto, feche o arco e gire o tubo (⟲ ⟳). Sem girar, o metal escorre no lado e pinga embaixo.',
+  },
 ]
 
 export const PLANEJADAS: MissaoPlanejada[] = [
-  {
-    id: 'tubulacao-horta',
-    titulo: 'Tubulação da horta comunitária',
-    contexto: 'Emenda de tubos de aço da irrigação da horta do bairro.',
-    motivo: 'Pede solda em tubo, com a peça girando durante o passe; o modelo só tem chapas paradas.',
-  },
   {
     id: 'tabela-basquete',
     titulo: 'Pé da tabela de basquete',
@@ -296,6 +317,7 @@ export function contextoDaMissao(m: Missao, p: Preparo): ContextoProcesso {
     posicaoInicial: { rolagemGraus: m.montagem.rolagemGraus, giroGraus: m.montagem.giroGraus },
     posicaoFixa: m.montagem.fixa,
     dbcpMm: p.dbcpMm ?? DBCP.referenciaMm,
+    ...(m.geometria.tubo ? { tubo: { diametroMm: m.geometria.tubo.diametroMm } } : {}),
   }
 }
 

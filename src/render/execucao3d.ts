@@ -13,6 +13,7 @@ import { Calor3D } from './calor3d'
 import { janelaDoRegistro } from './cordaoVivo'
 import { taxaFaiscas } from './efeitos'
 import { paraMundo } from './malha3d'
+import { curvarPonto } from './curvaTubo'
 import { Palco3D } from './palco3d'
 import { PERFIS, type Qualidade3D } from './qualidade3d'
 import { INCLINACAO_TECNICA_RAD, Tocha3D, type QuadroTocha } from './tocha3d'
@@ -105,9 +106,11 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
     mira.add(m)
   }
   mira.visible = false
-  palco.peca.add(mira)
+  // H103: no tubo, mira e tocha são rígidas e acompanham a superfície (ancorar não muda nada nas chapas).
+  palco.peca.add(palco.ancorar(mira))
   const tocha = new Tocha3D()
-  palco.peca.add(tocha.grupo)
+  palco.peca.add(palco.ancorar(tocha.grupo))
+  vista.definirTubo(palco.curva)
   palco.guardarTexturas(...tocha.texturas)
   const movimento = movimentoDe(op.contexto)
   const aparencia = MATERIAIS[op.contexto.material].aparencia
@@ -117,6 +120,7 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
   palco.relevo.add(calor.relevo)
   palco.guardarTexturas(...calor.texturas)
   for (const m of calor.materiaisSobreACapa) palco.furarTambem(m)
+  palco.curvarTambem(calor.relevo)
   const necessario = aporteNecessario(op.contexto)
   // A tinta térmica lê uma cópia dos aportes: no máximo 10 vezes por segundo.
   let tTinta = -Infinity
@@ -240,6 +244,8 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
             emissor.x = x
             emissor.y = qt.topoMm + 1
             emissor.z = z
+            // H103: faíscas e fumaça nascem no ponto do tubo e caem com a gravidade de verdade.
+            if (palco.curva) { const q = curvarPonto(palco.curva, x, qt.topoMm + 1, z); emissor.x = q.x; emissor.y = q.y; emissor.z = q.z }
             emite = true
           }
         } else tocha.esconder()
@@ -262,6 +268,12 @@ export function criarCenaExecucao3D(op: OpcoesExecucao3D): CenaExecucao3D | null
       avessoVaza.x = emissor.x
       avessoVaza.y = -op.contexto.espessuraMm - 0.3
       avessoVaza.z = emissor.z
+      if (palco.curva && d.posicao) {
+        const q = op.geometria.pontoEm(d.posicao.x, d.posicao.y)
+        const [px, , pz] = paraMundo(q.x, q.y, 0)
+        const v = curvarPonto(palco.curva, px, -op.contexto.espessuraMm - 0.3, pz)
+        avessoVaza.x = v.x; avessoVaza.y = v.y; avessoVaza.z = v.z
+      }
       avessoVaza.vazamento = vazando
       calor.atualizarParticulas(d.agoraMs, emite ? emissor : null, taxaFaiscas(op.contexto, d.desvio), gPeca, gotejando, vazando > 0 ? avessoVaza : null)
       palco.desenhar(vista.camera)

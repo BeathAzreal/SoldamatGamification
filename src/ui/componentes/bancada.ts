@@ -303,7 +303,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   // ------------------------------------------------------------ peça de teste
   const canvas = h('canvas', { class: 'tela-teste', 'aria-label': 'Peça de teste: solde aqui para conferir os ajustes' })
   const areaPeca = h('div', { class: 'peca-teste-area' }, canvas)
-  const opcoesGiro = () => ({ inicial: { rolagemGraus: m.montagem.rolagemGraus, giroGraus: m.montagem.giroGraus }, fixa: m.montagem.fixa, familia: INFO_JUNTA[m.geometria.junta].familia })
+  const opcoesGiro = () => ({ inicial: { rolagemGraus: m.montagem.rolagemGraus, giroGraus: m.montagem.giroGraus }, fixa: m.montagem.fixa, familia: INFO_JUNTA[m.geometria.junta].familia, tubo: !!m.geometria.tubo })
   const giro = montarGiro(opcoesGiro())
   const hudVel = h('strong', {}, '0,0')
   const hudLarg = h('strong', {}, '—')

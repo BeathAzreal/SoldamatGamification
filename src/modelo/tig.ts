@@ -29,6 +29,8 @@ export const TIG = {
   varetaDescansoMm: 3,
   /** Vareta que funde na poça (mm de vareta por segundo de contato). */
   fusaoVaretaMmS: 25,
+  /** Toque que já está fundindo continua até esta fração da temperatura de fusão na ponta (número do jogo). */
+  fusaoContinuaFracao: 0.85,
   varetaInicialMm: 300,
   /** Tempo do pedal até a corrente cheia no modo só mouse (s). */
   rampaPedalS: 0.35,
@@ -151,9 +153,20 @@ export class ModeloTig {
     while (d < 15 && this.temperaturaEm(this.xMm + this.sentido * (d + 0.5), this.yMm) >= TIG.fusaoK) d += 0.5
     return d
   }
-  /** Ponta da vareta: na borda da frente da poça (ou logo à frente do tungstênio, sem poça). */
+  /**
+   * Ponta da vareta: na borda da frente da POÇA, onde o soldador mergulha a
+   * vareta. Normalmente logo à frente do tungstênio, onde a poça avança. Se
+   * ali está frio porque o jogador avançou a tocha antes de tocar (a poça
+   * ficou para trás), a vareta vai à borda da poça mais perto, até 4 mm atrás
+   * do tungstênio. Sem poça nenhuma, fica na chapa fria (e só bate).
+   */
   get pontaVareta(): { x: number; y: number } {
-    return { x: this.xMm + this.sentido * Math.max(0.8, this.frentePocaMm - 0.3), y: this.yMm }
+    const x0 = this.xMm + this.sentido * Math.max(0.8, this.frentePocaMm - 0.3)
+    if (this.temperaturaEm(x0, this.yMm) >= TIG.fusaoK) return { x: x0, y: this.yMm }
+    for (let x = x0 - this.sentido * 0.5; this.sentido * (this.xMm - x) <= 4; x -= this.sentido * 0.5) {
+      if (this.temperaturaEm(x, this.yMm) >= TIG.fusaoK) return { x, y: this.yMm }
+    }
+    return { x: x0, y: this.yMm }
   }
 
   /** Avança o tempo; `depositar` recebe o metal da vareta (posição e volume) a cada subpasso. */
@@ -262,13 +275,17 @@ export class ModeloTig {
       if (this.toqueAtual) { if (this.toqueAtual.volumeMm3 > 0) { this.toques.push(this.toqueAtual); eventos?.('toque') } this.toqueAtual = null }
       return
     }
-    const p = this.pontaVareta
+    // Durante um mergulho a vareta fica no mesmo ponto: o lugar é escolhido quando ela toca.
+    const p = this.toqueAtual ? { x: this.toqueAtual.xMm, y: this.toqueAtual.yMm } : this.pontaVareta
     if (this.estado === 'arco' && this.distanciaMm < TIG.varetaNoTungstenioMm) {
       // Pouco espaço entre o tungstênio e a poça: a vareta encosta no eletrodo.
       if (!this.toqueAtual) { this.varetaNoTungstenio++; this.contaminado = true; eventos?.('vareta-no-tungstenio') }
     }
     if (!this.toqueAtual) this.toqueAtual = { xMm: p.x, yMm: p.y, tMs: this.tempoMs, volumeMm3: 0 }
-    if (this.temperaturaEm(p.x, p.y) < TIG.fusaoK) {
+    // Um toque que já começou fundindo continua enquanto a ponta segue na poça: o metal frio da
+    // vareta esfria a célula, mas o arco ao lado mantém a poça (folga de 20 %).
+    const limite = this.toqueAtual.volumeMm3 > 0 ? TIG.fusaoContinuaFracao * TIG.fusaoK : TIG.fusaoK
+    if (this.temperaturaEm(p.x, p.y) < limite) {
       // Vareta na chapa fria: não funde, só bate (conta uma vez por toque).
       if (this.toqueAtual.volumeMm3 === 0 && !(this.toqueAtual as { fria?: boolean }).fria) {
         ;(this.toqueAtual as { fria?: boolean }).fria = true

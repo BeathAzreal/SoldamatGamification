@@ -27,6 +27,8 @@ export interface OpcoesGiro {
   fixa?: boolean
   /** Para o código da posição (1G… ou 1F…). */
   familia?: FamiliaJunta
+  /** H103: emenda de tubos: ⟲ ⟳ giram o tubo no próprio eixo (o "giro" da posição). */
+  tubo?: boolean
 }
 
 export interface Giro {
@@ -47,6 +49,7 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
   let inicial: PosicaoPeca = op.inicial ?? POSICAO_PLANA
   let fixa = !!op.fixa
   let familia: FamiliaJunta = op.familia ?? 'chanfro'
+  let tubo = !!op.tubo
   let giro = inicial.giroGraus
   let rolagem = inicial.rolagemGraus
   let tAnterior: number | null = null
@@ -138,8 +141,7 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
     },
     aplicar(dGiro, dRolagem) {
       if (arcoAberto || fixa) return
-      void dGiro
-      mover(0, dRolagem)
+      mover(tubo ? dGiro : 0, dRolagem)
     },
     atualizar(agoraMs, vista, fonte, aberto) {
       arcoAberto = aberto
@@ -148,10 +150,14 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
       // H47: a peça só se mexe com o arco fechado (e não se estiver presa).
       const pode = !arcoAberto && !fixa
       if (pode) {
-        mover(0, sentido('cima', 'baixo', BOTAO_CIMA, BOTAO_BAIXO) * VELOCIDADE_GRAUS_S * dt)
+        // H103: no tubo, ⟲ ⟳ giram o tubo no eixo para trazer o trecho a soldar para cima.
+        const dGiro = tubo ? sentido('esq', 'dir', -1, -1) * VELOCIDADE_GRAUS_S * dt : 0
+        mover(dGiro, sentido('cima', 'baixo', BOTAO_CIMA, BOTAO_BAIXO) * VELOCIDADE_GRAUS_S * dt)
       }
       for (const b of botoes) b.disabled = !pode
-      botoes[0].disabled = botoes[1].disabled = true
+      if (!tubo) botoes[0].disabled = botoes[1].disabled = true
+      botoes[0].title = botoes[0].ariaLabel = tubo ? 'Girar o tubo no próprio eixo, sentido anti-horário (segure)' : 'Girar a peça no plano, sentido anti-horário (segure)'
+      botoes[1].title = botoes[1].ariaLabel = tubo ? 'Girar o tubo no próprio eixo, sentido horário (segure)' : 'Girar a peça no plano, sentido horário (segure)'
       endireitar.disabled = !pode || (giro === inicial.giroGraus && rolagem === inicial.rolagemGraus)
       const angulo = (giro * Math.PI) / 180
       const mudou = vista.angulo !== angulo
@@ -162,8 +168,10 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
       pecaLado.setAttribute('transform', `rotate(${-rolagem.toFixed(1)} 20 21)`)
       const pos = posicaoDe(gravidade({ rolagemGraus: rolagem, giroGraus: giro }))
       // Duas partes: em telas baixas o modo de fixação some e fica só a posição (estilo-espaco.css).
-      const modo = fixa ? 'Presa na garra · ' : 'Rotação somente X · '
-      const nome = `${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[familia][pos]})`
+      const modo = fixa ? 'Presa na garra · ' : tubo ? 'Tubo · gire no eixo · ' : 'Rotação somente X · '
+      // H103: no tubo a posição muda em volta; com o eixo de pé, a volta inteira é horizontal (2G).
+      const deitado = Math.abs(Math.cos((rolagem * Math.PI) / 180)) > 0.7
+      const nome = tubo ? (deitado ? 'plana em cima, vertical no lado, sobrecabeça embaixo' : 'Horizontal em volta (2G · PC)') : `${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[familia][pos]})`
       if (leituraPosicao.textContent !== modo + nome) leituraPosicao.replaceChildren(h('span', { class: 'giro-modo' }, modo), nome)
       elemento.classList.toggle('travado', !pode)
     },
@@ -171,6 +179,7 @@ export function montarGiro(op: OpcoesGiro = {}): Giro {
       inicial = novo.inicial ?? POSICAO_PLANA
       fixa = !!novo.fixa
       familia = novo.familia ?? 'chanfro'
+      tubo = !!novo.tubo
       giro = inicial.giroGraus
       rolagem = inicial.rolagemGraus
     },
