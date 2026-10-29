@@ -44,13 +44,15 @@ export class FontePonteiro implements FonteEntrada {
   ultimoEvento = ''
 
   /**
-   * Mouse: só eventos de mouse. Caneta: qualquer tipo de ponteiro, porque
-   * muitos drivers de mesa digitalizadora mandam o "passar por cima" como
-   * caneta mas o toque como mouse ou toque (ou tudo como mouse).
+   * Mouse: eventos de mouse e de caneta (a ponta encostada vale o botão
+   * esquerdo), para a mesa digitalizadora soldar mesmo com o dispositivo
+   * deixado em Mouse; o toque na tela fica de fora. Caneta: qualquer tipo de
+   * ponteiro, porque muitos drivers de mesa digitalizadora mandam o "passar
+   * por cima" como caneta mas o toque como mouse ou toque (ou tudo como mouse).
    */
   private aceita(e: PointerEvent): boolean {
     this.ultimoEvento = `${e.type} · ${e.pointerType || '?'} · botões ${e.buttons} · pressão ${e.pressure.toFixed(2)}`
-    return this.dispositivo === 'caneta' ? true : e.pointerType === 'mouse'
+    return this.dispositivo === 'caneta' ? true : e.pointerType === 'mouse' || e.pointerType === 'pen'
   }
 
   /** Último ponto da tela (relativo ao alvo), para reamostrar quando a peça gira. */

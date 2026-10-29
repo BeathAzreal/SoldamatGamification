@@ -3350,3 +3350,35 @@ canvas.tela-solda-3d[hidden] {
 .ficha-material-bancada .ficha-material > .dica {
   grid-column: 1 / -1;
 }
+
+/* Peça de teste numa faixa só: chapa, espessura, junta e ficha. */
+.peca-teste-topo .linha-peca,
+.linha-peca {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-right: auto;
+}
+.campo-peca {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.campo-peca .rotulo-maquina {
+  font-size: 12px;
+}
+.campo-peca select {
+  font-size: 0.85rem;
+  padding: 3px 6px;
+  min-width: 0;
+}
+.linha-peca .botao-fantasma {
+  padding: 4px 8px;
+  font-size: 13px;
+}
+.hud-sobre .hud-dica {
+  opacity: 0.85;
+}

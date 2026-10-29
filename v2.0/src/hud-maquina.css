@@ -28,7 +28,9 @@
 .jogo-imersivo .grupo-maquina .chip { font-size: 14px; padding: 7px 6px; }
 .jogo-imersivo .peca-teste { padding: 8px; border: 1px solid #495253; background: #161c1e; gap: 6px; min-height: 0; }
 .jogo-imersivo .peca-teste-topo { min-height: 26px; font-size: 14px; }
-.jogo-imersivo .barra-dispositivo { display: none; }
+/* Dispositivo (mouse, caneta, controle) e calibração ficam à vista, numa faixa compacta: sem eles a caneta não tem como ser escolhida. */
+.jogo-imersivo .barra-dispositivo { gap: 4px; }
+.jogo-imersivo .barra-dispositivo .botao-fantasma, .jogo-imersivo .peca-teste-topo .segmentado button { padding: 4px 8px; font-size: 13px; min-height: 0; }
 .jogo-imersivo .status-linha { font-size: 14px; margin: 0; }
 .jogo-imersivo .grupo-formato { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .jogo-imersivo .grupo-formato > .dica { display: none; }

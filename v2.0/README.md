@@ -34,6 +34,8 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
 - No Arcade, a máquina pré-ajustada usa os passos do painel e fica fora do globular.
 - Novo exercício técnico: **4. Curto-circuito, globular e spray**.
 - **Chapas com características próprias** (espessura, calor para fundir, quanto esquentam, quanto guardam o calor, deformação, limpeza). Novas: **aço galvanizado** (fino, com zinco que faz poro se não for esmerilhado), **aço médio carbono** (grosso, custa a esquentar e guarda o calor), **inox ferrítico** (bem fino, esquenta muito rápido) e **cobre** (pede o maior calor e esfria rápido). Cada chapa tem uma ficha com níveis de 1 a 5 tirados do próprio modelo.
+- **Bancada do MIG/MAG mais limpa:** chapa, espessura e junta numa linha só (listas), a ficha da chapa no botão **Ficha** e a dica de como abrir o arco dentro da área de teste. No notebook (1366 × 768) a área de teste passou de 205 para cerca de 450 px de altura.
+- **Mesa digitalizadora no MIG/MAG:** a escolha Mouse / Caneta / Controle voltou a aparecer na bancada, e com o dispositivo em Mouse a caneta também solda (antes a tocha não aparecia).
 - **No treino, troque a chapa** e ela leva as características dela:
   - MIG/MAG, treino livre: grupos **Chapa** e **Espessura** na bancada (gás, arame e limpeza acompanham; o V só em chapa de 4 mm ou mais);
   - eletrodo e TIG: **Escolha a chapa** depois da peça; a corrente sugerida acompanha o material.

@@ -361,3 +361,6 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
   - MIG/MAG, treino livre: os grupos Chapa e Espessura trocam a peça de teste (cor no 3D, selo, faixa "Material" do topo e ficha). Cobre: 1,5/2/3 mm; galvanizado bloqueia o V; médio carbono em V fica com 6 mm. "Treinar a peça" leva a chapa escolhida para a execução.
   - Eletrodo: "Unir duas chapas" em galvanizado: menu Escolha a chapa, bancada com a chapa clara e corrente sugerida pela chapa.
   - TIG: "Filete em T" em cobre (210–295 A) e alumínio (135–190 A): título e escala da fonte seguem a chapa.
+- Bancada do MIG/MAG (v2.0, depois da H104): navegador a 1366 × 768, área de teste de 958 × 205 px para 958 × 453 px no treino livre e 958 × 499 px no treino de missão; a 1600 × 1000, de 427 para 673 px de altura.
+  - Caneta simulada (eventos `pen` do Chromium) com o dispositivo em Mouse: antes a tocha não aparecia e não soldava; agora aparece e o cordão sai. Com Caneta escolhida na barra (que estava escondida no visual de oficina), também solda.
+  - `tests/caneta.test.ts`: "com o dispositivo em Mouse, a caneta também solda (o toque na tela não)" falha no código antigo e passa no novo; 579 testes passando.

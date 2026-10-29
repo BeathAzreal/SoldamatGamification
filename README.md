@@ -26,6 +26,9 @@ O jogo mostra **ALPHA v2.0** no topo. Novidades:
 - **Chapas novas com características próprias** (galvanizado, médio carbono,
   inox ferrítico e cobre): espessura, calor, aquecimento e deformação de cada
   uma. No treino dá para trocar a chapa no MIG/MAG, no eletrodo e no TIG.
+- **Bancada do MIG/MAG mais limpa** (chapa, espessura e junta numa linha;
+  área de teste com o dobro de altura no notebook) e **mesa digitalizadora**
+  de volta: a escolha Mouse / Caneta / Controle aparece, e a caneta solda.
 - **Passes sobrepostos:** cordão com seção de parábola, passes que somam (morro,
   plano ou vale pelo passo), falta de fusão entre passes no eletrodo e o botão
   **Corte** para ver as camadas.
