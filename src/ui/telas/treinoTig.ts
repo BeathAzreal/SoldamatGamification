@@ -1,6 +1,7 @@
 import { montarGiroTubo } from '../componentes/giroTubo'
 import { NOME_DIFICULDADE, type Dificuldade } from '../../missoes/catalogo'
-import { comoPecaBase, NOME_MATERIAL_TIG, type PecaTig } from '../../missoes/pecasTig'
+import { comoPecaBase, type PecaTig } from '../../missoes/pecasTig'
+import { MATERIAIS } from '../../modelo/material'
 import { Cordao } from '../../modelo/cordao'
 import { DepositoEletrodo } from '../../modelo/depositoEletrodo'
 import { GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA } from '../../modelo/juntas'
@@ -33,7 +34,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
     app.raiz.classList.add('app-cheia')
     app.escolherOutraPeca = voltar
     const base = comoPecaBase(peca)
-    const vista = criarBancada15(base, { tig: { material: peca.material === 'inox' ? 'inox-austenitico' : 'aco-carbono' } })
+    const vista = criarBancada15(base, { tig: true, material: peca.material })
     if (!vista) return app.raiz.append(h('p', {}, 'WebGL indisponível: abra o treino no Chrome ou Edge com aceleração gráfica.'))
     const canvas = vista.canvas
     canvas.style.touchAction = 'none'
@@ -85,7 +86,8 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
 
     // Painel lateral.
     const correnteValor = h('output')
-    const corrente = h('input', { type: 'range', min: 20, max: 200, step: 5, value: Math.round((peca.correnteA.min + peca.correnteA.max) / 10) * 5, 'aria-label': 'Corrente máxima do pedal (A)' }) as HTMLInputElement
+    // H104: chapas que pedem mais corrente (cobre, alumínio) alargam a escala da fonte.
+    const corrente = h('input', { type: 'range', min: 20, max: Math.max(200, Math.ceil((peca.correnteA.max * 1.2) / 10) * 10), step: 5, value: Math.round((peca.correnteA.min + peca.correnteA.max) / 10) * 5, 'aria-label': 'Corrente máxima do pedal (A)' }) as HTMLInputElement
     const referencia = h('small', { class: 'p15-dica' })
     const seletorControle = h('select', { 'aria-label': 'Controle da tocha e da vareta' }, (['mouse', 'mesa'] as const).map((c) => h('option', { value: c }, NOME_CONTROLE[c]))) as HTMLSelectElement
     const explicacaoControle = h('p', { class: 'p15-dica' })
@@ -176,7 +178,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       h('header', { class: 'p15-cabecalho' },
         h('div', {},
           h('h2', { class: 'tela-titulo', tabindex: '-1' }, peca.titulo),
-          h('p', {}, `TIG · modo ${NOME_DIFICULDADE[modo]} · ${NOME_MATERIAL_TIG[peca.material]} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · vareta Ø ${n1(peca.varetaMm)} mm`)),
+          h('p', {}, `TIG · modo ${NOME_DIFICULDADE[modo]} · ${MATERIAIS[peca.material].nomeCurto} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · vareta Ø ${n1(peca.varetaMm)} mm`)),
         h('div', { class: 'p15-processos navegacao-de-partida' }, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
       h('div', { class: 'p15-grade' }, area,
         h('aside', { class: 'p15-painel' },

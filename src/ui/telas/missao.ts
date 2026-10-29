@@ -101,6 +101,8 @@ export interface OpcoesPreparacao {
   travas?: { ajustes?: Ajustes; preparo?: Partial<Preparo> }
   /** Deixa escolher o tipo de junta na peça de teste (treino livre, H46). */
   escolherJunta?: boolean
+  /** H104: troca da chapa na peça de teste (treino livre). */
+  escolherMaterial?: boolean
   /** Texto extra no topo (ex.: condição do desafio do Arcade). */
   destaque?: HTMLElement | null
   aoIniciar: (c: ConfiguracaoTentativa, oficial: boolean) => void
@@ -115,13 +117,19 @@ export function montarPreparacao(app: App, op: OpcoesPreparacao): { elemento: HT
   const req = requisitosEfetivos(m, op.dificuldade)
   // Tela em bloco: tudo cabe na altura da janela, sem rolar a página.
   app.raiz.classList.add('tela-bancada')
-  const bancada = montarBancada(app, { missao: m, dificuldade: op.dificuldade, dispositivos: op.dispositivos, inicial: op.inicial, travas: op.travas, escolherJunta: op.escolherJunta, oficinaTreino: op.oficinaTreino, serralheria: !op.oficinaTreino && m.id === 'suporte-carbono' })
+  const bancada = montarBancada(app, { missao: m, dificuldade: op.dificuldade, dispositivos: op.dispositivos, inicial: op.inicial, travas: op.travas, escolherJunta: op.escolherJunta, escolherMaterial: op.escolherMaterial, oficinaTreino: op.oficinaTreino, serralheria: !op.oficinaTreino && m.id === 'suporte-carbono' })
 
   const conferido = h('input', { type: 'checkbox', id: 'prep-conferi' })
   const erros = h('p', { class: 'erro', role: 'alert' })
   const botaoTreino = op.treino ? h('button', { type: 'button', class: 'botao-secundario' }, 'Treinar a peça (não conta)') : null
   const botaoOficial = op.oficial ? h('button', { type: 'button', class: 'primario grande' }, icone('raio'), ` ${op.oficial}`) : null
+  const textoMaterial = h('strong', {}, `${MATERIAIS[m.material].nome}, ${n1(m.geometria.espessuraMm)} mm`)
   const atualizar = () => {
+    // H104: no treino livre a chapa muda na bancada.
+    if (op.escolherMaterial) {
+      const c = bancada.configuracao().contexto
+      textoMaterial.textContent = `${MATERIAIS[c.material].nome}, ${n1(c.espessuraMm)} mm`
+    }
     const p = bancada.problemas()
     erros.textContent = p.join(' ')
     if (botaoTreino) botaoTreino.disabled = p.length > 0
@@ -138,7 +146,7 @@ export function montarPreparacao(app: App, op: OpcoesPreparacao): { elemento: HT
     h(
       'ul',
       { class: 'resumo-itens' },
-      h('li', {}, h('span', {}, 'Material'), h('strong', {}, `${MATERIAIS[m.material].nome}, ${n1(m.geometria.espessuraMm)} mm`)),
+      h('li', {}, h('span', {}, 'Material'), textoMaterial),
       h('li', {}, h('span', {}, 'Trecho'), h('strong', {}, `${n1(m.trecho.inicioMm)}–${n1(m.trecho.fimMm)} mm`)),
       h('li', {}, h('span', {}, 'Largura'), h('strong', {}, `${n1(req.larguraMinMm)}–${n1(req.larguraMaxMm)} mm`)),
       h('li', {}, h('span', {}, 'Reforço'), h('strong', {}, `≤ ${n1(req.reforcoMaxMm)} mm`)),

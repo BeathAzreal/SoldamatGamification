@@ -1,5 +1,6 @@
 import { RENDIMENTO15 } from '../modelo/acionamento15'
 import type { TipoJunta } from '../modelo/juntas'
+import { MATERIAIS, type MaterialId } from '../modelo/material'
 
 /**
  * Peças do treino de eletrodo revestido (SMAW). Escolhidas pelo que o processo
@@ -22,6 +23,8 @@ export interface PecaEletrodo {
   /** H103: emenda de dois tubos (a junta de 150 mm é a volta desenrolada). */
   tubo?: { diametroMm: number }
   junta: TipoJunta
+  /** H104: chapa da peça. Ausente = aço carbono (todas as peças do catálogo). */
+  material?: MaterialId
   espessuraMm: number
   aberturaMm: number
   diametroMm: 2.5 | 3.2
@@ -118,6 +121,25 @@ export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
     objetivo: 'Dar a volta inteira na emenda: solde o trecho de cima, apague o arco e gire o tubo (⟲ ⟳) para trazer o próximo trecho para cima. Limpe a escória no fim.',
   },
 ]
+
+/** H104: chapa da peça (as do catálogo são de aço carbono). */
+export function materialEletrodo(p: PecaEletrodo): MaterialId {
+  return p.material ?? 'aco-carbono'
+}
+
+/**
+ * H104: a mesma peça em outra chapa (treino). A geometria fica; a corrente
+ * sugerida acompanha o calor que a chapa pede para fundir (necessidadeFusao),
+ * e com ela o aporte de referência da análise (H82). Arredonda de 5 em 5 A.
+ */
+export function pecaEletrodoEm(p: PecaEletrodo, material: MaterialId): PecaEletrodo {
+  const antigo = materialEletrodo(p)
+  if (material === antigo) return p
+  if (!MATERIAIS[material].processos.includes('eletrodo')) throw new Error(`${MATERIAIS[material].nome} não vai ao eletrodo no jogo.`)
+  const k = MATERIAIS[material].necessidadeFusao / MATERIAIS[antigo].necessidadeFusao
+  const a5 = (v: number) => Math.round((v * k) / 5) * 5
+  return { ...p, material, correnteA: { min: a5(p.correnteA.min), max: a5(p.correnteA.max) } }
+}
 
 export function pecaEletrodo(id: string): PecaEletrodo {
   return PECAS_ELETRODO.find(p => p.id === id) ?? PECAS_ELETRODO[0]

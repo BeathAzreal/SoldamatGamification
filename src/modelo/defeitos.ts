@@ -1,6 +1,7 @@
 import type { Cordao } from './cordao'
 import { analisarFusao, indiceDeformacao, suavizar, type PontoFusao } from './fusao'
 import { INFO_JUNTA, juntaDe } from './juntas'
+import { GASES, MATERIAIS } from './material'
 import { DEFEITOS } from './parametros'
 import type { Percurso } from './percurso'
 import { correnteA, dbcpDe, type ContextoProcesso } from './processo'
@@ -46,7 +47,7 @@ export const CONSELHO_DEFEITO: Record<TipoDefeito, string> = {
   sobreposicao: 'Devagar demais para o calor (ou arco curto): o metal se acumula e deita sobre a chapa sem fundir. Ande mais rápido; se o arco estiver curto, suba a tensão.',
   respingos: 'Arco fora do equilíbrio (tensão × alimentação) ou CO₂ puro: equilibre a máquina.',
   cratera: 'Ao terminar, segure a tocha parada um instante antes de fechar o arco para encher a cratera.',
-  porosidade: 'Gás mal protegido: arco longo, distância bico-peça grande ou óxido não removido (alumínio).',
+  porosidade: 'Gás mal protegido: arco longo, distância bico-peça grande ou superfície não limpa (óxido do alumínio, zinco do galvanizado).',
   'penetracao-excessiva': 'Calor demais para a espessura: o metal atravessou e ficou pendurado do outro lado. Ande mais rápido ou baixe a alimentação.',
   'raiz-afundada': 'A poça ficou pesada demais e caiu pela raiz: a face afunda. Menos corrente, avanço mais rápido ou curto-circuito em vez de spray.',
   furo: 'O calor atravessou a chapa e abriu um buraco. Em chapa fina: curto-circuito, avanço constante e sem parar a tocha no lugar.',
@@ -237,9 +238,11 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
   // Velocidade local pela permanência da tocha (H20), com o mesmo espalhamento do metal (H4).
   const permanencia = suavizar(percurso.copiaDasPermanencias(), passo)
 
-  const aluminioSujo = ctx.material === 'aluminio' && !ctx.oxidoRemovido
+  // H35/H104: óxido do alumínio ou zinco do galvanizado deixados na junta.
+  const material = MATERIAIS[ctx.material]
+  const sujo = material.exigeLimpeza && !ctx.oxidoRemovido ? material.limpeza?.porosidade ?? 0 : 0
   const dbcp = dbcpDe(ctx)
-  const porosidadeBase = (aluminioSujo ? 0.55 : 0) + (dbcp >= 20 ? 0.2 : dbcp > 17 ? 0.1 : 0) + (ctx.gas === 'ar' && ctx.material !== 'aluminio' ? 0.15 : 0)
+  const porosidadeBase = sujo + (dbcp >= 20 ? 0.2 : dbcp > 17 ? 0.1 : 0) + (ctx.gas === 'ar' && !GASES.ar.materiais.includes(ctx.material) ? 0.15 : 0)
   const respingoGas = ctx.gas === 'co2' ? 1.6 : 1
   const respingoDbcp = dbcp >= 20 ? 0.1 : 0
   const lim = LIMIARES_PENETRACAO[ctx.material]
