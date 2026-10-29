@@ -1,8 +1,9 @@
+import { montarGiroTubo } from '../componentes/giroTubo'
 import { NOME_DIFICULDADE, type Dificuldade } from '../../missoes/catalogo'
 import { comoPecaBase, NOME_MATERIAL_TIG, type PecaTig } from '../../missoes/pecasTig'
 import { Cordao } from '../../modelo/cordao'
 import { DepositoEletrodo } from '../../modelo/depositoEletrodo'
-import { INFO_JUNTA } from '../../modelo/juntas'
+import { GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA } from '../../modelo/juntas'
 import { ModeloTig, pedalDaPressao, TIG } from '../../modelo/tig'
 import { aprovacaoEletrodo } from '../../pontuacao/eletrodo'
 import { alvoTig, analiseVisualTig, avaliarTig, inspecionarTig, trechoTig } from '../../pontuacao/tig'
@@ -45,6 +46,12 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
     let pedalMouse = false, varetaMouse = false
     /** Toque rápido (tecla ou clique) ainda vale um mergulho mínimo, mesmo entre dois quadros. */
     let varetaAte = 0
+    /**
+     * H102: toque pedido e ainda não visto por um quadro. Em PC lento a tecla
+     * pode descer e subir entre dois quadros; o toque fica guardado e, no
+     * quadro seguinte, a vareta mergulha pelo menos TOQUE_MINIMO_MS.
+     */
+    let toquePendente = false
     const TOQUE_MINIMO_MS = 150
     let pausado = false, encerrada = false, foco = true
     let pedido = 0, anterior = performance.now(), analiseMs = 0
@@ -52,7 +59,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
     let gestoCamera = false, ultimaTela = { x: 0, y: 0 }
     let avisoCaneta = ''
     const teclas = new Set<string>()
-    const soltar = () => { teclas.clear(); pedalMouse = false; varetaMouse = false; modelo.mergulhar = false; modelo.pedal = 0 }
+    const soltar = () => { teclas.clear(); pedalMouse = false; varetaMouse = false; toquePendente = false; modelo.mergulhar = false; modelo.pedal = 0 }
 
     // HUD sobre a vista.
     const estado = h('strong', { class: 'p15-estado', role: 'status', 'aria-live': 'polite' })
@@ -125,6 +132,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       const painel = app.raiz.querySelector<HTMLElement>('.p15-painel')
       if (painel) painel.hidden = false
       modelo = new ModeloTig(peca)
+      giroTubo?.reiniciar()
       modelo.correnteA = Number(corrente.value)
       modelo.inclinacaoGraus = Number(inclinacao.value)
       modelo.xMm = peca.inicioMm - 3
@@ -161,6 +169,9 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       h('div', { class: 'zoom-bancada', role: 'group', 'aria-label': 'Zoom da câmera' }, h('span', { title: 'Teclas + e −' }, 'ZOOM'),
         h('button', { type: 'button', 'aria-label': 'Afastar câmera', on: { click: () => { vista.aproximar(150); canvas.focus() } } }, '−'), zoomValor,
         h('button', { type: 'button', 'aria-label': 'Aproximar câmera', on: { click: () => { vista.aproximar(-150); canvas.focus() } } }, '+')))
+    // H103: na emenda de tubos, ⟲ ⟳ giram o tubo com o arco apagado.
+    const giroTubo = vista.tubo ? montarGiroTubo(GIRO_INICIAL_TUBO_GRAUS, (r) => vista.girarTubo(r)) : null
+    if (giroTubo) area.append(giroTubo.elemento)
     const conteudo = h('section', { class: 'p15' },
       h('header', { class: 'p15-cabecalho' },
         h('div', {},
@@ -204,7 +215,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       if (encerrada) return
       capturar()
       if (e.pointerType === 'pen') caneta(e)
-      else if (controle === 'mesa') { varetaMouse = true; varetaAte = performance.now() + TOQUE_MINIMO_MS }
+      else if (controle === 'mesa') { varetaMouse = true; toquePendente = true }
       else { moverTocha(e); pedalMouse = true }
     })
     ouvir(canvas, 'pointermove', (ev) => {
@@ -248,7 +259,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       }
       if (!TECLAS.includes(e.code)) return
       e.preventDefault()
-      if (!pausado && !encerrada) { if (e.code === 'Space' && !e.repeat) varetaAte = performance.now() + TOQUE_MINIMO_MS; teclas.add(e.code) }
+      if (!pausado && !encerrada) { if (e.code === 'Space' && !e.repeat) toquePendente = true; teclas.add(e.code) }
     })
     ouvir(window, 'keyup', (ev) => { teclas.delete((ev as KeyboardEvent).code) })
     ouvir(window, 'blur', () => { foco = false; soltar() })
@@ -282,6 +293,7 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       const dt = Math.min(DT_MAX, (agora - anterior) / 1000)
       anterior = agora
       const pode = !encerrada && !pausado && foco && !document.hidden
+      giroTubo?.atualizar(dt, pode && modelo.estado !== 'arco')
       if (pode) {
         const t = (c: string) => Number(teclas.has(c))
         alturaTocha = Math.max(ALTURA.min, Math.min(ALTURA.max, alturaTocha + (t('KeyW') - t('KeyS')) * ALTURA.teclaMmS * dt))
@@ -289,8 +301,10 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
         if (controle === 'mouse') {
           // Pedal no botão do mouse: sobe em rampa e desce devagar (soltar devagar evita a cratera).
           modelo.pedal = pedalMouse ? Math.min(1, modelo.pedal + dt / TIG.rampaPedalS) : Math.max(0, modelo.pedal - dt / 0.6)
-          modelo.mergulhar = teclas.has('Space') || agora < varetaAte
-        } else modelo.mergulhar = varetaMouse || teclas.has('Space') || agora < varetaAte
+          modelo.mergulhar = teclas.has('Space') || agora < varetaAte || toquePendente
+        } else modelo.mergulhar = varetaMouse || teclas.has('Space') || agora < varetaAte || toquePendente
+        // O mergulho mínimo conta a partir do quadro que viu o toque, não do instante da tecla.
+        if (toquePendente) { varetaAte = Math.max(varetaAte, agora + TOQUE_MINIMO_MS); toquePendente = false }
         // Arco medido até o topo do metal já posto: o cordão crescendo encurta o arco.
         modelo.distanciaMm = alturaTocha - dep.espessura(modelo.xMm, modelo.yMm)
         const x0 = modelo.xMm, y0 = modelo.yMm

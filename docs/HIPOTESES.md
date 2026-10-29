@@ -1056,5 +1056,34 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
   - Durante um mergulho a vareta fica no mesmo ponto.
 - **Folga ao fundir:** um toque que já começou fundindo continua enquanto a ponta estiver a pelo menos 85 % da temperatura de fusão. Antes, o metal frio da vareta esfriava a célula e cortava o toque em 40–80 ms, e cada toque punha menos de 1 mm de vareta.
 - **Calibração:** com mais metal frio entrando, a poça esfria um pouco. Por isso a raiz aparente no avesso (H94) passou de 0,80 para 0,78 do limite de furo.
+- **Toques perdidos em PC lento:** com poucos quadros por segundo, a tecla (ou o clique da vareta) podia descer e subir entre dois quadros, e o toque sumia. No navegador sem placa de vídeo, só 1 de 18 toques chegava. Agora o toque fica guardado até o próximo quadro e, a partir dele, a vareta mergulha pelo menos 150 ms: no mesmo teste, 18 de 18.
 - **Testes:** em `tests/tig.test.ts`, "avançar 2 mm e tocar logo" funde a vareta sem nenhum toque frio e com reforço na faixa nas três peças, e falha no código antigo. "Sem poça, a vareta bate" continua valendo.
+- Os números são do jogo.
+
+### H103 — tubo com tubo, de topo (v2.0, Claude)
+
+- **A peça:** emenda de topo de dois tubos de 1½" (no jogo, Ø 47,7 mm), soldada em volta. A junta de 150 mm do jogo é a volta do tubo desenrolada, então o modelo (cordão, calor, fusão, defeitos, nota) é o mesmo da junta de topo reto.
+- **Gravidade em volta (MIG/MAG):** no ponto a φ graus do alto, a gravidade nos eixos da junta é `{t: sen φ · cos f, n: sen f, w: −cos φ · cos f}`, com f o tombamento.
+  - Em cima a posição é plana; no lado, vertical (descendo ou subindo conforme o sentido); embaixo, sobrecabeça.
+  - Com o eixo do tubo de pé (tombado 90°), a volta inteira é horizontal (2G).
+  - A simulação usa a gravidade do ponto em que deposita, então gotas e escorrimento aparecem onde o tubo está.
+  - Com o tubo fixo (5G) e a poça grande, pinga embaixo e escorre nos lados. Girando o tubo a cada 45° para soldar sempre perto do alto (1G), não.
+- **Girar o tubo:** no tubo, o "giro" da posição da peça é a rotação no próprio eixo. Os campos salvos são os mesmos; o formato dos registros não muda.
+  - No MIG/MAG, ⟲ ⟳ da barra de posição giram o tubo (com o arco fechado).
+  - No eletrodo e no TIG há botões TUBO ⟲ ⟳ na bancada.
+- **Desenho:** a peça plana é enrolada no cilindro no vertex shader (`curvaTubo.ts`): a = x/R + giro, X = (R + y)·sen a, Y = (R + y)·cos a − R.
+  - Chapas (com extrusão subdividida), cordão, defeitos, marcas, faixas de calor, metal do eletrodo e escória curvam.
+  - Tocha, mira, alicate, vareta, poça, luz e rótulos ficam rígidos, postos e inclinados no ponto do tubo.
+  - Faíscas, respingos e gotas nascem no tubo e caem com a gravidade de verdade.
+  - No tubo não há exagero vertical nem empeno, e a sombra projetada é desligada (o mapa de sombra veria a peça plana).
+- **Entrada:** o raio da câmera acerta o cilindro e volta para a junta desenrolada (MIG). No eletrodo e no TIG, cada ponto do raio é desenrolado antes de comparar com a superfície.
+- **Onde está:**
+  - MIG/MAG: a missão "Tubulação da horta comunitária", antes só planejada, vira jogável (também no treino de missões, no arcade e na rede, que usa as missões de aço carbono).
+  - Eletrodo: peça "Tubo com tubo — emenda de topo".
+  - TIG: peça "Tubo com tubo — inox 2 mm".
+  - As peças novas entram no fim das listas e não mudam o índice das outras.
+- **Limite:** os modelos do eletrodo e do TIG não têm gravidade. No tubo eles mudam o desenho e o giro, mas não o escorrimento em volta.
+- **Testes:** `tests/tubo.test.ts` cobre:
+  - as posições em volta, o eixo de pé (2G), o 5G e o 1G;
+  - a curvatura (ida e volta, raio de cima no alto do tubo, pose rígida).
 - Os números são do jogo.

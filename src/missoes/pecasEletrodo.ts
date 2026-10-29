@@ -19,6 +19,8 @@ export interface PecaEletrodo {
   conjunto?: 'grade'
   /** H91: chapa inteira (sem abertura) para treinar cordões em relevo. */
   sobreChapa?: boolean
+  /** H103: emenda de dois tubos (a junta de 150 mm é a volta desenrolada). */
+  tubo?: { diametroMm: number }
   junta: TipoJunta
   espessuraMm: number
   aberturaMm: number
@@ -103,6 +105,17 @@ export const PECAS_ELETRODO: readonly PecaEletrodo[] = [
     junta: 'topo', espessuraMm: 6.3, aberturaMm: 0, diametroMm: 2.5, correnteA: { min: 75, max: 95 },
     inicioMm: 20, fimMm: 130,
     objetivo: 'Um cordão reto e contínuo do INÍCIO ao FIM: avance com o mouse e desça a vareta (S) enquanto ela queima. Limpe a escória no fim.',
+  },
+  // H103 (v2.0): também no fim da lista, para não mudar os índices das outras.
+  {
+    id: 'tubo-topo',
+    titulo: 'Tubo com tubo — emenda de topo',
+    aplicacao: 'Emenda de tubos de aço em tubulações e estruturas tubulares.',
+    porque: 'Na obra o tubo não vai para a bancada: o eletrodo dispensa o gás e solda em qualquer lugar.',
+    tubo: { diametroMm: 150 / Math.PI },
+    junta: 'topo', espessuraMm: 4, aberturaMm: 1.5, diametroMm: 2.5, correnteA: { min: 70, max: 90 },
+    inicioMm: 2, fimMm: 148,
+    objetivo: 'Dar a volta inteira na emenda: solde o trecho de cima, apague o arco e gire o tubo (⟲ ⟳) para trazer o próximo trecho para cima. Limpe a escória no fim.',
   },
 ]
 

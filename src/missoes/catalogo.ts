@@ -1,7 +1,7 @@
 import { ARAMES, GASES, MATERIAIS, gasCompativel, type GasId, type MaterialId } from '../modelo/material'
 import { DBCP, PECA } from '../modelo/parametros'
 import type { FormatoJunta } from '../modelo/junta'
-import { INFO_JUNTA, TIPOS_JUNTA, type TipoJunta } from '../modelo/juntas'
+import { GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA, TIPOS_JUNTA, type TipoJunta } from '../modelo/juntas'
 import type { ContextoProcesso, Movimento, Tecnica } from '../modelo/processo'
 
 /*
@@ -230,7 +230,7 @@ export const MISSOES: Missao[] = [
     condicaoFornecimento: 'Tubo de aço carbono de 1½" (no jogo, Ø 47,7 mm), parede de 3 mm, cortado reto e com as pontas limpas.',
     // H103: a junta de 150 mm é a volta do tubo desenrolada; o tubo chega com a emenda da volta no alto.
     geometria: { ...GEOMETRIA_BASE, espessuraMm: 3, aberturaMm: 1, junta: 'topo', tubo: { diametroMm: PECA.comprimentoMm / Math.PI } },
-    montagem: { rolagemGraus: 0, giroGraus: 180, fixa: false },
+    montagem: { rolagemGraus: 0, giroGraus: GIRO_INICIAL_TUBO_GRAUS, fixa: false },
     ...COMUM,
     junta: 'Emenda de topo de dois tubos (bordas frente a frente, com abertura)',
     tipoSolda: 'Solda circunferencial em chanfro reto, por fora',

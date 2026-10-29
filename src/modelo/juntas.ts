@@ -474,6 +474,9 @@ export function gravidade(p: PosicaoPeca): GravidadeJunta {
  * (rolagem) põe o eixo do tubo de pé: aí a solda em volta é horizontal (2G).
  * No tubo, o "giro" da posição é a rotação do tubo no próprio eixo.
  */
+/** H103: ângulo em que o tubo chega: a emenda da volta (INÍCIO e FIM da junta) no alto. */
+export const GIRO_INICIAL_TUBO_GRAUS = 180
+
 export function gravidadeTubo(p: PosicaoPeca, sMm: number, diametroMm: number, topoMm: number): GravidadeJunta {
   const f = (p.rolagemGraus * Math.PI) / 180
   const phi = (sMm - topoMm) / (diametroMm / 2) + (p.giroGraus * Math.PI) / 180

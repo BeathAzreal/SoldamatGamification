@@ -5,6 +5,7 @@ import { limitesPecaEletrodo } from '../missoes/pecasEletrodo'
 import { criarDetalhesIndustriais15 } from './pecaIndustrial15'
 import * as THREE from 'three'
 import { Palco3D } from './palco3d'
+import { curvarPonto, desdobrarPonto } from './curvaTubo'
 import { geometriaDa } from '../modelo/junta'
 import { CONTEXTO_PADRAO, type ContextoProcesso } from '../modelo/processo'
 import type { Cordao } from '../modelo/cordao'
@@ -13,7 +14,7 @@ import type { ModeloTig } from '../modelo/tig'
 import { criarSuperficieEscoria15 } from './escoriaSuperficie15'
 import { girarFerramenta15, type Vetor15 } from '../entrada/giroFerramenta15'
 import type { FerramentaBancada15 } from '../modelo/escoria15'
-import { cristaMm, INFO_JUNTA, juntaDe, pontoNaSuperficie, type TipoJunta } from '../modelo/juntas'
+import { cristaMm, GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA, juntaDe, pontoNaSuperficie, type TipoJunta } from '../modelo/juntas'
 import type { AnaliseDefeitos } from '../modelo/defeitos'
 
 /** Ponta nua da vareta presa nas garras do alicate (mm). */
@@ -36,9 +37,10 @@ function texturaBrilho(): THREE.CanvasTexture {
 }
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
-export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade' }, op: { tig?: { material: ContextoProcesso['material'] } } = {}) {
+export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade'; tubo?: { diametroMm: number } }, op: { tig?: { material: ContextoProcesso['material'] } } = {}) {
   // A peça chega na posição plana (rolagem 0): no filete, o canto fica voltado para cima.
-  const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm, ...(op.tig ? { material: op.tig.material } : {}) } : CONTEXTO_PADRAO
+  // H103: a emenda de tubos curva o desenho; o modelo do eletrodo e do TIG continua na junta desenrolada.
+  const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm, ...(op.tig ? { material: op.tig.material } : {}), ...(peca.tubo ? { tubo: peca.tubo, posicaoInicial: { rolagemGraus: 0, giroGraus: GIRO_INICIAL_TUBO_GRAUS } } : {}) } : CONTEXTO_PADRAO
   // TIG: chapa limpa e cordão brilhante (o acabamento do MIG), sem a crosta do eletrodo.
   const palco = Palco3D.criar({
     larguraPecaMm: peca?.larguraMm, processo: op.tig ? 'mig' : 'eletrodo', contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
@@ -72,7 +74,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   const eletrodo = new THREE.Group()
   const mig = new THREE.Group()
   ferramenta.add(eletrodo, mig)
-  palco.peca.add(ferramenta)
+  palco.peca.add(palco.ancorar(ferramenta))
   const metal = new THREE.MeshStandardMaterial({ color: '#b5b9bd', metalness: 0.85, roughness: 0.4 })
   const revestimento = new THREE.MeshStandardMaterial({ color: '#b39a74', roughness: 0.95 })
   const isolante = new THREE.MeshStandardMaterial({ color: '#283842', roughness: 0.8 })
@@ -142,7 +144,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   const empunhaduraTig = haste(tig, 6, 70, new THREE.Vector3(0, 26, 0), new THREE.Vector3(0.9, 0.42, 0).normalize(), borracha)
   void tungstenio; void tampa; void empunhaduraTig
   const varetaTig = new THREE.Group()
-  palco.peca.add(varetaTig)
+  palco.peca.add(palco.ancorar(varetaTig))
   varetaTig.visible = false
   const varetaMat = new THREE.MeshStandardMaterial({ color: '#c9ccd0', metalness: 0.9, roughness: 0.25 })
   const corpoVareta = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 10), varetaMat)
@@ -154,7 +156,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   const dirVareta = new THREE.Vector3()
   const madeira = new THREE.MeshStandardMaterial({ color: '#996d3f', roughness: 0.85 })
   const martelo = new THREE.Group(), escova = new THREE.Group()
-  palco.peca.add(martelo, escova)
+  palco.peca.add(palco.ancorar(martelo), palco.ancorar(escova))
   cilindro(martelo, 2.5, 46, 27, madeira)
   const cabeca = new THREE.Mesh(new THREE.BoxGeometry(23, 7, 8), metal)
   martelo.add(cabeca)
@@ -173,15 +175,15 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   // Arco: coluna luminosa da ponta à poça, halo voltado para a câmera, poça e luz que tremulam.
   const aditivo = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false } as const
   const coluna = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 1.6, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#d9f0ff', opacity: 0.9, ...aditivo }))
-  palco.peca.add(coluna)
+  palco.peca.add(palco.ancorar(coluna))
   const textura = texturaBrilho()
   palco.guardarTexturas(textura)
   const halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: textura, color: '#cfe6ff', opacity: 0.95, ...aditivo }))
-  palco.peca.add(halo)
+  palco.peca.add(palco.ancorar(halo))
   const poca = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12), new THREE.MeshBasicMaterial({ color: '#ffd38a', toneMapped: false }))
-  palco.peca.add(poca)
+  palco.peca.add(palco.ancorar(poca))
   const luz = new THREE.PointLight('#c9eaff', 0, 160, 2)
-  palco.peca.add(luz)
+  palco.peca.add(palco.ancorar(luz))
   // Respingos: gotas balísticas que caem pela gravidade e se apagam ao esfriar.
   const posRespingo = new Float32Array(MAX_RESPINGOS * 3)
   const corRespingo = new Float32Array(MAX_RESPINGOS * 3)
@@ -204,8 +206,9 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   const alcanceLateral = INFO_JUNTA[junta].familia === 'filete' ? 50 / Math.SQRT2 : 50
   const escoria = criarSuperficieEscoria15(superficie, junta)
   palco.peca.add(escoria.malha)
+  palco.curvarTambem(escoria.malha)
   palco.guardarTexturas(escoria.textura, escoria.crosta)
-  if (peca) palco.peca.add(criarDetalhesIndustriais15(junta, peca.conjunto))
+  if (peca && !peca.tubo) palco.peca.add(criarDetalhesIndustriais15(junta, peca.conjunto))
   const eixo = new THREE.Vector3(), normal = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion()
   const pontaMartelo = new THREE.Vector3()
   const cameraLocal = new THREE.Vector3()
@@ -213,6 +216,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   let cordaoAntes: Cordao | DepositoEletrodo | null = null
   const metalLocal = criarMetalEletrodo()
   palco.peca.add(metalLocal.malha)
+  palco.curvarTambem(metalLocal.malha)
   const lascas = new THREE.Group()
   palco.peca.add(lascas)
   const particulasEscoria: { malha: THREE.Mesh; velocidade: THREE.Vector3; vida: number }[] = []
@@ -224,6 +228,10 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   let calorPonta = 0
   return {
     canvas, enquadrar, superficie,
+    /** H103: a peça é uma emenda de tubos (o giro do tubo vale). */
+    tubo: !!palco.curva,
+    /** H103: gira o tubo no próprio eixo (radianos). */
+    girarTubo(radianos: number) { palco.definirGiro(radianos) },
     zoomPercentual: () => Math.round(ZOOM0 / zoom * 100),
     soltarEscoria(x: number, y: number, removido: number) {
       if (removido <= 0) return
@@ -232,6 +240,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         const p = particulasEscoria[i], a = i * 2.39996
         p.vida = 0.45 + (i % 4) * 0.08
         p.malha.position.set(x - 75, superficie(y) + 2, y)
+        if (palco.curva) curvarPonto(palco.curva, x - 75, superficie(y) + 2, y, p.malha.position)
         p.malha.scale.set(1.2 + (i % 3) * 0.3, 0.25, 0.7)
         p.velocidade.set(Math.cos(a) * 24, 30 + (i % 5) * 7, Math.sin(a) * 24)
         p.malha.visible = true
@@ -256,9 +265,12 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       raio.setFromCamera(new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, 1 - ((y - r.top) / r.height) * 2), camera)
       // Anda pelo raio até cruzar a superfície das chapas e refina por bissecção.
       const o = raio.ray.origin, d = raio.ray.direction
+      const curva = palco.curva
       const acima = (t: number) => {
-        const n = o.z + d.z * t
-        return o.y + d.y * t > (cordaoAntes instanceof DepositoEletrodo ? cordaoAntes.altura(o.x+d.x*t+75,n) : superficie(n))
+        let x = o.x + d.x * t, y = o.y + d.y * t, n = o.z + d.z * t
+        // H103: no tubo, o ponto do raio volta para a junta desenrolada antes da comparação.
+        if (curva) ({ x, y, z: n } = desdobrarPonto(curva, x, y, n))
+        return y > (cordaoAntes instanceof DepositoEletrodo ? cordaoAntes.altura(x+75,n) : superficie(n))
       }
       let t0 = 0, t1 = -1
       for (let t = 0; t < 3000; t += 2) {
@@ -272,6 +284,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         else t1 = tm
       }
       raio.ray.at((t0 + t1) / 2, ponto)
+      if (curva) { const q = desdobrarPonto(curva, ponto.x, ponto.y, ponto.z); ponto.set(q.x, q.y, q.z) }
       // A borda não é uma superfície de contato: continue seguindo a mão fora da peça.
       const p = { x: ponto.x + 75, y: ponto.z }
       return { ...p, naPeca: p.x >= limitesX.min && p.x <= limitesX.max && Math.abs(p.y) <= alcanceLateral }
@@ -349,7 +362,8 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
         const i = proximoRespingo
         proximoRespingo = (proximoRespingo + 1) % MAX_RESPINGOS
         const ang = Math.random() * Math.PI * 2, v = 80 + Math.random() * 220
-        posRespingo.set([p.x - 75, base + 0.5, p.y], i * 3)
+        if (palco.curva) posRespingo.set(curvarPonto(palco.curva, p.x - 75, base + 0.5, p.y).toArray(), i * 3)
+        else posRespingo.set([p.x - 75, base + 0.5, p.y], i * 3)
         velRespingo.set([Math.cos(ang) * v, 120 + Math.random() * 260, Math.sin(ang) * v], i * 3)
         vidaRespingo[i] = 0.35 + Math.random() * 0.45
       }

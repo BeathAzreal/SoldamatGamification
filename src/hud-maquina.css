@@ -182,3 +182,8 @@
   .jogo-imersivo .maquina-identificacao { padding-bottom: 8px; }
   .jogo-imersivo .p15-fonte { gap: 8px; }
 }
+/* H103: girar o tubo nos treinos de eletrodo e TIG (abaixo do zoom). */
+.giro-tubo-bancada { position:absolute;top:52px;left:10px;display:flex;align-items:center;gap:7px;background:#141e22e8;border:1px solid #56666c;padding:4px 8px;font:11px Consolas,monospace;color:#d3dfdd; }
+.giro-tubo-bancada button { padding:3px 9px;font-size:18px;background:#263539;border:1px solid #647574;color:#d5eee7;touch-action:none; }
+.giro-tubo-bancada button:disabled { opacity:.45; }
+.giro-tubo-bancada output { min-width:40px;text-align:center; }
