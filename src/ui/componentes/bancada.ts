@@ -480,7 +480,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
           ? 'Analógico esquerdo move a tocha; R2 ou X abrem o arco (mude em Calibrar).'
           : dispositivo === 'caneta'
             ? 'Encoste a caneta para abrir o arco.'
-            : 'Segure o botão esquerdo para abrir o arco.'
+            : 'Segure o botão esquerdo (ou encoste a caneta) para abrir o arco.'
   }
   const abrirCalibracao = () => {
     calibracao = montarCalibracao(app, dispositivo, () => fonte, () => ligarFonte())
@@ -503,81 +503,68 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   document.addEventListener('visibilitychange', semFoco)
   window.addEventListener('blur', semFoco)
 
-  const textoFormato = h('p', { class: 'dica' }, descreverJunta(m))
-  const chipsJunta = TIPOS_JUNTA.map((f: TipoJunta) =>
-    chip('fmt', f, INFO_JUNTA[f].nome, m.geometria.junta === f, (v) => {
-      m = comJunta(m, v)
-      // H104: a espessura vem do estoque da chapa escolhida.
-      if (op.escolherMaterial) m = comMaterial(m, m.material)
-      atualizarPeca()
-      giro.reiniciar(opcoesGiro())
-      trocaContexto()
-    }),
-  )
-  const escolhaFormato = op.escolherJunta
-    ? h(
-        'div',
-        { class: 'grupo-maquina grupo-formato' },
-        h('span', { class: 'rotulo-maquina' }, 'Tipo de junta'),
-        h('div', { class: 'linha-chips', role: 'group', 'aria-label': 'Tipo de junta' }, chipsJunta),
-        textoFormato,
-      )
-    : textoFormato
-
-  // H104: troca da chapa (treino livre). Cada material traz gás, arame, estoque de espessuras e a física dele.
-  const espessuras = h('div', { class: 'linha-chips', role: 'group', 'aria-label': 'Espessura da chapa' })
-  const ficha = h('div', { class: 'ficha-material-bancada' })
+  // Peça de teste numa faixa só (chapa, espessura e junta em listas): a área de teste fica com o espaço.
+  // A descrição da junta e o resumo da chapa ficam na dica (title); a ficha da chapa abre num painel (H104).
   const selo = h('span', { style: 'display:contents' }, seloMaterial(m.material, m.geometria.espessuraMm))
-  const chipsMaterial = materiaisDoProcesso('MIG/MAG').map((mat: MaterialId) =>
-    chip('mat', mat, MATERIAIS[mat].nomeCurto, m.material === mat, (v) => {
-      m = comMaterial(m, v, m.geometria.espessuraMm)
-      const gases = m.consumiveis.gases
-      preparo = { ...preparo, gas: gases.includes(preparo.gas) ? preparo.gas : gases[0], oxidoRemovido: false }
-      gas.replaceChildren(montarGas())
-      const novaLimpeza = montarLimpeza()
-      limpeza.replaceChildren(...(novaLimpeza ? [novaLimpeza] : []))
-      const novaDica = montarDica()
-      dicaAluminio.replaceChildren(...(novaDica ? [novaDica] : []))
-      atualizarPeca()
-      giro.reiniciar(opcoesGiro())
-      trocaContexto()
-    }),
-  )
-  /** Espessuras, ficha, selo e juntas possíveis da chapa atual. */
-  function atualizarPeca(): void {
-    textoFormato.textContent = descreverJunta(m)
-    selo.replaceChildren(seloMaterial(m.material, m.geometria.espessuraMm))
-    for (const b of chipsJunta) {
-      const f = b.dataset.valor as TipoJunta
-      const ativo = f === m.geometria.junta
-      b.classList.toggle('ativo', ativo)
-      b.setAttribute('aria-pressed', String(ativo))
-      const cabe = !op.escolherMaterial || espessurasPara(m.material, f).length > 0
-      b.disabled = !cabe
-      b.title = cabe ? '' : `${MATERIAIS[m.material].nome}: chapa fina demais para chanfro em V.`
-    }
-    if (!op.escolherMaterial) return
-    espessuras.replaceChildren(...espessurasPara(m.material, m.geometria.junta).map((e) =>
-      chip('esp', e, `${n1(e)} mm`, e === m.geometria.espessuraMm, (v) => {
-        m = comMaterial(m, m.material, v)
-        selo.replaceChildren(seloMaterial(m.material, m.geometria.espessuraMm))
-        ficha.replaceChildren(fichaMaterial(m.material, { semSelo: true }))
-        trocaContexto()
-      }),
-    ))
-    ficha.replaceChildren(fichaMaterial(m.material, { semSelo: true }))
+  const lista = (rotulo: string, aoMudar: (v: string) => void) => {
+    const s = h('select', { 'aria-label': rotulo })
+    s.addEventListener('change', () => aoMudar(s.value))
+    return s
   }
-  const escolhaMaterial = op.escolherMaterial
-    ? h(
-        'div',
-        { class: 'grupo-maquina grupo-material' },
-        h('span', { class: 'rotulo-maquina' }, 'Chapa'),
-        h('div', { class: 'linha-chips', role: 'group', 'aria-label': 'Material da chapa' }, chipsMaterial),
-        h('span', { class: 'rotulo-maquina' }, 'Espessura'),
-        espessuras,
-        ficha,
-      )
-    : null
+  const campo = (rotulo: string, ...filhos: Node[]) => h('label', { class: 'campo-peca' }, h('span', { class: 'rotulo-maquina' }, rotulo), filhos)
+  const opcoes = (s: HTMLSelectElement, itens: { valor: string; texto: string; desativado?: boolean }[], atual: string) =>
+    s.replaceChildren(...itens.map((i) => h('option', { value: i.valor, selected: i.valor === atual, disabled: i.desativado }, i.texto)))
+  const listaChapa = lista('Chapa', (v) => {
+    m = comMaterial(m, v as MaterialId, m.geometria.espessuraMm)
+    const gases = m.consumiveis.gases
+    preparo = { ...preparo, gas: gases.includes(preparo.gas) ? preparo.gas : gases[0], oxidoRemovido: false }
+    gas.replaceChildren(montarGas())
+    const novaLimpeza = montarLimpeza()
+    limpeza.replaceChildren(...(novaLimpeza ? [novaLimpeza] : []))
+    const novaDica = montarDica()
+    dicaAluminio.replaceChildren(...(novaDica ? [novaDica] : []))
+    atualizarPeca()
+    giro.reiniciar(opcoesGiro())
+    trocaContexto()
+  })
+  const listaEspessura = lista('Espessura da chapa', (v) => {
+    m = comMaterial(m, m.material, Number(v))
+    atualizarPeca()
+    trocaContexto()
+  })
+  const listaJunta = lista('Tipo de junta', (v) => {
+    m = comJunta(m, v as TipoJunta)
+    // H104: a espessura vem do estoque da chapa escolhida.
+    if (op.escolherMaterial) m = comMaterial(m, m.material)
+    atualizarPeca()
+    giro.reiniciar(opcoesGiro())
+    trocaContexto()
+  })
+  const juntaFixa = h('strong', {})
+  const botaoFicha = h('button', { type: 'button', class: 'botao-fantasma', title: 'Características da chapa: calor, aquecimento, deformação' }, icone('info'), ' Ficha')
+  botaoFicha.addEventListener('click', () => abrirPainel(MATERIAIS[m.material].nome, fichaMaterial(m.material, { espessuraMm: m.geometria.espessuraMm })))
+  /** Listas, selo e dicas da peça atual. */
+  function atualizarPeca(): void {
+    selo.replaceChildren(seloMaterial(m.material, m.geometria.espessuraMm))
+    selo.title = MATERIAIS[m.material].ficha.resumo
+    juntaFixa.textContent = INFO_JUNTA[m.geometria.junta].nome
+    juntaFixa.title = listaJunta.title = descreverJunta(m)
+    opcoes(listaJunta, TIPOS_JUNTA.map((f: TipoJunta) => {
+      const cabe = !op.escolherMaterial || espessurasPara(m.material, f).length > 0
+      return { valor: f, texto: INFO_JUNTA[f].nome + (cabe ? '' : ' · chapa fina demais'), desativado: !cabe }
+    }), m.geometria.junta)
+    if (!op.escolherMaterial) return
+    opcoes(listaChapa, materiaisDoProcesso('MIG/MAG').map((id: MaterialId) => ({ valor: id, texto: MATERIAIS[id].nomeCurto })), m.material)
+    listaChapa.title = MATERIAIS[m.material].ficha.resumo
+    opcoes(listaEspessura, espessurasPara(m.material, m.geometria.junta).map((e) => ({ valor: String(e), texto: `${n1(e)} mm` })), String(m.geometria.espessuraMm))
+  }
+  const linhaPeca = h(
+    'div',
+    { class: 'linha-peca' },
+    op.escolherMaterial ? [campo('Chapa', listaChapa), campo('Espessura', listaEspessura)] : null,
+    op.escolherJunta ? campo('Junta', listaJunta) : h('span', { class: 'campo-peca' }, h('span', { class: 'rotulo-maquina' }, 'Junta'), juntaFixa),
+    botaoFicha,
+  )
   atualizarPeca()
   const pecaTeste = h(
     'section',
@@ -585,7 +572,9 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     h(
       'header',
       { class: 'peca-teste-topo' },
-      h('div', { class: 'peca-teste-nome' }, h('strong', {}, 'Peça de teste'), selo, h('small', {}, 'nada aqui conta')),
+      // Com a lista de chapas à vista o selo seria repetido.
+      h('div', { class: 'peca-teste-nome' }, h('strong', {}, 'Peça de teste'), op.escolherMaterial ? null : selo, h('small', {}, 'nada aqui conta')),
+      linhaPeca,
       h(
         'div',
         { class: 'barra-dispositivo' },
@@ -595,13 +584,13 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
         h('button', { type: 'button', class: 'botao-fantasma', on: { click: reiniciarPeca } }, icone('limpar'), ' Limpar'),
       ),
     ),
-    h('p', { class: 'dica status-linha' }, statusDispositivo),
     gaveta,
-    escolhaMaterial,
-    escolhaFormato,
     areaPeca,
     resumoPasse,
   )
+
+  // Como abrir o arco com o dispositivo escolhido: dentro da área de teste, não numa linha a mais.
+  areaPeca.querySelector('.hud-sobre')?.append(h('span', { class: 'hud-item hud-dica' }, statusDispositivo))
 
   const fontePainel = h('div', { class: 'fonte-com-leituras' }, maquina.querySelector('.mostradores'), maquina.querySelector('.leituras'))
   const preparoPainel = h('div', {}, maquina.querySelector('.maquina-grade'), maquina.querySelector('.aviso-trava'))
