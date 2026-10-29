@@ -22,9 +22,9 @@ class AlvoFalso {
 const mapa = { paraPeca: (px: number, py: number) => ({ x: px, y: py }) }
 
 /** Passa por cima (hover), encosta, arrasta 40 mm e levanta. */
-function passe(tipoHover: string, tipoContato: string, pressaoContato: number) {
+function passe(tipoHover: string, tipoContato: string, pressaoContato: number, dispositivo: 'mouse' | 'caneta' = 'caneta') {
   const alvo = new AlvoFalso()
-  const fonte = new FontePonteiro('caneta', alvo as unknown as HTMLElement, mapa, OPCOES_CANETA_PADRAO)
+  const fonte = new FontePonteiro(dispositivo, alvo as unknown as HTMLElement, mapa, OPCOES_CANETA_PADRAO)
   const sim = new Simulacao()
   fonte.ligar(sim)
   let t = 0
@@ -59,5 +59,22 @@ describe('caneta: contato abre o arco com qualquer driver', () => {
 
   it('registra o último evento para diagnóstico', () => {
     expect(passe('pen', 'pen', 0.4).ultimo).toContain('pointerup · pen')
+  })
+})
+
+describe('MIG/MAG: caneta com a seleção Mouse', () => {
+  it('Windows Ink move, solda no contato e fecha ao levantar', () => {
+    const r = passe('pen', 'pen', 0.4, 'mouse')
+    expect(r.abertoNoHover).toBe(false)
+    expect(r.abertoNoContato).toBe(true)
+    expect(r.fechou).toBe(true)
+    expect(r.volume).toBeGreaterThan(0)
+  })
+  it('preserva o mouse e os drivers que emulam mouse', () => {
+    const r = passe('mouse', 'mouse', 0.5, 'mouse')
+    expect(r.abertoNoHover).toBe(false)
+    expect(r.abertoNoContato).toBe(true)
+    expect(r.fechou).toBe(true)
+    expect(r.volume).toBeGreaterThan(0)
   })
 })
