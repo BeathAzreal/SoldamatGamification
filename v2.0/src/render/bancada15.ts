@@ -37,10 +37,10 @@ function texturaBrilho(): THREE.CanvasTexture {
 }
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
-export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade'; tubo?: { diametroMm: number } }, op: { tig?: { material: ContextoProcesso['material'] } } = {}) {
+export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade'; tubo?: { diametroMm: number } }, op: { tig?: boolean; material?: ContextoProcesso['material'] } = {}) {
   // A peça chega na posição plana (rolagem 0): no filete, o canto fica voltado para cima.
   // H103: a emenda de tubos curva o desenho; o modelo do eletrodo e do TIG continua na junta desenrolada.
-  const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm, ...(op.tig ? { material: op.tig.material } : {}), ...(peca.tubo ? { tubo: peca.tubo, posicaoInicial: { rolagemGraus: 0, giroGraus: GIRO_INICIAL_TUBO_GRAUS } } : {}) } : CONTEXTO_PADRAO
+  const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm, ...(op.material ? { material: op.material } : {}), ...(peca.tubo ? { tubo: peca.tubo, posicaoInicial: { rolagemGraus: 0, giroGraus: GIRO_INICIAL_TUBO_GRAUS } } : {}) } : CONTEXTO_PADRAO
   // TIG: chapa limpa e cordão brilhante (o acabamento do MIG), sem a crosta do eletrodo.
   const palco = Palco3D.criar({
     larguraPecaMm: peca?.larguraMm, processo: op.tig ? 'mig' : 'eletrodo', contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,

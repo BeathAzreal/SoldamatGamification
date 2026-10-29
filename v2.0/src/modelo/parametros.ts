@@ -142,7 +142,7 @@ export const FUSAO = {
   perfuracao: 2.6,
   /** Margem para considerar uma borda coberta (mm). */
   margemBordaMm: 0.5,
-  /** Fator quando o óxido do alumínio não foi removido (H35). */
+  /** Fator quando o óxido do alumínio (ou o zinco do galvanizado, H104) não foi removido (H35). */
   fatorSemLimpeza: 0.6,
   /** Normalização do índice de deformação (H36). */
   normalizacaoDeformacao: 2.07,

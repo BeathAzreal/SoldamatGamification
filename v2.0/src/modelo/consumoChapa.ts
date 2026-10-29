@@ -34,6 +34,11 @@ export const LIMIARES_PENETRACAO: Record<MaterialId, LimiaresPenetracao> = {
   'aco-carbono': { raizAparente: 1.6, excesso: 2.1, afunda: 2.35, furo: FUSAO.perfuracao },
   'inox-austenitico': { raizAparente: 1.6, excesso: 2.1, afunda: 2.35, furo: FUSAO.perfuracao },
   aluminio: { raizAparente: 2.25, excesso: 2.42, afunda: 2.52, furo: FUSAO.perfuracao },
+  // H104: galvanizado e médio carbono avisam como o aço; o inox ferrítico como o inox; o cobre, como o alumínio, quase não avisa.
+  'aco-galvanizado': { raizAparente: 1.6, excesso: 2.1, afunda: 2.35, furo: FUSAO.perfuracao },
+  'aco-medio-carbono': { raizAparente: 1.6, excesso: 2.1, afunda: 2.35, furo: FUSAO.perfuracao },
+  'inox-ferritico': { raizAparente: 1.6, excesso: 2.1, afunda: 2.35, furo: FUSAO.perfuracao },
+  cobre: { raizAparente: 2.2, excesso: 2.4, afunda: 2.5, furo: FUSAO.perfuracao },
 }
 
 export const CONSUMO = {

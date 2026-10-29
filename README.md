@@ -23,6 +23,9 @@ O jogo mostra **ALPHA v2.0** no topo. Novidades:
   eletrodo e TIG: peça Tubo com tubo): solde em volta e gire o tubo (⟲ ⟳).
 - **TIG:** a vareta funde na borda da poça mesmo avançando antes de tocar, e
   toques rápidos não se perdem em PC lento.
+- **Chapas novas com características próprias** (galvanizado, médio carbono,
+  inox ferrítico e cobre): espessura, calor, aquecimento e deformação de cada
+  uma. No treino dá para trocar a chapa no MIG/MAG, no eletrodo e no TIG.
 - **Passes sobrepostos:** cordão com seção de parábola, passes que somam (morro,
   plano ou vale pelo passo), falta de fusão entre passes no eletrodo e o botão
   **Corte** para ver as camadas.
@@ -79,7 +82,7 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
-- [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32 e #36)
+- [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32, #36 e #37)
 - [`v1.9/`](v1.9/) ← [`alpha-v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.9) (`claude/v1.9`, com a v1.8 junto)
 - [`v1.8/`](v1.8/) ← [`claude/v1.8`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v1.8) (feita a partir da `alpha-v1.7`; ainda não há `alpha-v1.8`)
 - [`v1.7/`](v1.7/) ← [`alpha-v1.7`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.7) (`gpt/v1.7` + `claude/v1.7`)
@@ -96,6 +99,7 @@ Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 - **Efeito na solda:** globular respinga; spray (só com argônio) penetra e fura chapa fina; arco curto deita o metal sem fundir; tensão alta respinga, achata e morde a borda (`pontuacao-v11`).
 - **Passar da chapa em níveis** no MIG/MAG, no eletrodo e no TIG (raiz aparente, metal pendurado, face afundada, furo).
 - **Tubo com tubo** (MIG/MAG, eletrodo e TIG), com a posição mudando em volta do tubo no MIG/MAG, e a vareta do TIG fundindo no ritmo do jogador.
+- **Chapas com características próprias** (galvanizado, médio carbono, inox ferrítico e cobre, além de aço carbono, inox e alumínio), trocáveis no treino dos três processos (H104).
 - **Passes sobrepostos** (a partir de Banaee et al. 2023): seção de parábola, morro/plano/vale pelo passo, falta de fusão entre passes no eletrodo e o **Corte** da peça; no MIG/MAG, forma pela alimentação e humping.
 
 ## O que mudou na v1.9?

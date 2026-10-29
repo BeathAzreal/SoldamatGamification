@@ -3,12 +3,14 @@ import { abrirPainel } from '../dialogo'
 import { montarControles } from './controles'
 import { GRAUS_POR_PIXEL, Gestos } from '../../entrada/gestos'
 import { criarFonte } from '../../entrada/fabrica'
-import { seloMaterial } from './material'
+import { fichaMaterial, seloMaterial } from './material'
 import type { FonteEntrada } from '../../entrada/fonte'
 import { DISPOSITIVOS, NOME_DISPOSITIVO, type Dispositivo } from '../../entrada/tipos'
 import {
   comJunta,
+  comMaterial,
   contextoDaMissao,
+  espessurasPara,
   descreverJunta,
   preparoPadrao,
   requisitosEfetivos,
@@ -19,7 +21,7 @@ import {
 } from '../../missoes/catalogo'
 import { analisarFusao, DESCRICAO_ESTADO, type EstadoFusao } from '../../modelo/fusao'
 import { analisarDefeitos, CONSELHO_DEFEITO, NOME_DEFEITO } from '../../modelo/defeitos'
-import { GASES, MATERIAIS } from '../../modelo/material'
+import { GASES, MATERIAIS, materiaisDoProcesso, type MaterialId } from '../../modelo/material'
 import { DBCP, EQUILIBRIO, PECA } from '../../modelo/parametros'
 import {
   alimentacaoMMin,
@@ -80,6 +82,8 @@ export interface OpcoesBancada {
   travas?: { ajustes?: Ajustes; preparo?: Partial<Preparo> }
   /** Deixa escolher o tipo de junta da peça de teste (Configurações, treino livre, H46). */
   escolherJunta?: boolean
+  /** H104: deixa trocar a chapa (material e espessura) da peça de teste (treino livre). */
+  escolherMaterial?: boolean
 }
 
 export interface Bancada {
@@ -151,6 +155,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       }
     })
     b.dataset.grupo = grupo
+    b.dataset.valor = String(valor)
     return b
   }
   const grupo = (titulo: string, ...filhos: (Node | null)[]) => h('div', { class: 'grupo-maquina' }, h('span', { class: 'rotulo-maquina' }, titulo), h('div', { class: 'linha-chips', role: 'group', 'aria-label': titulo }, filhos))
@@ -171,7 +176,8 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       }, travas.preparo?.diametroArameMm !== undefined),
     ),
   )
-  const gas = grupo(
+  // H104: gás, limpeza e dica dependem da chapa; na troca de chapa (treino livre) são refeitos.
+  const montarGas = () => grupo(
     'Gás de proteção',
     ...m.consumiveis.gases.map((g) =>
       chip('gas', g, `${GASES[g].nome} · ${GASES[g].processo}`, g === preparo.gas, (v) => {
@@ -180,6 +186,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       }, travas.preparo?.gas !== undefined),
     ),
   )
+  const gas = h('div', { style: 'display:contents' }, montarGas())
   const resumoTecnica = h('p', { class: 'dica dica-tecnica' }, INFO_TECNICA[preparo.tecnica ?? 'neutra'].resumo)
   const tecnica = grupo(
     'Técnica (inclinação da tocha)',
@@ -204,18 +211,20 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
       }, travas.preparo?.dbcpMm !== undefined, mm < DBCP.referenciaMm ? 'Mais perto: mais corrente e mais calor com o mesmo arame' : mm > DBCP.referenciaMm ? 'Mais longe: menos corrente e menos calor com o mesmo arame' : 'Referência do jogo'),
     ),
   )
-  const dicaAluminio = m.material === 'aluminio' ? h('p', { class: 'dica' }, 'Dica: no alumínio costuma-se empurrar a tocha (proteção gasosa). É só dica.') : null
+  const montarDica = () => m.material === 'aluminio' ? h('p', { class: 'dica' }, 'Dica: no alumínio costuma-se empurrar a tocha (proteção gasosa). É só dica.') : null
+  const dicaAluminio = h('div', { style: 'display:contents' }, montarDica())
 
-  const limpeza = material.exigeLimpeza
-    ? (() => {
-        const c = h('input', { type: 'checkbox', id: `bc-limpeza-${id}`, checked: preparo.oxidoRemovido })
-        c.addEventListener('change', () => {
-          preparo = { ...preparo, oxidoRemovido: c.checked }
-          trocaContexto()
-        })
-        return h('div', { class: 'grupo-maquina' }, h('span', { class: 'rotulo-maquina' }, 'Preparação da junta'), h('label', { for: c.id, class: 'interruptor' }, c, h('span', {}, 'Remover o óxido (escova de inox)')))
-      })()
-    : null
+  const montarLimpeza = () => {
+    const mat = MATERIAIS[m.material]
+    if (!mat.exigeLimpeza) return null
+    const c = h('input', { type: 'checkbox', id: `bc-limpeza-${id}`, checked: preparo.oxidoRemovido })
+    c.addEventListener('change', () => {
+      preparo = { ...preparo, oxidoRemovido: c.checked }
+      trocaContexto()
+    })
+    return h('div', { class: 'grupo-maquina' }, h('span', { class: 'rotulo-maquina' }, 'Preparação da junta'), h('label', { for: c.id, class: 'interruptor' }, c, h('span', {}, mat.limpeza?.acao ?? 'Remover o óxido (escova de inox)')))
+  }
+  const limpeza = h('div', { style: 'display:contents' }, montarLimpeza())
 
   // H93 (v2.0): o painel regula em volts e m/min; por dentro (e no registro) continuam as posições de botão.
   const ESCALAS = {
@@ -495,33 +504,88 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   window.addEventListener('blur', semFoco)
 
   const textoFormato = h('p', { class: 'dica' }, descreverJunta(m))
+  const chipsJunta = TIPOS_JUNTA.map((f: TipoJunta) =>
+    chip('fmt', f, INFO_JUNTA[f].nome, m.geometria.junta === f, (v) => {
+      m = comJunta(m, v)
+      // H104: a espessura vem do estoque da chapa escolhida.
+      if (op.escolherMaterial) m = comMaterial(m, m.material)
+      atualizarPeca()
+      giro.reiniciar(opcoesGiro())
+      trocaContexto()
+    }),
+  )
   const escolhaFormato = op.escolherJunta
     ? h(
         'div',
         { class: 'grupo-maquina grupo-formato' },
         h('span', { class: 'rotulo-maquina' }, 'Tipo de junta'),
-        h(
-          'div',
-          { class: 'linha-chips', role: 'group', 'aria-label': 'Tipo de junta' },
-          TIPOS_JUNTA.map((f: TipoJunta) =>
-            chip('fmt', f, INFO_JUNTA[f].nome, m.geometria.junta === f, (v) => {
-              m = comJunta(m, v)
-              textoFormato.textContent = descreverJunta(m)
-              giro.reiniciar(opcoesGiro())
-              trocaContexto()
-            }),
-          ),
-        ),
+        h('div', { class: 'linha-chips', role: 'group', 'aria-label': 'Tipo de junta' }, chipsJunta),
         textoFormato,
       )
     : textoFormato
+
+  // H104: troca da chapa (treino livre). Cada material traz gás, arame, estoque de espessuras e a física dele.
+  const espessuras = h('div', { class: 'linha-chips', role: 'group', 'aria-label': 'Espessura da chapa' })
+  const ficha = h('div', { class: 'ficha-material-bancada' })
+  const selo = h('span', { style: 'display:contents' }, seloMaterial(m.material, m.geometria.espessuraMm))
+  const chipsMaterial = materiaisDoProcesso('MIG/MAG').map((mat: MaterialId) =>
+    chip('mat', mat, MATERIAIS[mat].nomeCurto, m.material === mat, (v) => {
+      m = comMaterial(m, v, m.geometria.espessuraMm)
+      const gases = m.consumiveis.gases
+      preparo = { ...preparo, gas: gases.includes(preparo.gas) ? preparo.gas : gases[0], oxidoRemovido: false }
+      gas.replaceChildren(montarGas())
+      const novaLimpeza = montarLimpeza()
+      limpeza.replaceChildren(...(novaLimpeza ? [novaLimpeza] : []))
+      const novaDica = montarDica()
+      dicaAluminio.replaceChildren(...(novaDica ? [novaDica] : []))
+      atualizarPeca()
+      giro.reiniciar(opcoesGiro())
+      trocaContexto()
+    }),
+  )
+  /** Espessuras, ficha, selo e juntas possíveis da chapa atual. */
+  function atualizarPeca(): void {
+    textoFormato.textContent = descreverJunta(m)
+    selo.replaceChildren(seloMaterial(m.material, m.geometria.espessuraMm))
+    for (const b of chipsJunta) {
+      const f = b.dataset.valor as TipoJunta
+      const ativo = f === m.geometria.junta
+      b.classList.toggle('ativo', ativo)
+      b.setAttribute('aria-pressed', String(ativo))
+      const cabe = !op.escolherMaterial || espessurasPara(m.material, f).length > 0
+      b.disabled = !cabe
+      b.title = cabe ? '' : `${MATERIAIS[m.material].nome}: chapa fina demais para chanfro em V.`
+    }
+    if (!op.escolherMaterial) return
+    espessuras.replaceChildren(...espessurasPara(m.material, m.geometria.junta).map((e) =>
+      chip('esp', e, `${n1(e)} mm`, e === m.geometria.espessuraMm, (v) => {
+        m = comMaterial(m, m.material, v)
+        selo.replaceChildren(seloMaterial(m.material, m.geometria.espessuraMm))
+        ficha.replaceChildren(fichaMaterial(m.material, { semSelo: true }))
+        trocaContexto()
+      }),
+    ))
+    ficha.replaceChildren(fichaMaterial(m.material, { semSelo: true }))
+  }
+  const escolhaMaterial = op.escolherMaterial
+    ? h(
+        'div',
+        { class: 'grupo-maquina grupo-material' },
+        h('span', { class: 'rotulo-maquina' }, 'Chapa'),
+        h('div', { class: 'linha-chips', role: 'group', 'aria-label': 'Material da chapa' }, chipsMaterial),
+        h('span', { class: 'rotulo-maquina' }, 'Espessura'),
+        espessuras,
+        ficha,
+      )
+    : null
+  atualizarPeca()
   const pecaTeste = h(
     'section',
     { class: 'peca-teste', 'aria-label': 'Peça de teste' },
     h(
       'header',
       { class: 'peca-teste-topo' },
-      h('div', { class: 'peca-teste-nome' }, h('strong', {}, 'Peça de teste'), seloMaterial(m.material, m.geometria.espessuraMm), h('small', {}, 'nada aqui conta')),
+      h('div', { class: 'peca-teste-nome' }, h('strong', {}, 'Peça de teste'), selo, h('small', {}, 'nada aqui conta')),
       h(
         'div',
         { class: 'barra-dispositivo' },
@@ -533,6 +597,7 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
     ),
     h('p', { class: 'dica status-linha' }, statusDispositivo),
     gaveta,
+    escolhaMaterial,
     escolhaFormato,
     areaPeca,
     resumoPasse,
