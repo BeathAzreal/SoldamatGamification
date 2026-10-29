@@ -1,10 +1,10 @@
 # Oficina de Soldagem — Alpha v2.0
 
-Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. O PR #32 já está na `alpha-v2.0`; o tubo com tubo e a correção da vareta do TIG estão na `claude/v2.0`, ainda fora da `alpha-v2.0`.
+Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. Já incorporada à `alpha-v2.0` (PRs #32 e #36).
 
 ## Jogar
 
-- **Só jogar:** baixe [`Oficina-de-Soldagem-Alpha-v2.0.zip`](Oficina-de-Soldagem-Alpha-v2.0.zip), extraia e abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html** no Chrome ou Edge. Sem instalação nem internet. A mesma pasta está em [`jogo-portatil/`](jogo-portatil/).
+- **Só jogar:** baixe [`Oficina-de-Soldagem-Alpha-v2.0.zip`](Oficina-de-Soldagem-Alpha-v2.0.zip), extraia e abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html** no Chrome ou Edge. Sem instalação nem internet. O ZIP também traz **JOGAR ONLINE.html** (X1 online por convite) e o servidor local de reserva. A mesma pasta está em [`jogo-portatil/`](jogo-portatil/).
 - **X1 em rede:** no PC anfitrião, baixe [`Oficina-de-Soldagem-v2.0-Rede.zip`](Oficina-de-Soldagem-v2.0-Rede.zip) (Windows 64 bits, já com o Node.js), extraia e abra **ABRIR-OFICINA.bat**. Os dois PCs precisam ser da v2.0.
 
 ## O que mudou na v2.0
