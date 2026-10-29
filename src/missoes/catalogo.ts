@@ -1,4 +1,4 @@
-import { ARAMES, GASES, MATERIAIS, gasCompativel, type GasId, type MaterialId } from '../modelo/material'
+import { ARAMES, GASES, MATERIAIS, gasCompativel, gasesDoMaterial, type GasId, type MaterialId } from '../modelo/material'
 import { DBCP, PECA } from '../modelo/parametros'
 import type { FormatoJunta } from '../modelo/junta'
 import { GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA, TIPOS_JUNTA, type TipoJunta } from '../modelo/juntas'
@@ -308,7 +308,7 @@ export function contextoDaMissao(m: Missao, p: Preparo): ContextoProcesso {
     aberturaMm: m.geometria.aberturaMm,
     diametroArameMm: p.diametroArameMm,
     gas: p.gas,
-    // Só o alumínio exige limpeza; nos outros materiais a superfície já vem limpa.
+    // Só o alumínio (óxido) e o galvanizado (zinco) exigem limpeza; nos outros a superfície já vem limpa.
     oxidoRemovido: MATERIAIS[m.material].exigeLimpeza ? p.oxidoRemovido : true,
     tecnica: p.tecnica ?? 'neutra',
     // H39: o movimento da tocha saiu da bancada; o modelo segue aceitando dados antigos.
@@ -338,6 +338,41 @@ export function juntaAleatoria(aleatorio: () => number = Math.random): TipoJunta
 export function comJunta(m: Missao, junta: TipoJunta): Missao {
   const j = INFO_JUNTA[junta]
   return { ...m, geometria: { ...m.geometria, junta, espessuraMm: j.espessuraTesteMm, aberturaMm: j.aberturaTesteMm }, montagem: LIVRE(junta) }
+}
+
+/** H104: o chanfro em V só cabe em chapa a partir desta espessura (mm). */
+export const ESPESSURA_MINIMA_V_MM = 4
+
+/** H104: espessuras do estoque da chapa que servem para a junta. */
+export function espessurasPara(material: MaterialId, junta: TipoJunta): number[] {
+  return MATERIAIS[material].ficha.espessurasMm.filter((e) => junta !== 'v' || e >= ESPESSURA_MINIMA_V_MM)
+}
+
+/**
+ * H104: a peça de teste em outra chapa (treino livre). O material traz o
+ * gás, o arame e o estoque de espessuras dele; fica a espessura pedida, se o
+ * estoque tiver, ou a mais perto da de teste da junta. Chapa só fina não
+ * aceita o V: a junta volta para o topo.
+ */
+export function comMaterial(m: Missao, material: MaterialId, espessuraMm?: number): Missao {
+  let base = m
+  if (espessurasPara(material, base.geometria.junta).length === 0) base = comJunta(base, 'topo')
+  const junta = base.geometria.junta
+  const estoque = espessurasPara(material, junta)
+  const alvo = espessuraMm ?? INFO_JUNTA[junta].espessuraTesteMm
+  const espessura = estoque.includes(alvo) ? alvo : estoque.reduce((a, b) => (Math.abs(b - alvo) < Math.abs(a - alvo) ? b : a))
+  return {
+    ...base,
+    material,
+    condicaoFornecimento: `Sobra de chapa: ${MATERIAIS[material].nome.toLowerCase()}, ${espessura.toLocaleString('pt-BR')} mm.`,
+    geometria: { ...base.geometria, espessuraMm: espessura },
+    consumiveis: { ...base.consumiveis, gases: gasesDoMaterial(material) },
+  }
+}
+
+/** H104: a peça de teste do treino livre a partir do contexto de uma tentativa (chapa, espessura e junta). */
+export function pecaLivre(ctx: Pick<ContextoProcesso, 'material' | 'espessuraMm' | 'junta'>): Missao {
+  return comMaterial(comJunta(PECA_PADRAO, ctx.junta ?? 'topo'), ctx.material, ctx.espessuraMm)
 }
 
 export function descreverConsumiveis(m: Missao): string[] {

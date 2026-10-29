@@ -7,7 +7,8 @@
 import { sorteioFixo, type AnaliseDefeitos } from './defeitos'
 import type { DepositoEletrodo } from './depositoEletrodo'
 import { INFO_JUNTA } from './juntas'
-import { aporteAlvoKJmm, type PecaEletrodo } from '../missoes/pecasEletrodo'
+import { aporteAlvoKJmm, materialEletrodo, type PecaEletrodo } from '../missoes/pecasEletrodo'
+import { MATERIAIS } from './material'
 import type { RegistroPasse } from './registroPasse'
 
 export const LIMITES = {
@@ -101,6 +102,9 @@ export function analisarEletrodo(peca: PecaEletrodo, dep: DepositoEletrodo, reg:
   const alvo = aporteAlvoKJmm(peca)
   const fusaoMin = novo(), fusaoMax = novo(), fusaoPrimeiro = novo(), inclusao = novo(), partida = novo()
   const filete = INFO_JUNTA[peca.junta].familia === 'filete'
+  // H104: o eletrodo não tem como limpar a chapa no jogo; o revestimento segura metade do poro do zinco (ou do óxido).
+  const material = MATERIAIS[materialEletrodo(peca)]
+  const poroChapa = material.exigeLimpeza ? 0.5 * (material.limpeza?.porosidade ?? 0) : 0
   // Poro de partida (H84): abrir o arco a frio e seguir em frente deixa o começo poroso;
   // voltar por cima do ponto de abertura (técnica de recuar) refunde e elimina.
   for (const ab of reg.aberturas) {
@@ -136,8 +140,8 @@ export function analisarEletrodo(peca: PecaEletrodo, dep: DepositoEletrodo, reg:
     const o = frio * (0.35 + 0.65 * lento)
     a.sobreposicaoMenos[i] = o
     a.sobreposicaoMais[i] = o
-    // Porosidade (H84): arco longo tira a proteção do revestimento; partida a frio.
-    const poro = lim01(0.7 * lim01((arco - LIMITES.arcoPorosoAcima) / 0.6) + 0.3 * lim01(instab - 0.3) + partida[i])
+    // Porosidade (H84): arco longo tira a proteção do revestimento; partida a frio; zinco da chapa (H104).
+    const poro = lim01(0.7 * lim01((arco - LIMITES.arcoPorosoAcima) / 0.6) + 0.3 * lim01(instab - 0.3) + partida[i] + poroChapa)
     a.porosidade[i] = poro
     const meia = s.larguraMm / 2
     if (poro > 0.25 && sorteioFixo(i, 160) < 0.45 * poro * passo * 2) {

@@ -1,4 +1,5 @@
 import type { PecaTig } from '../missoes/pecasTig'
+import { MATERIAIS, type Material } from './material'
 
 /*
  * TIG (GTAW) didático, H92. O tungstênio não se consome: o arco aquece a
@@ -17,9 +18,12 @@ export const TIG = {
   /** Vareta tocando o tungstênio: o arco está curto demais para caber a vareta. */
   varetaNoTungstenioMm: 1.1,
   rendimento: 0.65,
-  /** Subida da temperatura que funde a chapa (K acima do ambiente). */
+  /** Subida da temperatura que funde o aço (K acima do ambiente); cada chapa tem a sua (H104). */
   fusaoK: 1450,
-  /** Furo na chapa fina: pico acima de `furoK + furoPorMmK × espessura`, ou poça mais larga que `furoLargura × espessura + 3 mm`. */
+  /**
+   * Furo na chapa fina: pico acima de `furoK + furoPorMmK × espessura` (no aço; nas outras chapas, na
+   * mesma proporção da temperatura de fusão), ou poça mais larga que `furoLargura × espessura + 3 mm`.
+   */
   furoK: 2600,
   furoPorMmK: 250,
   furoLargura: 3.5,
@@ -35,12 +39,6 @@ export const TIG = {
   /** Tempo do pedal até a corrente cheia no modo só mouse (s). */
   rampaPedalS: 0.35,
 } as const
-
-/** Propriedades por material: calor por volume (J/mm³K), difusividade (mm²/s) e perda para o resto da chapa (1/s). */
-export const MATERIAL_TIG = {
-  inox: { rhoC: 0.0039, alfa: 4, perda: 0.35 },
-  carbono: { rhoC: 0.0038, alfa: 6, perda: 0.45 },
-}
 
 const NX = 150, NY = 81, DX = 1, DY = 0.5, Y0 = -20
 const PASSO = 1 / 120
@@ -65,7 +63,7 @@ export class ModeloTig {
   /** Maior temperatura que cada célula já viu: fundiu se passou de `fusaoK`. */
   readonly maxima = new Float64Array(NX * NY)
   private readonly aux = new Float64Array(NX * NY)
-  readonly material
+  readonly material: NonNullable<Material['tig']>
   correnteA = 80
   /** 0–1: pedal (pressão da caneta ou botão do mouse). */
   pedal = 0
@@ -104,8 +102,14 @@ export class ModeloTig {
   private quedaPedalS = 0
 
   constructor(readonly peca: PecaTig) {
-    this.material = MATERIAL_TIG[peca.material]
+    // H104: calor por volume, difusividade, perda e fusão vêm da chapa (material.ts).
+    const tig = MATERIAIS[peca.material].tig
+    if (!tig) throw new Error(`${MATERIAIS[peca.material].nome} não vai ao TIG no jogo.`)
+    this.material = tig
   }
+
+  /** Subida da temperatura que funde esta chapa (K acima do ambiente). */
+  get fusaoK(): number { return this.material.fusaoK }
 
   /** Espessura que recebe o calor (no T, o arco fica concentrado no canto: o jogo usa a de uma chapa). */
   get espessuraTermicaMm(): number { return this.peca.espessuraMm }
@@ -126,21 +130,21 @@ export class ModeloTig {
   }
   fundiuEm(x: number, y: number): boolean {
     const k = this.indice(x, y)
-    return k >= 0 && this.maxima[k] >= TIG.fusaoK
+    return k >= 0 && this.maxima[k] >= this.fusaoK
   }
   /** Largura da zona fundida numa seção x (mm). */
   larguraFundida(x: number): number {
     const i = Math.round(x / DX - 0.5)
     if (i < 0 || i >= NX) return 0
     let n = 0
-    for (let j = 0; j < NY; j++) if (this.maxima[j * NX + i] >= TIG.fusaoK) n++
+    for (let j = 0; j < NY; j++) if (this.maxima[j * NX + i] >= this.fusaoK) n++
     return n * DY
   }
   /** Raio equivalente da poça agora (mm): área fundida num raio de 8 mm do tungstênio (a poça fica um pouco atrás dele ao avançar). */
   get raioPocaMm(): number {
     const i0 = Math.round(this.xMm / DX - 0.5)
     let n = 0
-    for (let i = Math.max(0, i0 - 8); i <= Math.min(NX - 1, i0 + 8); i++) for (let j = 0; j < NY; j++) if (this.temperatura[j * NX + i] >= TIG.fusaoK) n++
+    for (let i = Math.max(0, i0 - 8); i <= Math.min(NX - 1, i0 + 8); i++) for (let j = 0; j < NY; j++) if (this.temperatura[j * NX + i] >= this.fusaoK) n++
     return Math.sqrt((n * DX * DY) / Math.PI)
   }
   /** H95: largura com que o metal da vareta se espalha: a da poça em que funde (entre 2,5 e 8 mm). */
@@ -150,7 +154,7 @@ export class ModeloTig {
   /** Até onde a poça vai na frente do tungstênio, no sentido do avanço (mm). */
   get frentePocaMm(): number {
     let d = 0
-    while (d < 15 && this.temperaturaEm(this.xMm + this.sentido * (d + 0.5), this.yMm) >= TIG.fusaoK) d += 0.5
+    while (d < 15 && this.temperaturaEm(this.xMm + this.sentido * (d + 0.5), this.yMm) >= this.fusaoK) d += 0.5
     return d
   }
   /**
@@ -162,9 +166,9 @@ export class ModeloTig {
    */
   get pontaVareta(): { x: number; y: number } {
     const x0 = this.xMm + this.sentido * Math.max(0.8, this.frentePocaMm - 0.3)
-    if (this.temperaturaEm(x0, this.yMm) >= TIG.fusaoK) return { x: x0, y: this.yMm }
+    if (this.temperaturaEm(x0, this.yMm) >= this.fusaoK) return { x: x0, y: this.yMm }
     for (let x = x0 - this.sentido * 0.5; this.sentido * (this.xMm - x) <= 4; x -= this.sentido * 0.5) {
-      if (this.temperaturaEm(x, this.yMm) >= TIG.fusaoK) return { x, y: this.yMm }
+      if (this.temperaturaEm(x, this.yMm) >= this.fusaoK) return { x, y: this.yMm }
     }
     return { x: x0, y: this.yMm }
   }
@@ -284,7 +288,7 @@ export class ModeloTig {
     if (!this.toqueAtual) this.toqueAtual = { xMm: p.x, yMm: p.y, tMs: this.tempoMs, volumeMm3: 0 }
     // Um toque que já começou fundindo continua enquanto a ponta segue na poça: o metal frio da
     // vareta esfria a célula, mas o arco ao lado mantém a poça (folga de 20 %).
-    const limite = this.toqueAtual.volumeMm3 > 0 ? TIG.fusaoContinuaFracao * TIG.fusaoK : TIG.fusaoK
+    const limite = this.toqueAtual.volumeMm3 > 0 ? TIG.fusaoContinuaFracao * this.fusaoK : this.fusaoK
     if (this.temperaturaEm(p.x, p.y) < limite) {
       // Vareta na chapa fria: não funde, só bate (conta uma vez por toque).
       if (this.toqueAtual.volumeMm3 === 0 && !(this.toqueAtual as { fria?: boolean }).fria) {
@@ -323,7 +327,7 @@ export class ModeloTig {
   }
 
   /** Limite de temperatura que fura esta chapa (K acima do ambiente). */
-  get limiteFuroK(): number { return TIG.furoK + TIG.furoPorMmK * this.peca.espessuraMm }
+  get limiteFuroK(): number { return (TIG.furoK + TIG.furoPorMmK * this.peca.espessuraMm) * (this.fusaoK / TIG.fusaoK) }
   /** H94: maior temperatura que a seção x já viu, em fração do limite de furo. */
   picoRelativo(x: number): number {
     const i = Math.round(x / DX - 0.5)

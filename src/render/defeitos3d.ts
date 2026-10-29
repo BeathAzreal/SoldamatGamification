@@ -33,12 +33,35 @@ const OXIDACAO: Record<MaterialId, [string, number][]> = {
     ['#1d1f22', 0.42],
     ['#1d1f22', 0.14],
   ],
+  // Galvanizado: o zinco queimado deixa uma faixa branca e, mais longe, a oxidação do aço.
+  'aco-galvanizado': [
+    ['#e8ebe6', 0.5],
+    ['#6b5a3a', 0.35],
+    ['#2c333c', 0.15],
+  ],
+  'aco-medio-carbono': [
+    ['#74552c', 0.45],
+    ['#3a466c', 0.3],
+    ['#2a3038', 0.15],
+  ],
+  // Inox ferrítico: a mesma sequência do inox, um pouco mais fraca.
+  'inox-ferritico': [
+    ['#c49a48', 0.65],
+    ['#7d4470', 0.5],
+    ['#3f58b0', 0.4],
+  ],
+  // Cobre: rosado perto do cordão e óxido escuro em volta.
+  cobre: [
+    ['#e0a070', 0.4],
+    ['#3b2a2a', 0.45],
+    ['#2a1d1a', 0.18],
+  ],
 }
 
 /** Largura da faixa de oxidação por unidade do índice de fusão (mm): o inox conduz pouco calor e colore mais longe. */
-const ALCANCE_OXIDACAO: Record<MaterialId, number> = { 'aco-carbono': 2.4, 'inox-austenitico': 3.6, aluminio: 2 }
+const ALCANCE_OXIDACAO: Record<MaterialId, number> = { 'aco-carbono': 2.4, 'inox-austenitico': 3.6, aluminio: 2, 'aco-galvanizado': 3, 'aco-medio-carbono': 2.2, 'inox-ferritico': 3, cobre: 1.8 }
 
-const COR_RESPINGO: Record<MaterialId, string> = { 'aco-carbono': '#646a72', 'inox-austenitico': '#8d877c', aluminio: '#a3acb6' }
+const COR_RESPINGO: Record<MaterialId, string> = { 'aco-carbono': '#646a72', 'inox-austenitico': '#8d877c', aluminio: '#a3acb6', 'aco-galvanizado': '#6a7078', 'aco-medio-carbono': '#5c6168', 'inox-ferritico': '#8a8781', cobre: '#8f5a3a' }
 
 const lim01 = (v: number) => (v <= 0 ? 0 : v >= 1 ? 1 : v)
 
