@@ -357,3 +357,7 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
   - MIG/MAG: missão "Tubulação da horta" (treino): o tubo aparece no 3D, solda em cima, ⟲ gira o tubo e o cordão vai junto; o resultado mostra o tubo.
   - Eletrodo e TIG: peças de tubo com o INÍCIO no alto e os botões TUBO ⟲ ⟳. No TIG, com a tocha na linha, a poça forma no tubo e a vareta funde; no eletrodo, o metal sai curvado sobre o tubo.
   - Gotas e escorrimento em volta do tubo foram conferidos só nos testes.
+- H104: `npx vitest run` com 578 testes passando (`tests/materiais.test.ts`). Navegador:
+  - MIG/MAG, treino livre: os grupos Chapa e Espessura trocam a peça de teste (cor no 3D, selo, faixa "Material" do topo e ficha). Cobre: 1,5/2/3 mm; galvanizado bloqueia o V; médio carbono em V fica com 6 mm. "Treinar a peça" leva a chapa escolhida para a execução.
+  - Eletrodo: "Unir duas chapas" em galvanizado: menu Escolha a chapa, bancada com a chapa clara e corrente sugerida pela chapa.
+  - TIG: "Filete em T" em cobre (210–295 A) e alumínio (135–190 A): título e escala da fonte seguem a chapa.

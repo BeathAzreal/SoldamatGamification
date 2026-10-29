@@ -3281,3 +3281,72 @@ canvas.tela-solda-3d[hidden] {
 .leitura-transferencia strong[data-modo='curto-circuito'] { color: #8fd18a; }
 .leitura-transferencia strong[data-modo='globular'] { color: #f2b45a; }
 .leitura-transferencia strong[data-modo='spray'] { color: #7ec8ff; }
+
+/* ---------- H104: chapas novas e ficha do material */
+.material-aco-galvanizado .selo-material-amostra {
+  background: linear-gradient(135deg, #d4d9dc, #80878d);
+}
+.material-aco-medio-carbono .selo-material-amostra {
+  background: linear-gradient(135deg, #767b81, #3c4046);
+}
+.material-inox-ferritico .selo-material-amostra {
+  background: linear-gradient(135deg, #e2e4e5, #94989b);
+}
+.material-cobre .selo-material-amostra {
+  background: linear-gradient(135deg, #f0b48a, #8f5535);
+}
+.selo-material.material-inox-ferritico {
+  border-color: #999d9f;
+}
+.selo-material.material-cobre {
+  border-color: #b8774e;
+}
+.ficha-material {
+  display: grid;
+  gap: 6px;
+}
+.ficha-material p {
+  margin: 0;
+}
+.ficha-material-tracos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+.ficha-material-tracos dt {
+  opacity: 0.85;
+}
+.ficha-material-tracos dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ficha-material-nivel {
+  display: inline-flex;
+  gap: 3px;
+}
+.ficha-material-nivel span {
+  width: 14px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--sup-3);
+}
+.ficha-material-nivel span.cheio {
+  background: var(--laranja);
+}
+.ficha-material-pontos {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
+/* Na bancada a ficha fica em duas colunas: níveis à esquerda, o que a chapa tem de próprio à direita. */
+.ficha-material-bancada .ficha-material {
+  grid-template-columns: minmax(220px, auto) 1fr;
+  column-gap: 20px;
+}
+.ficha-material-bancada .ficha-material > .dica {
+  grid-column: 1 / -1;
+}

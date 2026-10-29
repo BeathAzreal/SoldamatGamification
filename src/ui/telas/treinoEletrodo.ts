@@ -1,6 +1,7 @@
 import { montarGiroTubo } from '../componentes/giroTubo'
 import { aprovacaoEletrodo, avaliarEletrodo, descontoDefeitos, MODOS_ELETRODO } from '../../pontuacao/eletrodo'
 import { NOME_DIFICULDADE, type Dificuldade } from '../../missoes/catalogo'
+import { MATERIAIS } from '../../modelo/material'
 import { resultadoEletrodo } from '../componentes/resultadoEletrodo'
 import { abrirCorteEletrodo } from '../componentes/corteEletrodo'
 import { painelMaquina } from '../componentes/painelMaquina'
@@ -17,7 +18,7 @@ import { GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA } from '../../modelo/juntas'
 import { RegistroPasse } from '../../modelo/registroPasse'
 import { analisarEletrodo, LIMITES } from '../../modelo/analiseEletrodo'
 import { inspecionarDefeitos } from '../../pontuacao/defeitosEletrodo'
-import { aporteAlvoKJmm, limitesPecaEletrodo, type PecaEletrodo } from '../../missoes/pecasEletrodo'
+import { aporteAlvoKJmm, limitesPecaEletrodo, materialEletrodo, type PecaEletrodo } from '../../missoes/pecasEletrodo'
 
 /** Quadro muito longo (aba travada, depurador) não vira um salto de vários segundos de arco. */
 const DT_MAX = 0.25
@@ -68,7 +69,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
     let giroNaTela: ReturnType<NonNullable<ReturnType<typeof criarBancada15>>['iniciarGiro']> | null = null
     let seguraSobe = 0, seguraDesce = 0
     const teclas = new Set<string>()
-    const vista = criarBancada15(peca)
+    const vista = criarBancada15(peca, { material: materialEletrodo(peca) })
     if (!vista) return app.raiz.append(h('p', {}, 'WebGL indisponível: abra o treino no Chrome ou Edge com aceleração gráfica.'))
     const canvas = vista.canvas
     const soltar = () => { ponteiro = false; teclas.clear(); modelo.soltar() }
@@ -219,7 +220,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       h('header', { class: 'p15-cabecalho' },
         h('div', {},
           h('h2', { class: 'tela-titulo', tabindex: '-1' }, peca.titulo),
-          h('p', {}, `Eletrodo revestido · modo ${NOME_DIFICULDADE[modo]} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · ${peca.aplicacao}`)),
+          h('p', {}, `Eletrodo revestido · modo ${NOME_DIFICULDADE[modo]} · ${MATERIAIS[materialEletrodo(peca)].nomeCurto} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · ${peca.aplicacao}`)),
         h('div', { class: 'p15-processos navegacao-de-partida' }, controles, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
       h('div', { class: 'p15-grade' }, area,
         h('aside', { class: 'p15-painel' },
