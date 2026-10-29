@@ -466,6 +466,20 @@ export function gravidade(p: PosicaoPeca): GravidadeJunta {
   return { t: Math.sin(q) * Math.sin(f), n: Math.cos(q) * Math.sin(f), w: -Math.cos(f) }
 }
 
+/**
+ * H103: gravidade num ponto da emenda de dois tubos. A junta de topo é a
+ * circunferência desenrolada: o ponto s fica a φ = (s − topo)/R + giro do
+ * tubo do alto do tubo. Em cima é plana; no lado, vertical (descendo ou
+ * subindo conforme o sentido); embaixo, sobrecabeça. Tombar a peça
+ * (rolagem) põe o eixo do tubo de pé: aí a solda em volta é horizontal (2G).
+ * No tubo, o "giro" da posição é a rotação do tubo no próprio eixo.
+ */
+export function gravidadeTubo(p: PosicaoPeca, sMm: number, diametroMm: number, topoMm: number): GravidadeJunta {
+  const f = (p.rolagemGraus * Math.PI) / 180
+  const phi = (sMm - topoMm) / (diametroMm / 2) + (p.giroGraus * Math.PI) / 180
+  return { t: Math.sin(phi) * Math.cos(f), n: Math.sin(f), w: -Math.cos(phi) * Math.cos(f) }
+}
+
 export type CodigoPosicao = 'plana' | 'horizontal' | 'vertical' | 'sobrecabeca'
 
 export const NOME_POSICAO: Record<CodigoPosicao, string> = {

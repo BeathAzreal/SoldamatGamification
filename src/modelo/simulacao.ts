@@ -1,6 +1,6 @@
 import { avaliar, type Tentativa } from './avaliacao'
 import { Cordao } from './cordao'
-import { efeitoPosicao, gravidade, juntaDe, POSICAO_PLANA, type GravidadeJunta, type PosicaoPeca } from './juntas'
+import { efeitoPosicao, gravidade, gravidadeTubo, juntaDe, POSICAO_PLANA, type GravidadeJunta, type PosicaoPeca } from './juntas'
 import type { GravidadePoca } from './cordao'
 import { MATERIAIS } from './material'
 import { analisarMovimento } from './movimento'
@@ -164,6 +164,12 @@ export class Simulacao {
     this.eventos.push({ tipo: 'ajustes', ajustes: this.ajustesAtuais })
     this.posicaoAtual = this.posicaoGravada = { ...(contexto.posicaoInicial ?? POSICAO_PLANA) }
     this.gravidadeAtual = gravidade(this.posicaoAtual)
+  }
+
+  /** Gravidade nos eixos da junta no ponto x (H47; no tubo, muda em volta, H103). */
+  gravidadeEm(xMm: number): GravidadeJunta {
+    const tubo = this.contexto.tubo
+    return tubo ? gravidadeTubo(this.posicaoAtual, xMm, tubo.diametroMm, PECA.comprimentoMm / 2) : this.gravidadeAtual
   }
 
   get posicao(): PosicaoPeca {
@@ -391,8 +397,9 @@ export class Simulacao {
     const integral = this.aquecer(t0, t1, potencia)
     const volume = (taxaDeposicao(this.ajustesAtuais, this.contexto) * (t1 - t0)) / 1000
     // H47: parada, só pesa a gravidade de lado e para fora da face (sem subir nem descer).
-    const ef = efeitoPosicao(this.gravidadeAtual, 0)
-    this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto), gravidadePoca(this.gravidadeAtual, 0))
+    const g = this.gravidadeEm(p.x)
+    const ef = efeitoPosicao(g, 0)
+    this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto), gravidadePoca(g, 0))
     this.percurso.registrar(p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
     this.picoSePreciso(p.x)
   }
@@ -411,14 +418,16 @@ export class Simulacao {
     const dt = (t1 - t0) / n
     const volume = (taxaDeposicao(this.ajustesAtuais, this.contexto) * dt) / 1000
     // H47: a gravidade depende de a tocha estar subindo ou descendo ao longo da junta.
-    const ef = efeitoPosicao(this.gravidadeAtual, p1.x - p0.x)
+    // H103: no tubo a gravidade muda em volta; o trecho é curto (um quadro), vale a do meio.
+    const g = this.gravidadeEm((p0.x + p1.x) / 2)
+    const ef = efeitoPosicao(g, p1.x - p0.x)
     const razao = razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao
     const potencia = potenciaRelativa(this.ajustesAtuais, this.contexto)
     // H93: o modo de transferência e o arco curto mudam quanto do calor funde a junta, não o calor total da peça.
     const fusaoAjustes = fatorFusaoAjustes(this.ajustesAtuais, this.contexto)
     const sigma = espalhamentoDoMovimento(this.contexto)
     const instab = instabilidadeArco(this.ajustesAtuais, this.contexto)
-    const gp = gravidadePoca(this.gravidadeAtual, p1.x - p0.x)
+    const gp = gravidadePoca(g, p1.x - p0.x)
     for (let j = 0; j < n; j++) {
       const f = (j + 0.5) / n
       const x = p0.x + (p1.x - p0.x) * f
