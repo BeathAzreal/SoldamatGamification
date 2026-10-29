@@ -20,6 +20,8 @@ export interface PecaTig {
   fimMm: number
   /** Chapa inteira (sem emenda): cordões sobre a chapa. */
   sobreChapa?: boolean
+  /** H103: emenda de dois tubos (a junta de 150 mm é a volta desenrolada). */
+  tubo?: { diametroMm: number }
 }
 
 export const NOME_MATERIAL_TIG: Record<PecaTig['material'], string> = { inox: 'Aço inox', carbono: 'Aço carbono' }
@@ -49,6 +51,14 @@ export const PECAS_TIG: readonly PecaTig[] = [
     material: 'carbono', junta: 't', espessuraMm: 3, varetaMm: 2.4, correnteA: { min: 100, max: 140 },
     inicioMm: 35, fimMm: 115,
   },
+  {
+    id: 'tig-tubo',
+    titulo: 'Tubo com tubo — inox 2 mm',
+    aplicacao: 'Emenda de tubos finos de inox: linhas de água, de alimentos e corrimãos.',
+    objetivo: 'Dar a volta inteira na emenda: funda as duas bordas com toques de vareta, apague o arco e gire o tubo (⟲ ⟳) para soldar sempre perto do alto.',
+    material: 'inox', junta: 'topo', espessuraMm: 2, varetaMm: 1.6, correnteA: { min: 55, max: 80 },
+    inicioMm: 2, fimMm: 148, tubo: { diametroMm: 150 / Math.PI },
+  },
 ]
 
 export function pecaTig(id: string): PecaTig {
@@ -61,5 +71,6 @@ export function comoPecaBase(p: PecaTig): PecaEletrodo {
     id: p.id, titulo: p.titulo, aplicacao: p.aplicacao, porque: '', objetivo: p.objetivo,
     junta: p.junta, espessuraMm: p.espessuraMm, aberturaMm: 0, diametroMm: 2.5,
     correnteA: p.correnteA, inicioMm: p.inicioMm, fimMm: p.fimMm, sobreChapa: p.sobreChapa,
+    ...(p.tubo ? { tubo: p.tubo } : {}),
   }
 }

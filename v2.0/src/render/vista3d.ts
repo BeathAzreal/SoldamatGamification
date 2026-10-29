@@ -3,6 +3,7 @@ import type { GeometriaJunta } from '../modelo/junta'
 import { PECA } from '../modelo/parametros'
 import { paraMundo } from './malha3d'
 import { Vista } from './vista'
+import { acertarTubo, curvarPonto, desdobrarPonto, type CurvaTubo } from './curvaTubo'
 
 /*
  * Câmera fixa da EXECUÇÃO em 3D e o equivalente 3D de Vista (paraPeca,
@@ -49,6 +50,9 @@ export class Vista3D {
   rolagem = 0
   private matrizPeca: THREE.Matrix4 | null = null
   definirMatrizPeca(m: THREE.Matrix4): void { this.matrizPeca = m.clone() }
+  /** H103: curvatura do tubo (a mesma do palco); null nas chapas. */
+  private curva: CurvaTubo | null = null
+  definirTubo(c: CurvaTubo | null): void { this.curva = c }
 
   definirRolagem(graus: number): void { this.rolagem = THREE.MathUtils.degToRad(graus) }
   // Reaproveitados a cada leitura: nada é alocado por evento de ponteiro.
@@ -168,6 +172,22 @@ export class Vista3D {
     const pv = this.pivoMundo()
     const normal = new THREE.Vector3(0, Math.cos(this.rolagem), Math.sin(this.rolagem))
     this.topo.setFromNormalAndCoplanarPoint(normal, new THREE.Vector3(pv.x, 0, pv.z))
+    if (this.matrizPeca && this.curva) {
+      // H103: raio no espaço da peça → superfície do tubo → junta desenrolada.
+      const inv = this.matrizPeca.clone().invert()
+      const o = this.raio.ray.origin.clone().applyMatrix4(inv)
+      const d = this.raio.ray.direction.clone().transformDirection(inv)
+      const c = this.curva
+      let q = acertarTubo(c, o, d)
+      if (!q) {
+        // Fora do tubo (rasante): o ponto do contorno mais perto, pelo plano do eixo.
+        const t = Math.abs(d.y) > 1e-9 ? (-c.raio - o.y) / d.y : 0
+        const X = Math.max(-c.raio, Math.min(c.raio, o.x + d.x * t))
+        q = new THREE.Vector3(X, Math.sqrt(Math.max(0, c.raio * c.raio - X * X)) - c.raio, o.z + d.z * t)
+      }
+      const p = desdobrarPonto(c, q.x, q.y, q.z)
+      return { x: p.x + PECA.comprimentoMm / 2, y: p.z }
+    }
     if (this.matrizPeca) {
       this.topo.set(new THREE.Vector3(0, 1, 0), 0).applyMatrix4(this.matrizPeca)
       if (!this.raio.ray.intersectPlane(this.topo, this.alvo)) return this.plano.paraChapa(px, py)
@@ -188,7 +208,9 @@ export class Vista3D {
   /** Chapa (X, Y) a uma altura Z (mm, já com exagero) → tela. */
   daChapa(X: number, Y: number, Z = 0): { x: number; y: number } {
     if (this.matrizPeca) {
-      this.alvo.set(X - PECA.comprimentoMm / 2, Z, Y).applyMatrix4(this.matrizPeca).project(this.camera)
+      if (this.curva) curvarPonto(this.curva, X - PECA.comprimentoMm / 2, Z, Y, this.alvo)
+      else this.alvo.set(X - PECA.comprimentoMm / 2, Z, Y)
+      this.alvo.applyMatrix4(this.matrizPeca).project(this.camera)
       return { x: (this.alvo.x + 1) / 2 * this.plano.larguraCss, y: (1 - this.alvo.y) / 2 * this.plano.alturaCss }
     }
     const pv = this.pivoMundo()

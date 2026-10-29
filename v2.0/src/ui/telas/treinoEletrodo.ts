@@ -1,3 +1,4 @@
+import { montarGiroTubo } from '../componentes/giroTubo'
 import { aprovacaoEletrodo, avaliarEletrodo, descontoDefeitos, MODOS_ELETRODO } from '../../pontuacao/eletrodo'
 import { NOME_DIFICULDADE, type Dificuldade } from '../../missoes/catalogo'
 import { resultadoEletrodo } from '../componentes/resultadoEletrodo'
@@ -12,7 +13,7 @@ import { h, n0, n1 } from '../dom'
 import { carregarControles15, nomeTecla15 as nomeTecla } from '../../dados/controles15'
 import { configurarControles15 } from '../componentes/controles15'
 import type { FerramentaBancada15 } from '../../modelo/escoria15'
-import { INFO_JUNTA } from '../../modelo/juntas'
+import { GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA } from '../../modelo/juntas'
 import { RegistroPasse } from '../../modelo/registroPasse'
 import { analisarEletrodo, LIMITES } from '../../modelo/analiseEletrodo'
 import { inspecionarDefeitos } from '../../pontuacao/defeitosEletrodo'
@@ -167,6 +168,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       registro = novoRegistro(); inclusaoAntes = 0; analiseMs = 0
       vista.atualizarDefeitos(null)
       modelo = new Acionamento15('eletrodo')
+      giroTubo?.reiniciar()
       modelo.limitesX = limitesX
       modelo.superficie = y => cordao.altura(modelo.xMm,y)
       modelo.abrirAoTocar = true
@@ -183,6 +185,9 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
     const zoomMenos=h('button',{type:'button','aria-label':'Afastar câmera',on:{click:()=>{vista.aproximar(150);canvas.focus()}}},'−')
     const area = h('div', { class: 'p15-vista' }, canvas, hud, teclasVista,
       h('div',{class:'zoom-bancada',role:'group','aria-label':'Zoom da câmera'},h('span',{title:'Teclas + e −'},'ZOOM'),zoomMenos,zoomValor,zoomMais))
+    // H103: na emenda de tubos, ⟲ ⟳ giram o tubo com o arco apagado.
+    const giroTubo = vista.tubo ? montarGiroTubo(GIRO_INICIAL_TUBO_GRAUS, (r) => vista.girarTubo(r)) : null
+    if (giroTubo) area.append(giroTubo.elemento)
     const regras = MODOS_ELETRODO[modo] // H88: modo escolhido antes de soldar (Fácil ou Difícil).
     const encerrar = () => {
       if (encerrada || pausado || modal || modelo.tempoArcoS < .1) return
@@ -349,6 +354,7 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       const dt = Math.min(DT_MAX, (agora - anterior) / 1000)
       anterior = agora
       const pode = !encerrada && !pausado && !modal && foco && !document.hidden
+      giroTubo?.atualizar(dt, pode && modelo.estado !== 'arco')
       const ativo = (a: keyof typeof cfg.teclas) => Number(teclas.has(cfg.teclas[a]))
       let alturaControle = 0, gatilhoControle = false
       const g = cfg.controle && pode ? [...navigator.getGamepads()].find(Boolean) : null

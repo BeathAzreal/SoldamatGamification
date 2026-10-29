@@ -45,8 +45,23 @@ Na versão online, os dois PCs abrem o mesmo link HTTPS, entram em Arcade → X1
 
 Validação adicional: persistência entre instâncias, prontidão concorrente, replay e ocultação de entregas, saída de visitante, autenticação, origem HTTP, expiração, W/O e limite de criação em SQLite real executando o SQL do D1. Cliente de consulta também testado. Total: 455 testes em 45 arquivos, typecheck e builds aprovados. Na prévia do Worker, dois clientes de navegador entraram por código e iniciaram a mesma partida. Ainda é necessário testar em dois PCs físicos; não há matchmaking ou proteção antifraude para torneio público.
 
-Endereço publicado: https://oficina-soldagem-x1.yummycamel20.chatgpt.site
+Endereço publicado: https://oficina-soldagem-x1.beath.chatgpt.site
 
 O checkout de publicação é separado do repositório do jogo e contém o Worker autocontido. Para atualizar: gerar novamente o Worker nesta branch, atualizar worker/index.js no checkout de hospedagem e publicar pelo fluxo Sites. Não copiar credenciais ou dados de salas para o código-fonte.
 
 Validação no endereço público: dois clientes criaram/entraram na sala, iniciaram a rodada, soldaram pela interface e entregaram as tentativas. O servidor online calculou 261 e 337 pontos e os dois clientes mostraram vitória do segundo. Prova visual no arquivo de entrega v17-online-resultado.png.
+
+
+## Atualização v2.0 — convite pelo navegador
+
+O endereço online acima passa a oferecer a v2.0 com as alterações de física e interface integradas. Arcade → X1 em rede cria uma sala no servidor hospedado. O botão Copiar convite gera `/?rede=1&sala=CODIGO`; esse link contém somente o código público da sala, nunca token ou identificação do participante. O convidado informa seu próprio apelido antes de entrar. Convites não consomem uma vaga até a confirmação de entrada.
+
+O portátil continua offline para treino, mas agora oferece Abrir oficina online para o multiplayer. Não exige .bat nem servidor nos computadores dos jogadores. Conexão local já configurada permanece compatível e usa convite na mesma origem local. Sem o serviço de salas, a tela oferece uma nova tentativa e o acesso à oficina hospedada, com prazo de dez segundos para verificar a conexão.
+
+O protocolo `soldagem-rede-2.0.0` separa as partidas das versões antigas. Credenciais temporárias da v1.7 não são reutilizadas na v2.0; salas antigas expiram pelas regras existentes, sem migração destrutiva do banco. Continuam valendo o replay no servidor, limite de duas pessoas, expiração, autenticação e restrição de origem.
+
+Limites: multiplayer somente MIG/MAG; o servidor sincroniza sala, início e resultado, sem transmitir cada movimento da tocha. Treinos, recordes locais e TIG/eletrodo continuam disponíveis no jogo. Internet é necessária para salas online; a pausa não interrompe o prazo, e recarregar durante a soldagem interrompe a tentativa.
+
+A confirmação de abandono fica acima da pausa, evitando que o clique em Sair da sala seja interceptado por Voltar ao menu. Verificação do fluxo online inclui cancelamento e confirmação de saída.
+
+Validação online da v2.0: dois clientes no endereço público abriram um convite, confirmaram prontidão, fizeram tentativas pela interface e entregaram ao servidor. As duas telas receberam 349 e 348 pontos, com vitória do primeiro cliente. Cópia do convite também verificada por HTTPS. Este teste usa duas sessões no mesmo computador, não dois PCs físicos.

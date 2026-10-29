@@ -50,6 +50,12 @@ export interface ContextoProcesso {
    * valor em que o modelo foi calibrado (dados antigos ficam iguais).
    */
   readonly dbcpMm?: number
+  /**
+   * H103: a junta é a emenda de topo entre dois tubos (solda em volta). A
+   * junta de 150 mm é a circunferência desenrolada: diâmetro externo ≈ 47,7
+   * mm (tubo de 1½"). Ausente = chapas planas.
+   */
+  readonly tubo?: { readonly diametroMm: number }
 }
 
 /** H48: DBCP usada pelo modelo; valores fora da faixa do jogo voltam ao padrão. */

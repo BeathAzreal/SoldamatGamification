@@ -1,6 +1,6 @@
 # Oficina de Soldagem — Alpha v2.0
 
-Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` (PR #32).
+Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. O PR #32 já está na `alpha-v2.0`; o tubo com tubo e a correção da vareta do TIG estão na `claude/v2.0`, ainda fora da `alpha-v2.0`.
 
 ## Jogar
 
@@ -9,6 +9,12 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
 
 ## O que mudou na v2.0
 
+- **Tubo com tubo** (emenda de topo de dois tubos, soldada em volta), nos três processos:
+  - MIG/MAG: a missão **Tubulação da horta comunitária**;
+  - eletrodo e TIG: a peça **Tubo com tubo**;
+  - solde perto do alto, apague o arco e gire o tubo (⟲ ⟳);
+  - no MIG/MAG a posição muda em volta: plana em cima, vertical no lado, sobrecabeça embaixo (gotas e escorrimento aparecem onde o tubo está).
+- **TIG: a vareta funde.** Ela vai à borda da poça mesmo se você avançar a tocha antes de tocar, e toques rápidos não se perdem em PC lento.
 - **Máquina MIG/MAG em unidades reais:** tensão de **0 a 30 V** e alimentação do arame de **1 a 15 m/min**, em passos de 0,5. O painel mostra a **corrente em A** e o **modo de transferência**.
 - **Os ajustes mudam a solda:**
   - **curto-circuito** (tensão baixa): pouco calor, bom para chapa fina;
@@ -29,4 +35,4 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
 - Novo exercício técnico: **4. Curto-circuito, globular e spray**.
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil, eletrodo sem assistência.
 
-Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H101) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.
+Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H103) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.

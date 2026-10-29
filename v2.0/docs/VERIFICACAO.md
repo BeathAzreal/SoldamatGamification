@@ -350,3 +350,10 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
   - por baixo (câmera da execução girada): dá para ver através do buraco, e o metal pendurado fica em volta dele;
   - no resultado: "Ver o avesso" mostra o furo.
 - Eletrodo ("Unir duas chapas") continua sem erros com o novo recorte das chapas.
+- H102: `tests/tig.test.ts` — "avançar 2 mm e tocar logo" funde a vareta sem toque frio nas três peças (falha no código antigo).
+  - Navegador (~1 quadro/s, sem placa de vídeo): o Espaço não chegava ao mergulho por causa de toques entre quadros. Depois da correção, 18 toques em 18.
+  - A versão anterior foi comparada com a v1.9 no mesmo roteiro com a tocha na linha: fusão 300/300 nas duas; o problema era a vareta.
+- H103: `npx vitest run` com 567 testes passando (`tests/tubo.test.ts`). Navegador:
+  - MIG/MAG: missão "Tubulação da horta" (treino): o tubo aparece no 3D, solda em cima, ⟲ gira o tubo e o cordão vai junto; o resultado mostra o tubo.
+  - Eletrodo e TIG: peças de tubo com o INÍCIO no alto e os botões TUBO ⟲ ⟳. No TIG, com a tocha na linha, a poça forma no tubo e a vareta funde; no eletrodo, o metal sai curvado sobre o tubo.
+  - Gotas e escorrimento em volta do tubo foram conferidos só nos testes.

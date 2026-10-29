@@ -2,11 +2,15 @@ OFICINA DE SOLDAGEM — ALPHA v2.0
 
 Abra o HTML no Chrome ou Edge. Sem instalação ou internet.
 
-X1 em rede: use o pacote de rede e ABRIR-OFICINA.bat (ou INICIAR-REDE.bat) no PC anfitrião. Nos dois navegadores abra o endereço mostrado pelo servidor. Arcade → X1 em rede. O HTML portátil continua offline; ele não hospeda salas.
+X1 ONLINE: abra https://oficina-soldagem-x1.beath.chatgpt.site/?rede=1 nos dois dispositivos. Crie uma sala, copie o convite e envie à outra pessoa. Não precisa instalar programas nem iniciar servidor nos computadores dos jogadores. Requer internet. O HTML portátil continua offline para treino e oferece o botão Abrir oficina online. O pacote de rede local permanece opcional.
 
 MÁQUINA MIG/MAG (novo na v2.0): tensão em volts (0 a 30 V) e alimentação do arame em m/min (1 a 15). O painel mostra a corrente em A e o modo de transferência: curto-circuito (pouca tensão, bom para chapa fina), globular (respinga e fica irregular) e spray (com argônio, corrente e tensão altas: liso e penetra muito, fura chapa fina). Tensão baixa para o arame deita o metal sem fundir as bordas; tensão alta demais respinga, achata e morde a borda. Abaixo de 14 V o arame bate e mergulha na poça (frio, sem fundir); abaixo de 10 V o arco nem abre. Parar a tocha no mesmo lugar consome a chapa em estágios: a raiz aparece embaixo, o metal vaza e pinga pelo avesso, a face afunda e, no ponto mais quente, abre um buraco de verdade, que alarga com o calor (dá para ver através, de cima e por baixo). Chapa grossa aguenta mais; o alumínio quase não avisa antes de cair.
 
 PASSAR DA CHAPA (novo na v2.0): calor demais aparece em níveis. Primeiro a raiz aparece no avesso (normal), depois o metal passa e fica pendurado do outro lado, depois a poça cai e a face afunda e, no limite, a chapa vara e abre um furo. No resultado, use Ver o avesso. Vale para o MIG/MAG, o eletrodo e o TIG.
+
+TUBO COM TUBO (novo na v2.0): emenda de topo de dois tubos, soldada em volta. MIG/MAG: missão "Tubulação da horta comunitária". Eletrodo e TIG: peça "Tubo com tubo". Solde perto do alto, apague o arco e gire o tubo (⟲ ⟳). No MIG/MAG a posição muda em volta: plana em cima, vertical no lado, sobrecabeça embaixo.
+
+TIG: a vareta vai à borda da poça mesmo se você avançar antes de tocar, e toques rápidos não se perdem em PC lento.
 
 PASSES SOBREPOSTOS (novo na v2.0): cada cordão tem a seção de uma parábola, e passes lado a lado somam. Com o passo certo (cerca de 2/3 da largura) a superfície fica quase plana; muito perto vira morro, muito longe deixa vale. No eletrodo, cada passe vira uma camada: um passe frio ou rápido sobre o anterior não funde nele (falta de fusão entre passes). No resultado, o botão Corte mostra a seção em escala real, com uma cor por passe.
 

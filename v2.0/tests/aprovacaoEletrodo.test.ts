@@ -31,11 +31,13 @@ describe('H90 no eletrodo: Fácil só nota, Difícil com 20 % em cada item', () 
 })
 
 describe('H91: peça de cordões sobre chapa', () => {
-  it('chapa inteira, alvo em relevo, e fica no fim da lista', () => {
+  it('chapa inteira, alvo em relevo, e entra depois das peças antigas (índices estáveis)', () => {
     const p = pecaEletrodo('cordao-sobre-chapa')
     expect(p.aberturaMm).toBe(0)
     expect(alvoEletrodo(p).altura).toBeGreaterThan(1)
     expect(PECAS_ELETRODO[0].id).toBe('cordao-chapa')
-    expect(PECAS_ELETRODO.at(-1)!.id).toBe('cordao-sobre-chapa')
+    // H91 ficou depois das cinco peças antigas; H103 (tubo) entra depois dela, sem mudar nenhum índice.
+    expect(PECAS_ELETRODO.findIndex((q) => q.id === 'cordao-sobre-chapa')).toBe(5)
+    expect(PECAS_ELETRODO.at(-1)!.id).toBe('tubo-topo')
   })
 })

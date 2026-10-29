@@ -13,6 +13,7 @@ import { chapasNaJunta, cristaMm, juntaDe, pontoNaSuperficie } from '../modelo/j
 import { paraMundo } from './malha3d'
 import { CONSUMO, novoMapaConsumo, preencherMapaConsumo, type MapaConsumo } from '../modelo/consumoChapa'
 import { INFO_JUNTA } from '../modelo/juntas'
+import { curvarArvore, poseNoTubo, uniformesCurva, type CurvaTubo } from './curvaTubo'
 import { criarOficinaTreino } from './oficinaTreino'
 import { criarSerralheria } from './serralheria'
 
@@ -184,7 +185,8 @@ function geometriaChapas(contexto: ContextoProcesso): THREE.BufferGeometry[] {
   return chapasNaJunta(juntaDe(contexto), contexto, PECA.larguraChapaMm).map((poligono) => {
     // Forma em (−n, w): girada 90° em y, a extrusão (z local) vira +x e −n vira +z (= n).
     const forma = new THREE.Shape(poligono.map(([n, w]) => new THREE.Vector2(-n, w)))
-    const g = new THREE.ExtrudeGeometry(forma, { depth: L, bevelEnabled: false, curveSegments: 1 })
+    // H103: no tubo a chapa é curvada no shader; precisa de vértices ao longo da junta (1 por mm).
+    const g = new THREE.ExtrudeGeometry(forma, { depth: L, bevelEnabled: false, curveSegments: 1, steps: contexto.tubo ? L : 1 })
     g.rotateY(Math.PI / 2)
     g.translate(-L / 2, 0, 0)
     return g
@@ -275,6 +277,12 @@ export class Palco3D {
   private readonly mapaConsumo: MapaConsumo | null
   private readonly texturaConsumo: THREE.DataTexture | null
   private anguloGiro = 0
+  /** H103: emenda de dois tubos: a peça plana é curvada no desenho (curvaTubo.ts). Null nas chapas. */
+  readonly curva: CurvaTubo | null
+  private readonly uCurva: ReturnType<typeof uniformesCurva> | null
+  private readonly curvados = new WeakSet<THREE.Material>()
+  /** Objetos rígidos no tubo: suporte com a pose do ponto (x, z), fixo ou seguindo a posição plana do objeto. */
+  private readonly rigidos: { suporte: THREE.Group; objeto: THREE.Object3D; x?: number; z?: number }[] = []
   private readonly cordao3d: THREE.Mesh
   private readonly cores: THREE.Color[]
   private readonly texturas: THREE.Texture[] = []
@@ -317,6 +325,9 @@ export class Palco3D {
 
     const material = MATERIAIS[op.contexto.material]
     const cena = this.cena
+    const tubo = op.contexto.tubo
+    this.curva = tubo ? { raio: tubo.diametroMm / 2, giro: THREE.MathUtils.degToRad(op.contexto.posicaoInicial?.giroGraus ?? 0) } : null
+    this.uCurva = this.curva ? uniformesCurva(this.curva) : null
     cena.background = new THREE.Color('#17191c')
     this.pmrem = new THREE.PMREMGenerator(renderer)
     const ambienteCena = new RoomEnvironment()
@@ -410,6 +421,8 @@ export class Palco3D {
     const orelha = new THREE.Mesh(new THREE.BoxGeometry(18, 5, 12), matChapa)
     orelha.castShadow = true
     orelha.position.set((op.larguraPecaMm ?? PECA.comprimentoMm) / 2 + 10, -3, 0)
+    // H103: o tubo é seguro pela ponta, no eixo.
+    if (this.curva) orelha.position.set(0, -this.curva.raio, PECA.larguraChapaMm + 9)
     this.orelha.copy(orelha.position)
     this.peca.add(orelha)
 
@@ -446,9 +459,12 @@ export class Palco3D {
     if (inicial) {
       this.anguloGiro = THREE.MathUtils.degToRad(inicial.giroGraus)
       this.rolagemGraus = inicial.rolagemGraus
-      this.giro.rotation.y = -this.anguloGiro
+      // H103: no tubo o giro é a rotação no próprio eixo (na curvatura), não no plano.
+      if (!this.curva) this.giro.rotation.y = -this.anguloGiro
     }
     this.definirExagero(EXAGERO_PADRAO)
+    // H103: tudo o que tem relevo vira tubo (os rótulos deitados ficam rígidos, já ancorados).
+    if (this.uCurva) curvarArvore(this.relevo, this.uCurva, this.curvados, new Set(this.rigidos.map((r) => r.suporte)))
   }
 
   /** Caixa da sala vista por dentro: piso de ladrilhos, paredes de blocos e teto com luminárias. */
@@ -493,7 +509,7 @@ export class Palco3D {
       const [a0, b0] = naSuperficie(n - 0.5)
       const [a1, b1] = naSuperficie(n + 0.5)
       m.rotation.x = -Math.PI / 2 - Math.atan2(b1 - b0, a1 - a0)
-      this.relevo.add(m)
+      this.relevo.add(this.ancorar(m, m.position.x, m.position.z))
       this.texturas.push((m.material as THREE.MeshBasicMaterial).map!)
     }
     if (missao) {
@@ -504,7 +520,8 @@ export class Palco3D {
       this.relevo.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#ffc440', transparent: true, opacity: 0.9, toneMapped: false })))
       if (regua) {
         deitar(rotuloDeitado('INÍCIO', 3, '#ffc440'), missao.inicioMm, -19)
-        deitar(rotuloDeitado('FIM', 3, '#ffc440'), missao.fimMm, -19)
+        // H103: no tubo o fim da volta encontra o início; o FIM vai para o outro lado da junta.
+        deitar(rotuloDeitado('FIM', 3, '#ffc440'), missao.fimMm, contexto.tubo ? 19 : -19)
       }
       if (missao.alinhamentoMm) {
         // Faixa de tolerância de alinhamento: tracejado dos dois lados da junta.
@@ -548,13 +565,20 @@ export class Palco3D {
   }
 
   definirExagero(fator: number): void {
-    this.exagero = Math.min(EXAGERO_MAX, Math.max(EXAGERO_MIN, fator))
+    // H103: no tubo o relevo não pode ser esticado em y (o tubo viraria oval).
+    this.exagero = this.curva ? 1 : Math.min(EXAGERO_MAX, Math.max(EXAGERO_MIN, fator))
     this.relevo.scale.y = this.exagero
     this.posicionarAmbiente()
   }
 
   /** Giro da peça (radianos, positivo = horário na tela, como Vista.angulo). */
   definirGiro(angulo: number): void {
+    if (this.curva && this.uCurva) {
+      // H103: no tubo, girar é rodar o tubo no próprio eixo.
+      this.curva.giro = angulo
+      this.uCurva.uGiroTubo.value = angulo
+      return
+    }
     // Na tela, x aponta para a direita e z para baixo: horário na tela = −θ em torno de y.
     this.giro.rotation.y = -angulo
     if (angulo !== this.anguloGiro) {
@@ -642,6 +666,7 @@ export class Palco3D {
         const viva = new MalhaCordaoViva(solto.nPosicoes, solto.passoMm, this.op.geometria, undefined, null, { junta: juntaDe(this.op.contexto), dimensoes: this.op.contexto })
         const malha = new THREE.Mesh(this.geometriaViva(viva), this.cordao3d.material)
         malha.castShadow = malha.receiveShadow = true
+        if (this.curva) malha.castShadow = false
         malha.frustumCulled = false
         this.relevo.add(malha)
         s = this.soltos3d[k] = { viva, malha }
@@ -704,6 +729,32 @@ export class Palco3D {
     this.atualizarConsumo(a)
   }
 
+  /**
+   * H103: põe um objeto rígido no tubo. Com (x, z), fica fixo nesse ponto; sem,
+   * segue a posição plana do próprio objeto a cada quadro (tocha, mira). Sem
+   * tubo, devolve o próprio objeto. Adicione ao grupo o que esta função devolve.
+   */
+  ancorar(objeto: THREE.Object3D, x?: number, z?: number): THREE.Object3D {
+    if (!this.curva) return objeto
+    const suporte = new THREE.Group()
+    suporte.matrixAutoUpdate = false
+    suporte.add(objeto)
+    this.rigidos.push({ suporte, objeto, x, z })
+    this.posicionarRigido(this.rigidos[this.rigidos.length - 1])
+    return suporte
+  }
+
+  private posicionarRigido(r: { suporte: THREE.Group; objeto: THREE.Object3D; x?: number; z?: number }): void {
+    if (!this.curva) return
+    poseNoTubo(this.curva, r.x ?? r.objeto.position.x, r.z ?? r.objeto.position.z, r.suporte.matrix)
+    r.suporte.matrixWorldNeedsUpdate = true
+  }
+
+  /** H103: curva também objetos criados fora do palco (faixas de calor, brilho). */
+  curvarTambem(objeto: THREE.Object3D): void {
+    if (this.uCurva) curvarArvore(objeto, this.uCurva, this.curvados)
+  }
+
   /** H101: recorta também outras malhas que cobrem o cordão (o brilho do metal quente). */
   furarTambem(mat: THREE.Material): void {
     if (this.texturaConsumo) furarComMapa(mat, this.texturaConsumo, false)
@@ -721,6 +772,8 @@ export class Palco3D {
 
   /** Empeno angular das chapas (graus, H57): no topo e no V, as pontas de fora sobem. */
   definirEmpeno(graus: number): void {
+    // H103: o tubo não empena como as duas chapas soltas.
+    if (this.curva) graus = 0
     const r = THREE.MathUtils.degToRad(graus)
     for (const { pivo, sinal } of this.pivosEmpeno) pivo.rotation.x = sinal * r
     this.defeitos3d.definirEmpeno(this.pivosEmpeno.length ? graus : 0)
@@ -788,6 +841,7 @@ export class Palco3D {
   }
 
   desenhar(camera: THREE.Camera): void {
+    for (const r of this.rigidos) this.posicionarRigido(r)
     if (this.largura > 0) this.renderer.render(this.cena, camera)
   }
 
