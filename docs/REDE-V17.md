@@ -45,7 +45,7 @@ Na versão online, os dois PCs abrem o mesmo link HTTPS, entram em Arcade → X1
 
 Validação adicional: persistência entre instâncias, prontidão concorrente, replay e ocultação de entregas, saída de visitante, autenticação, origem HTTP, expiração, W/O e limite de criação em SQLite real executando o SQL do D1. Cliente de consulta também testado. Total: 455 testes em 45 arquivos, typecheck e builds aprovados. Na prévia do Worker, dois clientes de navegador entraram por código e iniciaram a mesma partida. Ainda é necessário testar em dois PCs físicos; não há matchmaking ou proteção antifraude para torneio público.
 
-Endereço publicado: https://oficina-soldagem-x1.beath.chatgpt.site
+Endereço publicado: https://oficinadesolda.beath.chatgpt.site
 
 O checkout de publicação é separado do repositório do jogo e contém o Worker autocontido. Para atualizar: gerar novamente o Worker nesta branch, atualizar worker/index.js no checkout de hospedagem e publicar pelo fluxo Sites. Não copiar credenciais ou dados de salas para o código-fonte.
 
@@ -65,3 +65,12 @@ Limites: multiplayer somente MIG/MAG; o servidor sincroniza sala, início e resu
 A confirmação de abandono fica acima da pausa, evitando que o clique em Sair da sala seja interceptado por Voltar ao menu. Verificação do fluxo online inclui cancelamento e confirmação de saída.
 
 Validação online da v2.0: dois clientes no endereço público abriram um convite, confirmaram prontidão, fizeram tentativas pela interface e entregaram ao servidor. As duas telas receberam 349 e 348 pontos, com vitória do primeiro cliente. Cópia do convite também verificada por HTTPS. Este teste usa duas sessões no mesmo computador, não dois PCs físicos.
+
+
+## Pacote completo da v2.0
+
+`npm run pacote:v2` monta o ZIP com o HTML offline, JOGAR ONLINE.html e servidor-local/. O atalho HTML usa o mesmo endereço de src/rede/convite.ts e abre o site por redirecionamento, com link visível de alternativa; não executa servidor no computador. O gerador do portátil e o pacote LAN também incluem esse atalho.
+
+O servidor de reserva inclui o runtime oficial Windows x64 já conferido pelo manifesto SHA-256 e sua licença. A criação do ZIP não altera as regras do jogo nem as salas hospedadas. A pasta intermediária é ignorada no Git; o ZIP completo fica na raiz para download pela branch ou pelo PR.
+
+Validação do pacote: ZIP extraído e íntegro, 19 entradas, presença dos três modos e SHA-256 do runtime conferidos. O lançador extraído iniciou o servidor com abertura automática do navegador desabilitada para o teste; dois clientes autenticados entraram na mesma sala. Typecheck, 543 testes e build passaram. A abertura direta do atalho por file:// foi bloqueada pela política do navegador integrado; o redirecionamento e o link foram conferidos no HTML e o destino HTTPS já foi verificado. Ainda não é um teste em dois PCs físicos.

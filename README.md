@@ -1,74 +1,53 @@
-# Oficina de Soldagem — Alpha v1.4 para teste
+# Oficina de Soldagem — Alpha v2.0
 
 ## Baixar e jogar
 
-**[Baixar o jogo Alpha v1.4 em ZIP](https://github.com/BeathAzreal/SoldamatGamification/raw/refs/heads/gpt/v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip)**
+**[Baixar o pacote completo da v2.0](Oficina-de-Soldagem-Alpha-v2.0.zip)**
 
-1. Baixe o ZIP pelo link acima. Se o GitHub abrir a página do arquivo, clique em **Download raw file**.
-2. Extraia o ZIP inteiro para uma pasta.
-3. Abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html** no Chrome ou Edge.
-4. Confira **ALPHA v1.4** no topo e a navegação lateral.
+Extraia o ZIP inteiro. A pasta contém três formas de acesso:
 
-Não precisa instalar Node.js, executar servidor nem ter internet para jogar.
-Como o repositório é privado, entre na sua conta do GitHub para baixar.
+| Arquivo ou pasta | Quando usar |
+|---|---|
+| **JOGAR ONLINE.html** | Abre a oficina hospedada no navegador. Precisa de internet; não inicia Node.js nem servidor no PC. |
+| **Oficina de Soldagem.html** | Abre o jogo offline, para treinos e demais modos locais. Sem instalação e sem internet. |
+| **servidor-local/** | Reserva para x1 pela mesma rede. Inclui servidor, jogo e Node.js portátil para Windows x64. |
 
-## Qual versão é esta?
+O arquivo **Abrir o jogo.bat** também abre o jogo offline. As instruções de cada opção estão em **LEIA-ME.txt**; as notas da versão ficam em **NOTAS DA VERSAO.txt**.
 
-Esta é a **1.4.0-alpha.1**, disponível para testar a nova interface.
-O processo jogável continua sendo **MIG/MAG**. **Eletrodo revestido está apenas planejado.**
+## Jogo online
 
-A v1.4 tem início redesenhado, navegação lateral e uma linguagem visual comum
-para treino, missões, bancada, execução, resultados, recordes e torneios.
+[Abra a Oficina de Solda online](https://oficinadesolda.beath.chatgpt.site/?rede=1).
 
-| Versão | Estado | Acesso |
-|---|---|---|
-| Alpha v1.4 | Para teste; revisão visual pendente | [ZIP da v1.4](https://github.com/BeathAzreal/SoldamatGamification/raw/refs/heads/gpt/v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
-| Alpha v1.3 | Aprovada, preservada | [Branch alpha-v1.3](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.3) |
+Uma pessoa cria a sala e usa **Copiar convite**. A outra abre o link, informa seu apelido e entra. O x1 online é para duas pessoas em MIG/MAG; cada uma precisa de conexão com a internet. A nota é calculada no servidor. A pausa local não interrompe o prazo da rodada.
 
-## Por que a v1.4 ainda não aparece na página principal?
+## Servidor local de reserva
 
-A branch padrão do repositório é o histórico de versões.
-O trabalho da v1.4 está em **gpt/v1.4**, com integração proposta em
-**alpha-v1.4** pelo [pull request #6](https://github.com/BeathAzreal/SoldamatGamification/pull/6).
-Você pode baixar e testar o ZIP antes de aprovar o PR.
+Em **servidor-local/**, execute **ABRIR-OFICINA.bat** no PC anfitrião e mantenha a janela aberta. O pacote já inclui o runtime e não precisa de instalação de Node.js.
 
-## O que conferir no teste
+O outro jogador abre no navegador o endereço com IP mostrado na janela do servidor. `localhost` funciona somente no próprio anfitrião. A rede precisa permitir comunicação entre os PCs na porta 5197; as políticas do Windows e da instituição continuam valendo.
 
-- Menu e navegação em 1280×720 ou 1366×768.
-- Treino livre, exercícios técnicos e missões.
-- Regulagem da bancada, controles, câmera e execução.
-- Resultado, inspeção e comparação de tentativas.
-- Arcade, torneios e recordes.
-
-TypeScript, **305 testes** e build aprovados. A revisão visual e dos dispositivos
-continua pendente; o navegador integrado não acessou a prévia local.
+O servidor local guarda salas em memória: reiniciá-lo apaga essas salas. O online hospedado usa armazenamento compartilhado. Os dois modos usam o mesmo contrato de rede, mas suas salas são separadas.
 
 ## Seus dados
 
-Recordes e preferências ficam no navegador e podem depender do caminho do
-HTML. Antes de trocar de pasta ou versão, exporte os recordes em JSON.
-O ZIP não transfere automaticamente os dados da v1.3.
+Recordes e preferências ficam no navegador, não dentro da pasta. Antes de trocar de caminho, versão ou navegador, exporte os recordes que quiser preservar. O ZIP não transfere automaticamente os dados de versões antigas.
 
-## Código-fonte
+## Código-fonte e geração do pacote
 
-Selecione a branch **gpt/v1.4** e use **Code → Download ZIP** para baixar o projeto.
-Para desenvolvimento:
+A versão integrada fica em **alpha-v2.0**; o trabalho do GPT fica em **gpt/v2.0**, e o do Claude em **claude/v2.0**. As versões anteriores permanecem em suas branches.
 
 ```bash
 npm install
 npm run dev
 npm run typecheck
 npm test
-npm run portatil
+npm run pacote:v2
 ```
 
-O portátil é gerado em `portatil/Oficina de Soldagem/`.
-As instruções dos agentes estão em [AGENTS.md](AGENTS.md);
-as decisões de interface, em [docs/UI-v1.4.md](docs/UI-v1.4.md).
+A geração do ZIP usa a biblioteca ZIP do Windows e o Node.js oficial definido em `licencas/node-runtime.json`. Se o executável em uso não corresponder ao hash desse manifesto, defina `NODE_PORTATIL` com o caminho do `node.exe` oficial correspondente. O gerador confere o SHA-256 antes de incluir o runtime.
 
-Modelo didático qualitativo: os números do jogo não qualificam procedimentos de soldagem.
+`npm run pacote:v2` gera **Oficina-de-Soldagem-Alpha-v2.0.zip**, incluindo o portátil, o atalho HTML online e o servidor local de reserva. A pasta intermediária fica em `pacote-v20/` e não entra no Git. O HTML portátil também pode ser gerado separadamente com `npm run portatil`.
 
+Documentação técnica: [rede](docs/REDE-V17.md), [hipóteses](docs/HIPOTESES.md), [pontuação](docs/PONTUACAO.md), [TIG](docs/TIG.md) e [verificação](docs/VERIFICACAO.md).
 
-### Atualização didática da Alpha v1.4
-
-As missões apresentam roteiro de aprendizagem; capítulos mostram progresso e ação Continuar. Os resultados incluem Plano da próxima tentativa, baseado nos dados registrados. Arcade v2 introduz gradualmente missões, técnica e tempo, mantendo recordes antigos separados. Torneios têm resumo de pendências e desempates coerentes. Consulte `docs/ETAPA-DIDATICA.md`. As alterações de realismo do modelo e renderização continuam em desenvolvimento separado.
+Modelo didático qualitativo: os números do jogo não qualificam procedimentos nem servem como receita de soldagem.
