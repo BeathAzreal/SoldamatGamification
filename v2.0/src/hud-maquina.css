@@ -28,9 +28,7 @@
 .jogo-imersivo .grupo-maquina .chip { font-size: 14px; padding: 7px 6px; }
 .jogo-imersivo .peca-teste { padding: 8px; border: 1px solid #495253; background: #161c1e; gap: 6px; min-height: 0; }
 .jogo-imersivo .peca-teste-topo { min-height: 26px; font-size: 14px; }
-/* Dispositivo (mouse, caneta, controle) e calibração ficam à vista, numa faixa compacta: sem eles a caneta não tem como ser escolhida. */
-.jogo-imersivo .barra-dispositivo { gap: 4px; }
-.jogo-imersivo .barra-dispositivo .botao-fantasma, .jogo-imersivo .peca-teste-topo .segmentado button { padding: 4px 8px; font-size: 13px; min-height: 0; }
+.jogo-imersivo .barra-dispositivo { display: none; }
 .jogo-imersivo .status-linha { font-size: 14px; margin: 0; }
 .jogo-imersivo .grupo-formato { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .jogo-imersivo .grupo-formato > .dica { display: none; }
@@ -189,3 +187,14 @@
 .giro-tubo-bancada button { padding:3px 9px;font-size:18px;background:#263539;border:1px solid #647574;color:#d5eee7;touch-action:none; }
 .giro-tubo-bancada button:disabled { opacity:.45; }
 .giro-tubo-bancada output { min-width:40px;text-align:center; }
+
+/* MIG/MAG: ajustes e instrumentos visíveis juntos, sem reduzir os textos. */
+.jogo-imersivo .tela-bancada .bancada { grid-template-columns: 440px minmax(0,1fr); }
+.jogo-imersivo .tela-bancada .fonte-com-leituras { gap: 10px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .mostradores { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .mostrador { min-width: 0; padding: 8px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .mostrador .rotulo-maquina { min-height: 32px; display: block; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .leitura { min-height: 68px; padding: 7px; gap: 4px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .leitura:last-child { grid-column: 1/-1; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .forma-secao { display: flex; align-items: center; gap: 10px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .forma-secao svg { width: 100px; height: 40px; flex: none; }

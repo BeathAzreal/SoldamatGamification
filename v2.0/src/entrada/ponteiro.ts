@@ -44,15 +44,14 @@ export class FontePonteiro implements FonteEntrada {
   ultimoEvento = ''
 
   /**
-   * Mouse: eventos de mouse e de caneta (a ponta encostada vale o botão
-   * esquerdo), para a mesa digitalizadora soldar mesmo com o dispositivo
-   * deixado em Mouse; o toque na tela fica de fora. Caneta: qualquer tipo de
-   * ponteiro, porque muitos drivers de mesa digitalizadora mandam o "passar
-   * por cima" como caneta mas o toque como mouse ou toque (ou tudo como mouse).
+   * Mouse: aceita também caneta (Windows Ink), sem exigir trocar a seleção.
+   * Caneta: qualquer tipo de ponteiro, porque
+   * muitos drivers de mesa digitalizadora mandam o "passar por cima" como
+   * caneta mas o toque como mouse ou toque (ou tudo como mouse).
    */
   private aceita(e: PointerEvent): boolean {
     this.ultimoEvento = `${e.type} · ${e.pointerType || '?'} · botões ${e.buttons} · pressão ${e.pressure.toFixed(2)}`
-    return this.dispositivo === 'caneta' ? true : e.pointerType === 'mouse' || e.pointerType === 'pen'
+    return this.dispositivo === 'caneta' ? true : (e.pointerType === 'mouse' || e.pointerType === 'pen')
   }
 
   /** Último ponto da tela (relativo ao alvo), para reamostrar quando a peça gira. */
@@ -76,14 +75,14 @@ export class FontePonteiro implements FonteEntrada {
   }
 
   private lerExtras(e: PointerEvent): void {
-    if (this.dispositivo !== 'caneta') return
+    if (this.dispositivo !== 'caneta' && e.pointerType !== 'pen') return
     if (e.pressure > 0 && e.pressure !== 0.5 && e.pressure !== 1) this.pressaoDisponivel = true
     this.extras = { pressao: e.pressure, inclinacaoX: e.tiltX, inclinacaoY: e.tiltY }
   }
 
   /** Gatilho desejado para este evento. */
   private gatilhoDe(e: PointerEvent): boolean {
-    if (this.dispositivo === 'mouse') return (e.buttons & 1) === 1
+    if (this.dispositivo === 'mouse' && e.pointerType !== 'pen') return (e.buttons & 1) === 1
     // Contato: ponta encostada (botão 1) ou pressão informada. O botão lateral
     // da caneta sozinho (sem contato) não abre o arco.
     const encostada = (e.buttons & 1) === 1 || (e.pointerType === 'pen' && e.pressure > 0 && e.buttons !== 2)

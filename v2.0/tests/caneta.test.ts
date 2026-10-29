@@ -60,12 +60,21 @@ describe('caneta: contato abre o arco com qualquer driver', () => {
   it('registra o último evento para diagnóstico', () => {
     expect(passe('pen', 'pen', 0.4).ultimo).toContain('pointerup · pen')
   })
+})
 
-  it('com o dispositivo em Mouse, a caneta também solda (o toque na tela não)', () => {
+describe('MIG/MAG: caneta com a seleção Mouse', () => {
+  it('Windows Ink move, solda no contato e fecha ao levantar', () => {
     const r = passe('pen', 'pen', 0.4, 'mouse')
     expect(r.abertoNoHover).toBe(false)
     expect(r.abertoNoContato).toBe(true)
+    expect(r.fechou).toBe(true)
     expect(r.volume).toBeGreaterThan(0)
-    expect(passe('touch', 'touch', 0.5, 'mouse').abertoNoContato).toBe(false)
+  })
+  it('preserva o mouse e os drivers que emulam mouse', () => {
+    const r = passe('mouse', 'mouse', 0.5, 'mouse')
+    expect(r.abertoNoHover).toBe(false)
+    expect(r.abertoNoContato).toBe(true)
+    expect(r.fechou).toBe(true)
+    expect(r.volume).toBeGreaterThan(0)
   })
 })

@@ -592,10 +592,9 @@ export function montarBancada(app: App, op: OpcoesBancada): Bancada {
   // Como abrir o arco com o dispositivo escolhido: dentro da área de teste, não numa linha a mais.
   areaPeca.querySelector('.hud-sobre')?.append(h('span', { class: 'hud-item hud-dica' }, statusDispositivo))
 
-  const fontePainel = h('div', { class: 'fonte-com-leituras' }, maquina.querySelector('.mostradores'))
-  const leiturasPainel = h('div', { class: 'painel-leituras' }, maquina.querySelector('.leituras'))
+  const fontePainel = h('div', { class: 'fonte-com-leituras' }, maquina.querySelector('.mostradores'), maquina.querySelector('.leituras'))
   const preparoPainel = h('div', {}, maquina.querySelector('.maquina-grade'), maquina.querySelector('.aviso-trava'))
-  maquina.append(painelMaquina([['FONTE', fontePainel], ['LEITURAS', leiturasPainel], ['PREPARO', preparoPainel]]))
+  maquina.append(painelMaquina([['FONTE E LEITURAS', fontePainel], ['PREPARO', preparoPainel]]))
   bancada.elemento = h('div', { class: 'bancada' }, maquina, pecaTeste)
 
   // ------------------------------------------------------------ laço da peça de teste

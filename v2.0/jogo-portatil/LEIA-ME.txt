@@ -12,7 +12,7 @@ TUBO COM TUBO (novo na v2.0): emenda de topo de dois tubos, soldada em volta. MI
 
 TIG: a vareta vai à borda da poça mesmo se você avançar antes de tocar, e toques rápidos não se perdem em PC lento.
 
-BANCADA DO MIG/MAG: chapa, espessura e junta numa linha só; a ficha da chapa abre no botão Ficha. A escolha Mouse / Caneta / Controle fica na bancada; com Mouse escolhido, a caneta da mesa digitalizadora também solda.
+BANCADA DO MIG/MAG: chapa, espessura e junta numa linha só; a ficha da chapa abre no botão Ficha; a dica de como abrir o arco fica dentro da área de teste, que ganha o espaço.
 
 CHAPAS (novo na v2.0): cada chapa tem características próprias: espessura, calor para fundir, quanto esquenta, quanto guarda o calor e quanto deforma. Novas: aço galvanizado (fino; esmerilhe o zinco ou sobra poro), aço médio carbono (grosso; custa a esquentar e guarda o calor), inox ferrítico (bem fino; esquenta muito rápido) e cobre (pede o maior calor e esfria rápido). No treino, troque a chapa: MIG/MAG treino livre (grupos Chapa e Espessura), eletrodo e TIG (Escolha a chapa, depois da peça). A chapa leva as características dela; a corrente sugerida acompanha.
 

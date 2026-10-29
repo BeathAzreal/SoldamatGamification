@@ -26,9 +26,9 @@ O jogo mostra **ALPHA v2.0** no topo. Novidades:
 - **Chapas novas com características próprias** (galvanizado, médio carbono,
   inox ferrítico e cobre): espessura, calor, aquecimento e deformação de cada
   uma. No treino dá para trocar a chapa no MIG/MAG, no eletrodo e no TIG.
-- **Bancada do MIG/MAG mais limpa** (chapa, espessura e junta numa linha;
-  área de teste com o dobro de altura no notebook) e **mesa digitalizadora**
-  de volta: a escolha Mouse / Caneta / Controle aparece, e a caneta solda.
+- **Bancada do MIG/MAG mais limpa** (fonte e leituras juntas; chapa,
+  espessura e junta numa linha; área de teste com mais que o dobro de
+  altura no notebook) e **mesa digitalizadora** que solda no MIG/MAG.
 - **Passes sobrepostos:** cordão com seção de parábola, passes que somam (morro,
   plano ou vale pelo passo), falta de fusão entre passes no eletrodo e o botão
   **Corte** para ver as camadas.
@@ -85,7 +85,7 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
-- [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32, #36 e #37)
+- [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32, #36, #37 e #39; bancada compacta no #40)
 - [`v1.9/`](v1.9/) ← [`alpha-v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.9) (`claude/v1.9`, com a v1.8 junto)
 - [`v1.8/`](v1.8/) ← [`claude/v1.8`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v1.8) (feita a partir da `alpha-v1.7`; ainda não há `alpha-v1.8`)
 - [`v1.7/`](v1.7/) ← [`alpha-v1.7`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.7) (`gpt/v1.7` + `claude/v1.7`)
