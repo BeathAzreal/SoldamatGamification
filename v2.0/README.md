@@ -1,6 +1,6 @@
 # Oficina de Soldagem — Alpha v2.0
 
-Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. Já incorporada à `alpha-v2.0` (PRs #32, #36, #37 e #39; a bancada compacta está no #40).
+Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. Já incorporada à `alpha-v2.0` (PRs #32, #36, #37, #39 e #40).
 
 ## Jogar
 
