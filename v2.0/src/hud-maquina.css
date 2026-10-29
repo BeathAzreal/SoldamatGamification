@@ -187,3 +187,14 @@
 .giro-tubo-bancada button { padding:3px 9px;font-size:18px;background:#263539;border:1px solid #647574;color:#d5eee7;touch-action:none; }
 .giro-tubo-bancada button:disabled { opacity:.45; }
 .giro-tubo-bancada output { min-width:40px;text-align:center; }
+
+/* MIG/MAG: ajustes e instrumentos visíveis juntos, sem reduzir os textos. */
+.jogo-imersivo .tela-bancada .bancada { grid-template-columns: 440px minmax(0,1fr); }
+.jogo-imersivo .tela-bancada .fonte-com-leituras { gap: 10px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .mostradores { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .mostrador { min-width: 0; padding: 8px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .mostrador .rotulo-maquina { min-height: 32px; display: block; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .leitura { min-height: 68px; padding: 7px; gap: 4px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .leitura:last-child { grid-column: 1/-1; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .forma-secao { display: flex; align-items: center; gap: 10px; }
+.jogo-imersivo .tela-bancada .fonte-com-leituras .forma-secao svg { width: 100px; height: 40px; flex: none; }
