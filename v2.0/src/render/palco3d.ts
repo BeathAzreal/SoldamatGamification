@@ -31,6 +31,10 @@ const ACABAMENTO: Record<MaterialId, { metalness: number; roughness: number }> =
   'aco-carbono': { metalness: 0.75, roughness: 0.5 },
   'inox-austenitico': { metalness: 0.9, roughness: 0.32 },
   aluminio: { metalness: 0.6, roughness: 0.62 },
+  'aco-galvanizado': { metalness: 0.7, roughness: 0.45 },
+  'aco-medio-carbono': { metalness: 0.7, roughness: 0.55 },
+  'inox-ferritico': { metalness: 0.88, roughness: 0.36 },
+  cobre: { metalness: 0.85, roughness: 0.38 },
 }
 
 /** Faixas de cor do cordão pela distância ao centro, como as camadas da vista de cima. */

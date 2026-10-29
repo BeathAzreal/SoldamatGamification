@@ -136,7 +136,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
         { class: 'bloco', title: 'Calor acumulado da peça (relativo, sintético).' },
         h('h2', {}, 'Aquecimento da peça'),
         h('div', { class: 'barra barra-calor', role: 'meter', 'aria-label': 'Aquecimento acumulado relativo' }, aquecimento),
-        h('p', { class: 'nota' }, MATERIAIS[op.contexto.material].exigeLimpeza ? 'O alumínio esquenta muito ao longo do passe: a fusão aumenta com o calor acumulado.' : 'Calor acumulado da peça (relativo, sintético).'),
+        h('p', { class: 'nota' }, `${MATERIAIS[op.contexto.material].ficha.calor} (Relativo, sintético.)`),
       ),
       h(
         'section',

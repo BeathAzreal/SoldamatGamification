@@ -298,7 +298,7 @@ export function montarInspecao(d: DadosInspecao): { elemento: HTMLElement; destr
         const pos = posicaoDe(gravidade(final.posicao))
         return `${NOME_POSICAO[pos]} (${SIGLAS_POSICAO[INFO_JUNTA[juntaDe(d.contexto)].familia][pos]})${d.contexto.posicaoFixa ? ', peça fixa' : ''}`
       })()],
-      ['Óxido removido', m.exigeLimpeza ? (d.contexto.oxidoRemovido ? 'sim' : 'não') : 'não se aplica'],
+      [m.limpeza?.rotulo ?? 'Óxido removido', m.exigeLimpeza ? (d.contexto.oxidoRemovido ? 'sim' : 'não') : 'não se aplica'],
       ['Tempo de arco', `${n1(final.tempoDeArcoMs / 1000)} s`],
       ['Aberturas de arco', String(eventos.filter((e) => e.tipo === 'inicio').length)],
       ...(d.dispositivo ? [['Dispositivo', NOME_DISPOSITIVO[d.dispositivo]]] : []),

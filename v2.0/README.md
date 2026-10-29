@@ -33,6 +33,10 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
 - **MIG/MAG:** mais arame deixa o cordão mais achatado, e andar rápido demais com corrente alta faz corcovas (**humping**).
 - No Arcade, a máquina pré-ajustada usa os passos do painel e fica fora do globular.
 - Novo exercício técnico: **4. Curto-circuito, globular e spray**.
+- **Chapas com características próprias** (espessura, calor para fundir, quanto esquentam, quanto guardam o calor, deformação, limpeza). Novas: **aço galvanizado** (fino, com zinco que faz poro se não for esmerilhado), **aço médio carbono** (grosso, custa a esquentar e guarda o calor), **inox ferrítico** (bem fino, esquenta muito rápido) e **cobre** (pede o maior calor e esfria rápido). Cada chapa tem uma ficha com níveis de 1 a 5 tirados do próprio modelo.
+- **No treino, troque a chapa** e ela leva as características dela:
+  - MIG/MAG, treino livre: grupos **Chapa** e **Espessura** na bancada (gás, arame e limpeza acompanham; o V só em chapa de 4 mm ou mais);
+  - eletrodo e TIG: **Escolha a chapa** depois da peça; a corrente sugerida acompanha o material.
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil, eletrodo sem assistência.
 
-Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H103) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.
+Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H104) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.

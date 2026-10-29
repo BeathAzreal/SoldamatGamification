@@ -1087,3 +1087,21 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
   - as posições em volta, o eixo de pé (2G), o 5G e o 1G;
   - a curvatura (ida e volta, raio de cima no alto do tubo, pose rígida).
 - Os números são do jogo.
+
+### H104 — chapas com características próprias, trocáveis no treino (v2.0, Claude)
+
+- **Chapas novas** (`src/modelo/material.ts`), além do aço carbono, do inox austenítico e do alumínio:
+  - **Aço galvanizado:** aço carbono fino coberto de zinco. Estoque de 1,2 a 2 mm. Sem esmerilhar o zinco da borda, a fusão cai (o mesmo fator do óxido do alumínio, H35) e sobra poro (0,6 de porosidade de base). Não vai ao TIG (o zinco contamina o tungstênio).
+  - **Aço médio carbono (SAE 1045):** chapa grossa (4 a 8 mm). Pede 10 % a mais de calor que o aço carbono, custa a esquentar (ganho 0,18) e guarda o calor (τ = 40 s); a peça quente funde bem melhor (e = 0,45). Deforma pouco (0,8).
+  - **Inox ferrítico (430):** chapa bem fina (1 a 2 mm). É a chapa que mais rápido esquenta (ganho 0,4); deforma menos que o inox austenítico (1,2) e também colore.
+  - **Cobre:** pede o maior calor do jogo (2,4 vezes o do aço), esquenta a peça inteira e esfria rápido (τ = 12 s); peça quente funde muito mais (e = 1). Os estágios antes do furo são estreitos, como no alumínio. MIG com argônio puro.
+- **Ficha da chapa:** cada material tem um resumo, o comportamento do calor, os pontos que o distinguem e o estoque de espessuras. A ficha mostra níveis de 1 a 5 (calor para fundir, esquenta rápido, guarda o calor, deforma) **calculados dos próprios números do modelo**, para a ficha nunca contradizer a física. Nenhuma chapa tem a mesma ficha de outra.
+- **Troca no treino:**
+  - **MIG/MAG, treino livre:** a bancada tem os grupos **Chapa** e **Espessura**. A chapa traz o gás, o arame, a limpeza (óxido ou zinco) e o estoque dela. Na troca, fica a espessura atual se o estoque tiver; senão, a mais perto da de teste da junta. O chanfro em V só aparece para chapas de 4 mm ou mais; numa chapa só fina ele fica bloqueado e a junta volta ao topo.
+  - **Eletrodo e TIG:** depois da peça vem **Escolha a chapa** (a da peça vem primeiro). A geometria da peça fica a mesma; o material traz a física dele.
+    - Eletrodo: a corrente sugerida (e com ela o aporte de referência da análise, H82) acompanha o calor que a chapa pede (`necessidadeFusao`). O galvanizado põe metade do poro do zinco (o revestimento segura o resto; não há como limpar no jogo).
+    - TIG: calor por volume, difusividade, perda e temperatura de fusão vêm da chapa. O limite de furo acompanha a temperatura de fusão na mesma proporção do aço. A corrente sugerida acompanha `fatorCorrente`, medido no próprio modelo: a corrente que dá a mesma largura fundida que o aço carbono no filete de 3 mm a 2 mm/s (inox 0,8; alumínio 1,35; cobre 2,1). Os valores do aço carbono e do inox não mudaram. A escala de corrente da fonte cresce quando a chapa pede mais de 200 A.
+  - Missões, Arcade, História, torneio e rede continuam com a chapa da encomenda.
+- **Limites:** a difusividade do TIG é metade da real (para caber na grade de 1 × 0,5 mm). O alumínio no TIG real pede corrente alternada; o jogo não muda a polaridade. O médio carbono não tem trinca por têmpera no modelo: o pré-aquecimento só aparece como fusão melhor com a peça quente. O eletrodo não acumula calor de um passe para o outro.
+- **Testes:** `tests/materiais.test.ts` (catálogo, fichas únicas, toda chapa × junta × espessura monta contexto válido, cobre pede mais calor e inox menos, ferrítico esquenta mais e médio carbono menos, zinco faz poro, corrente do eletrodo e do TIG pela chapa, cobre no TIG).
+- Os números são do jogo.

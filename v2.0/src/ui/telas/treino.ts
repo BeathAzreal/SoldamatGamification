@@ -2,8 +2,8 @@ import { menuOficina } from '../componentes/menuOficina'
 import { telaMenu } from './menu'
 import { EXERCICIOS_TECNICOS, type ExercicioTecnico } from '../../didatica/exercicios'
 import { abrirPainel, confirmar } from '../dialogo'
-import { DIFICULDADES, MISSOES, NOME_DIFICULDADE, PECA_PADRAO, type Dificuldade, type Missao, comJunta } from '../../missoes/catalogo'
-import { MATERIAIS } from '../../modelo/material'
+import { DIFICULDADES, MISSOES, NOME_DIFICULDADE, PECA_PADRAO, type Dificuldade, type Missao, pecaLivre } from '../../missoes/catalogo'
+import { MATERIAIS, materiaisDoProcesso, type MaterialId, type ProcessoChapa } from '../../modelo/material'
 import { pontuarRegistro } from '../../pontuacao/oficial'
 import type { App } from '../app'
 import { montarInspecao } from '../componentes/inspecao'
@@ -13,16 +13,17 @@ import { telaExecucao } from './execucao'
 import { montarPreparacao, type ConfiguracaoTentativa } from './missao'
 import { botaoExplicacao, tentativaDoRegistro } from '../componentes/explicacao'
 import type { Tentativa } from '../../modelo/avaliacao'
-import { PECAS_ELETRODO } from '../../missoes/pecasEletrodo'
+import { materialEletrodo, PECAS_ELETRODO, pecaEletrodoEm } from '../../missoes/pecasEletrodo'
 import { INFO_JUNTA } from '../../modelo/juntas'
 import { telaTreinoEletrodo } from './treinoEletrodo'
-import { NOME_MATERIAL_TIG, PECAS_TIG } from '../../missoes/pecasTig'
+import { PECAS_TIG, pecaTigEm } from '../../missoes/pecasTig'
+import { resumoMaterial } from '../componentes/material'
 import { telaTreinoTig } from './treinoTig'
 
 /** Treino: navegação por processo e peça, sem ranking ou registro oficial. */
 export function telaTreino(app: App): void {
   menuOficina(app, 'TREINO', 'OFICINA / PRÁTICA LIVRE', [
-    { nome: 'MIG/MAG', descricao: 'Abra a bancada livre. Escolha a junta, regule a máquina e pratique.', abrir: () => escolherModo(app, 'MIG/MAG', 'TREINO / BANCADA LIVRE', (d) => treinoLivre(app, d), () => telaTreino(app)) },
+    { nome: 'MIG/MAG', descricao: 'Abra a bancada livre. Escolha a chapa, a junta, regule a máquina e pratique.', abrir: () => escolherModo(app, 'MIG/MAG', 'TREINO / BANCADA LIVRE', (d) => treinoLivre(app, d), () => telaTreino(app)) },
     { nome: 'ELETRODO', descricao: 'Escolha a peça e pratique o controle da distância e o consumo da vareta.', abrir: () => escolherPecaEletrodo(app) },
     { nome: 'TIG', descricao: 'Tocha numa mão e vareta na outra: pedal, poça e toques de vareta. Mesa digitalizadora + mouse ou só mouse.', abrir: () => escolherPecaTig(app) },
     { nome: 'EXERCÍCIOS', descricao: 'Roteiros técnicos para experimentar, inspecionar e comparar tentativas.', abrir: () => { telaTreino(app); void escolherExercicio(app) } },
@@ -47,16 +48,33 @@ function escolherPecaEletrodo(app: App): void {
   menuOficina(app, 'ELETRODO', 'TREINO / ESCOLHA A PEÇA', [...PECAS_ELETRODO.filter(p => p.sobreChapa), ...PECAS_ELETRODO.filter(p => !p.sobreChapa)].map(p => ({
     nome: p.titulo,
     descricao: `${p.aplicacao} · ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome}. Avaliação visual e nota do treino.`,
-    abrir: () => escolherModo(app, 'ELETRODO', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoEletrodo(app, p, d, () => escolherPecaEletrodo(app)), () => escolherPecaEletrodo(app)),
+    abrir: () => escolherChapa(app, 'ELETRODO', 'eletrodo', p.titulo, materialEletrodo(p), () => escolherPecaEletrodo(app), (mat, caminho) =>
+      escolherModo(app, 'ELETRODO', caminho, (d) => telaTreinoEletrodo(app, pecaEletrodoEm(p, mat), d, () => escolherPecaEletrodo(app)), () => escolherPecaEletrodo(app))),
   })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
 }
 
 function escolherPecaTig(app: App): void {
   menuOficina(app, 'TIG', 'TREINO / ESCOLHA A PEÇA', PECAS_TIG.map(p => ({
     nome: p.titulo,
-    descricao: `${p.aplicacao} · ${NOME_MATERIAL_TIG[p.material]} ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome} · vareta Ø ${n1(p.varetaMm)} mm.`,
-    abrir: () => escolherModo(app, 'TIG', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoTig(app, p, d, () => escolherPecaTig(app)), () => escolherPecaTig(app)),
+    descricao: `${p.aplicacao} · ${MATERIAIS[p.material].nomeCurto} ${n1(p.espessuraMm)} mm · ${INFO_JUNTA[p.junta].nome} · vareta Ø ${n1(p.varetaMm)} mm.`,
+    abrir: () => escolherChapa(app, 'TIG', 'TIG', p.titulo, p.material, () => escolherPecaTig(app), (mat, caminho) =>
+      escolherModo(app, 'TIG', caminho, (d) => telaTreinoTig(app, pecaTigEm(p, mat), d, () => escolherPecaTig(app)), () => escolherPecaTig(app))),
   })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
+}
+
+/**
+ * H104: no treino a peça do eletrodo e do TIG pode ser de outra chapa. A
+ * geometria da peça fica; o material traz a física dele (calor para fundir,
+ * aquecimento, poro) e a corrente sugerida acompanha.
+ */
+function escolherChapa(app: App, titulo: string, processo: ProcessoChapa, peca: string, original: MaterialId, voltar: () => void, seguir: (m: MaterialId, caminho: string) => void): void {
+  const caminho = 'TREINO / ' + peca.toUpperCase()
+  const materiais = [original, ...materiaisDoProcesso(processo).filter((m) => m !== original)]
+  menuOficina(app, titulo, caminho + ' / ESCOLHA A CHAPA', materiais.map((m) => ({
+    nome: MATERIAIS[m].nomeCurto.toUpperCase() + (m === original ? ' (DA PEÇA)' : ''),
+    descricao: resumoMaterial(m).replace(/ Chapas de .*$/, '') + ' ' + MATERIAIS[m].ficha.pontos.join(' '),
+    abrir: () => seguir(m, `${caminho} / ${MATERIAIS[m].nomeCurto.toUpperCase()}`),
+  })), { nome: 'VOLTAR', descricao: 'Escolher outra peça.', abrir: voltar })
 }
 
 function escolherMissaoTreino(app: App): void {
@@ -100,10 +118,11 @@ function bancadaTreino(app: App, s: SessaoTreino): void {
       treino: true,
       inicial: s.inicial,
       escolherJunta: s.livre,
+      escolherMaterial: s.livre,
       destaque: s.exercicio ? h('div', { class: 'faixa-regra' }, h('strong', {}, s.exercicio.titulo), h('button', { type: 'button', on: { click: () => abrirPainel(s.exercicio!.titulo, roteiro(s.exercicio!)) } }, 'Consultar roteiro')) : null,
       aoIniciar: (config) => {
-        // No treino livre a junta vem da bancada.
-        const m = s.livre ? comJunta(PECA_PADRAO, config.contexto.junta ?? 'topo') : s.m
+        // No treino livre a chapa (material e espessura) e a junta vêm da bancada (H104).
+        const m = s.livre ? pecaLivre(config.contexto) : s.m
         const atual: SessaoTreino = { ...s, m, inicial: config }
         app.ir(
           telaExecucao({
@@ -125,7 +144,7 @@ function bancadaTreino(app: App, s: SessaoTreino): void {
     })
     anexar(
       app.raiz,
-      s.livre ? titulo('Treino livre', `Peça de teste de aço carbono · modo ${NOME_DIFICULDADE[s.d]} · escolha o tipo de junta · nada é registrado`) : titulo(`Treino: ${s.m.titulo}`, `${NOME_DIFICULDADE[s.d]} · nada é registrado`),
+      s.livre ? titulo('Treino livre', `Peça de teste · modo ${NOME_DIFICULDADE[s.d]} · escolha a chapa e o tipo de junta · nada é registrado`) : titulo(`Treino: ${s.m.titulo}`, `${NOME_DIFICULDADE[s.d]} · nada é registrado`),
       prep.elemento,
     )
     return prep.destruir
