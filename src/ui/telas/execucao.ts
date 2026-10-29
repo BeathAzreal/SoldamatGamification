@@ -78,7 +78,7 @@ export function telaExecucao(op: OpcoesExecucao): Tela {
     vista.geometria = geometriaDa('reta')
     const escamas = new Escamas()
     const particulas = new Particulas()
-    const giro = montarGiro({ inicial: op.contexto.posicaoInicial, fixa: op.contexto.posicaoFixa, familia: INFO_JUNTA[juntaDe(op.contexto)].familia })
+    const giro = montarGiro({ inicial: op.contexto.posicaoInicial, fixa: op.contexto.posicaoFixa, familia: INFO_JUNTA[juntaDe(op.contexto)].familia, tubo: !!op.contexto.tubo })
 
     const canvas = h('canvas', { class: 'tela-solda', 'aria-label': `Vista de cima das chapas. ${INSTRUCOES[op.dispositivo]}` })
     const area = h('div', { class: 'area-peca' }, canvas)

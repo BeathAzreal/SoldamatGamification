@@ -69,3 +69,38 @@ describe('H103: o efeito da gravidade aparece onde o tubo está', () => {
     expect(Math.max(...a.rolos)).toBeLessThan(0.2)
   })
 })
+
+describe('H103: desenho do tubo (curvaTubo.ts)', async () => {
+  const THREE = await import('three')
+  const { acertarTubo, curvarPonto, desdobrarPonto, poseNoTubo } = await import('../src/render/curvaTubo')
+  const c = { raio: D / 2, giro: 0.4 }
+  it('curvar e desdobrar voltam ao mesmo ponto (x na volta, altura e lado)', () => {
+    for (const [x, y, z] of [[0, 0, 0], [30, 1.5, -12], [-70, -2, 40], [74, 3, 5]]) {
+      const q = curvarPonto(c, x, y, z)
+      const p = desdobrarPonto(c, q.x, q.y, q.z)
+      expect(p.x).toBeCloseTo(x, 6)
+      expect(p.y).toBeCloseTo(y, 6)
+      expect(p.z).toBeCloseTo(z, 6)
+    }
+  })
+  it('a volta inteira tem a circunferência da junta (150 mm)', () => {
+    expect(2 * Math.PI * c.raio).toBeCloseTo(PECA.comprimentoMm, 6)
+  })
+  it('um raio de cima acerta o alto do tubo, e o alto é o ponto x = −giro·R', () => {
+    const q = acertarTubo(c, new THREE.Vector3(0, 300, 7), new THREE.Vector3(0, -1, 0))!
+    expect(q.y).toBeCloseTo(0, 6)
+    const p = desdobrarPonto(c, q.x, q.y, q.z)
+    expect(p.x).toBeCloseTo(-c.giro * c.raio, 6)
+    expect(p.z).toBeCloseTo(7, 6)
+    expect(acertarTubo(c, new THREE.Vector3(100, 300, 0), new THREE.Vector3(0, -1, 0))).toBeNull()
+  })
+  it('a pose rígida leva o ponto (x, 0, z) ao ponto curvado e o "para cima" à normal do tubo', () => {
+    const m = poseNoTubo(c, 20, 3)
+    const p = new THREE.Vector3(20, 0, 3).applyMatrix4(m)
+    const q = curvarPonto(c, 20, 0, 3)
+    expect(p.distanceTo(q)).toBeLessThan(1e-9)
+    const cima = new THREE.Vector3(20, 1, 3).applyMatrix4(m).sub(p)
+    const normal = curvarPonto(c, 20, 1, 3).sub(q)
+    expect(cima.distanceTo(normal)).toBeLessThan(1e-9)
+  })
+})
