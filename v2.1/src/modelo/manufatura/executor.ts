@@ -233,6 +233,7 @@ export class Controlador {
     this.termico.avancar(PASSO_S, potencia, this.alturaParedeMm)
     if (this.atividade.tipo === 'espera') this.avancarEspera(this.atividade)
     else this.avancarMovimento(this.atividade)
+    if (this.modo === 'fabricar') this.deposito.escoar(PASSO_S, this.tempo)
   }
 
   private alimentacaoAtual(): number {

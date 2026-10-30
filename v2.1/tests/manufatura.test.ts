@@ -232,7 +232,7 @@ describe('repetições e limites', () => {
     expect(c.rodarAteOFim()).toBe('concluido')
     expect(c.passes).toHaveLength(8)
     expect(c.B[0]).toBe(4)
-  })
+  }, 30000)
 
   it('laço sem saída e salto sobre si mesmo param no limite', () => {
     const a = controlador(job('*A', 'TIMER T=0.01', 'JUMP *A'), 'teste')

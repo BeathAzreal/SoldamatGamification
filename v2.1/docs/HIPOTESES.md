@@ -1178,3 +1178,7 @@ Cada cordão solto possui aporte e picos de fusão próprios. O calor de um dep�
 - **Testes:** `tests/manufatura.test.ts`.
 - Os números são do jogo, calibrados para as tendências. **Não** são da tese da UFPE (o PDF não pôde ser aberto), nem do fabricante, nem medição.
 
+
+### Complemento H106 — escoamento local da poça na manufatura
+
+A parcela nova depositada pode migrar para vizinhos mais baixos durante a janela de solidificação de 1,5 s. O interpasse influencia a mobilidade, sem representar a temperatura local de fusão. A etapa roda no passo fixo, conserva a integral de alturas e o arame registrado, respeita o metal já solidificado e deixa a forma final permanente ao esfriar. Modelo de altura, sem gotas destacadas nem material pendurado. Limites e hipóteses em `docs/MANUFATURA-ADITIVA.md`.

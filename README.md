@@ -101,7 +101,7 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
-- [`v2.1/`](v2.1/) ← [`alpha-v2.1`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v2.1) (`claude/v2.1`, feita a partir da `alpha-v2.0`; PR #47). **Versão de teste, não estável.**
+- [`v2.1/`](v2.1/) ← [`alpha-v2.1`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v2.1) (`claude/v2.1` e `gpt/v2.1`, a partir da `alpha-v2.0`; PRs #47, #49 e #50). **Versão de teste, não estável.**
 - [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32, #36, #37, #39, #40, #42 e #43)
 - [`v1.9/`](v1.9/) ← [`alpha-v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.9) (`claude/v1.9`, com a v1.8 junto)
 - [`v1.8/`](v1.8/) ← [`claude/v1.8`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v1.8) (feita a partir da `alpha-v1.7`; ainda não há `alpha-v1.8`)
@@ -125,6 +125,7 @@ Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
   - célula 3D com robô ilustrativo;
   - parede multicamadas com efeito do incremento programado, da distância da tocha e do interpasse;
   - inspeção com nota e atividade guiada.
+  - cordões com relevo 3D por camada e escoamento da poça para os vizinhos mais baixos, que conserva o volume (#49, GPT).
 - Versão visível 2.1. Protocolo de rede, convites e endereço online iguais aos da v2.0.
 
 ## O que mudou na v2.0?

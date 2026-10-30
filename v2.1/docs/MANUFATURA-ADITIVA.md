@@ -210,3 +210,11 @@ Coleção nova `manufatura`. Guarda o programa, os pontos, as condições, a cé
 - o determinismo em 60, 23 e 2 quadros por segundo;
 - a nota: o programa inicial reprova, o corrigido aprova, incremento alto ou baixo, humping, sem espera e mesmo sentido contra alternado;
 - a persistência: ida e volta, campo estragado e dados antigos.
+
+## Acabamento visual das camadas
+
+A parede recebe faixas de deposição, sulcos arredondados e pequenas variações determinísticas de tom e rugosidade. O acabamento é calculado apenas na renderização: não muda o mapa de alturas, volume, colisões, temperatura ou pontuação. Como o mapa não guarda interfaces enterradas, as faixas aproximam a altura relativa de cada coluna e sua contagem de passes; não representam uma reconstrução metalúrgica das interfaces reais. O relevo das camadas é geométrico: as laterais são subdivididas em faixas de até 0,3 mm nas paredes usuais e recebem saliências arredondadas de aproximadamente 0,2–0,6 mm, com variação determinística por passe e posição. Os sulcos fecham entre passes e o relevo some no pé e no topo plano. Há ainda acabamento óptico fino. As interfaces continuam aproximadas; esse detalhe de representação não altera as medidas, colisões ou a quantidade de material calculadas pelo modelo.
+
+## Redistribuição local da poça pelo calor
+
+Complemento H106-c/d: durante os 1,5 s da janela de poça já usada pelo modelo, somente a parcela nova de metal pode ceder para células vizinhas mais baixas. A redistribuição conserva a integral de alturas do mapa (e não altera o arame consumido); depois da solidificação o depósito permanece na forma atingida. O cálculo roda no passo fixo do executor, também durante esperas, e congela com pausa/parada. A maior mobilidade é associada ao interpasse acima de 200 °C e cresce até o regime de colapso já existente (650 °C). Esses limites são didáticos, NÃO temperaturas de fusão do metal: o arco funde a poça local, enquanto o nó térmico representa o interpasse. Há pequenas diferenças determinísticas por posição e passe para representar retenção superficial; não é CFD. O mapa de alturas continua sem representar gotas destacadas ou material suspenso. O alargamento do cordão já existente é preservado; esta etapa redistribui material, sem somar volume. A forma resultante passa a ser lida pelas medidas e pela avaliação.
