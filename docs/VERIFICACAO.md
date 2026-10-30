@@ -362,3 +362,8 @@ Validação final: TypeScript, 305 testes em 24 arquivos e build de produção a
   - Eletrodo: "Unir duas chapas" em galvanizado: menu Escolha a chapa, bancada com a chapa clara e corrente sugerida pela chapa.
   - TIG: "Filete em T" em cobre (210–295 A) e alumínio (135–190 A): título e escala da fonte seguem a chapa.
 - Bancada do MIG/MAG compacta (v2.0, depois do #39): chapa, espessura e junta em listas numa linha, ficha no botão Ficha e a dica de abrir o arco dentro da área de teste. No navegador a 1366 × 768, área de teste de 878 × 492 px no treino livre (era 205 px de altura com os chips e a ficha à vista); a 1600 × 1000, 718 px de altura. Caneta simulada (eventos `pen`) com o dispositivo em Mouse: a tocha aparece e solda (correção do #39). `npx vitest run` com 580 testes passando.
+- H105 (brasagem): `npx vitest run` com 595 testes passando (`tests/brasagem.test.ts`, 15 testes). Navegador:
+  - Treino → BRASAGEM → peça → chapa → modo abre a bancada com o maçarico, a chama (dardo e envoltório), a vareta da liga e o painel Preparo / Maçarico / Missão.
+  - Chama sobre a peça: brilho de calor e mancha da chama; o fluxo passa de pasta branca a pó (100 °C); sem fluxo, o cobre escurece de óxido em volta da junta.
+  - Com o brasador simulado rodando na página: filete da liga visível na borda; no resultado, "Ver a folga por dentro" mostra onde a liga molhou, e "Defeitos" aponta a causa (sobreposição fria, liga superaquecida).
+  - Um robô dirigindo o mouse no navegador sem placa de vídeo (~2 quadros por segundo) não consegue controlar a chama a tempo; a técnica foi validada nos testes, no modelo.
