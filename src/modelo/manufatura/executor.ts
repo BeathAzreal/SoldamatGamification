@@ -24,6 +24,8 @@ export const VJ_EQUIVALENTE_MM_S = 1000
 export const ROTACAO_GRAUS_S = 60
 /** Tempo com o robô parado enquanto o arco abre. */
 export const IGNICAO_S = 0.3
+/** Na abertura o arame entra devagar (partida suave): fração da alimentação do ASF. */
+export const PARTIDA_SUAVE = 0.5
 /** Raio do bocal da tocha, para a colisão. */
 export const BOCAL_RAIO_MM = 9
 /** Mesa sob o substrato. */
@@ -241,6 +243,7 @@ export class Controlador {
       const aef = this.aefPendente
       if (aef) return this.condicoes.fim[aef - 1].alimentacaoMMin
     }
+    if (this.atividade?.tipo === 'espera' && this.atividade.motivo === 'ignicao') return PARTIDA_SUAVE * this.condicoes.inicio[this.asf - 1].alimentacaoMMin
     return this.condicoes.inicio[this.asf - 1].alimentacaoMMin
   }
 
@@ -300,7 +303,7 @@ export class Controlador {
     if (!this.deposito.dentro(p.x, p.y)) return this.alarme('O arco saiu de cima do substrato e apagou (sem peça embaixo, não há retorno de corrente).')
     const alimentacao = this.alimentacaoAtual()
     const volume = vazaoDeposito(alimentacao) * PASSO_S
-    const r = this.deposito.depositar({ x: p.x, y: p.y, z: p.z, volume, v, s: this.sArco, tArco: this.tArco, temperaturaC: this.termico.temperaturaC, movj, tempo: this.tempo, dt: PASSO_S, ux: this.direcao.x, uy: this.direcao.y })
+    const r = this.deposito.depositar({ x: p.x, y: p.y, z: p.z, volume, v, s: this.sArco, tArco: this.tArco, temperaturaC: this.termico.temperaturaC, movj, tempo: this.tempo, dt: PASSO_S, ux: this.direcao.x, uy: this.direcao.y, larguraParadoMm: this.ultimaLarguraMm })
     this.tArco += PASSO_S
     this.arameG += massaArameG(alimentacao, PASSO_S)
     const pot = sinergia(alimentacao, this.condicoes.inicio[this.asf - 1].correcaoArco).potenciaW
