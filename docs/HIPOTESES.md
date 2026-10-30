@@ -1147,3 +1147,34 @@ Cada cordão solto possui aporte e picos de fusão próprios. O calor de um dep�
   - o latão pede o lado de dentro quente;
   - o resultado não depende da taxa de quadros.
 - Potências, velocidades e vidas do fluxo são números do jogo; temperaturas de ligas, fluxos e metais são de catálogo.
+
+### H106 — manufatura aditiva por deposição a arco, programada em INFORM (v2.1, Claude, experimental)
+
+- **O modo:** programa de robô (subconjunto do INFORM III, controlador de referência DX200) que fabrica uma parede de várias camadas. Detalhes, fontes, limites e o que não está implementado em [`MANUFATURA-ADITIVA.md`](MANUFATURA-ADITIVA.md). Não é réplica do controlador, da fonte nem do robô.
+- **H106-a, cinemática:** sem o modelo do MA1440. MOVL em linha reta na velocidade V. MOVJ aproximado:
+  - arco ilustrativo fora da reta, de 8 % da distância para o lado e 6 % para cima;
+  - tempo por VJ × 1000 mm/s equivalentes;
+  - orientação sozinha a 60°/s.
+
+  O alcance de 1440 mm é o único limite do robô.
+- **H106-b, condições:** os arquivos ASF/AEF (controlador) levam a alimentação e a correção do arco. A linha sinérgica da fonte é didática: I = 30 + 25·alim (A) e U = 16 + 1,4·alim + 0,25·correção (V).
+- **H106-c, deposição:**
+  - Q = 0,92·π·1,2²/4·alim e seção A = Q/V (robô parado = 2 mm/s).
+  - Parábola A = (2/3)·w·h; w/h = 2,6 na peça fria, +0,32 por 100 °C, −3 %/mm de tocha alta. Início do arco (0,8 s) mais estreito; acima de 650 °C, escorre (×1,8).
+  - O cordão assenta no topo solidificado sob o eixo.
+  - Cratera de 0,3·A·1,5w no fim, que o AEF enche.
+  - A < 4 mm² ou V > 14 mm/s partem o cordão.
+- **H106-d, calor:** um nó, dT/dt = 5 K/(s·kW)·P − (T − 25)/τ, com τ = 25 s + 3 s/mm de parede. Passo exato.
+- **H106-e, distância da tocha:**
+  - TCP na ponta do arame;
+  - folga acima de 6 mm: arco instável; acima de 12 mm: perda de arco (alarme);
+  - abaixo de −3 mm: o arame mergulha; bocal abaixo do topo: colisão (alarme).
+- **Executor:** passo fixo de 10 ms (determinístico, independe da taxa de quadros e do relógio da tela). Limites de 400 linhas, 20 000 instruções, 2 000 saltos para trás e 60 min simulados.
+- **Calibração:** com 5 m/min e V = 8 mm/s, a camada soma cerca de 2,2 mm, com 7 a 8 mm de largura.
+  - O programa inicial (incremento de 2,8 mm, espera de 20 s) termina com o TCP cerca de 6 mm acima do topo e interpasse perto de 380 °C: reprovado.
+  - Com 2,2 mm e 60 s: TCP perto do topo, interpasse de cerca de 160 °C, aprovado.
+  - Sem espera, passa de 650 °C e escorre.
+  - No mesmo sentido, o topo inclina mais que alternando.
+- **Testes:** `tests/manufatura.test.ts`.
+- Os números são do jogo, calibrados para as tendências. **Não** são da tese da UFPE (o PDF não pôde ser aberto), nem do fabricante, nem medição.
+

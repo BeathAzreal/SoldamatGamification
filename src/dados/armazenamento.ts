@@ -27,8 +27,9 @@ export type Colecao =
   | 'recordes'
   | 'recordesArcade'
   | 'preferencias'
+  | 'manufatura'
 
-export const COLECOES: Colecao[] = ['participantes', 'tentativas', 'entregas', 'torneios', 'avaliacoes', 'recordes', 'recordesArcade', 'preferencias']
+export const COLECOES: Colecao[] = ['participantes', 'tentativas', 'entregas', 'torneios', 'avaliacoes', 'recordes', 'recordesArcade', 'preferencias', 'manufatura']
 
 interface Envelope {
   esquema: number

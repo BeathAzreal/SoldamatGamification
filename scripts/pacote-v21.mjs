@@ -4,10 +4,10 @@ import {spawnSync} from 'node:child_process'
 import {gravarAtalhoOnline} from './atalho-online.mjs'
 import {OFICINA_ONLINE} from '../src/rede/convite.ts'
 
-const projeto=process.cwd(),raiz=resolve('pacote-v20'),saida=join(raiz,'Oficina-de-Soldagem-v2.0')
-const portatil=resolve('portatil/Oficina de Soldagem v2.0')
-const rede=resolve('pacote-rede/Oficina-de-Soldagem-v2.0-Rede')
-const zip=resolve('Oficina-de-Soldagem-Alpha-v2.0.zip')
+const projeto=process.cwd(),raiz=resolve('pacote-v21'),saida=join(raiz,'Oficina-de-Soldagem-v2.1')
+const portatil=resolve('portatil/Oficina de Soldagem v2.1')
+const rede=resolve('pacote-rede/Oficina-de-Soldagem-v2.1-Rede')
+const zip=resolve('Oficina-de-Soldagem-Alpha-v2.1.zip')
 if(process.platform!=='win32')throw Error('A geração deste ZIP Windows x64 usa a biblioteca ZIP do Windows.')
 if(dirname(saida)!==raiz||!saida.startsWith(resolve(projeto)+sep))throw Error('Destino do pacote fora do projeto.')
 for(const arquivo of[join(portatil,'Oficina de Soldagem.html'),join(rede,'runtime/node.exe'),join(rede,'servidor/index.js')]){
@@ -19,7 +19,7 @@ cpSync(portatil,saida,{recursive:true})
 cpSync(rede,join(saida,'servidor-local'),{recursive:true})
 gravarAtalhoOnline(saida)
 writeFileSync(join(saida,'NOTAS DA VERSAO.txt'),readFileSync(join(portatil,'LEIA-ME.txt')))
-writeFileSync(join(saida,'LEIA-ME.txt'),`OFICINA DE SOLDAGEM — ALPHA v2.0
+writeFileSync(join(saida,'LEIA-ME.txt'),`OFICINA DE SOLDAGEM — ALPHA v2.1
 
 Extraia a pasta inteira antes de abrir qualquer arquivo.
 

@@ -1,8 +1,7 @@
-# Branches da Alpha v1.4
+# Branches da Alpha v2.1 (versão de teste)
 
-- `gpt/v1.4`: interface e trabalho do GPT.
-- `alpha-v1.4`: integração por pull request aprovado pelo dono.
-- `claude/v1.4`: reservada ao trabalho futuro do Claude, quando criada.
+- `claude/v2.1`: trabalho do Claude (Manufatura Aditiva, experimental).
+- `alpha-v2.1`: integração por pull request aprovado pelo dono.
 
-A Alpha v1.3 aprovada permanece preservada em `alpha-v1.3`.
+A v2.1 não é estável: serve para testar funções novas. A Alpha v2.0 estável permanece em `alpha-v2.0`.
 Leia `AGENTS.md` antes de alterar arquivos.

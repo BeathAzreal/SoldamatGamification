@@ -3,6 +3,7 @@ import type { App } from '../app'
 import { anexar, h } from '../dom'
 import { telaCentralArcade } from './centralArcade'
 import { telaConfiguracoes } from './configuracoes'
+import { telaManufatura } from './manufatura'
 import { telaRecordes } from './recordes'
 import { painelTorneio } from './torneio'
 import { telaTreino } from './treino'
@@ -11,6 +12,7 @@ import '../../menu-grafico.css'
 const MODOS = [
   { titulo: 'ARCADE', descricao: 'História, desafios e versus local.', abrir: telaCentralArcade },
   { titulo: 'TREINO', descricao: 'Sua bancada. Seu ritmo. Experimente e compare.', abrir: telaTreino },
+  { titulo: 'MANUFATURA ADITIVA', descricao: 'Experimental: programe o robô em INFORM e fabrique uma parede camada por camada.', abrir: telaManufatura },
   { titulo: 'RECORDES', descricao: 'Reveja as marcas que você deixou na oficina.', abrir: (app: App) => telaRecordes(app) },
   { titulo: 'CONFIGURAÇÕES', descricao: 'Som, dispositivo, controles e qualidade visual.', abrir: telaConfiguracoes },
 ]
@@ -61,7 +63,7 @@ export function telaMenu(app: App): void {
       if (e.ctrlKey || e.altKey || e.metaKey || document.querySelector('[role="dialog"]')) return
       if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
         e.preventDefault(); selecionar(e.key === 'Home' ? 0 : e.key === 'End' ? MODOS.length - 1 : selecionado + (e.key === 'ArrowDown' ? 1 : -1), true)
-      } else if (/^[1-4]$/.test(e.key)) { e.preventDefault(); abrir(Number(e.key) - 1) }
+      } else if (/^[1-5]$/.test(e.key)) { e.preventDefault(); abrir(Number(e.key) - 1) }
       else if (e.key === 'Enter' && e.target === app.raiz.querySelector('.tela-titulo')) { e.preventDefault(); abrir(selecionado) }
     }
     window.addEventListener('keydown', teclas)
@@ -80,7 +82,7 @@ export function telaMenu(app: App): void {
     const vez = torneio ? vezAtual(app.baseDoTorneio(torneio.id)) : null
     anexar(app.raiz,
       h('header', { class: 'grafico-titulo' }, h('h2', { class: 'tela-titulo', tabindex: '-1' }, 'OFICINA DE', h('br'), h('strong', {}, 'SOLDAGEM'))),
-      h('span', { class: 'grafico-versao' }, 'ALPHA / 2.0'),
+      h('span', { class: 'grafico-versao' }, 'ALPHA / 2.1'),
       h('nav', { class: 'grafico-lista', 'aria-label': 'Escolher modo de jogo' }, ...botoes),
       h('div', { class: 'grafico-legenda' }, descricao,
         torneio ? h('button', { class: 'grafico-retomar', type: 'button', on: { click: () => painelTorneio(app, torneio.id) } }, `↗ Retomar ${torneio.config.nome}${vez ? ' · rodada em andamento' : ''}`) : null),
