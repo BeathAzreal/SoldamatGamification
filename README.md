@@ -1,8 +1,12 @@
-# Oficina de Soldagem — Alpha v2.0
+# Oficina de Soldagem — Alpha v2.1 (versão de teste)
+
+> ⚠️ **A v2.1 não é estável e serve apenas para testar funções novas.** Para jogar, use a [Alpha v2.0](Oficina-de-Soldagem-Alpha-v2.0.zip).
+
+**Novo na v2.1, experimental:** **MANUFATURA ADITIVA**, uma programação robotizada. O jogador escreve um job num subconjunto do INFORM (controlador Yaskawa, referência DX200), ensina as posições, valida, roda sem deposição e fabrica uma parede de várias camadas por deposição a arco. Depois inspeciona e corrige. O simulador não é réplica do controlador, da fonte nem do robô. Detalhes, fontes e limites em [docs/MANUFATURA-ADITIVA.md](docs/MANUFATURA-ADITIVA.md). Todo o resto é a v2.0: MIG/MAG, TIG, eletrodo, brasagem, História, Desafios, Versus e o x1 online, com o mesmo protocolo de rede.
 
 ## Baixar e jogar
 
-**[Baixar o pacote completo da v2.0](Oficina-de-Soldagem-Alpha-v2.0.zip)**
+**[Baixar o pacote completo da v2.1 (teste)](Oficina-de-Soldagem-Alpha-v2.1.zip)**
 
 Extraia o ZIP inteiro. A pasta contém três formas de acesso:
 
@@ -34,7 +38,7 @@ Recordes e preferências ficam no navegador, não dentro da pasta. Antes de troc
 
 ## Código-fonte e geração do pacote
 
-A versão integrada fica em **alpha-v2.0**; o trabalho do GPT fica em **gpt/v2.0**, e o do Claude em **claude/v2.0**. As versões anteriores permanecem em suas branches.
+A versão de teste integrada fica em **alpha-v2.1**; o trabalho do Claude na v2.1 fica em **claude/v2.1**. A Alpha v2.0 estável continua em **alpha-v2.0**, e as versões anteriores permanecem em suas branches.
 
 ```bash
 npm install
@@ -46,8 +50,8 @@ npm run pacote:v2
 
 A geração do ZIP usa a biblioteca ZIP do Windows e o Node.js oficial definido em `licencas/node-runtime.json`. Se o executável em uso não corresponder ao hash desse manifesto, defina `NODE_PORTATIL` com o caminho do `node.exe` oficial correspondente. O gerador confere o SHA-256 antes de incluir o runtime.
 
-`npm run pacote:v2` gera **Oficina-de-Soldagem-Alpha-v2.0.zip**, incluindo o portátil, o atalho HTML online e o servidor local de reserva. A pasta intermediária fica em `pacote-v20/` e não entra no Git. O HTML portátil também pode ser gerado separadamente com `npm run portatil`.
+`npm run pacote:v2` gera **Oficina-de-Soldagem-Alpha-v2.1.zip**, incluindo o portátil, o atalho HTML online e o servidor local de reserva. A pasta intermediária fica em `pacote-v21/` e não entra no Git. O HTML portátil também pode ser gerado separadamente com `npm run portatil`.
 
-Documentação técnica: [rede](docs/REDE-V17.md), [hipóteses](docs/HIPOTESES.md), [pontuação](docs/PONTUACAO.md), [TIG](docs/TIG.md) e [verificação](docs/VERIFICACAO.md).
+Documentação técnica: [manufatura aditiva](docs/MANUFATURA-ADITIVA.md), [rede](docs/REDE-V17.md), [hipóteses](docs/HIPOTESES.md), [pontuação](docs/PONTUACAO.md), [TIG](docs/TIG.md) e [verificação](docs/VERIFICACAO.md).
 
 Modelo didático qualitativo: os números do jogo não qualificam procedimentos nem servem como receita de soldagem.
