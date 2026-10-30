@@ -31,9 +31,9 @@ export function montarConfiguracoes(app: App, duranteJogo = false, secoes?: stri
       somArco.ligado = som.checked
       if (!som.checked) somArco.calar()
       app.salvar('preferencias')
-      const topo = document.getElementById('botao-som')!
-      topo.textContent = som.checked ? '🔊 Som' : '🔇 Som'
-      topo.setAttribute('aria-pressed', String(som.checked))
+      const topo = document.getElementById('botao-som')
+      if (topo) topo.textContent = som.checked ? '🔊 Som' : '🔇 Som'
+      topo?.setAttribute('aria-pressed', String(som.checked))
     })
 
     const restaurar = async () => {
@@ -89,14 +89,14 @@ export function montarConfiguracoes(app: App, duranteJogo = false, secoes?: stri
       {},
       h(
         'div',
-        { class: 'mais-opcoes-caixa grade-cartoes' },
+        { class: 'config-opcoes grade-cartoes' },
         cartaoVisual,
         h('section', { class: 'cartao' }, h('h3', {}, 'Calibração'), h('p', {}, 'O dispositivo escolhido aqui vira o padrão das partidas. Ajuste a sensibilidade e os botões abaixo; pratique depois em Treino.'), h('button', { type: 'button', class: 'botao-secundario', on: { click: restaurar } }, 'Restaurar calibração padrão')),
         h(
           'section',
           { class: 'cartao' },
           h('h3', {}, 'Dados salvos'),
-          h('p', {}, `Ficam só neste navegador (chaves "${PREFIXO}…"), separados em participantes, tentativas, entregas, torneios, avaliações, recordes e preferências. Nada é enviado pela internet.`),
+          h('p', {}, `Ficam só neste navegador (chaves "${PREFIXO}…"), separados em participantes, tentativas, entregas, torneios, avaliações, recordes e preferências. As partidas online enviam os dados necessários à sala e à avaliação no servidor.`),
           h('p', { class: 'dica' }, 'Limpar os dados do site no navegador apaga tudo.'),
           h('button', { type: 'button', class: 'perigo', on: { click: apagarTudo } }, 'Apagar todos os dados'),
         ),
@@ -114,8 +114,8 @@ export function montarConfiguracoes(app: App, duranteJogo = false, secoes?: stri
         h('section', { class: 'cartao' }, h('h3', {}, 'Eletrodo revestido'), h('p', {}, 'Teclas de altura, orientação da vareta, câmera e ferramentas.'), h('button', { type: 'button', class: 'botao-secundario', on: { click: () => { void configurarControles15(carregarControles15()) } } }, 'Configurar controles do eletrodo')),
         outros)
     if (duranteJogo) {
-      caixa.querySelector('.mais-opcoes-caixa')?.children[1]?.remove()
-      caixa.querySelector('.mais-opcoes-caixa')?.lastElementChild?.remove()
+      caixa.querySelector('.config-opcoes')?.children[1]?.remove()
+      caixa.querySelector('.config-opcoes')?.lastElementChild?.remove()
       const seletor = caixa.querySelector<HTMLSelectElement>('#pref-dispositivo')
       if (seletor) { seletor.disabled = true; seletor.title = 'Troque o dispositivo antes de iniciar outra tentativa.' }
     }

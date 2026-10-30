@@ -41,7 +41,7 @@ export class SessaoRede {
  }}
  private trocar(tipo:string,tela:Tela){
   this.vista=tipo;this.atualizarTela=null;this.app.guardaSaida=null
-  void this.app.ir(app=>{const limpar=tela(app);this.guardarSaida();return()=>{this.atualizarTela=null;limpar?.()}},'Versus · X1 em rede')
+  void this.app.ir(app=>{const limpar=tela(app);this.guardarSaida();return()=>{this.atualizarTela=null;limpar?.()}},'Versus · Duelo online')
  }
  private mostrar(s:SalaRede){
   if(this.saiu)return
@@ -78,7 +78,7 @@ export class SessaoRede {
    h('div',{class:'rede-convite'},h('label',{},'CONVIDE A OUTRA PESSOA',convite),copiar),avisoCopia,
    h('p',{class:'rede-endereco'},this.credencial.transporte==='consulta'?'A outra pessoa abre o convite no navegador e informa o apelido. Vocês podem estar em redes diferentes.':'Compartilhe o convite com outro dispositivo da mesma rede local.'),
    jogadores,contagem,status,pronto,botaoRede('Sair da sala',()=>void this.sair()))
-  this.trocar('sala',paginaRede('SALA DO X1','MIG/MAG / DOIS COMPUTADORES',caixa))
+  this.trocar('sala',paginaRede('SALA DO DUELO','MIG/MAG / DOIS COMPUTADORES',caixa))
   const atualizar=()=>{
    const s=this.ultima;if(!s)return
    const eu=s.jogadores.find(j=>j.id===this.credencial.jogadorId),c=configuracaoRede(s.config)
@@ -94,7 +94,7 @@ export class SessaoRede {
   const texto=h('p',{role:'status'}),placar=h('p',{class:'rede-nota'}),acoes=h('div',{class:'rede-acoes'})
   const cabecalho=h('h3',{},titulo)
   const caixa=h('section',{class:'rede-caixa'},cabecalho,texto,placar,acoes)
-  this.trocar(encerrada?'encerrada':'aguardando',paginaRede('X1 EM REDE',`SALA ${this.credencial.codigo}`,caixa))
+  this.trocar(encerrada?'encerrada':'aguardando',paginaRede('DUELO ONLINE',`SALA ${this.credencial.codigo}`,caixa))
   const atualizar=()=>{
    const s=this.ultima,eu=s?.jogadores.find(j=>j.id===this.credencial.jogadorId),outro=s?.jogadores.find(j=>j.id!==this.credencial.jogadorId)
    if(eu?.entrega)cabecalho.textContent='Solda avaliada pelo servidor'
@@ -106,13 +106,13 @@ export class SessaoRede {
  private executar(s:SalaRede){
   const c=configuracaoRede(s.config)
   const tela=telaExecucao({missao:c.missao,dificuldade:s.config.dificuldade,contexto:c.contexto,ajustes:c.ajustes,dispositivo:this.app.preferencias.dispositivo,preferencias:this.app.preferencias,oficial:false,
-   rotulo:`X1 em rede · Sala ${s.codigo}`,aoSair:()=>void this.sair(),aoConcluir:({eventos})=>{
+   rotulo:`Duelo online · Sala ${s.codigo}`,aoSair:()=>void this.sair(),aoConcluir:({eventos})=>{
     if(this.envioPendente)return
     this.envioPendente={tipo:'entregar',rodada:s.rodada,eventos};this.telaEspera('Enviando a solda para avaliação');void this.enviarPendente()
    }})
   this.trocar('execucao',app=>{
    const limpar=tela(app)
-   const etiqueta=app.raiz.querySelector('.etiqueta');if(etiqueta)etiqueta.textContent='X1 EM REDE — VALIDAÇÃO NO SERVIDOR'
+   const etiqueta=app.raiz.querySelector('.etiqueta');if(etiqueta)etiqueta.textContent='DUELO ONLINE — VALIDAÇÃO NO SERVIDOR'
    const aviso=h('div',{class:'rede-hud',role:'status'})
    app.raiz.querySelector('.area-peca')?.append(aviso)
    const atualizar=()=>{
@@ -142,7 +142,7 @@ export class SessaoRede {
   }
   const aviso=h('p',{role:'status'}),revanche=botaoRede('Pedir revanche',()=>void this.comando({tipo:'revanche',rodada:s.rodada}),true)
   const caixa=h('section',{class:'rede-caixa rede-caixa-resultado'},h('h3',{},titulo),h('p',{},s.motivo),comparacao,aviso,h('div',{class:'rede-acoes'},revanche,botaoRede('Sair da sala',()=>void this.sair())))
-  this.trocar('resultado',paginaRede('RESULTADO DO X1',`SALA ${s.codigo} / RODADA ${s.rodada}`,caixa))
+  this.trocar('resultado',paginaRede('RESULTADO DO DUELO',`SALA ${s.codigo} / RODADA ${s.rodada}`,caixa))
   const atualizar=()=>{const estado=this.ultima,eu=estado?.jogadores.find(j=>j.id===this.credencial.jogadorId);revanche.disabled=!!eu?.revanche||!this.conexao||!!estado?.jogadores.some(j=>j.estado==='abandonou'||!j.conectado);aviso.textContent=estado?.jogadores.some(j=>j.estado==='abandonou')?'Um jogador saiu. Crie outra sala para disputar novamente.':eu?.revanche?'Aguardando o adversário aceitar a revanche.':!this.conexao?this.mensagem:'A maior nota vence. Notas iguais empatam.'}
   this.atualizarTela=atualizar;atualizar()
  }
@@ -157,7 +157,7 @@ export class SessaoRede {
   this.cliente.fechar();try{sessionStorage.removeItem(CHAVE_SESSAO);sessionStorage.removeItem(CHAVE_SESSAO+'-rodada')}catch{/* sem armazenamento */}
  }
  private async sair(){
-  if(this.ultima&&!['resultado','encerrada','espera'].includes(this.ultima.fase)&&!await confirmar('Abandonar o x1?',this.ultima.fase==='contagem'?'Isso cancela o início da rodada.':'A outra pessoa vencerá por abandono.',{sim:'Abandonar e sair'})){this.guardarSaida();return}
+  if(this.ultima&&!['resultado','encerrada','espera'].includes(this.ultima.fase)&&!await confirmar('Abandonar o duelo?',this.ultima.fase==='contagem'?'Isso cancela o início da rodada.':'A outra pessoa vencerá por abandono.',{sim:'Abandonar e sair'})){this.guardarSaida();return}
   await this.desconectar();this.app.guardaSaida=null;this.iniciarNovamente()
  }
 }

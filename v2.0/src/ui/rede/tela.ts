@@ -9,7 +9,7 @@ import { CHAVE_SESSAO,SessaoRede,sairParaArcade } from './sessao'
 
 export function telaRede(app:App){
  const erro=h('p',{class:'rede-erro',role:'alert'}),nome=h('input',{maxLength:24,placeholder:'Seu apelido',required:true,'aria-label':'Seu apelido'}),codigo=h('input',{maxLength:6,placeholder:'Ex.: ABC234','aria-label':'Código para entrar',autocomplete:'off',on:{input:e=>{const el=e.target as HTMLInputElement;el.value=el.value.toUpperCase().replace(/[^A-Z2-9]/g,'')}}})
- const missao=h('select',{'aria-label':'Missão do x1'},...MISSOES_REDE.map(m=>h('option',{value:m.id},m.titulo))),dificuldade=h('select',{'aria-label':'Dificuldade do x1'},h('option',{value:'aprendiz'},'Aprendiz'),h('option',{value:'profissional'},'Profissional'))
+ const missao=h('select',{'aria-label':'Missão do duelo'},...MISSOES_REDE.map(m=>h('option',{value:m.id},m.titulo))),dificuldade=h('select',{'aria-label':'Dificuldade do duelo'},h('option',{value:'aprendiz'},'Aprendiz'),h('option',{value:'profissional'},'Profissional'))
  const convite=codigoDoConvite(location.href)
  codigo.value=convite
  const verificarAbortar=new AbortController()
@@ -33,15 +33,15 @@ export function telaRede(app:App){
   h('label',{},'SEU APELIDO',nome),
   h('div',{class:'rede-opcoes'},h('label',{},'MISSÃO',missao),h('label',{},'DIFICULDADE',dificuldade)),criar,
   h('div',{class:'rede-entrar'},h('label',{},'CÓDIGO DA SALA',codigo),entrar),erro,abrirOnline,tentar,
-  botaoRede('Como jogar online',()=>void abrirPainel('X1 direto no navegador',h('section',{class:'rede-caixa'},
+  botaoRede('Como jogar online',()=>void abrirPainel('Duelo online no navegador',h('section',{class:'rede-caixa'},
    h('p',{},'Abra a oficina online nos dois dispositivos. Um jogador cria a sala e copia o convite; o outro abre o link e informa seu apelido. Também é possível entrar com o código de seis caracteres.'),
    h('p',{},'Não precisa instalar o jogo, abrir arquivo .bat ou manter um computador como servidor. Cada jogador precisa de internet e de um navegador compatível com o 3D.'),
    h('p',{},'Os dois confirmam prontidão e têm três minutos para entregar. A nota é calculada no servidor. Pausar não para o relógio da partida.'),
    h('p',{},'A disputa online está disponível para MIG/MAG. TIG e eletrodo continuam no treino.'),
    h('a',{href:OFICINA_ONLINE+'/?rede=1'},'Abrir oficina online')))),
   botaoRede('Voltar ao Arcade',()=>sairParaArcade(app)))
- const tela=paginaRede('X1 EM REDE','ARCADE / DOIS COMPUTADORES',caixa)
- void app.ir(a=>{const limpar=tela(a);return()=>{vivo=false;verificarAbortar.abort();limpar?.()}},'Versus · X1 em rede')
+ const tela=paginaRede('DUELO ONLINE','ARCADE / DOIS COMPUTADORES',caixa)
+ void app.ir(a=>{const limpar=tela(a);return()=>{vivo=false;verificarAbortar.abort();limpar?.()}},'Versus · Duelo online')
  atualizar()
  async function verificar(){
   conectado=false;tentar.hidden=true;abrirOnline.hidden=true;erro.textContent='';atualizar()
