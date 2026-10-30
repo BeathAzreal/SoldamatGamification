@@ -818,6 +818,11 @@ export class Palco3D {
     this.cordao3d.visible = false
   }
 
+  /** H105: cores do cordão (da borda à crista), para a liga de brasagem ter a cor dela; vale para o que for desenhado depois. */
+  definirCoresCordao(cores: readonly [string, string, string, string]): void {
+    cores.forEach((c, i) => this.cores[i].set(c))
+  }
+
   /** Altura da crista do cordão em s acima do plano da mira (mm, já com o exagero), para pôr a tocha em cima. */
   alturaEm(s: number): number {
     const c = this.cordaoAtual

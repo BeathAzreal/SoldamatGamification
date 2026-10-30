@@ -19,6 +19,9 @@ import { telaTreinoEletrodo } from './treinoEletrodo'
 import { PECAS_TIG, pecaTigEm } from '../../missoes/pecasTig'
 import { resumoMaterial } from '../componentes/material'
 import { telaTreinoTig } from './treinoTig'
+import { PECAS_BRASAGEM, pecaBrasagemEm } from '../../missoes/pecasBrasagem'
+import { LIGAS } from '../../modelo/brasagem'
+import { telaTreinoBrasagem } from './treinoBrasagem'
 
 /** Treino: navegação por processo e peça, sem ranking ou registro oficial. */
 export function telaTreino(app: App): void {
@@ -26,6 +29,7 @@ export function telaTreino(app: App): void {
     { nome: 'MIG/MAG', descricao: 'Abra a bancada livre. Escolha a chapa, a junta, regule a máquina e pratique.', abrir: () => escolherModo(app, 'MIG/MAG', 'TREINO / BANCADA LIVRE', (d) => treinoLivre(app, d), () => telaTreino(app)) },
     { nome: 'ELETRODO', descricao: 'Escolha a peça e pratique o controle da distância e o consumo da vareta.', abrir: () => escolherPecaEletrodo(app) },
     { nome: 'TIG', descricao: 'Tocha numa mão e vareta na outra: pedal, poça e toques de vareta. Mesa digitalizadora + mouse ou só mouse.', abrir: () => escolherPecaTig(app) },
+    { nome: 'BRASAGEM', descricao: 'Maçarico, fluxo e vareta: aqueça a junta sobreposta e deixe a liga correr para dentro da folga, sem fundir a peça.', abrir: () => escolherPecaBrasagem(app) },
     { nome: 'EXERCÍCIOS', descricao: 'Roteiros técnicos para experimentar, inspecionar e comparar tentativas.', abrir: () => { telaTreino(app); void escolherExercicio(app) } },
     { nome: 'TREINAR MISSÃO', descricao: 'Repita uma encomenda sem limite de tentativas.', abrir: () => escolherMissaoTreino(app) },
   ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
@@ -75,6 +79,15 @@ function escolherChapa(app: App, titulo: string, processo: ProcessoChapa, peca: 
     descricao: resumoMaterial(m).replace(/ Chapas de .*$/, '') + ' ' + MATERIAIS[m].ficha.pontos.join(' '),
     abrir: () => seguir(m, `${caminho} / ${MATERIAIS[m].nomeCurto.toUpperCase()}`),
   })), { nome: 'VOLTAR', descricao: 'Escolher outra peça.', abrir: voltar })
+}
+
+function escolherPecaBrasagem(app: App): void {
+  menuOficina(app, 'BRASAGEM', 'TREINO / ESCOLHA A PEÇA', PECAS_BRASAGEM.map(p => ({
+    nome: p.titulo,
+    descricao: `${p.aplicacao} · ${MATERIAIS[p.material].nomeCurto} ${n1(p.espessuraMm)} mm · ${LIGAS[p.recomendado.liga].nome}.`,
+    abrir: () => escolherChapa(app, 'BRASAGEM', 'brasagem', p.titulo, p.material, () => escolherPecaBrasagem(app), (mat, caminho) =>
+      escolherModo(app, 'BRASAGEM', caminho, (d) => telaTreinoBrasagem(app, pecaBrasagemEm(p, mat), d, () => escolherPecaBrasagem(app)), () => escolherPecaBrasagem(app))),
+  })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo ou exercício.', abrir: () => telaTreino(app) })
 }
 
 function escolherMissaoTreino(app: App): void {

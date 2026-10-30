@@ -6,6 +6,22 @@ import type { aprovacaoEletrodo } from '../../pontuacao/eletrodo'
 
 /** Resultado do TIG: mesmo placar do eletrodo (nota, itens com o mínimo do Difícil e defeitos). */
 export function resultadoTig(r: ResultadoTig, defeitos: DefeitoTig[], modo: string, aprovacao: ReturnType<typeof aprovacaoEletrodo>, op: { nova: () => void; pecas: () => void }) {
+  return resultadoProcesso(r, defeitos, modo, aprovacao, op, {
+    descontos: r.penalidadeFuros || r.penalidadeNiveis ? `Descontos: furos −${r.penalidadeFuros} · passar da chapa −${r.penalidadeNiveis}` : 'Sem descontos adicionais.',
+    detalhe: `Modo ${modo}. Furos: −${r.penalidadeFuros}. Metal pendurado e raiz afundada: −${r.penalidadeNiveis}. Total limitado a 0–1000.`,
+    limites: 'Modelo didático de calor na chapa: não avalia penetração na raiz, cor de oxidação do inox nem porosidade. Não qualifica soldador.',
+  })
+}
+
+/**
+ * H105: o mesmo placar para outro processo (TIG, brasagem): nota, itens com o
+ * mínimo do Difícil, defeitos e, se houver, botões próprios do processo.
+ */
+export function resultadoProcesso(
+  r: { nota: number; itens: readonly { nome: string; pontos: number; maximo: number; explicacao: string }[]; descricao: string },
+  defeitos: readonly DefeitoTig[], modo: string, aprovacao: ReturnType<typeof aprovacaoEletrodo>, op: { nova: () => void; pecas: () => void },
+  textos: { descontos: string; detalhe: string; limites: string; botoes?: HTMLElement[] },
+) {
   const minimo = aprovacao.exigencia, pct = (f: number) => `${Math.round(f * 100)} %`
   const letra = conceito(r.nota, aprovacao.aprovada, 1000)
   const selo = minimo === null
@@ -17,8 +33,8 @@ export function resultadoTig(r: ResultadoTig, defeitos: DefeitoTig[], modo: stri
   const detalhes = () => abrirPainel('Avaliação da tentativa', h('section', { class: 'resultado-smaw' },
     h('p', {}, `Nota automática do jogo, de 0 a 1000. ${r.descricao}.`),
     h('ul', {}, ...r.itens.map((i) => h('li', {}, h('strong', {}, `${i.nome}: ${i.pontos}/${i.maximo}`), h('small', {}, i.explicacao)))),
-    h('p', {}, `Modo ${modo}. Furos: −${r.penalidadeFuros}. Metal pendurado e raiz afundada: −${r.penalidadeNiveis}. Total limitado a 0–1000.`),
-    h('small', {}, 'Modelo didático de calor na chapa: não avalia penetração na raiz, cor de oxidação do inox nem porosidade. Não qualifica soldador.')))
+    h('p', {}, textos.detalhe),
+    h('small', {}, textos.limites)))
   const graves = defeitos.filter((d) => d.grave).length
   const resumo = defeitos.length ? `${defeitos.length} defeito(s)${graves ? `, ${graves} pedindo reparo` : ''}: ${defeitos.map((d) => d.nome).join(', ')}.` : 'Nenhum defeito visível no trecho.'
   const listaDefeitos = () => abrirPainel('Defeitos encontrados', h('section', { class: 'resultado-smaw' },
@@ -38,8 +54,8 @@ export function resultadoTig(r: ResultadoTig, defeitos: DefeitoTig[], modo: stri
       h('div', { class: 'barra-trilho', role: 'meter', 'aria-label': i.nome, 'aria-valuemin': '0', 'aria-valuemax': String(i.maximo), 'aria-valuenow': String(i.pontos) },
         h('div', { class: 'barra-valor', style: `width:${(100 * i.pontos) / i.maximo}%` }),
         minimo !== null ? h('div', { class: 'barra-minimo', title: `Mínimo do Difícil: ${pct(minimo)}`, style: `left:${minimo * 100}%` }) : null)))),
-    h('p', { class: 'p15-descontos' }, r.penalidadeFuros || r.penalidadeNiveis ? `Descontos: furos −${r.penalidadeFuros} · passar da chapa −${r.penalidadeNiveis}` : 'Sem descontos adicionais.'),
-    h('div', { class: 'p15-botoes-resultado' },
+    h('p', { class: 'p15-descontos' }, textos.descontos),
+    h('div', { class: 'p15-botoes-resultado' }, ...(textos.botoes ?? []),
       h('button', { type: 'button', on: { click: detalhes } }, 'Detalhes da avaliação'),
       h('button', { type: 'button', class: 'p15-botao-defeitos', 'data-graves': String(graves), title: resumo, 'aria-label': resumo, on: { click: listaDefeitos } }, `Defeitos (${defeitos.length})`)),
     h('small', {}, 'Inspecione em 360° com o botão do meio. + / − controlam o zoom. A tentativa está encerrada.'),
