@@ -74,6 +74,12 @@ export interface EntradaDeposito {
   /** Direção do percurso no plano (unitária; a última, com o robô parado). */
   ux: number
   uy: number
+  /**
+   * Largura do cordão em movimento. Com o robô parado (abertura do arco,
+   * cratera, TIMER com arco) a poça não se abre além dela: o metal sobe
+   * no ponto em vez de espalhar um disco largo nas pontas da parede.
+   */
+  larguraParadoMm?: number
 }
 
 export interface SaidaDeposito {
@@ -186,7 +192,8 @@ export class Deposito {
     const secaoMm2 = e.volume / (Math.max(GEOMETRIA.vMinimaMmS, e.v) * e.dt)
     const escorre = e.temperaturaC > GEOMETRIA.colapsoC
     if (escorre) defeitos.push('escorrimento')
-    const { largura } = Deposito.geometria(secaoMm2, e.temperaturaC, folga, e.tArco, escorre)
+    const geo = Deposito.geometria(secaoMm2, e.temperaturaC, folga, e.tArco, escorre)
+    const largura = e.v < GEOMETRIA.vMinimaMmS && e.larguraParadoMm ? Math.min(geo.largura, e.larguraParadoMm) : geo.largura
     let volume = e.volume
     // Padrões determinísticos pela distância andada (nada de aleatório: a mesma entrada dá a mesma parede).
     if (e.v > GEOMETRIA.vHumpingMmS || (secaoMm2 < GEOMETRIA.secaoMinimaMm2 && e.v > GEOMETRIA.vMinimaMmS)) {

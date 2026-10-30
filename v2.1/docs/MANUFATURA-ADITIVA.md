@@ -140,7 +140,8 @@ Contexto da célula: G. G. S. Figueiredo, *Desenvolvimento da manufatura aditiva
   - A razão w/h começa em 2,6 na peça fria e cresce 0,32 a cada 100 °C de interpasse. Cai com a tocha alta (−3 % por mm) e sobe com a tocha baixa. No começo do arco (0,8 s) é menor, o que dá um início alto e estreito. Acima de 650 °C a poça escorre (razão × 1,8).
   - Cada camada assenta no topo **já solidificado** sob o eixo do cordão. O que transborda vira coluna cheia (a parede fica da largura do cordão); um vale ao longo do eixo continua vale.
   - O fim do cordão deixa uma cratera (0,3 × A × 1,5 w). O AEF deposita parado e a enche.
-  - A abertura do arco fica 0,3 s parada, o que forma uma pequena bossa.
+  - A abertura do arco fica 0,3 s parada, com partida suave (metade da alimentação), o que forma uma pequena bossa.
+  - Com o robô parado (abertura, cratera, TIMER com arco), a poça não fica mais larga que o cordão em movimento: o metal sobe no ponto. Assim a parede termina como uma linha, sem bolo largo nas pontas.
   - Continuidade: seção abaixo de 4 mm² ou V acima de 14 mm/s parte o cordão (padrão determinístico pela distância). Com o TCP longe do topo (mais de 6 mm ou menos de −3 mm) ou em MOVJ, o depósito oscila.
   - Esses números são do jogo. **Não reaproveita** as equações de cordão único nem de passes lado a lado do MIG/MAG: a parede sai da altura que cada camada soma de verdade, comparada com o incremento que o programa manda subir.
 - **H106-d, calor acumulado:** um nó só, o topo da parede.
