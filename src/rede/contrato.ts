@@ -22,7 +22,7 @@ export type ComandoRede =
  | {tipo:'sair'} | {tipo:'revanche';rodada:number}
 export function configuracaoRede(c:ConfigRede){
  const missao=MISSOES_REDE.find(m=>m.id===c.missaoId)
- if(c.processo!=='mig' || !missao || !['aprendiz','profissional'].includes(c.dificuldade))throw new Error('Missão ou dificuldade indisponível nesta versão do x1.')
+ if(c.processo!=='mig' || !missao || !['aprendiz','profissional'].includes(c.dificuldade))throw new Error('Missão ou dificuldade indisponível nesta versão do duelo.')
  const preparo={...preparoPadrao(missao),oxidoRemovido:true}
  return {missao,preparo,contexto:contextoDaMissao(missao,preparo),ajustes:{...AJUSTES_PADRAO}}
 }
