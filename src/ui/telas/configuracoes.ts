@@ -1,6 +1,7 @@
 import { menuOficina } from '../componentes/menuOficina'
 import { abrirPainel } from '../dialogo'
 import { COLECOES, PREFIXO } from '../../dados/armazenamento'
+import { dadosManufaturaIniciais } from '../../dados/manufatura'
 import { PREFERENCIAS_PADRAO } from '../../dados/preferencias'
 import { DISPOSITIVOS, NOME_DISPOSITIVO, type Dispositivo } from '../../entrada/tipos'
 import type { App } from '../app'
@@ -45,7 +46,7 @@ export function montarConfiguracoes(app: App, duranteJogo = false, secoes?: stri
       redesenhar()
     }
     const apagarTudo = async () => {
-      const texto = await pedirTexto('Apagar todos os dados?', 'Recordes, torneios, avaliações e preferências deste navegador serão apagados. Para confirmar, escreva APAGAR.')
+      const texto = await pedirTexto('Apagar todos os dados?', 'Recordes, torneios, avaliações, preferências e o projeto da Manufatura Aditiva deste navegador serão apagados. Para confirmar, escreva APAGAR.')
       if (texto !== 'APAGAR') return
       for (const c of COLECOES) app.repo.apagar(c)
       app.recordes = []
@@ -56,6 +57,7 @@ export function montarConfiguracoes(app: App, duranteJogo = false, secoes?: stri
       app.torneios = []
       app.avaliacoes = []
       app.preferencias = { ...PREFERENCIAS_PADRAO }
+      app.manufatura = dadosManufaturaIniciais()
       app.avisar('Todos os dados deste navegador foram apagados.')
       telaMenu(app)
     }

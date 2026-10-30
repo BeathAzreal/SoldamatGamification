@@ -1,4 +1,5 @@
 import { armazenamentoDoNavegador, novoId, Repositorio, type Colecao } from '../dados/armazenamento'
+import { dadosManufaturaIniciais, validarDadosManufatura, type DadosManufatura } from '../dados/manufatura'
 import { validarPerfis, type PerfilParticipante } from '../dados/participantes'
 import { PREFERENCIAS_PADRAO, validarPreferencias, type Preferencias } from '../dados/preferencias'
 import { validarListaRecordes, type Recorde } from '../dados/recordes'
@@ -40,6 +41,8 @@ export class App {
   torneios: Torneio[] = []
   avaliacoes: Avaliacao[] = []
   preferencias: Preferencias = { ...PREFERENCIAS_PADRAO }
+  /** Projeto da Manufatura Aditiva (v2.1). */
+  manufatura: DadosManufatura = dadosManufaturaIniciais()
   readonly ambiente: Ambiente = {
     agora: () => new Date(),
     aleatorio: () => {
@@ -81,6 +84,7 @@ export class App {
     this.torneios = ler('torneios', [], validarListaComId<Torneio>)
     this.avaliacoes = ler('avaliacoes', [], validarListaComId<Avaliacao>)
     this.preferencias = ler('preferencias', { ...PREFERENCIAS_PADRAO }, (d) => validarPreferencias(d))
+    this.manufatura = ler('manufatura', dadosManufaturaIniciais(), validarDadosManufatura)
 
     // Página recarregada no meio de uma tentativa oficial: ela conta como interrompida.
     for (const t of this.torneios) {
@@ -102,6 +106,7 @@ export class App {
       torneios: this.torneios,
       avaliacoes: this.avaliacoes,
       preferencias: this.preferencias,
+      manufatura: this.manufatura,
     }
     const r = this.repo.gravar(colecao, dados[colecao])
     if (!r.ok) this.avisar(r.erro)
