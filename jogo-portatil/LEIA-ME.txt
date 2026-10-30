@@ -12,6 +12,8 @@ TUBO COM TUBO (novo na v2.0): emenda de topo de dois tubos, soldada em volta. MI
 
 TIG: a vareta vai à borda da poça mesmo se você avançar antes de tocar, e toques rápidos não se perdem em PC lento.
 
+BRASAGEM (novo na v2.0): Treino → Brasagem → peça → chapa → modo. Maçarico oxiacetilênico: segure o botão esquerdo para pôr a chama na peça e mova sobre toda a sobreposição; quando o fluxo ficar vítreo e a peça na cor de trabalho, Espaço encosta a vareta na borda (do lado oposto à chama). A liga corre para dentro da folga, puxada pelo calor; a peça nunca funde. Mesa + mouse: a caneta é o maçarico e o mouse, a vareta. No Difícil não há termômetro: só a cor da peça. No resultado, Ver a folga por dentro mostra onde a liga molhou.
+
 BANCADA DO MIG/MAG: chapa, espessura e junta numa linha só; a ficha da chapa abre no botão Ficha; a dica de como abrir o arco fica dentro da área de teste, que ganha o espaço.
 
 CHAPAS (novo na v2.0): cada chapa tem características próprias: espessura, calor para fundir, quanto esquenta, quanto guarda o calor e quanto deforma. Novas: aço galvanizado (fino; esmerilhe o zinco ou sobra poro), aço médio carbono (grosso; custa a esquentar e guarda o calor), inox ferrítico (bem fino; esquenta muito rápido) e cobre (pede o maior calor e esfria rápido). No treino, troque a chapa: MIG/MAG treino livre (grupos Chapa e Espessura), eletrodo e TIG (Escolha a chapa, depois da peça). A chapa leva as características dela; a corrente sugerida acompanha.
