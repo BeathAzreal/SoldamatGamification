@@ -1,7 +1,9 @@
 import * as THREE from 'three'
+import { acabamentoCamadas } from './camadasManufatura'
+import { malhaCamadas } from './malhaCamadasManufatura'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { MISSAO_PAREDE, SUBSTRATO, type Pose, type PontoEnsinado } from '../modelo/manufatura/celula'
-import { CELULA_MM, type Deposito } from '../modelo/manufatura/deposicao'
+import { type Deposito } from '../modelo/manufatura/deposicao'
 import { MESA } from '../modelo/manufatura/executor'
 import { nomePonto } from '../modelo/manufatura/inform'
 import { webglDisponivel } from './palco3d'
@@ -123,51 +125,34 @@ export function criarVistaCelula(): VistaCelula | null {
   }
 
   // Parede: um campo de alturas sobre o substrato (uma célula do modelo por vértice).
+  let depositoAtual: Deposito | null = null
   let paredeVersao = -1
   let parede: THREE.Mesh | null = null
   let geoParede: THREE.BufferGeometry | null = null
   const materialParede = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.25, roughness: 0.5 })
+  acabamentoCamadas(materialParede)
   let ultimaParedeMs = 0
-  const montarParede = (d: Deposito) => {
-    const nx = d.nx, ny = d.ny
-    const pos = new Float32Array(nx * ny * 3), cor = new Float32Array(nx * ny * 3)
-    const indices: number[] = []
-    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-      const k = j * nx + i
-      const v = paraMundo(d.x0 + (i + 0.5) * CELULA_MM, d.y0 + (j + 0.5) * CELULA_MM, 0)
-      pos.set([v.x, v.y, v.z], k * 3)
-      if (i < nx - 1 && j < ny - 1) indices.push(k, k + 1, k + nx, k + 1, k + nx + 1, k + nx)
-    }
-    const g = new THREE.BufferGeometry()
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
-    g.setAttribute('color', new THREE.BufferAttribute(cor, 3))
-    g.setIndex(indices)
-    geoParede = g
-    parede = new THREE.Mesh(g, materialParede)
-    cena.add(parede)
-  }
   const atualizarParede = (d: Deposito, temperaturaC: number) => {
-    if (!geoParede) montarParede(d)
-    if (d.versao === paredeVersao || !geoParede) return
-    // A malha tem uma célula do modelo por vértice: refazer no máximo ~8 vezes por segundo.
+    if (depositoAtual !== d) { depositoAtual = d; paredeVersao = -1; ultimaParedeMs = -Infinity }
+    if (d.versao === paredeVersao) return
     const agora = performance.now()
     if (agora - ultimaParedeMs < 120) return
-    ultimaParedeMs = agora
-    paredeVersao = d.versao
-    const pos = geoParede.getAttribute('position') as THREE.BufferAttribute
-    const cor = geoParede.getAttribute('color') as THREE.BufferAttribute
+    ultimaParedeMs = agora; paredeVersao = d.versao
+    const malha = malhaCamadas(d), cor = new Float32Array(malha.alturas.length * 3)
     const quente = Math.max(0, Math.min(1, (temperaturaC - 300) / 500))
-    for (let k = 0; k < d.altura.length; k++) {
-      const h = d.altura[k]
-      pos.setY(k, h * E)
-      if (h < 0.05) { cor.setXYZ(k, 0.6, 0.64, 0.67); continue }
-      // Camadas alternam um pouco o tom (para contar) e o inox ganha cor de revenido com a altura.
-      const par = d.camada[k] % 2 ? 0.06 : 0
-      cor.setXYZ(k, 0.72 + par + 0.2 * quente, 0.7 + par * 0.8 - 0.1 * quente, 0.66 + par * 0.6 - 0.2 * quente)
+    for (let k = 0; k < malha.alturas.length; k++) {
+      const h = malha.alturas[k]
+      cor.set(h < 0.05 ? [0.6, 0.64, 0.67] : [0.72 + 0.2 * quente, 0.7 - 0.1 * quente, 0.66 - 0.2 * quente], k * 3)
     }
-    pos.needsUpdate = true
-    cor.needsUpdate = true
-    geoParede.computeVertexNormals()
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.BufferAttribute(malha.posicoes, 3))
+    g.setAttribute('color', new THREE.BufferAttribute(cor, 3))
+    g.setAttribute('camadaVisual', new THREE.BufferAttribute(malha.camadas, 1))
+    g.setIndex(new THREE.BufferAttribute(malha.indices, 1))
+    g.computeVertexNormals()
+    geoParede?.dispose(); geoParede = g
+    if (parede) parede.geometry = g
+    else { parede = new THREE.Mesh(g, materialParede); cena.add(parede) }
   }
 
   // Robô ilustrativo: base, coluna, braço, antebraço, punho e tocha.
