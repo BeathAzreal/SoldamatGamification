@@ -194,6 +194,17 @@ describe('sequência do arco', () => {
     expect(c.passes[0].comprimentoMm).toBeCloseTo(100, 0)
   })
 
+  it('as pontas do cordão não ficam mais largas que o meio (robô parado não espalha a poça)', () => {
+    const largura = (d: Deposito, x: number) => { let w = 0; for (let y = -20; y < 20; y += 0.5) if (d.alturaEm(x + 0.25, y + 0.25) > 0.2) w += 0.5; return w }
+    const uma = new Deposito()
+    controlador(UMA_CAMADA, 'fabricar', pontosIniciais(), uma).rodarAteOFim()
+    for (const x of [698, 700, 702, 798, 800, 802]) expect(largura(uma, x), `x ${x}`).toBeLessThanOrEqual(largura(uma, 750) + 0.5)
+    const parede = controlador(PROGRAMA_INICIAL)
+    parede.rodarAteOFim()
+    const meio = largura(parede.deposito, 750)
+    for (let x = 694; x <= 806; x += 2) expect(largura(parede.deposito, x), `x ${x}`).toBeLessThanOrEqual(meio + 1.5)
+  }, 30000)
+
   it('o teste sem deposição percorre o mesmo caminho e não deposita nada', () => {
     const d = new Deposito()
     const t = controlador(UMA_CAMADA, 'teste', pontosIniciais(), d)

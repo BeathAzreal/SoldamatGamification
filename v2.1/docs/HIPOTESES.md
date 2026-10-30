@@ -1163,6 +1163,7 @@ Cada cordão solto possui aporte e picos de fusão próprios. O calor de um dep�
   - Parábola A = (2/3)·w·h; w/h = 2,6 na peça fria, +0,32 por 100 °C, −3 %/mm de tocha alta. Início do arco (0,8 s) mais estreito; acima de 650 °C, escorre (×1,8).
   - O cordão assenta no topo solidificado sob o eixo.
   - Cratera de 0,3·A·1,5w no fim, que o AEF enche.
+  - Robô parado: largura limitada à do cordão em movimento; abertura com metade da alimentação (partida suave).
   - A < 4 mm² ou V > 14 mm/s partem o cordão.
 - **H106-d, calor:** um nó, dT/dt = 5 K/(s·kW)·P − (T − 25)/τ, com τ = 25 s + 3 s/mm de parede. Passo exato.
 - **H106-e, distância da tocha:**

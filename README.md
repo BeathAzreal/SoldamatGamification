@@ -101,7 +101,7 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
-- [`v2.1/`](v2.1/) ← [`alpha-v2.1`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v2.1) (`claude/v2.1` e `gpt/v2.1`, a partir da `alpha-v2.0`; PRs #47, #49 e #50). **Versão de teste, não estável.**
+- [`v2.1/`](v2.1/) ← [`alpha-v2.1`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v2.1) (`claude/v2.1` e `gpt/v2.1`, a partir da `alpha-v2.0`; PRs #47, #49, #50 e #52). **Versão de teste, não estável.**
 - [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32, #36, #37, #39, #40, #42 e #43)
 - [`v1.9/`](v1.9/) ← [`alpha-v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.9) (`claude/v1.9`, com a v1.8 junto)
 - [`v1.8/`](v1.8/) ← [`claude/v1.8`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v1.8) (feita a partir da `alpha-v1.7`; ainda não há `alpha-v1.8`)
