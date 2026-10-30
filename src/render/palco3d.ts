@@ -729,6 +729,9 @@ export class Palco3D {
       viva.definirDefeitos(a)
       if (viva.atualizar(this.cordaoAtual)) this.enviarCordao()
     }
+    // H101: a face dos cordoes fora da junta tambem afunda antes do furo.
+    this.soltos3d.forEach((s, i) => s.viva.definirDefeitos(a?.consumosSoltos?.[i]?.analise ?? null))
+    if (this.cordaoAtual) this.atualizarSoltos(this.cordaoAtual)
     this.defeitos3d.atualizar(a, viva)
     this.atualizarConsumo(a)
   }
