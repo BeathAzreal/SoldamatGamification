@@ -40,6 +40,18 @@ O jogo mostra **ALPHA v2.0** no topo. Novidades:
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil e
   eletrodo sem assistência.
 
+## Alpha v2.1 — versão de teste (não estável)
+
+> ⚠️ **A v2.1 não é estável e serve apenas para testar funções novas.** Para jogar, use a Alpha v2.0 acima.
+
+**[Baixar Alpha v2.1 (teste) — ZIP](v2.1/Oficina-de-Soldagem-Alpha-v2.1.zip)**
+
+Novo e experimental: **MANUFATURA ADITIVA**, uma programação robotizada (menu principal). Você escreve o programa do robô num subconjunto do **INFORM**, a linguagem dos controladores Yaskawa Motoman, com o DX200 como referência. Depois ensina as posições, valida, roda sem deposição e fabrica uma **parede de várias camadas** por deposição a arco (WAAM). A inspeção traz a nota e o que corrigir.
+
+O simulador não é réplica do controlador, da fonte nem do robô. Comandos fora do subconjunto dão erro explicado. Detalhes, fontes e limites: [`v2.1/docs/MANUFATURA-ADITIVA.md`](v2.1/docs/MANUFATURA-ADITIVA.md).
+
+Todo o resto é igual à v2.0. O x1 online continua com o mesmo protocolo.
+
 **[BAIXAR PACOTE DE REDE v2.0 — para o X1 (Windows 64 bits, 41 MB)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip)**
 
 No PC anfitrião, extraia a pasta inteira e abra **ABRIR-OFICINA.bat** (não precisa
@@ -54,7 +66,8 @@ abre ao tocar a peça com **S** e a vareta queima: continue descendo com toques 
 
 | Versão | O que tem de novo | Download |
 |---|---|---|
-| **Alpha v2.0** | **Mais nova.** Máquina MIG/MAG em volts e m/min com curto-circuito, globular e spray; chapa que passa e fura em níveis; tubo com tubo; chapas com características próprias; **brasagem** com maçarico | [ZIP da v2.0](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip) · [Pacote de rede (X1)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip) |
+| Alpha v2.1 | **Teste, não estável.** Modo experimental **Manufatura Aditiva**: robô programado em INFORM fabrica uma parede de várias camadas | [ZIP da v2.1 (teste)](v2.1/Oficina-de-Soldagem-Alpha-v2.1.zip) |
+| **Alpha v2.0** | **Mais nova estável.** Máquina MIG/MAG em volts e m/min com curto-circuito, globular e spray; chapa que passa e fura em níveis; tubo com tubo; chapas com características próprias; **brasagem** com maçarico | [ZIP da v2.0](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip) · [Pacote de rede (X1)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip) |
 | Alpha v1.9 | **TIG** com mesa digitalizadora + mouse; Fácil só nota e Difícil com mínimo por categoria; eletrodo sem ajuda na altura | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
 | Alpha v1.8 | Modos **Fácil e Difícil**; MIG/MAG mais lento pela física; nota sem trava | [ZIP da v1.8](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip) · [Pacote de rede (X1)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip) |
 | Alpha v1.7 | **X1 em rede** no MIG/MAG; painel MIG maior; eletrodo com cordão 3D e lista de defeitos | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
@@ -88,6 +101,7 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
+- [`v2.1/`](v2.1/) ← [`alpha-v2.1`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v2.1) (`claude/v2.1`, feita a partir da `alpha-v2.0`; PR #47). **Versão de teste, não estável.**
 - [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32, #36, #37, #39, #40, #42 e #43)
 - [`v1.9/`](v1.9/) ← [`alpha-v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.9) (`claude/v1.9`, com a v1.8 junto)
 - [`v1.8/`](v1.8/) ← [`claude/v1.8`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v1.8) (feita a partir da `alpha-v1.7`; ainda não há `alpha-v1.8`)
@@ -100,6 +114,18 @@ entrega correspondente, que junta o trabalho do GPT e do Claude por pull request
 
 Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 [`v1.5/docs/PROTOTIPO-V15.md`](v1.5/docs/PROTOTIPO-V15.md).
+
+## O que mudou na v2.1? (teste, não estável)
+
+- **Manufatura Aditiva — Programação Robotizada** (H106, experimental):
+  - editor do job em INFORM, com números de linha, a linha em execução e erros com a linha, a causa e a correção;
+  - executar sem deposição, fabricar, pausar, passo, parar e reiniciar;
+  - tabela de posições com jog e registro;
+  - arquivos de início e fim de arco (ASF/AEF) separados do movimento;
+  - célula 3D com robô ilustrativo;
+  - parede multicamadas com efeito do incremento programado, da distância da tocha e do interpasse;
+  - inspeção com nota e atividade guiada.
+- Versão visível 2.1. Protocolo de rede, convites e endereço online iguais aos da v2.0.
 
 ## O que mudou na v2.0?
 
