@@ -4,7 +4,7 @@ Abra o HTML no Chrome ou Edge. Sem instalação ou internet.
 
 VERSÃO DE TESTE (v2.1): esta versão NÃO É ESTÁVEL. Serve só para testar funções novas; para jogar, use a Alpha v2.0.
 
-MANUFATURA ADITIVA — PROGRAMAÇÃO ROBOTIZADA (novo na v2.1, experimental): no menu, MANUFATURA ADITIVA. Escreva um job em um subconjunto do INFORM (linguagem dos controladores Yaskawa Motoman, referência DX200), ensine as posições na tabela, valide, rode sem arco e depois fabrique uma parede de várias camadas (WAAM). O simulador não é réplica do controlador nem da fonte de soldagem: comandos fora do subconjunto dão erro explicado. Detalhes em docs/MANUFATURA-ADITIVA.md.
+MANUFATURA ADITIVA — PROGRAMAÇÃO ROBOTIZADA (novo na v2.1, experimental): no menu, MANUFATURA ADITIVA. Escreva um job em um subconjunto do INFORM (linguagem dos controladores Yaskawa Motoman, referência DX200), ensine as posições na tabela, valide, rode sem arco e depois fabrique uma parede de várias camadas (WAAM). O simulador não é réplica do controlador nem da fonte de soldagem: comandos fora do subconjunto dão erro explicado. Duas opções: MISSÃO (parede reta, com nota) e MODO LIVRE (teste, sem missão e sem nota: só as medidas da peça). Detalhes em docs/MANUFATURA-ADITIVA.md.
 
 X1 ONLINE: abra https://oficinadesolda.beath.chatgpt.site/?rede=1 nos dois dispositivos. Crie uma sala, copie o convite e envie à outra pessoa. Não precisa instalar programas nem iniciar servidor nos computadores dos jogadores. Requer internet. O HTML portátil continua offline para treino e oferece o botão Abrir oficina online. O pacote de rede local permanece opcional.
 

@@ -139,3 +139,4 @@
   .ma-aba-posicoes{grid-template-columns:minmax(0,1fr) 250px}
   .ma-vistas{right:8px;top:auto;bottom:30px}
 }
+.ma-modo{margin-right:auto;margin-left:10px;padding:2px 8px;border:1px solid #7cc4ff;border-radius:3px;color:#9fd3ff;font:700 11px var(--mono);letter-spacing:.06em}

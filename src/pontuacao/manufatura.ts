@@ -148,28 +148,96 @@ export function avaliarParede(c: Controlador): AvaliacaoParede {
   const aprovada = !alarme && c.estado === 'concluido' && med.alturaUtilMm >= m.alturaMinMm && med.larguraMinMm >= m.larguraMinMm &&
     med.comprimentoMm >= (m.xFim - m.xInicio) * 0.95 && !med.falhas.length && interpasseMax <= m.interpasseMaxC && med.desvioAlturaMm <= 1
 
-  // Achados: onde, causa e como corrigir.
-  if (alarme) achados.push({ nome: 'Programa interrompido por alarme', onde: `linha ${alarme.linha}`, causa: alarme.texto, correcao: 'Corrija a linha indicada e fabrique de novo. Rode antes sem deposição para conferir o caminho.', grave: true })
-  if (c.estado === 'parado') achados.push({ nome: 'Fabricação parada pelo operador', onde: 'no meio do job', causa: 'Parar fecha o arco sem preencher a cratera e deixa a parede incompleta.', correcao: 'Use Pausar para observar; Parar só em emergência.', grave: true })
-  if (ultimos.length >= 2) {
-    const sugestao = Math.round(alturaPorCamada * 10) * 100
-    if (folgaFinal > 2.5) achados.push({ nome: 'Tocha subindo mais que a parede', onde: `camadas ${ultimos[0].numero} a ${ultimos[ultimos.length - 1].numero}: TCP ${mm(folgaFinal)} mm acima do topo`, causa: `O incremento programado é maior que a altura que cada camada soma (cerca de ${mm(alturaPorCamada)} mm). O arco alonga, fica instável e pode apagar.`, correcao: `Meça a parede e use um incremento perto da altura real da camada, por exemplo ADD D000 ${sugestao} (${mm(sugestao / 1000)} mm).`, grave: folgaFinal > 6 })
-    else if (folgaFinal < -1.5) achados.push({ nome: 'Parede subindo mais que a tocha', onde: `camadas ${ultimos[0].numero} a ${ultimos[ultimos.length - 1].numero}: TCP ${mm(-folgaFinal)} mm abaixo do topo`, causa: `O incremento programado é menor que a altura que cada camada soma (cerca de ${mm(alturaPorCamada)} mm). O arame mergulha na poça e o bocal pode bater.`, correcao: `Aumente o incremento para perto da altura real da camada, por exemplo ADD D000 ${sugestao}.`, grave: folgaFinal < -4 })
-  }
+  // Achados: onde, causa e como corrigir. Primeiro os do processo, depois os da missão.
+  achados.push(...achadosDoProcesso(c, alturaPorCamada, med.falhas.length > 0))
   if (interpasseMax > m.interpasseMaxC) {
     const pior = passes.slice(1).reduce((a, b) => (b.interpasseC > a.interpasseC ? b : a))
     achados.push({ nome: 'Interpasse acima do limite', onde: `camada ${pior.numero}: ${pior.interpasseC.toFixed(0)} °C no ARCON`, causa: 'A parede guarda calor; quanto mais alta, mais devagar ela esfria pelo substrato.', correcao: 'Aumente o TIMER entre camadas (as de cima pedem mais tempo) ou diminua a energia (alimentação).', grave: false })
   }
-  if (escorreu > 0) achados.push({ nome: 'Escorrimento lateral', onde: 'camadas superaquecidas', causa: 'A parede passou de 650 °C (número do modelo) e a poça escorreu pela lateral: parede mais larga e mais baixa.', correcao: 'Espere a parede esfriar entre camadas (TIMER).', grave: false })
   if (Math.abs(med.inclinacaoMm100) > 1) achados.push({ nome: 'Topo inclinado', onde: `um lado ${mm(Math.abs(med.inclinacaoMm100))} mm mais alto a cada 100 mm`, causa: 'Cada camada começa mais alta e fria e termina mais baixa e quente. No mesmo sentido, isso se soma.', correcao: 'Alterne o sentido entre camadas (ida e volta).', grave: false })
-  if (descontinuo > 0) achados.push({ nome: 'Cordão partido (humping)', onde: `${mm(descontinuo)} mm no total`, causa: 'Velocidade de soldagem alta para a alimentação: pouco metal por milímetro, e a poça se parte em gotas.', correcao: 'Baixe o V= do MOVL de solda ou aumente a alimentação no arquivo ASF.', grave: med.falhas.length > 0 })
-  if (instavel > 0 && !achados.some((a) => a.nome.startsWith('Tocha') || a.nome.startsWith('Parede subindo'))) achados.push({ nome: 'Arco fora da distância de trabalho', onde: `${mm(instavel)} mm de cordão`, causa: 'O TCP passou longe do topo da parede (alto ou baixo demais).', correcao: 'Acerte a altura dos pontos e o incremento por camada.', grave: false })
-  if (movj > 0) achados.push({ nome: 'MOVJ com arco aberto', onde: `${mm(movj)} mm de cordão`, causa: 'No MOVJ o caminho não é reto e a velocidade de soldagem não é controlada.', correcao: 'Solde só com MOVL.', grave: false })
-  if (semCratera > 0) achados.push({ nome: 'Arco cortado sem cratera', onde: `${semCratera} passe(s)`, causa: 'O arco foi fechado por END ou por parada, sem ARCOF.', correcao: 'Feche o arco com ARCOF AEF#(1) antes de sair do cordão.', grave: false })
-  const inclinada = passes.find((p) => p.inclinacaoMaxGraus > 15)
-  if (inclinada) achados.push({ nome: 'Tocha inclinada', onde: `camada ${inclinada.numero}: ${inclinada.inclinacaoMaxGraus.toFixed(0)}° da vertical`, causa: 'Neste exercício a parede pede a tocha na vertical (Rx 180°, Ry 0°).', correcao: 'Reensine os pontos com a tocha vertical.', grave: false })
   if (med.comprimentoMm < (m.xFim - m.xInicio) * 0.95 && !alarme) achados.push({ nome: 'Parede curta ou fora do lugar', onde: `de X ${med.inicioMm} a ${med.fimMm} mm`, causa: `A missão pede a parede de X ${m.xInicio} a ${m.xFim} mm, em Y ${m.y}.`, correcao: 'Confira os pontos de início e fim na tabela de posições.', grave: true })
   if (!achados.length) achados.push({ nome: 'Nenhum problema encontrado', onde: '—', causa: 'A parede atende à missão.', correcao: 'Tente reduzir o tempo de ciclo sem passar do interpasse.', grave: false })
 
   return { medidas: med, itens, nota, aprovada, achados, camadas, interpasseMaxC: interpasseMax, tempoS: c.tempo, tempoArcoS: tempoArco, arameG: c.arameG, energiaKJ: c.energiaKJ, alturaPorCamadaMm: alturaPorCamada }
 }
+
+/**
+ * Achados que não dependem da missão (servem também ao modo livre): alarme,
+ * parada, distância da tocha que deriva camada a camada, escorrimento,
+ * cordão partido, arco fora da distância, MOVJ com arco, arco cortado e
+ * tocha inclinada.
+ */
+export function achadosDoProcesso(c: Controlador, alturaPorCamada: number, temFalhas = false): Achado[] {
+  const passes = c.passes
+  const achados: Achado[] = []
+  const alarme = c.eventos.find((e) => e.tipo === 'alarme')
+  const descontinuo = comDefeito(passes, 'descontinuo') + comDefeito(passes, 'humping')
+  const instavel = comDefeito(passes, 'instavel') + comDefeito(passes, 'mergulho')
+  const escorreu = comDefeito(passes, 'escorrimento')
+  const movj = comDefeito(passes, 'movj')
+  const semCratera = passes.filter((p) => p.fechamento === 'END' || p.fechamento === 'parada').length
+  const ultimos = passes.slice(-3)
+  const folgaFinal = ultimos.length ? ultimos.reduce((s, p) => s + p.folgaInicialMm, 0) / ultimos.length : 0
+  if (alarme) achados.push({ nome: 'Programa interrompido por alarme', onde: `linha ${alarme.linha}`, causa: alarme.texto, correcao: 'Corrija a linha indicada e fabrique de novo. Rode antes sem deposição para conferir o caminho.', grave: true })
+  if (c.estado === 'parado') achados.push({ nome: 'Fabricação parada pelo operador', onde: 'no meio do job', causa: 'Parar fecha o arco sem preencher a cratera e deixa a peça incompleta.', correcao: 'Use Pausar para observar; Parar só em emergência.', grave: true })
+  if (ultimos.length >= 2) {
+    const sugestao = Math.round(alturaPorCamada * 10) * 100
+    if (folgaFinal > 2.5) achados.push({ nome: 'Tocha subindo mais que a parede', onde: `camadas ${ultimos[0].numero} a ${ultimos[ultimos.length - 1].numero}: TCP ${mm(folgaFinal)} mm acima do topo`, causa: `O incremento programado é maior que a altura que cada camada soma (cerca de ${mm(alturaPorCamada)} mm). O arco alonga, fica instável e pode apagar.`, correcao: `Meça a parede e use um incremento perto da altura real da camada, por exemplo ADD D000 ${sugestao} (${mm(sugestao / 1000)} mm).`, grave: folgaFinal > 6 })
+    else if (folgaFinal < -1.5) achados.push({ nome: 'Parede subindo mais que a tocha', onde: `camadas ${ultimos[0].numero} a ${ultimos[ultimos.length - 1].numero}: TCP ${mm(-folgaFinal)} mm abaixo do topo`, causa: `O incremento programado é menor que a altura que cada camada soma (cerca de ${mm(alturaPorCamada)} mm). O arame mergulha na poça e o bocal pode bater.`, correcao: `Aumente o incremento para perto da altura real da camada, por exemplo ADD D000 ${sugestao}.`, grave: folgaFinal < -4 })
+  }
+  if (escorreu > 0) achados.push({ nome: 'Escorrimento lateral', onde: 'camadas superaquecidas', causa: 'A parede passou de 650 °C (número do modelo) e a poça escorreu pela lateral: parede mais larga e mais baixa.', correcao: 'Espere a parede esfriar entre camadas (TIMER).', grave: false })
+  if (descontinuo > 0) achados.push({ nome: 'Cordão partido (humping)', onde: `${mm(descontinuo)} mm no total`, causa: 'Velocidade de soldagem alta para a alimentação: pouco metal por milímetro, e a poça se parte em gotas.', correcao: 'Baixe o V= do MOVL de solda ou aumente a alimentação no arquivo ASF.', grave: temFalhas })
+  if (instavel > 0 && !achados.some((a) => a.nome.startsWith('Tocha') || a.nome.startsWith('Parede subindo'))) achados.push({ nome: 'Arco fora da distância de trabalho', onde: `${mm(instavel)} mm de cordão`, causa: 'O TCP passou longe do topo da peça (alto ou baixo demais).', correcao: 'Acerte a altura dos pontos e o incremento por camada.', grave: false })
+  if (movj > 0) achados.push({ nome: 'MOVJ com arco aberto', onde: `${mm(movj)} mm de cordão`, causa: 'No MOVJ o caminho não é reto e a velocidade de soldagem não é controlada.', correcao: 'Solde só com MOVL.', grave: false })
+  if (semCratera > 0) achados.push({ nome: 'Arco cortado sem cratera', onde: `${semCratera} passe(s)`, causa: 'O arco foi fechado por END ou por parada, sem ARCOF.', correcao: 'Feche o arco com ARCOF AEF#(1) antes de sair do cordão.', grave: false })
+  const inclinada = passes.find((p) => p.inclinacaoMaxGraus > 15)
+  if (inclinada) achados.push({ nome: 'Tocha inclinada', onde: `passe ${inclinada.numero}: ${inclinada.inclinacaoMaxGraus.toFixed(0)}° da vertical`, causa: 'Com a tocha muito inclinada o cordão fica assimétrico e a proteção piora.', correcao: 'Reensine os pontos com a tocha mais perto da vertical (Rx 180°, Ry 0°).', grave: false })
+  return achados
+}
+
+/** Inspeção do modo livre: medidas da peça, sem missão, sem nota e sem aprovação. */
+export interface InspecaoLivre {
+  passes: number
+  alturaMaxMm: number
+  /** Retângulo (mm, base) que contém o metal depositado; null se nada foi depositado. */
+  extensao: { xMin: number; xMax: number; yMin: number; yMax: number } | null
+  areaOcupadaMm2: number
+  /** Topo mais alto em cada X do substrato (perfil visto de lado). */
+  perfil: { x: number; alturaMm: number }[]
+  volumeMm3: number
+  arameG: number
+  energiaKJ: number
+  tempoS: number
+  tempoArcoS: number
+  interpasseMaxC: number
+  alturaPorCamadaMm: number
+  achados: Achado[]
+}
+
+export function inspecionarLivre(c: Controlador): InspecaoLivre {
+  const d = c.deposito
+  let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity, alturaMax = 0, celulas = 0
+  const topoPorX = new Float32Array(d.nx)
+  for (let j = 0; j < d.ny; j++) for (let i = 0; i < d.nx; i++) {
+    const h = d.altura[j * d.nx + i]
+    if (h <= 0.2) continue
+    const x = d.x0 + (i + 0.5) * CELULA_MM, y = d.y0 + (j + 0.5) * CELULA_MM
+    xMin = Math.min(xMin, x); xMax = Math.max(xMax, x); yMin = Math.min(yMin, y); yMax = Math.max(yMax, y)
+    alturaMax = Math.max(alturaMax, h)
+    if (h > topoPorX[i]) topoPorX[i] = h
+    celulas++
+  }
+  const perfil: { x: number; alturaMm: number }[] = []
+  for (let i = 0; i < d.nx; i += 2) perfil.push({ x: d.x0 + (i + 0.5) * CELULA_MM, alturaMm: topoPorX[i] })
+  const passes = c.passes.filter((p) => p.comprimentoMm > 5).length
+  const alturaPorCamada = passes ? alturaMax / passes : 0
+  const achados = achadosDoProcesso(c, alturaPorCamada)
+  if (!celulas && c.estado === 'concluido') achados.push({ nome: 'Nada foi depositado', onde: '—', causa: 'O programa não abriu o arco sobre o substrato.', correcao: 'Use ARCON ASF#(1) com o TCP no topo da peça e ARCOF depois do movimento de soldar.', grave: false })
+  return {
+    passes, alturaMaxMm: alturaMax, extensao: celulas ? { xMin, xMax, yMin, yMax } : null, areaOcupadaMm2: celulas * CELULA_MM * CELULA_MM,
+    perfil, volumeMm3: d.volumeTotal, arameG: c.arameG, energiaKJ: c.energiaKJ, tempoS: c.tempo,
+    tempoArcoS: c.passes.reduce((s, p) => s + (p.tFim - p.tInicio), 0),
+    interpasseMaxC: c.passes.slice(1).reduce((s, p) => Math.max(s, p.interpasseC), 0), alturaPorCamadaMm: alturaPorCamada, achados,
+  }
+}
+

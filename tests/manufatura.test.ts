@@ -6,8 +6,8 @@ import { condicoesPadrao } from '../src/modelo/manufatura/condicoes'
 import { Deposito } from '../src/modelo/manufatura/deposicao'
 import { Controlador, PASSO_S, type ModoExecucao } from '../src/modelo/manufatura/executor'
 import { lerPrograma, outraLinguagem, type Programa } from '../src/modelo/manufatura/inform'
-import { PROGRAMA_INICIAL } from '../src/modelo/manufatura/missao'
-import { avaliarParede } from '../src/pontuacao/manufatura'
+import { PROGRAMA_INICIAL, PROGRAMA_LIVRE, projetoLivre } from '../src/modelo/manufatura/missao'
+import { avaliarParede, inspecionarLivre } from '../src/pontuacao/manufatura'
 
 /*
  * Manufatura Aditiva (H106): parser do subconjunto INFORM, executor com
@@ -426,3 +426,52 @@ describe('persistência', () => {
     expect(r.dados).toEqual(dadosManufaturaIniciais())
   })
 })
+
+describe('modo livre (sem missão)', () => {
+  it('o programa inicial do modo livre é válido e faz um cordão só', () => {
+    expect(ler(PROGRAMA_LIVRE).diagnosticos).toEqual([])
+    const c = controlador(PROGRAMA_LIVRE)
+    expect(c.rodarAteOFim()).toBe('concluido')
+    const i = inspecionarLivre(c)
+    expect(i.passes).toBe(1)
+    expect(i.extensao).not.toBeNull()
+    expect(i.extensao!.xMin).toBeGreaterThan(690)
+    expect(i.extensao!.xMax).toBeLessThan(810)
+    expect(i.alturaMaxMm).toBeGreaterThan(1.5)
+    expect(i.arameG).toBeGreaterThan(0)
+    // Sem nota e sem aprovação: só medidas e avisos de processo.
+    expect('nota' in i).toBe(false)
+    expect(i.achados.some((a) => /missão/i.test(a.causa))).toBe(false)
+  })
+
+  it('peça fora do lugar da missão é medida sem reclamar', () => {
+    const pontos = pontosIniciais().map((p) => ({ ...p, pose: { ...p.pose, y: p.pose.y + 25 } }))
+    pontos[0] = pontosIniciais()[0]
+    const c = controlador(PROGRAMA_LIVRE, 'fabricar', pontos)
+    expect(c.rodarAteOFim()).toBe('concluido')
+    const i = inspecionarLivre(c)
+    expect(i.extensao!.yMin).toBeGreaterThan(18)
+    expect(i.achados).toEqual([])
+  })
+
+  it('nada depositado vira aviso; alarme aparece como no modo missão', () => {
+    const vazio = controlador(job('MOVJ C00001 VJ=15.00'))
+    vazio.rodarAteOFim()
+    expect(inspecionarLivre(vazio).achados.map((a) => a.nome)).toContain('Nada foi depositado')
+    const alarme = controlador(job('MOVL C00001 V=50.0', 'ARCON ASF#(1)'))
+    alarme.rodarAteOFim()
+    expect(inspecionarLivre(alarme).achados[0].nome).toBe('Programa interrompido por alarme')
+  })
+
+  it('o projeto do modo livre é salvo à parte; dado antigo sem ele recebe o padrão', () => {
+    const d = dadosManufaturaIniciais()
+    d.livre.programa = 'NOP\nTIMER T=2.00\nEND'
+    const v = validarDadosManufatura(JSON.parse(JSON.stringify(d)))!
+    expect(v.livre.programa).toBe('NOP\nTIMER T=2.00\nEND')
+    expect(v.projeto.programa).toBe(PROGRAMA_INICIAL)
+    const antigo = JSON.parse(JSON.stringify(d)) as Record<string, unknown>
+    delete antigo.livre
+    expect(validarDadosManufatura(antigo)!.livre).toEqual(projetoLivre())
+  })
+})
+

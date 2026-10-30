@@ -3,7 +3,7 @@ import type { App } from '../app'
 import { anexar, h } from '../dom'
 import { telaCentralArcade } from './centralArcade'
 import { telaConfiguracoes } from './configuracoes'
-import { telaManufatura } from './manufatura'
+import { telaEscolhaManufatura } from './manufatura'
 import { telaRecordes } from './recordes'
 import { painelTorneio } from './torneio'
 import { telaTreino } from './treino'
@@ -12,7 +12,7 @@ import '../../menu-grafico.css'
 const MODOS = [
   { titulo: 'ARCADE', descricao: 'História, desafios e versus local.', abrir: telaCentralArcade },
   { titulo: 'TREINO', descricao: 'Sua bancada. Seu ritmo. Experimente e compare.', abrir: telaTreino },
-  { titulo: 'MANUFATURA ADITIVA', descricao: 'Experimental: programe o robô em INFORM e fabrique uma parede camada por camada.', abrir: telaManufatura },
+  { titulo: 'MANUFATURA ADITIVA', descricao: 'Experimental: programe o robô em INFORM e fabrique uma parede camada por camada.', abrir: telaEscolhaManufatura },
   { titulo: 'RECORDES', descricao: 'Reveja as marcas que você deixou na oficina.', abrir: (app: App) => telaRecordes(app) },
   { titulo: 'CONFIGURAÇÕES', descricao: 'Som, dispositivo, controles e qualidade visual.', abrir: telaConfiguracoes },
 ]
