@@ -1105,3 +1105,7 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
 - **Limites:** a difusividade do TIG é metade da real (para caber na grade de 1 × 0,5 mm). O alumínio no TIG real pede corrente alternada; o jogo não muda a polaridade. O médio carbono não tem trinca por têmpera no modelo: o pré-aquecimento só aparece como fusão melhor com a peça quente. O eletrodo não acumula calor de um passe para o outro.
 - **Testes:** `tests/materiais.test.ts` (catálogo, fichas únicas, toda chapa × junta × espessura monta contexto válido, cobre pede mais calor e inox menos, ferrítico esquenta mais e médio carbono menos, zinco faz poro, corrente do eletrodo e do TIG pela chapa, cobre no TIG).
 - Os números são do jogo.
+
+### Complemento H101 — aquecimento fora da junta (MIG/MAG)
+
+Cada cordão solto possui aporte e picos de fusão próprios. O calor de um depósito fora da junta não é transferido ao cordão da junta. A chapa plana fora da junta usa a referência de topo sem abertura, com o mesmo material e espessura. O mapa compõe os furos de todos os cordões, sem deslocá-los nem apagar os anteriores. O tempo fora da junta continua contando para eficiência. Modelo didático por faixas de cordão, não uma solução térmica contínua 2D.

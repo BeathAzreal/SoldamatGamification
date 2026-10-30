@@ -771,6 +771,10 @@ export class Palco3D {
     const viva = this.viva
     if (a && viva) preencherMapaConsumo(mapa, a.passoMm, a.furoMm, viva.centro, a.afundamento)
     else mapa.dados.fill(0)
+    for (const solto of a?.consumosSoltos ?? []) {
+      const d = solto.analise
+      preencherMapaConsumo(mapa, d.passoMm, d.furoMm, solto.centro, d.afundamento, false)
+    }
     this.texturaConsumo.needsUpdate = true
   }
 
