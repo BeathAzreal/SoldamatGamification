@@ -213,7 +213,7 @@ Coleção nova `manufatura`. Guarda o programa, os pontos, as condições, a cé
 
 ## Acabamento visual das camadas
 
-A parede recebe faixas de deposição, sulcos arredondados e pequenas variações determinísticas de tom e rugosidade. O acabamento é calculado apenas na renderização: não muda o mapa de alturas, volume, colisões, temperatura ou pontuação. Como o mapa não guarda interfaces enterradas, as faixas aproximam a altura relativa de cada coluna e sua contagem de passes; não representam uma reconstrução metalúrgica das interfaces reais. O relevo é óptico, sem deslocamento dos vértices.
+A parede recebe faixas de deposição, sulcos arredondados e pequenas variações determinísticas de tom e rugosidade. O acabamento é calculado apenas na renderização: não muda o mapa de alturas, volume, colisões, temperatura ou pontuação. Como o mapa não guarda interfaces enterradas, as faixas aproximam a altura relativa de cada coluna e sua contagem de passes; não representam uma reconstrução metalúrgica das interfaces reais. O relevo das camadas é geométrico: as laterais são subdivididas em faixas de até 0,3 mm nas paredes usuais e recebem saliências arredondadas de aproximadamente 0,2–0,6 mm, com variação determinística por passe e posição. Os sulcos fecham entre passes e o relevo some no pé e no topo plano. Há ainda acabamento óptico fino. As interfaces continuam aproximadas; esse detalhe de representação não altera as medidas, colisões ou a quantidade de material calculadas pelo modelo.
 
 ## Redistribuição local da poça pelo calor
 
