@@ -1,6 +1,14 @@
 # Manufatura Aditiva — Programação Robotizada (v2.1, H106, experimental)
 
-Menu → **MANUFATURA ADITIVA**.
+Menu → **MANUFATURA ADITIVA**, com duas opções:
+
+- **Missão: parede reta:** com nota, aprovação e atividade guiada (abaixo).
+- **Modo livre:** é o modo de teste, sem missão, sem nota e sem aprovação.
+  - Tem o projeto salvo à parte; o da missão não muda.
+  - O programa começa com um cordão só, de A a B.
+  - A inspeção mostra as medidas da peça: extensão, altura máxima, área, metal, arame, energia, tempo e interpasse.
+  - Mostra também o perfil visto de lado e os avisos do processo: alarme, distância da tocha, escorrimento, humping, MOVJ com arco, arco cortado e tocha inclinada.
+  - Não há aba Atividade nem marcas da missão na célula.
 
 > **Versão de teste.** A v2.1 não é estável e serve para testar funções novas. O simulador **não é réplica** do controlador do robô, da fonte de soldagem nem do robô. Ele não é um controlador certificado. É um exercício didático de programação e de fabricação por deposição a arco (WAAM).
 

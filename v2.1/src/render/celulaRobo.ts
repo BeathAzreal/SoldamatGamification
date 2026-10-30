@@ -71,7 +71,8 @@ function rotulo(texto: string, cor: string): THREE.Sprite {
   return s
 }
 
-export function criarVistaCelula(): VistaCelula | null {
+/** `missao`: desenha as marcas de início e fim da parede (o modo livre não tem). */
+export function criarVistaCelula(op: { missao?: boolean } = {}): VistaCelula | null {
   if (!webglDisponivel()) return null
   let renderizador: THREE.WebGLRenderer
   try {
@@ -119,7 +120,7 @@ export function criarVistaCelula(): VistaCelula | null {
 
   // Marcas da missão: onde a parede deve começar e terminar.
   const marca = new THREE.LineBasicMaterial({ color: '#ffc440' })
-  for (const x of [MISSAO_PAREDE.xInicio, MISSAO_PAREDE.xFim]) {
+  for (const x of op.missao === false ? [] : [MISSAO_PAREDE.xInicio, MISSAO_PAREDE.xFim]) {
     const g = new THREE.BufferGeometry().setFromPoints([paraMundo(x, SUBSTRATO.yMin + 4, 0.2), paraMundo(x, SUBSTRATO.yMin + 14, 0.2)])
     cena.add(new THREE.Line(g, marca))
   }

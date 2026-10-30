@@ -3,15 +3,17 @@ import { ARQUIVOS_MAX, FAIXA_ALIMENTACAO, FAIXA_CORRECAO, FAIXA_CRATERA, LINHA_S
 import { Deposito } from '../../modelo/manufatura/deposicao'
 import { Controlador, type EstadoExecucao, type Evento, type ModoExecucao } from '../../modelo/manufatura/executor'
 import { AJUDA_COMANDOS, lerPrograma, nomePonto, type Diagnostico, type Programa } from '../../modelo/manufatura/inform'
-import { PROGRAMA_INICIAL, type ProjetoManufatura } from '../../modelo/manufatura/missao'
-import { avaliarParede, type AvaliacaoParede } from '../../pontuacao/manufatura'
+import { PROGRAMA_INICIAL, PROGRAMA_LIVRE, type ProjetoManufatura } from '../../modelo/manufatura/missao'
+import { avaliarParede, inspecionarLivre, type AvaliacaoParede, type InspecaoLivre } from '../../pontuacao/manufatura'
 import { criarVistaCelula } from '../../render/celulaRobo'
 import type { App } from '../app'
 import { montarAbas } from '../componentes/abas'
+import { menuOficina } from '../componentes/menuOficina'
 import { criarEditorInform } from '../componentes/editorInform'
 import { abrirPainel, confirmar } from '../dialogo'
 import { h } from '../dom'
 import '../../estilo-manufatura.css'
+import { telaMenu } from './menu'
 
 /*
  * Manufatura Aditiva — Programação Robotizada (v2.1, experimental). Três
@@ -33,15 +35,27 @@ const copiarProjeto = (p: ProjetoManufatura): ProjetoManufatura => JSON.parse(JS
 
 interface Atividade { celula: boolean; validou: boolean; testou: boolean; fabricou: boolean; inspecionou: boolean; aprovou: boolean }
 
-export function telaManufatura(app: App): void {
+/** Missão da parede (com nota e atividade guiada) ou modo livre (teste, sem missão nem nota). */
+export type ModoManufatura = 'missao' | 'livre'
+
+export function telaEscolhaManufatura(app: App): void {
+  menuOficina(app, 'MANUFATURA ADITIVA', 'OFICINA / PROGRAMAÇÃO ROBOTIZADA (EXPERIMENTAL)', [
+    { nome: 'MISSÃO: PAREDE RETA', descricao: 'Parede de várias camadas com nota, aprovação e atividade guiada.', abrir: () => telaManufatura(app, 'missao') },
+    { nome: 'MODO LIVRE', descricao: 'Teste à vontade: sem missão, sem nota. Programe, fabrique e veja as medidas da peça.', abrir: () => telaManufatura(app, 'livre') },
+  ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
+}
+
+export function telaManufatura(app: App, modo: ModoManufatura = 'missao'): void {
+  const livre = modo === 'livre'
   app.ir((app) => {
     app.raiz.classList.add('app-cheia')
-    const vista = criarVistaCelula()
+    app.escolherOutraPeca = () => telaEscolhaManufatura(app)
+    const vista = criarVistaCelula({ missao: !livre })
     if (!vista) {
       app.raiz.append(h('p', {}, 'WebGL indisponível: abra a Manufatura Aditiva no Chrome ou Edge com aceleração gráfica.'))
       return
     }
-    const projeto = copiarProjeto(app.manufatura.projeto)
+    const projeto = copiarProjeto(livre ? app.manufatura.livre : app.manufatura.projeto)
     let programa: Programa = ler()
     let deposito = new Deposito()
     let controlador: Controlador | null = null
@@ -61,7 +75,7 @@ export function telaManufatura(app: App): void {
     let timerSalvar = 0
     const salvar = (agora = false) => {
       clearTimeout(timerSalvar)
-      const gravar = () => { app.manufatura = { ...app.manufatura, projeto: copiarProjeto(projeto) }; app.salvar('manufatura') }
+      const gravar = () => { app.manufatura = { ...app.manufatura, [livre ? 'livre' : 'projeto']: copiarProjeto(projeto) }; app.salvar('manufatura') }
       if (agora) gravar(); else timerSalvar = window.setTimeout(gravar, 600)
     }
 
@@ -178,14 +192,15 @@ export function telaManufatura(app: App): void {
         h('p', {}, 'Não implementados (dão erro com o motivo, nunca são ignorados): PL, NWAIT, ACC/DEC, VR, UNTIL, MOVC, MOVS, IMOV, CALL, WAIT, DOUT/DIN, DEC, SUB, MUL, DIV, operações lógicas, comparações <>, <= e >=, ARCON com condição na linha (AC=, AV=...), ARCSET, oscilação (WVON), SFTON em outro sistema (UF#, TF), variáveis R e S. G-code, RAPID (ABB) e KRL (KUKA) são reconhecidos e recusados.')))
     }
     const restaurarExemplo = async () => {
-      if (!(await confirmar('Restaurar o programa de exemplo?', 'O texto do editor volta ao programa inicial da missão. Pontos e condições não mudam.'))) return
-      editor.definir(PROGRAMA_INICIAL)
-      projeto.programa = PROGRAMA_INICIAL
+      const exemplo = livre ? PROGRAMA_LIVRE : PROGRAMA_INICIAL
+      if (!(await confirmar('Restaurar o programa de exemplo?', `O texto do editor volta ao programa inicial ${livre ? 'do modo livre (um cordão)' : 'da missão'}. Pontos e condições não mudam.`))) return
+      editor.definir(exemplo)
+      projeto.programa = exemplo
       salvar()
       validar(false)
     }
     const areaPrograma = h('section', { class: 'ma-programa', 'aria-label': 'Programa e depuração' },
-      h('header', { class: 'ma-cab' }, h('h2', { class: 'tela-titulo', tabindex: '-1' }, 'Programa e depuração'),
+      h('header', { class: 'ma-cab' }, h('h2', { class: 'tela-titulo', tabindex: '-1' }, 'Programa e depuração'), livre ? h('span', { class: 'ma-modo', title: 'Sem missão, sem nota' }, 'MODO LIVRE') : null,
         h('div', { class: 'ma-cab-botoes' }, botao('Comandos', 'Lista dos comandos aceitos, com exemplos', ajudaComandos), botao('Exemplo', 'Volta ao programa inicial da missão', () => void restaurarExemplo()))),
       ferramentasPrograma,
       h('p', { class: 'ma-linha-estado', role: 'status' }, estadoTexto, linhaTexto, tempoTexto),
@@ -305,11 +320,12 @@ export function telaManufatura(app: App): void {
         h('dt', {}, 'TCP'), h('dd', {}, 'Na ponta do arame, à distância de trabalho do bico de contato. TCP no topo da peça = arco na distância certa.'),
         h('dt', {}, 'Distância de trabalho (bico–peça)'), h('dd', {}, h('label', { class: 'ma-inline' }, campoCtwd, ' mm'), ' O bocal bate na peça quando ela sobe acima dele.'),
         h('dt', {}, 'Orientação da tocha'), h('dd', {}, 'Vertical: Rx 180°, Ry 0°. Inclinar mais de 15° conta na inspeção.'),
-        h('dt', {}, 'Missão'), h('dd', {}, `Parede de X ${MISSAO_PAREDE.xInicio} a ${MISSAO_PAREDE.xFim} mm em Y ${MISSAO_PAREDE.y}; altura útil de ${MISSAO_PAREDE.alturaMinMm} mm ou mais, largura de ${MISSAO_PAREDE.larguraMinMm} mm ou mais, sem falhas, interpasse até ${MISSAO_PAREDE.interpasseMaxC} °C (limite da missão). Velocidade de soldagem e incremento de camada ficam no programa.`),
+        livre ? h('dt', {}, 'Modo livre') : null, livre ? h('dd', {}, 'Sem missão, sem nota e sem aprovação. Fabrique o que quiser sobre o substrato; a inspeção mostra as medidas da peça e os avisos do processo (distância da tocha, calor, cordão partido…).') : null,
+        livre ? null : h('dt', {}, 'Missão'), livre ? null : h('dd', {}, `Parede de X ${MISSAO_PAREDE.xInicio} a ${MISSAO_PAREDE.xFim} mm em Y ${MISSAO_PAREDE.y}; altura útil de ${MISSAO_PAREDE.alturaMinMm} mm ou mais, largura de ${MISSAO_PAREDE.larguraMinMm} mm ou mais, sem falhas, interpasse até ${MISSAO_PAREDE.interpasseMaxC} °C (limite da missão). Velocidade de soldagem e incremento de camada ficam no programa.`),
         h('dt', {}, 'MOVJ e MOVL'), h('dd', {}, 'MOVL leva o TCP em linha reta na velocidade V (mm/s): é o movimento de soldar. MOVJ move as juntas: o caminho do TCP não é reto. Sem a cinemática do robô, o simulador desenha um arco ilustrativo e estima o tempo por VJ; não é o caminho do robô real.'),
         h('dt', {}, 'Robô'), h('dd', {}, `Ilustrativo, com o alcance de ${LIMITES.alcanceMm} mm do MA1440 como limite dos pontos. Não é réplica do robô nem do controlador.`)),
       h('div', { class: 'ma-jog-acoes' },
-        botao('Conferi a célula', 'Marca na atividade que você leu a célula', () => { atividade.celula = true; desenharAtividade() }),
+        livre ? null : botao('Conferi a célula', 'Marca na atividade que você leu a célula', () => { atividade.celula = true; desenharAtividade() }),
         botao('Substrato novo', 'Tira a parede da mesa', () => void pecaNova())))
 
     // Condições: arquivos do controlador (ASF/AEF) e a fonte, separados.
@@ -419,10 +435,46 @@ export function telaManufatura(app: App): void {
         h('p', { class: 'ma-dica' }, 'Modelo didático (H106): tendências, não previsão metalúrgica. O mapa de alturas não representa a ondulação das laterais nem a microestrutura.'))
     }
     const abaInspecao = h('div', { class: 'ma-aba ma-rolagem' }, corpoInspecao)
+    if (livre) corpoInspecao.replaceChildren(h('p', { class: 'ma-dica' }, 'Modo livre: sem missão e sem nota. Fabrique para ver as medidas da peça, o perfil e os avisos do processo.'))
+    const desenharInspecaoLivre = (a: InspecaoLivre, c: Controlador) => {
+      const perfil = h('canvas', { width: 560, height: 150, class: 'ma-perfil', 'aria-label': 'Perfil da peça visto de lado: o topo mais alto em cada X' }) as HTMLCanvasElement
+      const g = perfil.getContext('2d')
+      if (g && a.perfil.length > 1) {
+        const xs = a.perfil, hMax = Math.max(5, a.alturaMaxMm) * 1.1
+        const px = (x: number) => 30 + ((x - xs[0].x) / (xs[xs.length - 1].x - xs[0].x)) * 520, py = (v: number) => 135 - (v / hMax) * 120
+        g.fillStyle = '#141b20'; g.fillRect(0, 0, 560, 150)
+        g.fillStyle = '#5d6d77'
+        g.beginPath(); g.moveTo(px(xs[0].x), py(0))
+        for (const s of xs) g.lineTo(px(s.x), py(s.alturaMm))
+        g.lineTo(px(xs[xs.length - 1].x), py(0)); g.fill()
+        g.fillStyle = '#cfd6da'; g.font = '11px Consolas, monospace'
+        g.fillText(`${n1(a.alturaMaxMm)} mm`, 34, py(a.alturaMaxMm) - 4)
+        g.fillText(`X ${Math.round(xs[0].x)}`, 30, 148); g.textAlign = 'right'; g.fillText(`X ${Math.round(xs[xs.length - 1].x)}`, 550, 148)
+      }
+      const e = a.extensao
+      const passes = h('table', { class: 'ma-tabela' }, h('caption', {}, 'Passes com arco: interpasse no ARCON e altura do TCP sobre o topo'),
+        h('thead', {}, h('tr', {}, ['Passe', 'Linha', 'Interpasse', 'TCP–topo no início', 'Comprimento', 'Fechamento'].map((t) => h('th', { scope: 'col' }, t)))),
+        h('tbody', {}, c.passes.map((p) => h('tr', {}, h('th', { scope: 'row' }, String(p.numero)), h('td', {}, `L${p.linha}`), h('td', {}, `${Math.round(p.interpasseC)} °C`), h('td', {}, `${n1(p.folgaInicialMm)} mm`), h('td', {}, `${Math.round(p.comprimentoMm)} mm`), h('td', {}, p.fechamento)))))
+      corpoInspecao.replaceChildren(
+        h('div', { class: 'ma-nota' }, h('strong', {}, 'MODO LIVRE'), h('span', {}, 'sem nota: só as medidas')),
+        h('p', {}, e
+          ? `Peça de X ${Math.round(e.xMin)} a ${Math.round(e.xMax)} mm e Y ${Math.round(e.yMin)} a ${Math.round(e.yMax)} mm; altura máxima ${n1(a.alturaMaxMm)} mm; ${a.passes} passe(s), cerca de ${n2(a.alturaPorCamadaMm)} mm por passe empilhado; área ocupada ${Math.round(a.areaOcupadaMm2)} mm².`
+          : 'Nenhum metal sobre o substrato.'),
+        h('p', {}, `Metal ${Math.round(a.volumeMm3)} mm³, arame ${n1(a.arameG)} g, energia ${Math.round(a.energiaKJ)} kJ, tempo ${Math.round(a.tempoS)} s (arco aberto ${Math.round(a.tempoArcoS)} s), ${c.passes.length > 1 ? `interpasse máximo ${Math.round(a.interpasseMaxC)} °C` : 'interpasse: só há um passe'}.`),
+        perfil,
+        h('h3', {}, 'Avisos do processo'),
+        h('ul', { class: 'ma-achados' }, a.achados.length
+          ? a.achados.map((x) => h('li', { class: x.grave ? 'ma-grave' : '' }, h('b', {}, x.nome), ` (${x.onde}). `, x.causa, ' ', h('em', {}, `Correção: ${x.correcao}`)))
+          : h('li', {}, 'Nenhum aviso.')),
+        passes,
+        h('p', { class: 'ma-dica' }, 'Modelo didático (H106): tendências, não previsão metalúrgica.'))
+    }
 
-    const abas = montarAbas([['Posições', abaPosicoes], ['Célula', abaCelula], ['Condições', abaCondicoes], ['Variáveis', abaVariaveis], ['Atividade', abaAtividade], ['Inspeção', abaInspecao]], 'Posições e parâmetros')
+    const listaAbas: [string, HTMLElement][] = [['Posições', abaPosicoes], ['Célula', abaCelula], ['Condições', abaCondicoes], ['Variáveis', abaVariaveis], ...(livre ? [] : [['Atividade', abaAtividade] as [string, HTMLElement]]), ['Inspeção', abaInspecao]]
+    const abas = montarAbas(listaAbas, 'Posições e parâmetros')
+    const abaDaInspecao = listaAbas.length - 1
     const areaParametros = h('section', { class: 'ma-parametros', 'aria-label': 'Posições e parâmetros' }, abas.lista, ...abas.corpos)
-    abas.lista.addEventListener('click', () => { if (!abas.corpos[5].hidden && avaliacao) { atividade.inspecionou = true; desenharAtividade() } })
+    abas.lista.addEventListener('click', () => { if (!abas.corpos[abaDaInspecao].hidden && avaliacao) { atividade.inspecionou = true; desenharAtividade() } })
 
     // ---------------- Célula 3D ----------------
     const hudEstado = h('strong', { class: 'ma-hud-estado', role: 'status', 'aria-live': 'polite' })
@@ -432,7 +484,7 @@ export function telaManufatura(app: App): void {
     const botoesVista = h('div', { class: 'ma-vistas', role: 'group', 'aria-label': 'Câmera' },
       botao('Peça', 'Câmera na parede', () => vista.vista('peca')), botao('Lado', 'Câmera de lado, para ver o perfil', () => vista.vista('lado')), botao('Célula', 'Câmera na célula inteira', () => vista.vista('celula')))
     const areaVista = h('section', { class: 'ma-vista', 'aria-label': 'Célula 3D e peça' }, vista.canvas, hud, botoesVista,
-      h('p', { class: 'ma-legenda' }, 'Robô ilustrativo · laranja: caminho com arco · azul: sem arco · amarelo: pontos e limites da missão'))
+      h('p', { class: 'ma-legenda' }, livre ? 'Robô ilustrativo · laranja: caminho com arco · azul: sem arco · amarelo: ponto selecionado' : 'Robô ilustrativo · laranja: caminho com arco · azul: sem arco · amarelo: pontos e limites da missão'))
 
     app.raiz.append(h('div', { class: 'ma' }, areaPrograma, h('div', { class: 'ma-direita' }, areaVista, areaParametros)))
 
@@ -481,11 +533,16 @@ export function telaManufatura(app: App): void {
         return
       }
       jog = copiaPose(c.pose)
+      if (livre) {
+        desenharInspecaoLivre(inspecionarLivre(c), c)
+        abas.escolher(abaDaInspecao)
+        return
+      }
       if (c.estado === 'concluido' || c.estado === 'alarme' || c.estado === 'parado') {
         avaliacao = avaliarParede(c)
         atividade.fabricou = true
         desenharInspecao(avaliacao, c)
-        abas.escolher(5)
+        abas.escolher(abaDaInspecao)
         atividade.inspecionou = true
         if (avaliacao.aprovada) atividade.aprovou = true
         const melhor = app.manufatura.melhor
@@ -542,5 +599,5 @@ export function telaManufatura(app: App): void {
       salvar(true)
       vista.destruir()
     }
-  }, 'Manufatura aditiva')
+  }, livre ? 'Manufatura aditiva · modo livre' : 'Manufatura aditiva')
 }
