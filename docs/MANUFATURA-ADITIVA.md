@@ -210,3 +210,7 @@ Coleção nova `manufatura`. Guarda o programa, os pontos, as condições, a cé
 - o determinismo em 60, 23 e 2 quadros por segundo;
 - a nota: o programa inicial reprova, o corrigido aprova, incremento alto ou baixo, humping, sem espera e mesmo sentido contra alternado;
 - a persistência: ida e volta, campo estragado e dados antigos.
+
+## Acabamento visual das camadas
+
+A parede recebe faixas de deposição, sulcos arredondados e pequenas variações determinísticas de tom e rugosidade. O acabamento é calculado apenas na renderização: não muda o mapa de alturas, volume, colisões, temperatura ou pontuação. Como o mapa não guarda interfaces enterradas, as faixas aproximam a altura relativa de cada coluna e sua contagem de passes; não representam uma reconstrução metalúrgica das interfaces reais. O relevo é óptico, sem deslocamento dos vértices.

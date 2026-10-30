@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { acabamentoCamadas, coordenadasCamadas } from './camadasManufatura'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { MISSAO_PAREDE, SUBSTRATO, type Pose, type PontoEnsinado } from '../modelo/manufatura/celula'
 import { CELULA_MM, type Deposito } from '../modelo/manufatura/deposicao'
@@ -123,10 +124,12 @@ export function criarVistaCelula(): VistaCelula | null {
   }
 
   // Parede: um campo de alturas sobre o substrato (uma célula do modelo por vértice).
+  let depositoAtual: Deposito | null = null
   let paredeVersao = -1
   let parede: THREE.Mesh | null = null
   let geoParede: THREE.BufferGeometry | null = null
   const materialParede = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.25, roughness: 0.5 })
+  acabamentoCamadas(materialParede)
   let ultimaParedeMs = 0
   const montarParede = (d: Deposito) => {
     const nx = d.nx, ny = d.ny
@@ -141,12 +144,14 @@ export function criarVistaCelula(): VistaCelula | null {
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
     g.setAttribute('color', new THREE.BufferAttribute(cor, 3))
+    g.setAttribute('camadaVisual', new THREE.BufferAttribute(new Float32Array(nx * ny), 1))
     g.setIndex(indices)
     geoParede = g
     parede = new THREE.Mesh(g, materialParede)
     cena.add(parede)
   }
   const atualizarParede = (d: Deposito, temperaturaC: number) => {
+    if (depositoAtual !== d) { depositoAtual = d; paredeVersao = -1; ultimaParedeMs = -Infinity }
     if (!geoParede) montarParede(d)
     if (d.versao === paredeVersao || !geoParede) return
     // A malha tem uma célula do modelo por vértice: refazer no máximo ~8 vezes por segundo.
@@ -161,10 +166,12 @@ export function criarVistaCelula(): VistaCelula | null {
       const h = d.altura[k]
       pos.setY(k, h * E)
       if (h < 0.05) { cor.setXYZ(k, 0.6, 0.64, 0.67); continue }
-      // Camadas alternam um pouco o tom (para contar) e o inox ganha cor de revenido com a altura.
-      const par = d.camada[k] % 2 ? 0.06 : 0
-      cor.setXYZ(k, 0.72 + par + 0.2 * quente, 0.7 + par * 0.8 - 0.1 * quente, 0.66 + par * 0.6 - 0.2 * quente)
+      // O calor colore o metal; as interfaces de deposição são realçadas pelo material.
+      cor.setXYZ(k, 0.72 + 0.2 * quente, 0.7 - 0.1 * quente, 0.66 - 0.2 * quente)
     }
+    const faixas = geoParede.getAttribute('camadaVisual') as THREE.BufferAttribute
+    faixas.copyArray(coordenadasCamadas(d))
+    faixas.needsUpdate = true
     pos.needsUpdate = true
     cor.needsUpdate = true
     geoParede.computeVertexNormals()
