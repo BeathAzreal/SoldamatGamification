@@ -399,15 +399,22 @@ export class Simulacao {
     // H47: parada, só pesa a gravidade de lado e para fora da face (sem subir nem descer).
     const g = this.gravidadeEm(p.x)
     const ef = efeitoPosicao(g, 0)
-    this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto), gravidadePoca(g, 0))
-    this.percurso.registrar(p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
+    const destino = this.cordao.depositar(p.x, p.y + ef.desvioMm, volume, t1, razaoEfetiva(this.ajustesAtuais, this.contexto) * ef.razao, espalhamentoDoMovimento(this.contexto), instabilidadeArco(this.ajustesAtuais, this.contexto), gravidadePoca(g, 0))
+    this.registrarCalor(destino, p.x, p.y, t1 - t0, (potencia * (t1 - t0)) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
     this.picoSePreciso(p.x)
+  }
+
+  /** H101: calor no depósito atingido; tempo e eficiência continuam registrados na junta. */
+  private registrarCalor(destino: Cordao, x: number, y: number, dt: number, bruto: number, efetivo: number): void {
+    this.percurso.registrar(x, y, dt, destino.solto ? 0 : bruto, destino.solto ? 0 : efetivo)
+    if (destino.solto) destino.termico.registrar(x, y, dt, bruto, efetivo)
   }
 
   /** H101: a cada intervalo de tempo de arco, guarda o índice de fusão perto da tocha. */
   private picoSePreciso(xMm: number): void {
     if (this.tempoArcoMs < this.proximoPicoMs) return
     registrarPicosFusao(this.cordao, this.percurso, this.contexto, xMm, PICO_FUSAO.raioMm)
+    for (const solto of this.cordao.soltos) registrarPicosFusao(solto, solto.termico, { ...this.contexto, junta: 'topo', aberturaMm: 0 }, xMm, PICO_FUSAO.raioMm)
     this.proximoPicoMs = (Math.floor(this.tempoArcoMs / PICO_FUSAO.intervaloMs) + 1) * PICO_FUSAO.intervaloMs
   }
 
@@ -437,8 +444,8 @@ export class Simulacao {
         continue
       }
       const integral = this.aquecer(t0 + j * dt, t0 + (j + 1) * dt, potencia)
-      this.cordao.depositar(x, y + ef.desvioMm, volume, t0 + (j + 1) * dt, razao, sigma, instab, gp)
-      this.percurso.registrar(x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
+      const destino = this.cordao.depositar(x, y + ef.desvioMm, volume, t0 + (j + 1) * dt, razao, sigma, instab, gp)
+      this.registrarCalor(destino, x, y, dt, (potencia * dt) / 1000, potencia * integral * ef.fusao * fusaoAjustes)
     }
     this.picoSePreciso(p1.x)
   }

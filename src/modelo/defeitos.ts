@@ -120,6 +120,8 @@ export interface Poro {
 }
 
 export interface AnaliseDefeitos {
+  /** H101: consumo térmico dos cordões fora da junta, sem agregá-los ao cordão avaliado. */
+  consumosSoltos?: { centro: Float32Array; analise: AnaliseDefeitos }[]
   n: number
   passoMm: number
   /** −1…1: o perfil pende para o lado −n ou +n (horizontal, H50). */
@@ -231,6 +233,10 @@ export function analisarDefeitos(e: EntradaDefeitos): AnaliseDefeitos {
 
   const secoes = Array.from({ length: n }, (_, i) => cordao.secao(i))
   const comCordao = secoes.filter((s) => s.larguraMm >= 1)
+  if (cordao.soltos.length) a.consumosSoltos = cordao.soltos.map(solto => ({
+    centro: Float32Array.from({ length: solto.nPosicoes }, (_, i) => solto.secao(i).yCentroMm),
+    analise: analisarDefeitos({ cordao: solto, percurso: solto.termico, contexto: { ...ctx, junta: 'topo', aberturaMm: 0 } }),
+  }))
   if (comCordao.length === 0) return a
   // Seção típica do cordão: as pontas afinam e não devem parecer "rápidas demais".
   const areas = comCordao.map((s) => s.areaMm2).sort((x, y) => x - y)

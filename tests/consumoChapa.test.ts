@@ -77,3 +77,46 @@ describe('H101: a chapa consumida em estágios pelo calor', () => {
     expect(celula(40, 0)).toBe(0)
   })
 })
+
+
+describe('H101: perfuração fora da junta no MIG/MAG', () => {
+  function aquecer(sim: Simulacao, y: number, inicio = 0, passo = 8) {
+    sim.iniciarArco({ t: inicio, x: 75, y })
+    for (let dt = passo; dt <= 6000; dt += passo) sim.moverTocha({ t: inicio + dt, x: 75, y })
+    sim.encerrarArco({ t: inicio + 6000, x: 75, y })
+  }
+  function analisar(sim: Simulacao) {
+    return analisarDefeitos({ cordao: sim.cordao, percurso: sim.percurso, contexto: sim.contexto })
+  }
+  function nova() {
+    const sim = new Simulacao(CONTEXTO_PADRAO)
+    sim.definirAjustes({ alimentacao: 5, tensao: botaoDaTensao(28) })
+    return sim
+  }
+  it('fura nos dois lados da chapa sem aquecer a junta por engano', () => {
+    const sim = nova()
+    aquecer(sim, 25)
+    aquecer(sim, -25, 7000)
+    const a = analisar(sim), i = sim.cordao.indiceEm(75)
+    expect(a.furoMm[i]).toBe(0)
+    expect(a.consumosSoltos).toHaveLength(2)
+    for (const s of a.consumosSoltos!) expect(s.analise.furoMm[i]).toBeGreaterThan(0)
+    const mapa = novoMapaConsumo(PECA.comprimentoMm)
+    for (const s of a.consumosSoltos!) preencherMapaConsumo(mapa, a.passoMm, s.analise.furoMm, s.centro, s.analise.afundamento, false)
+    const em = (y: number) => mapa.dados[4 * (Math.floor((y + CONSUMO.meiaLarguraMm) / CONSUMO.celulaMm) * mapa.nx + Math.floor(75 / CONSUMO.celulaMm))]
+    expect(em(25)).toBe(255)
+    expect(em(-25)).toBe(255)
+    expect(em(0)).toBe(0)
+    expect(sim.percurso.pertoDaJuntaEntre(0, Infinity)).toBe(0)
+  })
+  it('mantém o furo anterior ao aquecer outro depósito e não cria calor fora da peça', () => {
+    const sim = nova()
+    aquecer(sim, 25)
+    const antes = analisar(sim).consumosSoltos![0].analise.furoMm[sim.cordao.indiceEm(75)]
+    aquecer(sim, -25, 7000)
+    expect(analisar(sim).consumosSoltos![0].analise.furoMm[sim.cordao.indiceEm(75)]).toBeGreaterThanOrEqual(antes)
+    const fora = nova()
+    aquecer(fora, PECA.larguraChapaMm + 20)
+    expect(analisar(fora).consumosSoltos).toBeUndefined()
+  })
+})
