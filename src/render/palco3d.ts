@@ -729,6 +729,9 @@ export class Palco3D {
       viva.definirDefeitos(a)
       if (viva.atualizar(this.cordaoAtual)) this.enviarCordao()
     }
+    // H101: a face dos cordoes fora da junta tambem afunda antes do furo.
+    this.soltos3d.forEach((s, i) => s.viva.definirDefeitos(a?.consumosSoltos?.[i]?.analise ?? null))
+    if (this.cordaoAtual) this.atualizarSoltos(this.cordaoAtual)
     this.defeitos3d.atualizar(a, viva)
     this.atualizarConsumo(a)
   }
@@ -771,6 +774,10 @@ export class Palco3D {
     const viva = this.viva
     if (a && viva) preencherMapaConsumo(mapa, a.passoMm, a.furoMm, viva.centro, a.afundamento)
     else mapa.dados.fill(0)
+    for (const solto of a?.consumosSoltos ?? []) {
+      const d = solto.analise
+      preencherMapaConsumo(mapa, d.passoMm, d.furoMm, solto.centro, d.afundamento, false)
+    }
     this.texturaConsumo.needsUpdate = true
   }
 

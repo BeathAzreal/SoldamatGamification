@@ -1106,6 +1106,9 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
 - **Testes:** `tests/materiais.test.ts` (catálogo, fichas únicas, toda chapa × junta × espessura monta contexto válido, cobre pede mais calor e inox menos, ferrítico esquenta mais e médio carbono menos, zinco faz poro, corrente do eletrodo e do TIG pela chapa, cobre no TIG).
 - Os números são do jogo.
 
+### Complemento H101 — aquecimento fora da junta (MIG/MAG)
+
+Cada cordão solto possui aporte e picos de fusão próprios. O calor de um depósito fora da junta não é transferido ao cordão da junta. A chapa plana fora da junta usa a referência de topo sem abertura, com o mesmo material e espessura. O mapa compõe os furos de todos os cordões, sem deslocá-los nem apagar os anteriores. O tempo fora da junta continua contando para eficiência. Modelo didático por faixas de cordão, não uma solução térmica contínua 2D.
 ### H105 — brasagem forte com maçarico (v2.0, Claude)
 
 - **O processo:** junta sobreposta; o metal de base não funde. O maçarico aquece a junta, a vareta encostada na borda derrete pelo calor **da peça** e a liga entra na folga por capilaridade. Detalhes, controles e peças em [`BRASAGEM.md`](BRASAGEM.md).

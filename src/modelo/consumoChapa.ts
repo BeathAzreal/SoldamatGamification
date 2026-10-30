@@ -104,8 +104,9 @@ export function preencherMapaConsumo(
   furoMm: ArrayLike<number>,
   centroMm: ArrayLike<number>,
   afundamento: ArrayLike<number>,
+  limpar = true,
 ): boolean {
-  mapa.dados.fill(0)
+  if (limpar) mapa.dados.fill(0)
   const cel = CONSUMO.celulaMm
   let algum = false
   for (let i = 0; i < furoMm.length; i++) {

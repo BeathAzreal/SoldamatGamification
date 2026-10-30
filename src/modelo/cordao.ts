@@ -1,4 +1,5 @@
 import { secaoNaJunta, type DimensoesJunta, type TipoJunta } from './juntas'
+import { Percurso } from './percurso'
 import { MODELO, PECA } from './parametros'
 
 /**
@@ -118,6 +119,8 @@ export class Cordao {
   readonly soltos: Cordao[] = []
   /** Centro lateral de referência de um cordão solto (onde começou). */
   private yReferencia = 0
+  /** Calor local dos depósitos fora da junta, separado da avaliação da junta. */
+  readonly termico: Percurso
 
   constructor(
     readonly comprimentoMm: number = PECA.comprimentoMm,
@@ -127,6 +130,7 @@ export class Cordao {
     /** Este é um cordão solto (H58): aceita todo depósito, sem repartir. */
     readonly solto = false,
   ) {
+    this.termico = new Percurso(comprimentoMm, passoMm)
     this.passoMm = passoMm
     this.nPosicoes = Math.ceil(comprimentoMm / passoMm)
     this.volumes = new Float64Array(this.nPosicoes)
@@ -167,11 +171,10 @@ export class Cordao {
     sigmaLateralMm = 0,
     instabilidade = 0,
     g: GravidadePoca | null = null,
-  ): void {
-    if (volumeMm3 <= 0) return
+  ): Cordao {
+    if (volumeMm3 <= 0) return this
     if (!this.solto && !this.daJunta(xMm, yMm)) {
-      this.soltoPara(xMm, yMm).depositar(xMm, yMm, volumeMm3, tMs, razao, sigmaLateralMm, instabilidade, g)
-      return
+      return this.soltoPara(xMm, yMm).depositar(xMm, yMm, volumeMm3, tMs, razao, sigmaLateralMm, instabilidade, g)
     }
     const centro = this.indiceEm(xMm)
     const ini = Math.max(0, centro - this.raio)
@@ -194,6 +197,7 @@ export class Cordao {
       }
       if (Math.abs(i - centro) <= this.raioRecente && tMs > this.tUltimo[i]) this.tUltimo[i] = tMs
     }
+    return this
   }
 
   secao(i: number): SecaoLocal {
