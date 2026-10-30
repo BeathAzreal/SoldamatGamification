@@ -1105,3 +1105,42 @@ Fonte científica: Banaee, Kapil, Marefat e Sharma (2023), "Generalised overlapp
 - **Limites:** a difusividade do TIG é metade da real (para caber na grade de 1 × 0,5 mm). O alumínio no TIG real pede corrente alternada; o jogo não muda a polaridade. O médio carbono não tem trinca por têmpera no modelo: o pré-aquecimento só aparece como fusão melhor com a peça quente. O eletrodo não acumula calor de um passe para o outro.
 - **Testes:** `tests/materiais.test.ts` (catálogo, fichas únicas, toda chapa × junta × espessura monta contexto válido, cobre pede mais calor e inox menos, ferrítico esquenta mais e médio carbono menos, zinco faz poro, corrente do eletrodo e do TIG pela chapa, cobre no TIG).
 - Os números são do jogo.
+
+### H105 — brasagem forte com maçarico (v2.0, Claude)
+
+- **O processo:** junta sobreposta; o metal de base não funde. O maçarico aquece a junta, a vareta encostada na borda derrete pelo calor **da peça** e a liga entra na folga por capilaridade. Detalhes, controles e peças em [`BRASAGEM.md`](BRASAGEM.md).
+- **Calor:** o campo do TIG (H92), com uma chama gaussiana larga no lugar do arco. Na sobreposição o calor vai para as duas chapas (o dobro da massa).
+  - Bico de 1 a 5: potência na peça de 1,1 a 6,2 kW.
+  - Largura da chama: σ = 2,2 + 0,32 × (distância − dardo) + 0,6 × bico (mm).
+  - Rendimento: cai acima de 15 mm de distância.
+  - Chama: neutra ×1; oxidante ×1,1 e oxida três vezes mais; carburante ×0,85 e oxida menos.
+- **Liga** (temperaturas de catálogo): a mobilidade vai de zero no solidus a cheia 20 °C acima do liquidus.
+  - A vareta só derrete pela peça acima do solidus.
+  - Sobre a peça fria, se a chama dá nela 35 % ou mais do calor do centro, ela derrete na chama e cai em bolinhas que não molham (contadas como liga embolada).
+- **Molhamento:** a liga só molha onde a superfície está limpa.
+  - Com fluxo, ele precisa estar na faixa ativa. Ativo, o fluxo dissolve o óxido e se gasta (60 s o branco, 90 s o bórax; a chama oxidante gasta três vezes mais rápido). Acima da faixa, ele queima em 0,8 s.
+  - Ainda pasta ou pó, o fluxo protege do ar (oxida 8 % do normal).
+  - Sem fluxo, o metal oxida acima de 400 °C (300 °C no cobre).
+  - O cobre-fósforo no cobre limpa sozinho, exceto com chama oxidante.
+- **Capilaridade:** a liga do filete entra na folga e corre para as células vizinhas que molham, mais depressa para as mais quentes. Velocidade: 25 mm/s × f(folga) × mobilidade.
+  - f(folga) é uma gaussiana no logaritmo, com máximo em 0,075 mm (desvio 0,45).
+  - Acima de 0,15 mm a capilaridade não segura a coluna de liga e as células enchem só em parte (vazios).
+  - Abaixo do solidus a liga trava (solidifica).
+  - Filete acima de 4 mm² escorre.
+- **Defeitos:**
+  - zinco da liga fervendo acima do superaquecimento (poros);
+  - metal de base fundido (acima da fusão);
+  - zinco do galvanizado fervido acima de 907 °C (faixa sem proteção);
+  - cobre-fósforo no aço (fosfeto de ferro, junta frágil).
+- **Calibração:** com um brasador simulado com a técnica de oficina, a junta de aço com prata e bico 2 enche cerca de 75 % em uns 40 s, e a de cobre com cobre-fósforo, com bico 5, em uns 25 s. Com bico 3 o cobre não chega à faixa. Folga de 0,3 mm deixa vazios (cerca de 10 %). O latão só enche com o lado de dentro da sobreposição quente.
+- **Testes:** `tests/brasagem.test.ts`:
+  - dados de catálogo coerentes;
+  - folga certa contra folga larga;
+  - sem fluxo a liga embola;
+  - vareta na chama vira bolinhas;
+  - fluxo queimado com bico grande parado;
+  - cobre-fósforo no cobre sem fluxo e no aço (frágil);
+  - latão queima mais zinco que a prata no galvanizado;
+  - o latão pede o lado de dentro quente;
+  - o resultado não depende da taxa de quadros.
+- Potências, velocidades e vidas do fluxo são números do jogo; temperaturas de ligas, fluxos e metais são de catálogo.

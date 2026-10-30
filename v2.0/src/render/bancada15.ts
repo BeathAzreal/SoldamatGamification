@@ -11,6 +11,7 @@ import { CONTEXTO_PADRAO, type ContextoProcesso } from '../modelo/processo'
 import type { Cordao } from '../modelo/cordao'
 import type { Acionamento15 } from '../modelo/acionamento15'
 import type { ModeloTig } from '../modelo/tig'
+import { BRASAGEM, FLUXOS, ModeloBrasagem, type ChamaId } from '../modelo/brasagem'
 import { criarSuperficieEscoria15 } from './escoriaSuperficie15'
 import { girarFerramenta15, type Vetor15 } from '../entrada/giroFerramenta15'
 import type { FerramentaBancada15 } from '../modelo/escoria15'
@@ -226,6 +227,81 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
     particulasEscoria.push({ malha, velocidade: new THREE.Vector3(), vida: 0 })
   }
   let calorPonta = 0
+
+  // ------------------------------------------------------------ brasagem (H105)
+  // Maçarico oxiacetilênico: corpo de latão, pescoço e bico de cobre; a chama sai do bico para baixo.
+  const macarico = new THREE.Group()
+  ferramenta.add(macarico)
+  macarico.visible = false
+  const latao = new THREE.MeshStandardMaterial({ color: '#c9a24a', metalness: 0.85, roughness: 0.35 })
+  const bicoMalha = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, 14, 16), cobre)
+  bicoMalha.position.y = 7
+  macarico.add(bicoMalha)
+  // Pescoço curvo e corpo para o lado e para cima (como a tocha do TIG), finos para não tampar a peça.
+  const dirPescoco = new THREE.Vector3(0.35, 0.94, 0).normalize(), dirCorpo = new THREE.Vector3(0.9, 0.42, -0.1).normalize()
+  const pescocoMacarico = haste(macarico, 1.8, 36, new THREE.Vector3(0, 14, 0), dirPescoco, cobre)
+  const inicioCorpo = new THREE.Vector3(0, 14, 0).addScaledVector(dirPescoco, 36)
+  const corpoMacarico = haste(macarico, 3.6, 60, inicioCorpo, dirCorpo, latao)
+  const registroO2 = cilindro(macarico, 3, 4, 0, vermelho)
+  registroO2.position.copy(inicioCorpo).addScaledVector(dirCorpo, 10).add(new THREE.Vector3(0, 4, 0))
+  registroO2.rotation.x = Math.PI / 2
+  void pescocoMacarico; void corpoMacarico
+  // Chama: dardo (cone interno brilhante), pena do acetileno (só na carburante) e envoltório azulado.
+  const aditivoChama = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false } as const
+  const dardo = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 18, 1, true), new THREE.MeshBasicMaterial({ color: '#e6f2ff', opacity: 0.95, ...aditivoChama }))
+  const pena = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 18, 1, true), new THREE.MeshBasicMaterial({ color: '#fff4dc', opacity: 0.5, ...aditivoChama }))
+  const envoltorio = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#2f6bff', opacity: 0.35, ...aditivoChama }))
+  for (const c of [dardo, pena, envoltorio]) { c.rotation.x = Math.PI; macarico.add(c) }
+  const manchaChama = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: textura, color: '#ffb070', opacity: 0.6, ...aditivoChama }))
+  palco.peca.add(palco.ancorar(manchaChama))
+  manchaChama.visible = false
+  const COR_CHAMA: Record<ChamaId, { envoltorio: string; pena: number; dardo: number }> = {
+    neutra: { envoltorio: '#2f6bff', pena: 0, dardo: 1 },
+    oxidante: { envoltorio: '#5a48ff', pena: 0, dardo: 0.7 },
+    carburante: { envoltorio: '#ff9a3a', pena: 1, dardo: 1 },
+  }
+  // Brilho da peça pela temperatura (incandescência) e o fluxo por cima, na mesma grade do modelo.
+  const G = ModeloBrasagem.grade
+  const nVert = G.NX * G.NY
+  const geoBrasa = new THREE.BufferGeometry()
+  const posBrasa = new Float32Array(nVert * 3)
+  for (let j = 0; j < G.NY; j++) for (let i = 0; i < G.NX; i++) {
+    const k = j * G.NX + i, y = G.Y0 + (j + 0.5) * G.DY
+    posBrasa[3 * k] = (i + 0.5) * G.DX - 75
+    posBrasa[3 * k + 1] = superficie(y) + 0.06
+    posBrasa[3 * k + 2] = y
+  }
+  const indices: number[] = []
+  for (let j = 0; j + 1 < G.NY; j++) for (let i = 0; i + 1 < G.NX; i++) {
+    const a = j * G.NX + i
+    indices.push(a, a + G.NX, a + 1, a + 1, a + G.NX, a + G.NX + 1)
+  }
+  geoBrasa.setAttribute('position', new THREE.BufferAttribute(posBrasa, 3))
+  geoBrasa.setIndex(indices)
+  const geoFluxo = geoBrasa.clone()
+  const corBrasa = new Float32Array(nVert * 3)
+  const corFluxo = new Float32Array(nVert * 4)
+  geoBrasa.setAttribute('color', new THREE.BufferAttribute(corBrasa, 3))
+  geoFluxo.setAttribute('color', new THREE.BufferAttribute(corFluxo, 4))
+  const brilhoPeca = new THREE.Mesh(geoBrasa, new THREE.MeshBasicMaterial({ vertexColors: true, ...aditivoChama, side: THREE.DoubleSide }))
+  const camadaFluxo = new THREE.Mesh(geoFluxo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide }))
+  camadaFluxo.position.y = 0.03
+  for (const m of [camadaFluxo, brilhoPeca]) { m.visible = false; m.frustumCulled = false; palco.peca.add(m); palco.curvarTambem(m) }
+  /** Cor da incandescência do aço e do cobre (°C → cor somada à peça): vermelho escuro, cereja, laranja, amarelo. */
+  const PONTOS_COR: [number, number, number, number][] = [
+    [480, 0, 0, 0], [580, 0.16, 0.01, 0], [680, 0.42, 0.04, 0.01], [760, 0.75, 0.1, 0.02],
+    [850, 1, 0.24, 0.04], [950, 1, 0.48, 0.1], [1050, 1, 0.72, 0.28], [1200, 1, 0.92, 0.65],
+  ]
+  const corIncandescente = (t: number, saida: Float32Array, k: number) => {
+    if (t <= PONTOS_COR[0][0]) { saida[3 * k] = saida[3 * k + 1] = saida[3 * k + 2] = 0; return }
+    let n = PONTOS_COR.length - 1
+    for (let q = 1; q < PONTOS_COR.length; q++) if (t < PONTOS_COR[q][0]) { n = q; break }
+    const a = PONTOS_COR[n - 1], b = PONTOS_COR[n]
+    const f = Math.max(0, Math.min(1, (t - a[0]) / (b[0] - a[0])))
+    for (let c = 0; c < 3; c++) saida[3 * k + c] = a[c + 1] + (b[c + 1] - a[c + 1]) * f
+  }
+  let brasaQuadro = 0
+
   return {
     canvas, enquadrar, superficie,
     /** H103: a peça é uma emenda de tubos (o giro do tubo vale). */
@@ -471,6 +547,99 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       }
       palco.desenhar(camera)
     },
+    /**
+     * Brasagem (H105): maçarico com a chama do tipo escolhido, a peça brilhando
+     * pela temperatura, o fluxo (pasta branca, pó, vítreo, queimado), a vareta
+     * na borda e a liga (filete) com a cor dela.
+     */
+    desenharBrasagem(m: ModeloBrasagem, c: Cordao, dt = 0, inspecionando = false) {
+      const chao = superficie(m.yMm)
+      eletrodo.visible = mig.visible = tig.visible = false
+      martelo.visible = escova.visible = false
+      macarico.visible = true
+      ferramenta.visible = !inspecionando
+      // Solto, o maçarico sobe e se afasta da peça (a chama continua acesa).
+      const altura = m.naPeca ? m.distanciaMm : Math.max(m.distanciaMm, 45)
+      ferramenta.position.set(m.xMm - 75, chao + altura, m.yMm)
+      eixo.set(Math.sin(0.35), Math.cos(0.35), 0)
+      ferramenta.quaternion.setFromUnitVectors(normal, eixo)
+      const bico = m.bico, cor = COR_CHAMA[m.preparo.chama]
+      const tremor = 0.94 + 0.12 * Math.random()
+      const dardoMm = bico.dardoMm * (m.preparo.chama === 'oxidante' ? 0.7 : 1)
+      dardo.scale.set(0.7 + bico.n * 0.15, dardoMm, 0.7 + bico.n * 0.15)
+      dardo.position.y = -dardoMm / 2
+      ;(dardo.material as THREE.MeshBasicMaterial).opacity = 0.95 * cor.dardo
+      pena.visible = cor.pena > 0
+      pena.scale.set(1.4 + bico.n * 0.2, dardoMm * 3, 1.4 + bico.n * 0.2)
+      pena.position.y = -dardoMm * 1.5
+      const comprimento = Math.min(altura + 6, 22 + 6 * bico.n) * tremor
+      envoltorio.scale.set(2.5 + bico.n * 0.9, comprimento, 2.5 + bico.n * 0.9)
+      envoltorio.position.y = -comprimento / 2
+      ;(envoltorio.material as THREE.MeshBasicMaterial).color.set(cor.envoltorio)
+      // Onde a chama bate na peça, ela se abre numa mancha.
+      manchaChama.visible = m.naPeca && !inspecionando && m.potenciaW > 0
+      palco.peca.worldToLocal(cameraLocal.copy(camera.position))
+      manchaChama.position.set(m.xMm - 75, chao + 0.5, m.yMm)
+      manchaChama.lookAt(cameraLocal)
+      manchaChama.scale.setScalar(m.chama.sigmaMm * 3 * tremor)
+      // Vareta da liga na borda da chapa de cima, vindo do outro lado da chama.
+      const r = m.liga.varetaMm / 2
+      const pontaY = superficie(0.25) + (m.encostarVareta ? r : r + 6)
+      const comp = Math.min(140, 30 + m.varetaRestanteMm * 0.35)
+      dirVareta.set(-Math.sign(m.xMm - m.varetaXMm || 1) * Math.cos(0.5), Math.sin(0.5), 0).normalize()
+      corpoVareta.scale.set(r, comp, r)
+      corpoVareta.quaternion.setFromUnitVectors(Y, dirVareta)
+      corpoVareta.position.copy(dirVareta).multiplyScalar(comp / 2)
+      varetaMat.color.set(m.liga.cor)
+      varetaTig.position.set(m.varetaXMm - 75, pontaY, 0.6)
+      varetaTig.visible = !inspecionando && m.varetaRestanteMm > 0
+      const derretendo = m.encostarVareta && m.temperaturaC(m.varetaXMm, 0.25) > m.liga.solidusC
+      pontaVaretaMat.opacity = derretendo ? 0.9 : Math.max(0, pontaVaretaMat.opacity - dt * 2)
+      pontaVaretaMalha.scale.setScalar(r * 1.3)
+      pontaVaretaMalha.visible = pontaVaretaMat.opacity > 0.02
+      coluna.visible = halo.visible = poca.visible = false
+      luz.position.set(m.xMm - 75, chao + 10, m.yMm)
+      luz.color.set('#ffb36a')
+      luz.intensity = m.naPeca && !inspecionando ? 60 + 30 * bico.n : 15
+      respingos.visible = false
+      escoria.malha.visible = false
+      lascas.visible = false
+      // Brilho e fluxo: a cada dois quadros (13 mil pontos).
+      brilhoPeca.visible = camadaFluxo.visible = true
+      if (++brasaQuadro % 2 === 0 || inspecionando) {
+        const [a0, a1] = FLUXOS[m.liga.fluxo].ativoC
+        const oxidoCor = m.peca.material === 'cobre' ? [0.08, 0.05, 0.04] : [0.16, 0.13, 0.1]
+        for (let k = 0; k < nVert; k++) {
+          const t = BRASAGEM.ambienteC + m.temperatura[k]
+          corIncandescente(t, corBrasa, k)
+          const pico = BRASAGEM.ambienteC + m.maxima[k]
+          let rC = 0, gC = 0, bC = 0, aC = 0
+          if (m.fluxo[k] > 0.05) {
+            // Pasta branca; acima de 100 °C a água ferve e vira pó; na faixa ativa fica vítreo e transparente.
+            if (t < 100) { rC = 0.95; gC = 0.94; bC = 0.9; aC = 0.7 }
+            else if (t < a0) { rC = 0.9; gC = 0.88; bC = 0.82; aC = 0.55 }
+            else { rC = 1; gC = 0.97; bC = 0.85; aC = 0.12 }
+          } else if (m.preparo.fluxo && pico > a1 && m.fluxo[k] <= 0.05 && pico > 300 && Math.abs(G.Y0 + (Math.floor(k / G.NX) + 0.5) * G.DY) < 15) {
+            // Fluxo queimado: crosta escura, verde-preta.
+            rC = 0.09; gC = 0.11; bC = 0.08; aC = 0.75
+          } else if (m.oxido[k] > 0.15) {
+            rC = oxidoCor[0]; gC = oxidoCor[1]; bC = oxidoCor[2]; aC = Math.min(0.75, m.oxido[k] * 0.8)
+          }
+          corFluxo[4 * k] = rC; corFluxo[4 * k + 1] = gC; corFluxo[4 * k + 2] = bC; corFluxo[4 * k + 3] = aC
+        }
+        geoBrasa.attributes.color.needsUpdate = true
+        geoFluxo.attributes.color.needsUpdate = true
+      }
+      if (c !== cordaoAntes || c.volumeTotal() !== volumeAntes) {
+        metalLocal.malha.visible = false
+        palco.atualizarCordao(c)
+        cordaoAntes = c
+        volumeAntes = c.volumeTotal()
+      }
+      palco.desenhar(camera)
+    },
+    /** H105: a liga tem a cor dela no cordão (filete). */
+    definirCoresLiga(cores: readonly [string, string, string, string]) { palco.definirCoresCordao(cores) },
     /** Defeitos visíveis calculados pela análise do eletrodo (poros, crateras, mordedura, respingos, cor de calor), desenhados sobre o cordão 3D (H84, H86). */
     atualizarDefeitos(a: AnaliseDefeitos | null) {
       palco.atualizarDefeitos(a)

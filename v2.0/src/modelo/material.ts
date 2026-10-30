@@ -12,8 +12,8 @@ export type MaterialId =
   | 'inox-ferritico'
   | 'cobre'
 
-/** Processos do jogo em que uma chapa pode ser soldada (H104). */
-export type ProcessoChapa = 'MIG/MAG' | 'eletrodo' | 'TIG'
+/** Processos do jogo em que uma chapa pode ser soldada (H104) ou brasada (H105). */
+export type ProcessoChapa = 'MIG/MAG' | 'eletrodo' | 'TIG' | 'brasagem'
 
 export interface Material {
   id: MaterialId
@@ -73,7 +73,7 @@ export const MATERIAIS: Record<MaterialId, Material> = {
     fatorDeformacao: 1,
     exigeLimpeza: false,
     nomeCurto: 'Aço carbono',
-    processos: ['MIG/MAG', 'eletrodo', 'TIG'],
+    processos: ['MIG/MAG', 'eletrodo', 'TIG', 'brasagem'],
     ficha: {
       resumo: 'A referência da oficina: funde com calor médio e avisa antes de furar.',
       calor: 'Calor acumulado da peça: o aço carbono esquenta e esfria num ritmo médio.',
@@ -93,7 +93,7 @@ export const MATERIAIS: Record<MaterialId, Material> = {
     fatorDeformacao: 1.7,
     exigeLimpeza: false,
     nomeCurto: 'Inox austenítico',
-    processos: ['MIG/MAG', 'eletrodo', 'TIG'],
+    processos: ['MIG/MAG', 'eletrodo', 'TIG', 'brasagem'],
     ficha: {
       resumo: 'Conduz pouco o calor: ele fica perto do cordão, a peça entorta e colore.',
       calor: 'O inox guarda o calor perto do cordão e demora a esfriar: o fim do passe sai mais quente.',
@@ -135,7 +135,7 @@ export const MATERIAIS: Record<MaterialId, Material> = {
     exigeLimpeza: true,
     limpeza: { acao: 'Remover o zinco da borda (esmerilhadeira)', rotulo: 'Zinco removido', porosidade: 0.6 },
     nomeCurto: 'Galvanizado',
-    processos: ['MIG/MAG', 'eletrodo'],
+    processos: ['MIG/MAG', 'eletrodo', 'brasagem'],
     ficha: {
       resumo: 'Aço carbono fino coberto de zinco: o zinco ferve no arco e enche o cordão de poro.',
       calor: 'Chapa fina de aço: esquenta rápido e fura cedo se a tocha parar.',
@@ -194,7 +194,7 @@ export const MATERIAIS: Record<MaterialId, Material> = {
     fatorDeformacao: 1.3,
     exigeLimpeza: false,
     nomeCurto: 'Cobre',
-    processos: ['MIG/MAG', 'TIG'],
+    processos: ['MIG/MAG', 'TIG', 'brasagem'],
     ficha: {
       resumo: 'O metal que mais conduz calor: espalha tudo pela peça e esfria assim que o arco sai.',
       calor: 'O cobre espalha o calor pela peça inteira e esfria rápido: só funde bem com a peça já quente.',

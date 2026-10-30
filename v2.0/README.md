@@ -1,6 +1,6 @@
 # Oficina de Soldagem — Alpha v2.0
 
-Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. Já incorporada à `alpha-v2.0` (PRs #32, #36, #37, #39 e #40).
+Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. Já incorporada à `alpha-v2.0` (PRs #32, #36, #37, #39, #40, #42 e #43).
 
 ## Jogar
 
@@ -34,6 +34,7 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
 - No Arcade, a máquina pré-ajustada usa os passos do painel e fica fora do globular.
 - Novo exercício técnico: **4. Curto-circuito, globular e spray**.
 - **Chapas com características próprias** (espessura, calor para fundir, quanto esquentam, quanto guardam o calor, deformação, limpeza). Novas: **aço galvanizado** (fino, com zinco que faz poro se não for esmerilhado), **aço médio carbono** (grosso, custa a esquentar e guarda o calor), **inox ferrítico** (bem fino, esquenta muito rápido) e **cobre** (pede o maior calor e esfria rápido). Cada chapa tem uma ficha com níveis de 1 a 5 tirados do próprio modelo.
+- **Brasagem (novo):** Treino → **BRASAGEM**. Maçarico oxiacetilênico, fluxo e vareta: aqueça a junta sobreposta até a cor de trabalho e deixe a liga correr por capilaridade para dentro da folga, sem fundir a peça. Ligas reais (cobre-fósforo, prata 45 %, latão) com as temperaturas de catálogo, fluxo que muda de aspecto com o calor (pasta, pó, vítreo, queimado), bico e chama (neutra, oxidante, carburante) e quatro peças (aço com prata, cobre com cobre-fósforo, galvanizado sem queimar o zinco, luva com latão). No Difícil não há termômetro: só a cor da peça. No resultado, **Ver a folga por dentro** mostra onde a liga molhou. Detalhes em [`docs/BRASAGEM.md`](docs/BRASAGEM.md).
 - **Bancada do MIG/MAG mais limpa:** fonte e leituras juntas, e chapa, espessura e junta numa linha só (listas), com a ficha da chapa no botão **Ficha** e a dica de como abrir o arco dentro da área de teste. No notebook (1366 × 768) a área de teste passou de 205 para cerca de 490 px de altura.
 - **Mesa digitalizadora no MIG/MAG:** com o dispositivo em Mouse, a caneta também solda (antes a tocha não aparecia).
 - **No treino, troque a chapa** e ela leva as características dela:
@@ -41,4 +42,4 @@ Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamifica
   - eletrodo e TIG: **Escolha a chapa** depois da peça; a corrente sugerida acompanha o material.
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil, eletrodo sem assistência.
 
-Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H104) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.
+Detalhes em [`docs/HIPOTESES.md`](docs/HIPOTESES.md) (H93 a H105) e [`docs/PONTUACAO.md`](docs/PONTUACAO.md) (`pontuacao-v11`). Números do jogo, não de catálogo de fabricante.
