@@ -1,6 +1,6 @@
 # Oficina de Soldagem — Alpha v2.0
 
-Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. Já incorporada à `alpha-v2.0` (PRs #32, #36, #37, #39, #40 e #42; a brasagem está no #43).
+Cópia da branch [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0), feita a partir da `alpha-v1.9`. Já incorporada à `alpha-v2.0` (PRs #32, #36, #37, #39, #40, #42 e #43).
 
 ## Jogar
 
