@@ -7,7 +7,7 @@ const manifesto=JSON.parse(readFileSync('licencas/node-runtime.json','utf8').rep
 const executavel=resolve(process.env.NODE_PORTATIL??process.execPath)
 const hash=createHash('sha256').update(readFileSync(executavel)).digest('hex')
 if(hash!==manifesto.sha256)throw Error('Para gerar o pacote Windows x64, NODE_PORTATIL deve apontar ao node.exe oficial '+manifesto.versao+'. O jogo entregue já inclui esse runtime.')
-const raiz=resolve('pacote-rede'),saida=join(raiz,'Oficina-de-Soldagem-v2.0-Rede')
+const raiz=resolve('pacote-rede'),saida=join(raiz,'Oficina-de-Soldagem-v2.1-Rede')
 if(dirname(saida)!==raiz || !saida.startsWith(resolve(process.cwd())+sep))throw Error('Destino do pacote fora do projeto.')
 if(existsSync(saida))rmSync(saida,{recursive:true,force:true})
 mkdirSync(join(saida,'servidor'),{recursive:true})
@@ -17,7 +17,7 @@ mkdirSync(join(saida,'runtime'),{recursive:true})
 cpSync(executavel,join(saida,'runtime/node.exe'))
 cpSync(join('licencas',manifesto.licenca),join(saida,'runtime/LICENSE.txt'))
 writeFileSync(join(saida,'runtime/ORIGEM.json'),JSON.stringify(manifesto,null,2))
-writeFileSync(join(saida,'package.json'),JSON.stringify({private:true,type:'module',version:'2.0.0',engines:{node:'>=22'}},null,2))
+writeFileSync(join(saida,'package.json'),JSON.stringify({private:true,type:'module',version:'2.1.0',engines:{node:'>=22'}},null,2))
 const bat=`@echo off
 setlocal DisableDelayedExpansion
 cd /d "%~dp0"
@@ -34,7 +34,7 @@ pause
 writeFileSync(join(saida,'INICIAR-REDE.bat'),bat.replace(/\n/g,'\r\n'))
 writeFileSync(join(saida,'ABRIR-OFICINA.bat'),bat.replace(/\n/g,'\r\n'))
 writeFileSync(join(saida,'ABRIR-NESTE-PC.url'),'[InternetShortcut]\r\nURL=http://localhost:5197/?rede=1\r\n')
-const leia=`OFICINA DE SOLDAGEM v2.0 — X1 EM REDE LOCAL
+const leia=`OFICINA DE SOLDAGEM v2.1 — X1 EM REDE LOCAL
 
 1. Extraia esta pasta inteira no PC que hospedará a sala.
 2. Não é preciso instalar Node.js ou outros programas. Este pacote Windows x64 já inclui o servidor e o runtime necessário. O outro PC só precisa do navegador.
@@ -63,6 +63,6 @@ VALIDAÇÃO
 Consulte docs/REDE-V17.md no código-fonte para testes e limitações. Dois clientes automatizados na mesma máquina não substituem o teste físico na rede da faculdade.
 `
 writeFileSync(join(saida,'LEIA-ME.txt'),leia.replace(/\n/g,'\r\n'))
-if(existsSync('portatil/Oficina de Soldagem v2.0/Oficina de Soldagem.html'))cpSync('portatil/Oficina de Soldagem v2.0/Oficina de Soldagem.html',join(saida,'Oficina-de-Soldagem-v2.0-offline.html'))
+if(existsSync('portatil/Oficina de Soldagem v2.1/Oficina de Soldagem.html'))cpSync('portatil/Oficina de Soldagem v2.1/Oficina de Soldagem.html',join(saida,'Oficina-de-Soldagem-v2.1-offline.html'))
 gravarAtalhoOnline(saida)
 console.log(`Pacote de rede gerado: ${saida}`)
