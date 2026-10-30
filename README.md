@@ -52,18 +52,18 @@ No **eletrodo revestido** (Treino → Eletrodo → escolha a peça e o modo), o 
 abre ao tocar a peça com **S** e a vareta queima: continue descendo com toques em **S**; **Encerrar tentativa** ou **Enter** mostra a nota de
 0 a 1000 e o botão **Defeitos**, com o lugar, a causa e como corrigir cada defeito.
 
-| Versão | Estado | Download |
+| Versão | O que tem de novo | Download |
 |---|---|---|
-| **Alpha v2.0** | **Mais nova — máquina MIG em volts e m/min com efeito na solda (curto-circuito, globular, spray)** | [ZIP da v2.0](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip) · [Pacote de rede (X1)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip) |
-| Alpha v1.9 | Anterior — TIG com mesa digitalizadora + mouse, Fácil só nota, Difícil com mínimo por categoria, desafios e História no Difícil, eletrodo sem assistência | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
-| Alpha v1.8 | Anterior — modos Fácil e Difícil, solda mais lenta no MIG/MAG e nota sem trava | [ZIP da v1.8](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip) · [Pacote de rede (X1)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip) |
-| Alpha v1.7 | Anterior — x1 em rede (MIG/MAG), painel MIG maior e eletrodo com cordão 3D e lista de defeitos | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
-| Alpha v1.6 | Interface de máquina e eletrodo com nota 0–1000 (alpha-v1.6) + lista de defeitos com causa e correção, com o código organizado para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
-| Alpha v1.5 | Anterior — MIG/MAG + treino de eletrodo revestido | [ZIP da v1.5](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip) |
-| Alpha v1.4 | Anterior — MIG/MAG com solda realista | [ZIP da v1.4](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
-| Alpha v1.3 | Aprovada | [ZIP da v1.3](v1.3/Oficina%20de%20Soldagem%203D%20Alpha%20v1.3.zip) |
-| Alpha v1.2 | Anterior | [Pasta portátil](v1.2/jogo-portatil/) |
-| Alpha v1.1 | Anterior | [Pasta do jogo](v1.1/) |
+| **Alpha v2.0** | **Mais nova.** Máquina MIG/MAG em volts e m/min com curto-circuito, globular e spray; chapa que passa e fura em níveis; tubo com tubo; chapas com características próprias; **brasagem** com maçarico | [ZIP da v2.0](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip) · [Pacote de rede (X1)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip) |
+| Alpha v1.9 | **TIG** com mesa digitalizadora + mouse; Fácil só nota e Difícil com mínimo por categoria; eletrodo sem ajuda na altura | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
+| Alpha v1.8 | Modos **Fácil e Difícil**; MIG/MAG mais lento pela física; nota sem trava | [ZIP da v1.8](v1.8/Oficina-de-Soldagem-Alpha-v1.8.zip) · [Pacote de rede (X1)](v1.8/Oficina-de-Soldagem-v1.8-Rede.zip) |
+| Alpha v1.7 | **X1 em rede** no MIG/MAG; painel MIG maior; eletrodo com cordão 3D e lista de defeitos | [ZIP da v1.7](v1.7/Oficina-de-Soldagem-Alpha-v1.7.zip) · [Pacote de rede (X1)](v1.7/Oficina-de-Soldagem-v1.7-Rede.zip) |
+| Alpha v1.6 | Painel de máquina, pausa e Arcade com História, Desafios e Versus; eletrodo com nota de 0 a 1000 e defeitos; **código organizado em português** para editar | [ZIP da v1.6](v1.6/Oficina-de-Soldagem-Alpha-v1.6.zip) · [guia do código](v1.6/README.md) |
+| Alpha v1.5 | Primeiro treino de **eletrodo revestido**: cinco peças, vareta que queima, escória, martelinho e escova | [ZIP da v1.5](v1.5/Oficina-de-Soldagem-Alpha-v1.5.zip) |
+| Alpha v1.4 | **Interface nova** (menu ilustrado, oficina e serralheria em 3D) e solda realista: gravidade no metal e defeitos visíveis | [ZIP da v1.4](v1.4/Oficina-de-Soldagem-Alpha-v1.4.zip) |
+| Alpha v1.3 | **Aprovada.** Câmera livre, giro da peça por gestos, distância bico–peça e nota de 0 a 1000 | [ZIP da v1.3](v1.3/Oficina%20de%20Soldagem%203D%20Alpha%20v1.3.zip) |
+| Alpha v1.2 | Jogo só em 3D, **cinco tipos de junta** e posições de soldagem (plana, horizontal, vertical, sobrecabeça) | [Pasta portátil](v1.2/jogo-portatil/) |
+| Alpha v1.1 | **Primeira versão 3D** do jogo MIG/MAG, com volta para o 2D sem WebGL | [Pasta do jogo](v1.1/) |
 
 Se o GitHub abrir a página do ZIP em vez de baixar, clique em **Download raw file**.
 **Code → Download ZIP** nesta página baixa o histórico inteiro; use os links
@@ -95,6 +95,8 @@ entrega correspondente, que junta o trabalho do GPT e do Claude por pull request
 - [`v1.6/`](v1.6/) ← [`alpha-v1.6`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.6) (`gpt/v1.6`) com o código reorganizado e a lista de defeitos do eletrodo (`claude/v1.6`)
 - [`v1.5/`](v1.5/) ← [`alpha-v1.5`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.5) (`gpt/v1.5` + `claude/v1.5`)
 - [`v1.4/`](v1.4/) ← [`alpha-v1.4`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.4) (`gpt/v1.4` + `claude/v1.4`)
+- [`v1.3/`](v1.3/) ← [`alpha-v1.3`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.3) (a versão aprovada)
+- [`v1.2/`](v1.2/) e [`v1.1/`](v1.1/): guardadas só aqui, de antes das branches de entrega (a v1.1 tem só o jogo pronto)
 
 Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 [`v1.5/docs/PROTOTIPO-V15.md`](v1.5/docs/PROTOTIPO-V15.md).
@@ -133,6 +135,18 @@ Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 - **Eletrodo:** o cordão aparece em 3D, com escamas e brilho, e o resultado tem o
   botão **Defeitos**, com o lugar, a causa e como corrigir cada defeito.
 
+## O que mudou na v1.6?
+
+- **Interface da alpha-v1.6** (GPT): painel de máquina, menu da oficina, pausa e
+  Arcade com História, Desafios e Versus.
+- **Eletrodo revestido** com depósito de metal real e nota de 0 a 1000.
+- **Defeitos do eletrodo** (Claude): falta de fusão, mordedura, poros, cratera,
+  inclusão de escória e outros, com o lugar, a causa e como corrigir, desenhados
+  no cordão; a lista não muda a nota.
+- **Código organizado para editar:** pastas e arquivos em português, um quadro
+  "O que faz / Onde mexer" no começo de cada arquivo e um `LEIA-ME.md` por pasta
+  (veja "Quer mexer no código?" acima).
+
 ## O que mudou na v1.5?
 
 - Treino de eletrodo revestido com cinco peças próprias do processo e objetivos.
@@ -145,6 +159,60 @@ Detalhes e limites do modelo do eletrodo (hipóteses H59–H73):
 
 TypeScript, **404 testes** e build aprovados. Testado em navegador automatizado;
 teste em aparelhos reais (placa de vídeo, caneta, controle) ainda pendente.
+
+## O que mudou na v1.4?
+
+- **Interface nova:** início com o soldador e menu ilustrado, e a mesma
+  identidade visual em todas as telas.
+- **Cenários 3D:** o treino acontece numa oficina (bancada, morsa, ferramentas e
+  máquina no carrinho); a missão Suporte de prateleira, numa serralheria.
+- **Solda mais realista no MIG/MAG:** a gravidade escorre o metal na vertical,
+  pinga na sobrecabeça e derruba o cordão na horizontal.
+- **Defeitos visíveis** na peça 3D, no corte e na aba Defeitos do resultado:
+  mordedura, sobreposição, respingos, cratera no fim, porosidade, escamas, cores
+  de calor e empeno das chapas (`pontuacao-v7`).
+- Roteiros de missões, progresso e plano da próxima tentativa; Arcade v2;
+  torneios com pendências por rodada.
+
+## O que mudou na v1.3?
+
+Esta é a versão **aprovada** que serviu de base para as seguintes.
+
+- **Câmera livre** em volta da peça (botão do meio, Espaço com a caneta ou
+  analógico direito) e **giro da peça por gestos** (botão direito, E/B com a
+  caneta ou direcional), só com o arco fechado. Os botões e as teclas mudam em
+  **Controles**.
+- A peça fica numa oficina com piso, paredes e teto, presa num suporte.
+- **Distância bico–peça (DBCP)** na bancada (10, 15 ou 20 mm): mais distância,
+  menos corrente e menos fusão com o mesmo metal.
+- **Nota de 0 a 1000** (`pontuacao-v3`): fusão, geometria do cordão,
+  regularidade, controle térmico e execução, cada critério perdendo pontos aos
+  poucos.
+- Na junta de topo, o metal enche primeiro a fresta entre as chapas; o cordão
+  aparece em escala real.
+- As telas cabem num notebook de 1280×720 sem rolar.
+
+## O que mudou na v1.2?
+
+- **O jogo passou a ser só 3D**, com um desenho 2D de reserva sem WebGL.
+- **Cinco tipos de junta:** topo reto, topo em V, em T, sobreposta e de canto.
+  Cada missão tem a sua; no treino livre dá para escolher.
+- **Posicionar a peça** (girar no plano e tombar de 0° a 180°), com a posição de
+  soldagem mostrada no canto: plana, horizontal, vertical ou sobrecabeça. Na
+  vertical, subir funde mais e descer funde menos; de cabeça para baixo o cordão
+  fica mais alto.
+- A técnica (empurrando ou puxando) inclina a tocha no 3D.
+- As telas cabem numa página; os textos longos abrem por botões.
+
+## O que mudou na v1.1?
+
+- **Primeira versão em 3D** do jogo MIG/MAG: o 3D vem ligado na peça de teste da
+  bancada e durante a soldagem, com os botões 2D / 3D e a inclinação da vista.
+- A mira, o cordão e a pontuação são os mesmos do 2D: o 3D só muda o desenho.
+- Se o 3D ficar lento, o jogo baixa a qualidade sozinho e, se preciso, volta para
+  o 2D; sem WebGL, tudo funciona em 2D.
+- Já trazia o jogo base: História, Arcade, Torneio local, Recordes, Treino e
+  Configurações, com mouse, caneta e controle.
 
 ## Dados e versões
 
