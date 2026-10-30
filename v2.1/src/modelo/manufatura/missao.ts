@@ -59,3 +59,24 @@ export interface ProjetoManufatura {
 export function projetoInicial(): ProjetoManufatura {
   return { programa: PROGRAMA_INICIAL, pontos: pontosIniciais(), condicoes: condicoesPadrao(), celula: { ...CELULA_PADRAO } }
 }
+
+/**
+ * Modo livre (teste): sem missão, sem nota. Começa com um cordão só, de A a
+ * B, para o jogador ter de onde partir; o resto é com ele.
+ */
+export const PROGRAMA_LIVRE = `NOP
+'MODO LIVRE: SEM MISSAO E SEM NOTA
+'UM CORDAO DE A ATE B. MUDE A VONTADE.
+MOVJ C00000 VJ=25.00
+MOVJ C00001 VJ=15.00
+MOVL C00002 V=20.0
+ARCON ASF#(1)
+MOVL C00003 V=8.0
+ARCOF AEF#(1)
+MOVL C00004 V=50.0
+MOVJ C00000 VJ=25.00
+END`
+
+export function projetoLivre(): ProjetoManufatura {
+  return { ...projetoInicial(), programa: PROGRAMA_LIVRE }
+}

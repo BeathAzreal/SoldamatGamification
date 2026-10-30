@@ -17,7 +17,7 @@ Cada coleção tem a sua chave, sempre com o prefixo `soldagem-mig/`:
 | `avaliacoes` | Ficha inicial, nota final, justificativa e histórico de revisões do professor |
 | `recordes` | Recordes do Arcade |
 | `preferencias` | Dispositivo padrão, calibração do controle e da caneta, último nome usado |
-| `manufatura` | v2.1: projeto da Manufatura Aditiva (programa INFORM, pontos ensinados, arquivos ASF/AEF, distância de trabalho) e a melhor nota. Coleção nova; validada campo a campo ([`MANUFATURA-ADITIVA.md`](MANUFATURA-ADITIVA.md)) |
+| `manufatura` | v2.1: projeto da Manufatura Aditiva (programa INFORM, pontos ensinados, arquivos ASF/AEF, distância de trabalho), o projeto do modo livre (`livre`, à parte) e a melhor nota da missão. Dado salvo antes do modo livre recebe o projeto livre padrão. Coleção nova; validada campo a campo ([`MANUFATURA-ADITIVA.md`](MANUFATURA-ADITIVA.md)) |
 
 As **missões** não são salvas: ficam no código (`src/missoes/catalogo.ts`), com
 número de versão. A versão da missão entra na chave dos rankings.
