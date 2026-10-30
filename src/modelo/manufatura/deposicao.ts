@@ -97,6 +97,8 @@ export class Deposito {
   /** Quanto a poça atual já somou na célula. */
   private readonly novo: Float32Array
   private readonly toque: Float64Array
+  private readonly mobilidade: Float32Array
+  private readonly liquidas = new Set<number>()
   /** Camada (contagem de ARCON) que tocou a célula por último: só para o desenho. */
   readonly camada: Uint16Array
   /** Volume total depositado (mm³). */
@@ -114,6 +116,7 @@ export class Deposito {
     this.novo = new Float32Array(n)
     this.toque = new Float64Array(n).fill(-1e9)
     this.camada = new Uint16Array(n)
+    this.mobilidade = new Float32Array(n)
   }
 
   dentro(x: number, y: number): boolean {
@@ -195,7 +198,7 @@ export class Deposito {
       defeitos.push(e.movj ? 'movj' : folga > FOLGA.instavel ? 'instavel' : 'mergulho')
       volume *= 1 + 0.55 * Math.sin(e.s * 1.9) * Math.sin(e.s * 0.73 + 1)
     }
-    if (volume > 0) this.carimbar(e.x, e.y, largura / 2, volume, e.tempo, e.ux, e.uy)
+    if (volume > 0) this.carimbar(e.x, e.y, largura / 2, volume, e.tempo, e.ux, e.uy, e.temperaturaC)
     return { folgaMm: folga, larguraMm: largura, alturaCordaoMm: largura > 0 ? (1.5 * secaoMm2) / largura : 0, secaoMm2, defeitos, perdeuArco: false }
   }
 
@@ -208,7 +211,7 @@ export class Deposito {
    * coluna cheia (a parede fica da largura do cordão); ao longo do eixo, um
    * vale da camada de baixo continua vale (não se enche de graça).
    */
-  carimbar(x: number, y: number, raio: number, volume: number, tempo: number, ux: number, uy: number): void {
+  carimbar(x: number, y: number, raio: number, volume: number, tempo: number, ux: number, uy: number, temperaturaC = 25): void {
     const r = Math.max(raio, CELULA_MM)
     let soma = 0
     const celulas: number[] = [], pesos: number[] = [], assentos: number[] = []
@@ -226,6 +229,9 @@ export class Deposito {
     for (let n = 0; n < celulas.length; n++) {
       const k = celulas[n]
       if (tempo - this.toque[k] > TAU_POCA_S) { this.base[k] = this.altura[k]; this.novo[k] = 0 }
+      // H106: o nó térmico é o interpasse; a poça recém-fundida cede mais na peça quente.
+      this.mobilidade[k] = Math.max(this.mobilidade[k] * (tempo - this.toque[k] <= TAU_POCA_S ? 1 : 0), Math.min(1, Math.max(0, (temperaturaC - 200) / (GEOMETRIA.colapsoC - 200))))
+      if (this.mobilidade[k] > 0) this.liquidas.add(k)
       this.toque[k] = tempo
       this.novo[k] += pesos[n] * escala
       this.altura[k] = Math.max(this.base[k], assentos[n]) + this.novo[k]
@@ -233,6 +239,50 @@ export class Deposito {
     }
     this.volumeTotal += volume
     this.versao++
+  }
+
+  /** H106: escoamento didático da parcela nova; não move o substrato nem o metal solidificado. */
+  escoar(dt: number, tempo: number): void {
+    if (dt <= 0 || this.liquidas.size === 0) return
+    const variacoes = new Map<number, { dh: number; toque: number; mobilidade: number; camada: number }>()
+    const somar = (k: number, dh: number, origem: number) => {
+      const v = variacoes.get(k) ?? { dh: 0, toque: -Infinity, mobilidade: 0, camada: this.camada[k] }
+      v.dh += dh
+      if (dh > 0 && this.toque[origem] >= v.toque) {
+        v.toque = this.toque[origem]; v.mobilidade = this.mobilidade[origem]; v.camada = this.camada[origem]
+      }
+      variacoes.set(k, v)
+    }
+    // Todas as diferenças usam o mesmo mapa: não há preferência pela ordem de visita.
+    for (const k of this.liquidas) {
+      const idade = Math.max(0, tempo - this.toque[k])
+      if (idade >= TAU_POCA_S || this.novo[k] <= 0.000001) { this.liquidas.delete(k); continue }
+      const i = k % this.nx, j = Math.floor(k / this.nx)
+      const vizinhos = [i > 0 ? k - 1 : -1, i + 1 < this.nx ? k + 1 : -1, j > 0 ? k - this.nx : -1, j + 1 < this.ny ? k + this.nx : -1]
+      const retencao = 0.12 + 0.05 * Math.sin(i * 0.36 + j * 0.21 + this.camada[k] * 1.7)
+      const pesos = vizinhos.map(v => v < 0 ? 0 : Math.max(0, this.altura[k] - this.altura[v] - retencao))
+      const total = pesos.reduce((a, v) => a + v, 0)
+      if (total <= 0) continue
+      const disponivel = Math.max(0, Math.min(this.novo[k], this.altura[k] - this.base[k]))
+      // Retenção/molhamento local variam suavemente: pequenas línguas, sem sorteio por quadro.
+      const molhamento = 0.7 + 0.3 * Math.sin(i * 0.24 + j * 0.17 + this.camada[k] * 1.7)
+      const dh = Math.min(disponivel * 0.2, 1.6 * molhamento * dt * this.mobilidade[k] * (1 - idade / TAU_POCA_S) * total / 4)
+      if (dh <= 0.0000001) continue
+      somar(k, -dh, k)
+      vizinhos.forEach((v, n) => { if (pesos[n] > 0) somar(v, dh * pesos[n] / total, k) })
+    }
+    for (const [k, v] of variacoes) {
+      if (v.dh > 0 && tempo - this.toque[k] >= TAU_POCA_S) { this.base[k] = this.altura[k]; this.novo[k] = 0 }
+      this.altura[k] = Math.max(this.base[k], this.altura[k] + v.dh)
+      this.novo[k] = Math.max(0, this.novo[k] + v.dh)
+      if (v.toque > -Infinity) {
+        this.toque[k] = Math.max(this.toque[k], v.toque)
+        this.mobilidade[k] = Math.max(this.mobilidade[k], v.mobilidade)
+        this.camada[k] = v.camada
+        this.liquidas.add(k)
+      }
+    }
+    if (variacoes.size > 0) this.versao++
   }
 
   /**
