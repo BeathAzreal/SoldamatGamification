@@ -45,3 +45,13 @@ export function registroDaSoldagem(total: number, aprovada: boolean, em: string)
   const nota = Math.max(0, Math.min(100, Math.round(total / 10)))
   return { nota, conforme: aprovada, resumo: `Emenda soldada: ${Math.round(total)}/1000 · ${aprovada ? 'aprovada' : 'não aprovada'} no Difícil`, em }
 }
+
+/** Torno convencional (v2.2): nota de 0 a 1000 e aprovação do Difícil (20 % em cada item). */
+export function registroDoTorno(nota: number, aprovada: boolean, diametros: { min: number; max: number }, em: string): RegistroEtapa {
+  return {
+    nota: Math.max(0, Math.min(100, Math.round(nota / 10))),
+    conforme: aprovada,
+    resumo: `Pino torneado: ${Math.round(nota)}/1000 · Ø ${diametros.min.toFixed(2)}–${diametros.max.toFixed(2)} mm · ${aprovada ? 'aprovado' : 'não aprovado'} no Difícil`,
+    em,
+  }
+}

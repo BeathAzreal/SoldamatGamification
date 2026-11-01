@@ -1206,3 +1206,32 @@ Na mesma chapa e no mesmo calor do TIG (H92), o plasma muda (`src/modelo/plasma.
 - **Nota:** fusão no trecho, penetração total (keyhole) ou cordão estreito (microplasma), largura regular, keyhole estável e bocal/arco, com desconto por furo como no TIG.
 - **Testes:** `tests/plasma.test.ts`.
 - **Base qualitativa:** o comportamento (coluna constrita, arco piloto, keyhole, rampa de descida, arco duplo, microplasma em chapa fina) segue a literatura de soldagem, por exemplo o *Welding Handbook* da AWS (vol. 2, capítulo de soldagem a plasma) e S. Kou, *Welding Metallurgy* (2ª ed.). Os números são do jogo, calibrados para essas tendências: não são de procedimento nem de fabricante.
+
+
+### H108 — torno convencional operado nas manivelas (v2.2, Claude)
+
+Refaz a Usinagem no estilo da bancada de solda: o jogador move a ferramenta e a física responde em tempo real (`src/torno/modelo.ts`). O conteúdo da Usinagem anterior (materiais, encomenda OM-01, fórmulas) serviu de guia; o código é novo.
+
+- **H108-a, peça:** perfil de raio r(z) em células de 0,05 mm, com z medido da face da placa. A ponta (raio rε) corta à frente, do lado da placa; atrás dela a aresta corta reta por 3 mm. Para o faceamento limpar a face até o centro, a ponta passa até 1,5 mm do centro, e o avanço transversal para sozinho em −rε.
+- **H108-b, corte:**
+  - avanço por volta f = |v|/(n/60);
+  - vc = π·D·n/1000;
+  - seção do cavaco = f × engajamento na direção do movimento (longitudinal: profundidade radial, medida pelo material à frente da ponta; transversal: largura axial em contato);
+  - força de Kienzle Fc = kc11·f^(−mc)·A;
+  - potência = Fc·vc/60.
+- **H108-c, limites:**
+  - motor de 4 kW, cheio a partir de 710 rpm (abaixo, proporcional à rotação): acima disso, o eixo para (sobrecarga);
+  - profundidade acima de 4 mm ou Fc acima de 3,8 kN quebra a pastilha;
+  - encostar com o eixo parado, ligar o eixo com a ferramenta encostada ou bater na placa também quebra.
+- **H108-d, desgaste:** Taylor do jogo. VB chega a 0,3 mm em `vidaRefS`·(vcRef/vc)^expoente segundos de corte (240 s a 200 m/min no aço 1045), e a carepa dobra o desgaste. Acima de 0,6 mm, a aresta lasca.
+- **H108-e, rugosidade:**
+  - Ra = max(Ra mínima, f²/(8rε)) × (1 + aresta postiça) × (1 + 2·VB) × 2,5 se vibrar × 3 se lascada;
+  - aresta postiça na janela de vc baixa de cada material (dados da Usinagem anterior);
+  - a causa dominante fica registrada por célula, para a inspeção.
+- **H108-f, deflexão:** a peça sai acima da ponta por Fp/k (Fp = 0,4·Fc, k = 20 N/µm do carro), mais Fp·L³/(3EI) da peça em balanço, mais 0,1·VB. No desbaste, alguns centésimos; no acabamento leve, quase nada. É a razão de medir antes do passe final.
+- **H108-g, vibração:** com esbeltez L/D > 2,5 e seção acima de 0,6/(L/D − 1,5) mm², a peça vibra.
+- **H108-h, cavaco:** fita (aço, alumínio, inox), que vira espiral quebrada acima do avanço de quebra; curto no latão; azulado acima da vc de azular (aço, inox).
+- **Medição:** micrômetro 0,01 mm, paquímetro 0,02 mm e rugosímetro 0,1 µm, só com o eixo parado (medir com a peça girando conta como falha de segurança).
+- **Nota (0–1000):** diâmetro na tolerância 300, comprimento até o ressalto 150, acabamento 200, face e região bruta 100, ferramenta e segurança 150, parâmetros e tempo 100. O Difícil aprova com 20 % em cada item.
+- **Testes:** `tests/torno.test.ts` (OM-01 bem feita aprovada no Difícil; deflexão; Ra pelo avanço; aresta postiça; quebras; sobrecarga; vibração; segurança; independência da taxa de quadros).
+- Números do jogo, com a ordem de grandeza de dados de usinagem (Kienzle, Taylor, Ra teórica). Não são de catálogo de ferramenta nem de máquina.
