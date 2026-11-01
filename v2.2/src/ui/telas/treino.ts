@@ -18,6 +18,9 @@ import { PECAS_TIG, pecaTigEm } from '../../missoes/pecasTig'
 import { resumoMaterial } from '../componentes/material'
 import { telaTreinoPlasma, telaTreinoTig } from './treinoTig'
 import { PECAS_PLASMA } from '../../missoes/pecasPlasma'
+import { PECAS_TORNO, type PecaTorno } from '../../torno/pecas'
+import { MATERIAIS_TORNO, type MaterialTornoId } from '../../torno/materiais'
+import { telaTorno } from './torno'
 import { PECAS_BRASAGEM, pecaBrasagemEm } from '../../missoes/pecasBrasagem'
 import { LIGAS } from '../../modelo/brasagem'
 import { telaTreinoBrasagem } from './treinoBrasagem'
@@ -32,6 +35,7 @@ export function telaTreino(app: App): void {
     { nome: 'ELETRODO', descricao: 'Escolha a peça e pratique o controle da distância e o consumo da vareta.', abrir: () => escolherPecaEletrodo(app) },
     { nome: 'TIG', descricao: 'Tocha numa mão e vareta na outra: pedal, poça e toques de vareta. Mesa digitalizadora + mouse ou só mouse.', abrir: () => escolherPecaTig(app) },
     { nome: 'PLASMA', descricao: 'Arco apertado por um bocal: keyhole que atravessa a chapa numa passada, sem chanfro, e microplasma para chapa muito fina.', abrir: () => escolherPecaPlasma(app) },
+    { nome: 'TORNO', descricao: 'Torno convencional em 3D: faceie, desbaste e dê o acabamento com as manivelas, meça com micrômetro e veja o cavaco de cada material.', abrir: () => escolherPecaTorno(app, () => telaTreino(app)) },
     { nome: 'BRASAGEM', descricao: 'Maçarico, fluxo e vareta: aqueça a junta sobreposta e deixe a liga correr para dentro da folga, sem fundir a peça.', abrir: () => escolherPecaBrasagem(app) },
   ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
 }
@@ -80,6 +84,20 @@ function escolherChapa(app: App, titulo: string, processo: ProcessoChapa, peca: 
     descricao: resumoMaterial(m).replace(/ Chapas de .*$/, '') + ' ' + MATERIAIS[m].ficha.pontos.join(' '),
     abrir: () => seguir(m, `${caminho} / ${MATERIAIS[m].nomeCurto.toUpperCase()}`),
   })), { nome: 'VOLTAR', descricao: 'Escolher outra peça.', abrir: voltar })
+}
+
+/** v2.2: peças do torno convencional; o tarugo livre deixa escolher o material. */
+export function escolherPecaTorno(app: App, voltar: () => void): void {
+  const abrir = (p: PecaTorno) => escolherModo(app, 'TORNO', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTorno(app, p, d, () => escolherPecaTorno(app, voltar)), () => escolherPecaTorno(app, voltar))
+  menuOficina(app, 'TORNO', 'OFICINA / TORNO CONVENCIONAL', PECAS_TORNO.map((p) => ({
+    nome: p.titulo,
+    descricao: `${p.aplicacao} ${p.alvo ? `· Tarugo Ø ${p.diametroBrutoMm} × ${p.balancoMm} mm.` : ''}`,
+    abrir: () => p.alvo ? abrir(p) : menuOficina(app, 'TORNO', 'TREINO / TARUGO LIVRE / MATERIAL', (Object.keys(MATERIAIS_TORNO) as MaterialTornoId[]).map((id) => ({
+      nome: MATERIAIS_TORNO[id].nome.toUpperCase(),
+      descricao: MATERIAIS_TORNO[id].descricao,
+      abrir: () => abrir({ ...p, material: id, titulo: `Tarugo livre — ${MATERIAIS_TORNO[id].nome.toLowerCase()}` }),
+    })), { nome: 'VOLTAR', descricao: 'Escolher outra peça.', abrir: () => escolherPecaTorno(app, voltar) }),
+  })), { nome: 'VOLTAR', descricao: 'Voltar.', abrir: voltar })
 }
 
 /** H107: peças do plasma (keyhole e microplasma); a chapa é a da peça (as faixas foram calibradas nela). */

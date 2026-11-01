@@ -21,8 +21,8 @@ Menu → **FÁBRICA** (ou o ícone da fábrica na barra lateral).
 
 | Etapa | Setor | O que o aluno faz | Conforme quando |
 |---|---|---|---|
-| 1. Análise da falha | Laboratório | Caso "A junta que falhou": hipóteses, ensaios e relatório | Nota do relatório ≥ 60/100 |
-| 2. Usinar o pino | Usinagem | Encomenda OM-01: Ø 36 (0/−0,05) × 50 ± 0,5 mm, Ra ≤ 1,6 µm | O cliente aceita a peça (dimensões e Ra) |
+| 1. Análise da falha | Laboratório | Caso "A junta que falhou": ensaios feitos à mão na bancada 3D (inspeção, corte, lixa, polimento, ataque, microscópio, microdureza), hipóteses e relatório no escritório | Nota do relatório ≥ 60/100 |
+| 2. Usinar o pino | Usinagem | OM-01 no torno convencional 3D: Ø 36 (0/−0,05) × 50 ± 0,5 mm, Ra ≤ 1,6 µm (no Difícil) | O cliente aceita a peça (dimensões e Ra) |
 | 3. Soldar a emenda | Soldagem | Emenda em V em aço SAE 1045, 6 mm, MIG/MAG, no Difícil | Aprovada com 40 % em cada categoria (como na História) |
 | Liberação | Qualidade | Responde a três perguntas e libera a OS | Todas as etapas conformes |
 

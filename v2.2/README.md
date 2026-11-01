@@ -2,6 +2,23 @@
 
 > ⚠️ **A v2.2 não é estável e serve apenas para testar funções novas.** Para jogar, use a [Alpha v2.0](../v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip).
 
+**LABORATÓRIO DE FALHAS refeito** (Fábrica → Laboratório). O laboratório agora é uma bancada em 3D com as estações feitas à mão.
+- **Inspeção:** você arrasta a lanterna (luz rasante mostra as marcas de praia), usa a lupa e escolhe a limpeza.
+- **Corte:** marca o ponto e segura o disco (rápido demais, ele trava).
+- **Preparo:** lixa #220 → #600 → #1200 arrastando a amostra e girando 90° a cada troca (pular a #600 gera arrancamento); depois pano de 6 e 1 µm e ataque com Nital no cronômetro (demais vira sobreataque).
+- **Microscópio:** posiciona a mesa, foca com a roda do mouse e clica nos achados.
+- **Microdureza:** pontos que atravessam a junta.
+
+O motor do caso continua decidindo o que aparece. Hipóteses, caderno e relatório ficam no escritório. Hipóteses do modelo em `docs/HIPOTESES.md` (H109).
+
+**TORNO CONVENCIONAL (Usinagem refeita)** (Treino → TORNO, ou Fábrica → Usinagem). A Usinagem foi refeita no estilo da bancada de solda: o torno em 3D é operado nas manivelas (mouse e teclado) e a física responde na hora.
+- **O que acontece no corte:** o cavaco sai com a forma de cada material; em vc baixa aparece aresta postiça; a aresta se desgasta; a peça esbelta vibra; o motor para por sobrecarga; e a ferramenta quebra se encostar com o eixo parado.
+- **Deflexão:** no desbaste a peça sai maior que o mostrador, então é preciso medir com micrômetro (com o eixo parado) antes do acabamento.
+- **Peças:** OM-01 eixo de aço, pino esbelto de alumínio, bucha de latão e tarugo livre.
+- **Nota e Fábrica:** nota de 0 a 1000 com defeitos explicados. A etapa de usinagem da OS-01 usa o torno novo. O CNC da versão anterior continua em Fábrica → Usinagem até ser refeito.
+
+Hipóteses em `docs/HIPOTESES.md` (H108).
+
 **Novo na v2.2, experimental:** **FÁBRICA**, uma prática industrial. A Oficina de Soldagem, a **Usinagem** (torno CNC) e o **Laboratório de Falhas** viram um jogo só: um galpão 3D com os setores de Usinagem, Soldagem, Manufatura Aditiva e Laboratório, ligados por **ordens de serviço**. A OS-01 (*Braço tensor da peneira vibratória*) passa pelos setores como numa indústria. O laboratório investiga por que o braço quebrou, a usinagem refaz o pino dentro da tolerância e a soldagem refaz a emenda em aço SAE 1045 com o procedimento corrigido. No fim, a qualidade libera a OS, e o relatório sai impresso ou em PDF para o professor. Como funciona, sugestão de aula e como criar novas OS: [docs/FABRICA.md](docs/FABRICA.md).
 
 **Menu em 3D (teste da nova interface):** o menu é a própria fábrica, à noite. Cada opção é um lugar do galpão: o portão com o quadro de OS (Fábrica), os fliperamas (Arcade), a cabine de solda (Treino), o robô (Manufatura Aditiva), a estante de troféus (Recordes) e o armário de ferramentas (Configurações). Escolher uma opção vira a câmera para o lugar, e confirmar leva a câmera até lá. A lista fica por cima e continua funcionando com teclado, controle e leitor de tela; também dá para clicar direto no lugar. O **mesmo cenário fica atrás das outras telas de menu**: no Arcade (e na História, nos Desafios etc.) a câmera fica diante dos fliperamas; no Treino, na cabine de solda; em Recordes, na estante de troféus; em Configurações, no armário; e na Manufatura Aditiva, no robô. Voltar ao menu recua a câmera olhando para o lugar de onde você veio. Telas de jogo com o próprio 3D (bancada, célula do robô, fábrica) escondem e pausam o cenário. Sem 3D no computador, volta a arte ilustrada. Código em `src/render/menu3d.ts` e `src/ui/cenario.ts`.

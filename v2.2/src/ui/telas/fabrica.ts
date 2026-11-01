@@ -21,7 +21,11 @@ import {
   type SetorId,
 } from '../../fabrica/ordens'
 import { MISSAO_OS01_EMENDA } from '../../fabrica/missaoOs'
-import { registroDaSoldagem, registroDaUsinagem, registroDoLaboratorio } from '../../fabrica/registros'
+import { registroDaSoldagem, registroDaUsinagem, registroDoLaboratorio, registroDoTorno } from '../../fabrica/registros'
+import { PECAS_TORNO } from '../../torno/pecas'
+import { telaTorno } from './torno'
+import { escolherLaboratorio } from './laboratorio'
+import { menuOficina } from '../componentes/menuOficina'
 import { pontuarRegistro } from '../../pontuacao/oficial'
 import { EXIGENCIA, type ResultadoPontuacao } from '../../pontuacao/regras'
 import type { EventosCompactos } from '../../dados/eventos'
@@ -34,7 +38,7 @@ import { anexar, dataHora, h, titulo } from '../dom'
 import { telaExecucao } from './execucao'
 import { telaEscolhaManufatura } from './manufatura'
 import { montarPreparacao, type ConfiguracaoTentativa } from './missao'
-import { telaTreino } from './treino'
+import { escolherPecaTorno, telaTreino } from './treino'
 import '../../fabrica.css'
 
 /*
@@ -149,8 +153,32 @@ export function telaFabrica(app: App, foco: SetorId | null = null): void {
 /** Abre um setor; com `etapa`, o setor trabalha para a OS e grava o resultado nela. */
 function abrirSetor(app: App, setor: SetorId, etapa: Etapa | null): void {
   const ordem = ordemAtiva(app)
-  if (setor === 'usinagem') return telaSetorReact(app, 'usinagem', ordem, etapa)
-  if (setor === 'laboratorio') return telaSetorReact(app, 'laboratorio', ordem, etapa)
+  if (setor === 'usinagem') {
+    // v2.2: a etapa da OS usa o torno convencional novo (OM-01, no Difícil).
+    if (etapa) {
+      const p = PECAS_TORNO.find((x) => x.id === 'om01-eixo')!
+      return telaTorno(app, p, 'profissional', () => telaFabrica(app, 'usinagem'), {
+        contexto: 'Fábrica · Usinagem',
+        aoConcluir: (r, aprovada) => {
+          registrar(app, ordem, etapa, registroDoTorno(r.nota, aprovada, { min: r.medidas.diametroMin, max: r.medidas.diametroMax }, app.ambiente.agora().toISOString()))
+          void avisar(`Registrado na ${ordem.codigo}`, h('p', {}, aprovada ? 'Pino aprovado. Volte à fábrica para a próxima etapa.' : 'Pino não aprovado no Difícil. Você pode refazer: fica o melhor resultado.'))
+        },
+      })
+    }
+    return menuOficina(app, 'USINAGEM', 'FÁBRICA / SETOR DE USINAGEM', [
+      { nome: 'TORNO CONVENCIONAL', descricao: 'Novo: torno em 3D operado nas manivelas, com cavaco, desgaste, medição e nota.', abrir: () => escolherPecaTorno(app, () => abrirSetor(app, 'usinagem', null)) },
+      { nome: 'TORNO CNC (ANTERIOR)', descricao: 'A Usinagem CNC da versão anterior, até ser refeita no mesmo estilo.', abrir: () => telaSetorReact(app, 'usinagem', ordem, null) },
+    ], { nome: 'VOLTAR À FÁBRICA', descricao: 'Voltar ao galpão.', abrir: () => telaFabrica(app, 'usinagem') })
+  }
+  if (setor === 'laboratorio') {
+    // Laboratório no estilo da bancada de solda; a conclusão (no escritório) registra a etapa da OS.
+    return escolherLaboratorio(app, () => telaFabrica(app, 'laboratorio'), {
+      aoConcluir: etapa ? (r) => {
+        registrar(app, ordem, etapa, registroDoLaboratorio(r.avaliacao.total, app.ambiente.agora().toISOString()))
+        void avisar(`Registrado na ${ordem.codigo}`, h('p', {}, `Relatório de análise de falha: ${r.avaliacao.total}/100. Volte à fábrica para a próxima etapa.`))
+      } : undefined,
+    })
+  }
   if (setor === 'manufatura') return telaEscolhaManufatura(app)
   if (etapa) return telaSoldagemOs(app, ordem, etapa)
   telaTreino(app)

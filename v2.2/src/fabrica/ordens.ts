@@ -68,7 +68,7 @@ export const ORDENS: OrdemServico[] = [
         id: 'usinar-pino',
         setor: 'usinagem',
         titulo: 'Usinar o pino de articulação',
-        instrucao: 'Encomenda OM-01: tornear o eixo de Ø 36 (0/−0,05) × 50 ± 0,5 mm com Ra ≤ 1,6 µm e entregar.',
+        instrucao: 'Encomenda OM-01 no torno convencional: facear e tornear o eixo de Ø 36 (0/−0,05) × 50 ± 0,5 mm com Ra ≤ 1,6 µm, aprovado no Difícil.',
         porque: 'O pino trabalha em flexão alternada: diâmetro fora da tolerância e marcas de usinagem viram concentradores de tensão.',
       },
       {

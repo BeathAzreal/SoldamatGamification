@@ -1,24 +1,24 @@
 # Oficina de Soldagem — versões e downloads
 
-## 🆕 Testar agora: Alpha v2.3 — TORNO CONVENCIONAL em 3D
+## 🆕 Testar agora: Alpha v2.2 — FÁBRICA, menu 3D, plasma, TORNO e LABORATÓRIO
 
-**[⬇ BAIXAR ALPHA v2.3 (teste) — ZIP](v2.3/Oficina-de-Soldagem-Alpha-v2.3.zip)**
+**[⬇ BAIXAR ALPHA v2.2 (teste) — ZIP](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip)**
 
 1. Baixe o ZIP. Se o GitHub abrir a página do arquivo, clique em **Download raw file**.
 2. Extraia a pasta e abra **Oficina de Soldagem.html** no Chrome ou Edge. Não precisa instalar nada nem ter internet.
 
-O jogo mostra **ALPHA v2.3** no topo. Tudo da v2.2 continua, e a novidade é a **Usinagem refeita no estilo da solda**: **Treino → TORNO** (ou Fábrica → Usinagem).
+O jogo mostra **ALPHA v2.2** no topo. Além da Fábrica, do menu 3D e do plasma (descritos abaixo), a **Usinagem foi refeita no estilo da solda**: **Treino → TORNO** (ou Fábrica → Usinagem).
 
 - **Controles:** segure o botão esquerdo e a ferramenta vai até o ponteiro, na velocidade da manivela (Shift: rápido). Teclas: **A/D** carro, **W/S** transversal, **roda** = nônio, **E** liga o eixo, **Espaço** avanço automático, **F** facear, **1–7** marchas, **M** instrumento de medição, **Enter** encerra.
 - **Física:** o cavaco muda com o material e a velocidade; aparece aresta postiça; a aresta desgasta; a peça fina vibra; o motor para se o corte for pesado demais; a ferramenta quebra se você encostar com o eixo parado.
 - **Medição:** no desbaste a peça sai um pouco maior que o mostrador. Pare o eixo e meça com o micrômetro antes do passe final.
 - **Peças:** OM-01 (eixo de aço), pino esbelto de alumínio, bucha de latão e tarugo livre. A nota de 0 a 1000 vem com defeitos explicados.
 
-> ⚠️ A v2.3 é uma versão de teste, não estável. Hipóteses do torno: H108 em [`v2.3/docs/HIPOTESES.md`](v2.3/docs/HIPOTESES.md).
+**E o Laboratório de Falhas também foi refeito no mesmo estilo** (Fábrica → Laboratório): bancada 3D em que você mesmo faz a inspeção (lanterna e lupa), o corte, o lixamento (#220 → #600 → #1200, girando 90°), o polimento, o ataque, o microscópio (foco na roda do mouse) e a microdureza. Hipóteses, caderno e relatório ficam no escritório.
 
-## Alpha v2.2 — FÁBRICA e menu em 3D
+> ⚠️ A v2.2 é uma versão de teste, não estável. Hipóteses do torno (H108) e do laboratório (H109) em [`v2.2/docs/HIPOTESES.md`](v2.2/docs/HIPOTESES.md).
 
-**[⬇ BAIXAR ALPHA v2.2 (teste) — ZIP](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip)**
+## Mais sobre a v2.2: FÁBRICA, menu em 3D e plasma
 
 1. Baixe o ZIP. Se o GitHub abrir a página do arquivo, clique em **Download raw file**.
 2. Extraia a pasta inteira.
@@ -120,8 +120,7 @@ abre ao tocar a peça com **S** e a vareta queima: continue descendo com toques 
 
 | Versão | O que tem de novo | Download |
 |---|---|---|
-| Alpha v2.3 | **Teste, não estável.** **Torno convencional** em 3D operado nas manivelas (Usinagem refeita no estilo da solda) | [ZIP da v2.3 (teste)](v2.3/Oficina-de-Soldagem-Alpha-v2.3.zip) |
-| Alpha v2.2 | **Teste, não estável.** **FÁBRICA**: usinagem, soldagem e laboratório de falhas num jogo só, com ordens de serviço num galpão 3D | [ZIP da v2.2 (teste)](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip) |
+| Alpha v2.2 | **Teste, não estável.** **FÁBRICA** com ordens de serviço num galpão 3D, menu 3D, soldagem a plasma e **torno convencional** em 3D | [ZIP da v2.2 (teste)](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip) |
 | Alpha v2.1 | **Teste, não estável.** Modo experimental **Manufatura Aditiva**: robô programado em INFORM fabrica uma parede de várias camadas | [ZIP da v2.1 (teste)](v2.1/Oficina-de-Soldagem-Alpha-v2.1.zip) |
 | **Alpha v2.0** | **Mais nova estável.** Máquina MIG/MAG em volts e m/min com curto-circuito, globular e spray; chapa que passa e fura em níveis; tubo com tubo; chapas com características próprias; **brasagem** com maçarico | [ZIP da v2.0](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip) · [Pacote de rede (X1)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip) |
 | Alpha v1.9 | **TIG** com mesa digitalizadora + mouse; Fácil só nota e Difícil com mínimo por categoria; eletrodo sem ajuda na altura | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
@@ -157,7 +156,6 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
-- [`v2.3/`](v2.3/): feita a partir da v2.2, com o torno convencional novo. **Versão de teste, não estável.**
 - [`v2.2/`](v2.2/): feita a partir da v2.1, com a Usinagem e o Laboratório de Falhas dentro do jogo. **Versão de teste, não estável.**
 - [`v2.1/`](v2.1/) ← [`alpha-v2.1`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v2.1) (`claude/v2.1` e `gpt/v2.1`, a partir da `alpha-v2.0`; PRs #47, #49, #50, #52 e #54). **Versão de teste, não estável.**
 - [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32, #36, #37, #39, #40, #42 e #43)
