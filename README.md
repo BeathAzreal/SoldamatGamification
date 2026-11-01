@@ -1,6 +1,21 @@
 # Oficina de Soldagem — versões e downloads
 
-## Alpha v2.0 disponível para teste
+## 🆕 Testar agora: Alpha v2.2 — FÁBRICA e menu em 3D
+
+**[⬇ BAIXAR ALPHA v2.2 (teste) — ZIP](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip)**
+
+1. Baixe o ZIP. Se o GitHub abrir a página do arquivo, clique em **Download raw file**.
+2. Extraia a pasta inteira.
+3. Abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html** no Chrome ou Edge. Não precisa instalar nada nem ter internet.
+
+O jogo mostra **ALPHA v2.2** no topo. O que testar:
+
+- **Menu em 3D:** o menu é a fábrica à noite e cada opção é um lugar do galpão. Use as setas ou passe o mouse na lista para virar a câmera, e Enter ou clique no lugar para entrar.
+- **FÁBRICA:** galpão 3D com Usinagem, Soldagem, Manufatura Aditiva e Laboratório. A **OS-01** passa pelo laboratório (análise da falha), pela usinagem (pino) e pela soldagem (emenda em SAE 1045). A qualidade libera no fim e gera o relatório em PDF.
+
+> ⚠️ A v2.2 é uma versão de teste, não estável. Detalhes mais abaixo e em [`v2.2/docs/FABRICA.md`](v2.2/docs/FABRICA.md).
+
+## Alpha v2.0 (estável)
 
 **[BAIXAR ALPHA v2.0 — jogo pronto em ZIP](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip)**
 
