@@ -42,20 +42,20 @@ const NOMES: Record<SetorId, string> = {
   manufatura: 'MANUFATURA ADITIVA',
 }
 
-const metal = (cor: string, rugosidade = 0.55, metalico = 0.5) => new THREE.MeshStandardMaterial({ color: cor, roughness: rugosidade, metalness: metalico })
-const pintado = (cor: string) => new THREE.MeshStandardMaterial({ color: cor, roughness: 0.7, metalness: 0.15 })
+export const metal = (cor: string, rugosidade = 0.55, metalico = 0.5) => new THREE.MeshStandardMaterial({ color: cor, roughness: rugosidade, metalness: metalico })
+export const pintado = (cor: string) => new THREE.MeshStandardMaterial({ color: cor, roughness: 0.7, metalness: 0.15 })
 
-function caixa(l: number, a: number, p: number, mat: THREE.Material, x = 0, y = 0, z = 0): THREE.Mesh {
+export function caixa(l: number, a: number, p: number, mat: THREE.Material, x = 0, y = 0, z = 0): THREE.Mesh {
   const m = new THREE.Mesh(new THREE.BoxGeometry(l, a, p), mat)
   m.position.set(x, y + a / 2, z)
   return m
 }
 
-function cilindro(r: number, h: number, mat: THREE.Material, seg = 24): THREE.Mesh {
+export function cilindro(r: number, h: number, mat: THREE.Material, seg = 24): THREE.Mesh {
   return new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), mat)
 }
 
-function placa(texto: string, cor: string, largura = 512): THREE.Mesh {
+export function placa(texto: string, cor: string, largura = 512): THREE.Mesh {
   const c = document.createElement('canvas')
   c.width = largura; c.height = 96
   const g = c.getContext('2d')!
@@ -74,7 +74,7 @@ function placa(texto: string, cor: string, largura = 512): THREE.Mesh {
 }
 
 /** Torno CNC: barramento, cabeçote com placa, contraponto e carenagem. */
-function torno(): { grupo: THREE.Group; animar: (t: number) => void } {
+export function torno(): { grupo: THREE.Group; animar: (t: number) => void } {
   const g = new THREE.Group()
   const corpo = pintado('#d9dde1')
   g.add(caixa(3.2, 0.9, 1.1, pintado('#59636d')))
@@ -111,7 +111,7 @@ function torno(): { grupo: THREE.Group; animar: (t: number) => void } {
 }
 
 /** Cabine de solda: biombos vermelhos, mesa, máquina no carrinho e o brilho do arco. */
-function cabineSolda(): { grupo: THREE.Group; animar: (t: number) => void } {
+export function cabineSolda(): { grupo: THREE.Group; animar: (t: number) => void } {
   const g = new THREE.Group()
   const cortina = new THREE.MeshStandardMaterial({ color: '#b3261e', roughness: 0.6, transparent: true, opacity: 0.72, side: THREE.DoubleSide })
   const tubo = metal('#c9cdd1', 0.4, 0.7)
@@ -150,7 +150,7 @@ function cabineSolda(): { grupo: THREE.Group; animar: (t: number) => void } {
 }
 
 /** Laboratório: bancada com microscópio, microdurômetro, lixadeira e parede de vidro. */
-function laboratorio(): { grupo: THREE.Group; animar: (t: number) => void } {
+export function laboratorio(): { grupo: THREE.Group; animar: (t: number) => void } {
   const g = new THREE.Group()
   g.add(caixa(3.2, 0.9, 0.9, pintado('#e9ecef'), 0, 0, -0.3))
   g.add(caixa(3.2, 0.04, 0.95, pintado('#2f3a44'), 0, 0.9, -0.3))
@@ -189,7 +189,7 @@ function laboratorio(): { grupo: THREE.Group; animar: (t: number) => void } {
 }
 
 /** Robô de 6 eixos ilustrativo (como o da Manufatura Aditiva), com a parede de camadas na mesa. */
-function robo(): { grupo: THREE.Group; animar: (t: number) => void } {
+export function robo(): { grupo: THREE.Group; animar: (t: number) => void } {
   const g = new THREE.Group()
   const azul = pintado('#2563a8')
   g.add(caixa(1.6, 0.8, 1.0, metal('#4c5660', 0.8, 0.5), 0.8, 0, 0))

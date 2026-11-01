@@ -52,6 +52,8 @@ A Oficina de Soldagem, a **Usinagem** (torno CNC) e o **Laboratório de Falhas**
 2. **Usinagem:** tornear o pino de articulação dentro da tolerância e da rugosidade pedidas.
 3. **Soldagem:** soldar a emenda do braço novo em aço SAE 1045, aplicando o que o laboratório mostrou.
 
+O **menu também virou 3D** (primeiro teste da nova interface): cada opção é um lugar da fábrica, e a lista fica por cima.
+
 No fim, a **qualidade** faz três perguntas, libera a OS e gera um relatório para imprimir ou salvar em PDF para o professor. Os setores também abrem em acesso livre. Como funciona, sugestão de aula e como criar novas OS: [`v2.2/docs/FABRICA.md`](v2.2/docs/FABRICA.md).
 
 O ZIP da v2.2 traz o jogo offline e o atalho do x1 online. O servidor local de reserva continua no pacote da v2.1/v2.0 (mesmo protocolo).

@@ -1,0 +1,15 @@
+/* Menu 3D (v2.2): a fábrica ocupa a tela; título, lista e descrição ficam por cima. */
+.menu-grafico #app.menu-3d { background: #07090b; }
+.menu-3d .menu3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: -2; }
+/* Sombra à esquerda para a lista ler bem sobre o 3D. */
+.menu-grafico #app.menu-3d::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(4, 5, 6, .82) 0, rgba(4, 5, 6, .5) 28%, rgba(4, 5, 6, 0) 50%),
+              linear-gradient(0deg, rgba(4, 5, 6, .7) 0, rgba(4, 5, 6, 0) 22%); }
+.menu-3d .grafico-lista, .menu-3d .grafico-titulo, .menu-3d .grafico-legenda, .menu-3d .grafico-rodape { pointer-events: auto; }
+.menu-3d .grafico-descricao { text-shadow: 0 1px 3px #000; }
+.menu-3d .grafico-rodape { background: rgba(9, 9, 9, .82); }
+/* Ao confirmar, a lista sai e a câmera anda até o lugar. */
+.menu-3d.menu-saindo .grafico-rodape, .menu-3d.menu-saindo .grafico-versao { opacity: 0; transition: opacity 240ms ease; }
+@media (max-width: 700px) {
+  .menu-grafico #app.menu-3d::before { background: linear-gradient(90deg, rgba(4, 5, 6, .85) 0, rgba(4, 5, 6, .55) 60%, rgba(4, 5, 6, .2) 100%); }
+}

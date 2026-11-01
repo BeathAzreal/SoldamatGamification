@@ -175,7 +175,7 @@ export class App {
     })
     const r = tela(this)
     // A fábrica tem 3D, mas é um painel de navegação: mantém o topo e a barra lateral.
-    const imersivo = !!this.raiz.querySelector('canvas') && !this.raiz.querySelector('.fabrica')
+    const imersivo = !!this.raiz.querySelector('canvas') && !this.raiz.querySelector('.fabrica, .menu3d-canvas')
     document.body.classList.toggle('jogo-imersivo', imersivo)
     const paginaArcade = rota === 'arcade' && !imersivo && !document.body.classList.contains('menu-grafico')
     document.body.classList.toggle('arcade-interno', paginaArcade)
