@@ -6,7 +6,9 @@
 
 1. Baixe o ZIP. Se o GitHub abrir a página do arquivo, clique em **Download raw file**.
 2. Extraia a pasta inteira.
-3. Abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html** no Chrome ou Edge. Não precisa instalar nada nem ter internet.
+3. Abra **Oficina de Soldagem.html** no Chrome ou Edge. Não precisa instalar nada nem ter internet.
+
+O ZIP da v2.2 traz só o jogo (um HTML) e o LEIA-ME, sem `.bat` nem atalho para o site online, que são os arquivos que o antivírus costuma acusar por engano. O x1 online continua dentro do jogo: Arcade → X1 em rede → **Abrir oficina online**.
 
 O jogo mostra **ALPHA v2.2** no topo. O que testar:
 
@@ -71,7 +73,7 @@ O **menu também virou 3D** (primeiro teste da nova interface): cada opção é 
 
 No fim, a **qualidade** faz três perguntas, libera a OS e gera um relatório para imprimir ou salvar em PDF para o professor. Os setores também abrem em acesso livre. Como funciona, sugestão de aula e como criar novas OS: [`v2.2/docs/FABRICA.md`](v2.2/docs/FABRICA.md).
 
-O ZIP da v2.2 traz o jogo offline e o atalho do x1 online. O servidor local de reserva continua no pacote da v2.1/v2.0 (mesmo protocolo).
+O ZIP da v2.2 traz só o jogo offline e o LEIA-ME. O servidor local de reserva continua no pacote da v2.1/v2.0 (mesmo protocolo).
 
 ## Alpha v2.1 — versão de teste (não estável)
 

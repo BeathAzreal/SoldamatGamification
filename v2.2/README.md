@@ -12,7 +12,7 @@ Todo o resto é a v2.1: Manufatura Aditiva, MIG/MAG, TIG, eletrodo, brasagem, Hi
 
 **[Baixar a v2.2 (teste) — ZIP](Oficina-de-Soldagem-Alpha-v2.2.zip)**
 
-Extraia o ZIP inteiro e abra **Oficina de Soldagem.html** (ou **Abrir o jogo.bat**) no Chrome ou Edge, sem instalação e sem internet. **JOGAR ONLINE.html** abre a oficina hospedada para o x1 online.
+Extraia o ZIP e abra **Oficina de Soldagem.html** no Chrome ou Edge, sem instalação e sem internet. O ZIP traz só esse HTML e o LEIA-ME: o `.bat` e o atalho JOGAR ONLINE.html ficaram de fora porque o antivírus costuma acusá-los por engano. O x1 online abre dentro do jogo: Arcade → X1 em rede → **Abrir oficina online**.
 
 O ZIP da v2.2 não traz o servidor local de reserva (ele só é gerado no Windows). Para o x1 em rede local, use o pacote da [v2.1](../v2.1/Oficina-de-Soldagem-Alpha-v2.1.zip) ou da [v2.0](../v2.0/Oficina-de-Soldagem-v2.0-Rede.zip), que usam o mesmo protocolo.
 
