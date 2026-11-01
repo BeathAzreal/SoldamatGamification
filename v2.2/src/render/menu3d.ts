@@ -177,7 +177,7 @@ function estanteRecordes(): Desenho {
     taca.position.y = 0.31
     tr.add(taca)
     tr.position.set(x as number, (y as number), -0.22)
-    tr.scale.setScalar(1.6)
+    tr.scale.setScalar(1.1)
     g.add(tr)
     trofeus.push(tr)
   })
