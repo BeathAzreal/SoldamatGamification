@@ -1183,3 +1183,26 @@ Cada cordão solto possui aporte e picos de fusão próprios. O calor de um dep�
 ### Complemento H106 — escoamento local da poça na manufatura
 
 A parcela nova depositada pode migrar para vizinhos mais baixos durante a janela de solidificação de 1,5 s. O interpasse influencia a mobilidade, sem representar a temperatura local de fusão. A etapa roda no passo fixo, conserva a integral de alturas e o arame registrado, respeita o metal já solidificado e deixa a forma final permanente ao esfriar. Modelo de altura, sem gotas destacadas nem material pendurado. Limites e hipóteses em `docs/MANUFATURA-ADITIVA.md`.
+
+
+### H107 — soldagem a plasma (PAW), keyhole e microplasma (v2.2, Claude)
+
+Na mesma chapa e no mesmo calor do TIG (H92), o plasma muda (`src/modelo/plasma.ts`):
+
+- **H107-a, coluna constrita:** o tungstênio fica recuado num bocal de cobre. O calor chega com σ = 0,75 + 0,05·L − 0,15·gás (mm), que quase não muda com a distância L (no TIG, σ = 0,9 + 0,35·L). Tensão de 20 + 0,4·L V.
+- **H107-b, arco piloto:** o arco transferido abre até 9 mm e se mantém até 14 mm (TIG: 5 e 8 mm).
+- **H107-c, sem contaminação, com arco duplo:** quem encosta (≤ 0,8 mm) é o bocal, e o arco passa por ele (arco duplo). O mesmo acontece acima de 230 A (limite do furo do bocal no jogo). O bocal fica gasto: σ + 0,9 mm até trocar.
+- **H107-d, keyhole:**
+  - abre quando a seção sob a tocha passa de 92 % do limite de furo do TIG para a chapa e o gás de plasma é de pelo menos 0,8 L/min; fecha abaixo de 80 %;
+  - diâmetro = pedal·(1 + 0,8·gás) mm, mais 2,5 mm por segundo com a tocha parada (< 1,2 mm/s);
+  - fecha atrás se o diâmetro ficar abaixo de 1,4 + 0,55·espessura (mm); acima disso fica um furo (com gás alto, uma sequência de furos: corte);
+  - a seção que o keyhole atravessa tem penetração total;
+  - no fim, o keyhole só fecha com a corrente descendo em rampa por pelo menos 0,45 s; cortar de vez deixa um furo.
+- **Calibração (testes):**
+  - inox 4 mm: keyhole estável com 120–180 A e 2–4 mm/s (1,5 L/min);
+  - aço carbono 5 mm: 150–220 A;
+  - 0,5 L/min não abre; 3,5 L/min corta;
+  - inox 1 mm com 0,3–0,5 L/min: funde sem furar até cerca de 20 A (microplasma).
+- **Nota:** fusão no trecho, penetração total (keyhole) ou cordão estreito (microplasma), largura regular, keyhole estável e bocal/arco, com desconto por furo como no TIG.
+- **Testes:** `tests/plasma.test.ts`.
+- **Base qualitativa:** o comportamento (coluna constrita, arco piloto, keyhole, rampa de descida, arco duplo, microplasma em chapa fina) segue a literatura de soldagem, por exemplo o *Welding Handbook* da AWS (vol. 2, capítulo de soldagem a plasma) e S. Kou, *Welding Metallurgy* (2ª ed.). Os números são do jogo, calibrados para essas tendências: não são de procedimento nem de fabricante.

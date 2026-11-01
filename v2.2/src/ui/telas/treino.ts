@@ -16,7 +16,8 @@ import { INFO_JUNTA } from '../../modelo/juntas'
 import { telaTreinoEletrodo } from './treinoEletrodo'
 import { PECAS_TIG, pecaTigEm } from '../../missoes/pecasTig'
 import { resumoMaterial } from '../componentes/material'
-import { telaTreinoTig } from './treinoTig'
+import { telaTreinoPlasma, telaTreinoTig } from './treinoTig'
+import { PECAS_PLASMA } from '../../missoes/pecasPlasma'
 import { PECAS_BRASAGEM, pecaBrasagemEm } from '../../missoes/pecasBrasagem'
 import { LIGAS } from '../../modelo/brasagem'
 import { telaTreinoBrasagem } from './treinoBrasagem'
@@ -30,6 +31,7 @@ export function telaTreino(app: App): void {
     { nome: 'MIG/MAG', descricao: 'Abra a bancada livre. Escolha a chapa, a junta, regule a máquina e pratique.', abrir: () => escolherModo(app, 'MIG/MAG', 'TREINO / BANCADA LIVRE', (d) => treinoLivre(app, d), () => telaTreino(app)) },
     { nome: 'ELETRODO', descricao: 'Escolha a peça e pratique o controle da distância e o consumo da vareta.', abrir: () => escolherPecaEletrodo(app) },
     { nome: 'TIG', descricao: 'Tocha numa mão e vareta na outra: pedal, poça e toques de vareta. Mesa digitalizadora + mouse ou só mouse.', abrir: () => escolherPecaTig(app) },
+    { nome: 'PLASMA', descricao: 'Arco apertado por um bocal: keyhole que atravessa a chapa numa passada, sem chanfro, e microplasma para chapa muito fina.', abrir: () => escolherPecaPlasma(app) },
     { nome: 'BRASAGEM', descricao: 'Maçarico, fluxo e vareta: aqueça a junta sobreposta e deixe a liga correr para dentro da folga, sem fundir a peça.', abrir: () => escolherPecaBrasagem(app) },
   ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
 }
@@ -78,6 +80,15 @@ function escolherChapa(app: App, titulo: string, processo: ProcessoChapa, peca: 
     descricao: resumoMaterial(m).replace(/ Chapas de .*$/, '') + ' ' + MATERIAIS[m].ficha.pontos.join(' '),
     abrir: () => seguir(m, `${caminho} / ${MATERIAIS[m].nomeCurto.toUpperCase()}`),
   })), { nome: 'VOLTAR', descricao: 'Escolher outra peça.', abrir: voltar })
+}
+
+/** H107: peças do plasma (keyhole e microplasma); a chapa é a da peça (as faixas foram calibradas nela). */
+function escolherPecaPlasma(app: App): void {
+  menuOficina(app, 'PLASMA', 'TREINO / ESCOLHA A PEÇA', PECAS_PLASMA.map(p => ({
+    nome: p.titulo,
+    descricao: `${p.aplicacao} · ${p.correnteA.min}–${p.correnteA.max} A · gás ${n1(p.gasLMin.min)}–${n1(p.gasLMin.max)} L/min.`,
+    abrir: () => escolherModo(app, 'PLASMA', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoPlasma(app, p, d, () => escolherPecaPlasma(app)), () => escolherPecaPlasma(app)),
+  })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo.', abrir: () => telaTreino(app) })
 }
 
 function escolherPecaBrasagem(app: App): void {

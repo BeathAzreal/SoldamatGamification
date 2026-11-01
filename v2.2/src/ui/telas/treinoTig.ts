@@ -6,12 +6,15 @@ import { Cordao } from '../../modelo/cordao'
 import { DepositoEletrodo } from '../../modelo/depositoEletrodo'
 import { GIRO_INICIAL_TUBO_GRAUS, INFO_JUNTA } from '../../modelo/juntas'
 import { ModeloTig, pedalDaPressao, TIG } from '../../modelo/tig'
+import { ModeloPlasma, PLASMA, furoQueFechaMm } from '../../modelo/plasma'
+import type { PecaPlasma } from '../../missoes/pecasPlasma'
+import { analiseVisualPlasma, avaliarPlasma, inspecionarPlasma } from '../../pontuacao/plasma'
 import { aprovacaoEletrodo } from '../../pontuacao/eletrodo'
 import { alvoTig, analiseVisualTig, avaliarTig, inspecionarTig, trechoTig } from '../../pontuacao/tig'
 import { criarBancada15 } from '../../render/bancada15'
 import type { App } from '../app'
 import { painelMaquina } from '../componentes/painelMaquina'
-import { resultadoTig } from '../componentes/resultadoTig'
+import { resultadoProcesso, resultadoTig } from '../componentes/resultadoTig'
 import { h, n0, n1 } from '../dom'
 
 /** Quadro muito longo (aba travada, depurador) não vira um salto de vários segundos de arco. */
@@ -30,6 +33,23 @@ const NOME_CONTROLE: Record<ControleTig, string> = { mesa: 'Mesa + mouse (duas m
 const ALTURA = { min: 0, max: 12, inicial: 3, passoRoda: 0.25, teclaMmS: 4 }
 
 export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar: () => void): void {
+  treinoTocha(app, peca, modo, voltar, null)
+}
+
+/**
+ * H107: soldagem a plasma na mesma bancada do TIG. Muda a fonte (gás de
+ * plasma), o bocal no lugar do tungstênio exposto, o keyhole e a nota.
+ */
+export function telaTreinoPlasma(app: App, peca: PecaPlasma, modo: Dificuldade, voltar: () => void): void {
+  treinoTocha(app, peca, modo, voltar, peca)
+}
+
+function treinoTocha(app: App, peca: PecaTig, modo: Dificuldade, voltar: () => void, plasma: PecaPlasma | null): void {
+  const criarModelo = (): ModeloTig => plasma ? new ModeloPlasma(peca) : new ModeloTig(peca)
+  /** Limites do arco no medidor (o plasma alcança mais longe). */
+  const ARCO = plasma
+    ? { contato: PLASMA.contatoMm, curto: 2, bom: 7, max: PLASMA.arcoMaxMm }
+    : { contato: TIG.contatoMm, curto: TIG.varetaNoTungstenioMm, bom: 4, max: TIG.arcoMaxMm }
   app.ir((app) => {
     app.raiz.classList.add('app-cheia')
     app.escolherOutraPeca = voltar
@@ -38,7 +58,8 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
     if (!vista) return app.raiz.append(h('p', {}, 'WebGL indisponível: abra o treino no Chrome ou Edge com aceleração gráfica.'))
     const canvas = vista.canvas
     canvas.style.touchAction = 'none'
-    let modelo = new ModeloTig(peca)
+    let modelo = criarModelo()
+    const mp = () => modelo as ModeloPlasma
     let dep = new DepositoEletrodo(base)
     const novoCordao3D = () => new Cordao(undefined, undefined, undefined, { junta: peca.junta, dimensoes: { espessuraMm: peca.espessuraMm, aberturaMm: 0 } })
     let cordao3D = novoCordao3D()
@@ -65,8 +86,8 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
     // HUD sobre a vista.
     const estado = h('strong', { class: 'p15-estado', role: 'status', 'aria-live': 'polite' })
     const faixasEl = h('div', { class: 'p15-medidor-faixas' },
-      ...([[TIG.contatoMm, 'encosta', 'contato'], [TIG.varetaNoTungstenioMm, 'curto: a vareta encosta', 'atencao'], [4, 'adequado', 'bom'], [TIG.arcoMaxMm, 'longo', 'atencao']] as const)
-        .map(([ate, nome, classe], i, l) => h('span', { class: `p15-faixa p15-faixa-${classe}`, title: nome, style: `width:${((ate - (i ? l[i - 1][0] : 0)) / TIG.arcoMaxMm) * 100}%` })))
+      ...([[ARCO.contato, plasma ? 'bocal encosta' : 'encosta', 'contato'], [ARCO.curto, plasma ? 'perto' : 'curto: a vareta encosta', 'atencao'], [ARCO.bom, 'adequado', 'bom'], [ARCO.max, 'longo', 'atencao']] as const)
+        .map(([ate, nome, classe], i, l) => h('span', { class: `p15-faixa p15-faixa-${classe}`, title: nome, style: `width:${((ate - (i ? l[i - 1][0] : 0)) / ARCO.max) * 100}%` })))
     const marcador = h('span', { class: 'p15-medidor-marca' })
     const medidorTexto = h('span', { class: 'p15-medidor-texto' })
     const distanciaHud = h('output', { class: 'p15-numero' })
@@ -80,14 +101,14 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
         h('div', { class: 'p15-medidor', 'aria-hidden': 'true' }, faixasEl, marcador), medidorTexto),
       h('div', { class: 'p15-hud-grade' },
         h('div', { class: 'p15-hud-item p15-consumo' }, h('span', { class: 'p15-rotulo' }, 'Pedal'), pedalTexto, pedalBarra),
-        h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Poça'), pocaHud),
+        h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, plasma?.tecnica === 'keyhole' ? 'Keyhole' : 'Poça'), pocaHud),
         h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Avanço'), avanco),
         h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Vareta'), varetaHud)))
 
     // Painel lateral.
     const correnteValor = h('output')
     // H104: chapas que pedem mais corrente (cobre, alumínio) alargam a escala da fonte.
-    const corrente = h('input', { type: 'range', min: 20, max: Math.max(200, Math.ceil((peca.correnteA.max * 1.2) / 10) * 10), step: 5, value: Math.round((peca.correnteA.min + peca.correnteA.max) / 10) * 5, 'aria-label': 'Corrente máxima do pedal (A)' }) as HTMLInputElement
+    const corrente = h('input', { type: 'range', min: plasma ? 5 : 20, max: plasma ? 250 : Math.max(200, Math.ceil((peca.correnteA.max * 1.2) / 10) * 10), step: plasma ? 1 : 5, value: Math.round((peca.correnteA.min + peca.correnteA.max) / 10) * 5, 'aria-label': 'Corrente máxima do pedal (A)' }) as HTMLInputElement
     const referencia = h('small', { class: 'p15-dica' })
     const seletorControle = h('select', { 'aria-label': 'Controle da tocha e da vareta' }, (['mouse', 'mesa'] as const).map((c) => h('option', { value: c }, NOME_CONTROLE[c]))) as HTMLSelectElement
     const explicacaoControle = h('p', { class: 'p15-dica' })
@@ -100,11 +121,17 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
         : 'Mouse = tocha: leve até a peça; segure o botão esquerdo para o pedal (a corrente sobe aos poucos). Espaço mergulha a vareta na poça. W/S ou a roda sobem e descem a tocha.'
     }
     seletorControle.addEventListener('change', () => { mudarControle(seletorControle.value as ControleTig); canvas.focus() })
-    const afiar = h('button', { type: 'button', class: 'p15-alerta', on: { click: () => { modelo.afiar(); canvas.focus() } } }, 'Afiar tungstênio')
+    const afiar = h('button', { type: 'button', class: 'p15-alerta', on: { click: () => { if (plasma) mp().trocarBocal(); else modelo.afiar(); canvas.focus() } } }, plasma ? 'Trocar bocal' : 'Afiar tungstênio')
+    // Plasma: vazão do gás de plasma (o gás do orifício, que forma o jato).
+    const gasValor = h('output')
+    const gas = h('input', { type: 'range', min: PLASMA.gas.min, max: PLASMA.gas.max, step: 0.1, value: plasma ? (plasma.gasLMin.min + plasma.gasLMin.max) / 2 : PLASMA.gas.inicial, 'aria-label': 'Vazão do gás de plasma (L/min)' }) as HTMLInputElement
+    gas.addEventListener('input', () => { if (plasma) mp().gasLMin = Number(gas.value) })
+    const gasCampo = plasma ? h('label', {}, h('span', { class: 'p15-linha' }, 'Gás de plasma (argônio)', gasValor), gas,
+      h('small', { class: 'p15-dica' }, `Pouco gás: só funde por cima. Gás demais: o jato corta. Sugerido: ${n1(plasma.gasLMin.min)}–${n1(plasma.gasLMin.max)} L/min.`)) : null
     const novaVareta = h('button', { type: 'button', on: { click: () => { modelo.novaVareta(); canvas.focus() } } }, 'Nova vareta')
-    const fonte = h('fieldset', { class: 'p15-fonte' }, h('legend', {}, 'Fonte TIG (CC, eletrodo negativo)'),
+    const fonte = h('fieldset', { class: 'p15-fonte' }, h('legend', {}, plasma ? 'Fonte plasma (CC, eletrodo negativo, arco piloto)' : 'Fonte TIG (CC, eletrodo negativo)'),
       h('label', {}, h('span', { class: 'p15-linha' }, 'Corrente no pedal cheio', correnteValor), corrente),
-      referencia,
+      referencia, gasCampo,
       h('label', { class: 'p15-linha' }, 'Controle', seletorControle), explicacaoControle)
     const alturaFaixa = h('input', { type: 'range', min: ALTURA.min, max: ALTURA.max, step: 0.1, value: ALTURA.inicial, 'aria-label': 'Altura da tocha' }) as HTMLInputElement
     alturaFaixa.addEventListener('input', () => { alturaTocha = Number(alturaFaixa.value) })
@@ -113,10 +140,15 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
     const tocha = h('div', {},
       h('label', {}, h('span', { class: 'p15-linha' }, 'Altura da tocha', h('small', {}, 'roda ou W/S')), alturaFaixa),
       h('label', {}, h('span', { class: 'p15-linha' }, 'Inclinação', h('small', {}, 'caneta ou I/K')), inclinacao),
-      h('p', { class: 'p15-dica' }, 'Tungstênio a 2–3 mm da poça. Quando o cordão crescer, suba um pouco: tungstênio na poça contamina.'),
+      h('p', { class: 'p15-dica' }, plasma
+        ? 'O tungstênio fica recuado dentro do bocal: não toca a poça. Mantenha o bocal a 3–6 mm; encostado na peça, o arco passa pelo bocal (arco duplo) e o gasta.'
+        : 'Tungstênio a 2–3 mm da poça. Quando o cordão crescer, suba um pouco: tungstênio na poça contamina.'),
       h('button', { type: 'button', on: { click: () => { vista.centralizar(); canvas.focus() } } }, 'Centralizar câmera'))
-    const alvo = alvoTig(peca)
-    const itensObjetivo = ['Fusão no trecho', 'Toques de vareta', 'Tungstênio limpo', 'Sem furos'].map((t) => {
+    const alvo = plasma ? { descricao: plasma.tecnica === 'keyhole' ? 'Keyhole do início ao fim: penetração total numa passada, sem furo no fim' : 'Cordão estreito e contínuo, sem furar' } : alvoTig(peca)
+    const nomesObjetivo = plasma
+      ? ['Fusão no trecho', plasma.tecnica === 'keyhole' ? 'Penetração total' : 'Sem keyhole', 'Bocal sem arco duplo', 'Sem furos']
+      : ['Fusão no trecho', 'Toques de vareta', 'Tungstênio limpo', 'Sem furos']
+    const itensObjetivo = nomesObjetivo.map((t) => {
       const valor = h('span', { class: 'p15-obj-valor' })
       return { li: h('li', {}, h('span', {}, t), valor), valor }
     })
@@ -133,7 +165,8 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       painelResultado?.remove(); painelResultado = null
       const painel = app.raiz.querySelector<HTMLElement>('.p15-painel')
       if (painel) painel.hidden = false
-      modelo = new ModeloTig(peca)
+      modelo = criarModelo()
+      if (plasma) mp().gasLMin = Number(gas.value)
       giroTubo?.reiniciar()
       modelo.correnteA = Number(corrente.value)
       modelo.inclinacaoGraus = Number(inclinacao.value)
@@ -152,8 +185,19 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       modelo.avancar(1 / 60)
       encerrada = true
       hud.hidden = true
-      const r = avaliarTig(peca, modelo, dep, modo)
-      const resultado = resultadoTig(r, inspecionarTig(peca, modelo, dep), NOME_DIFICULDADE[modo], aprovacaoEletrodo(r, modo), { nova: recomecar, pecas: voltar })
+      const op = { nova: recomecar, pecas: voltar }
+      let resultado: ReturnType<typeof resultadoTig>
+      if (plasma) {
+        const r = avaliarPlasma(plasma, mp(), modo)
+        resultado = resultadoProcesso(r, inspecionarPlasma(plasma, mp()), NOME_DIFICULDADE[modo], aprovacaoEletrodo(r, modo), op, {
+          descontos: r.penalidadeFuros ? `Descontos: furos −${r.penalidadeFuros}` : 'Sem descontos adicionais.',
+          detalhe: `Modo ${NOME_DIFICULDADE[modo]}. Furos: −${r.penalidadeFuros}. Total limitado a 0–1000.`,
+          limites: 'Modelo didático de calor na chapa e do keyhole: não avalia porosidade, mordedura no avesso nem a cor de oxidação do inox. Correntes e vazões são do jogo. Não qualifica soldador nem procedimento.',
+        })
+      } else {
+        const r = avaliarTig(peca, modelo, dep, modo)
+        resultado = resultadoTig(r, inspecionarTig(peca, modelo, dep), NOME_DIFICULDADE[modo], aprovacaoEletrodo(r, modo), op)
+      }
       const painel = conteudo.querySelector<HTMLElement>('.p15-painel')!
       painel.hidden = true
       painelResultado = resultado.painel
@@ -178,11 +222,13 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       h('header', { class: 'p15-cabecalho' },
         h('div', {},
           h('h2', { class: 'tela-titulo', tabindex: '-1' }, peca.titulo),
-          h('p', {}, `TIG · modo ${NOME_DIFICULDADE[modo]} · ${MATERIAIS[peca.material].nomeCurto} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · vareta Ø ${n1(peca.varetaMm)} mm`)),
+          h('p', {}, plasma
+            ? `Plasma (${plasma.tecnica === 'keyhole' ? 'keyhole' : 'microplasma'}) · modo ${NOME_DIFICULDADE[modo]} · ${MATERIAIS[peca.material].nomeCurto} · ${INFO_JUNTA[peca.junta].nome} reto · ${n1(peca.espessuraMm)} mm · vareta opcional`
+            : `TIG · modo ${NOME_DIFICULDADE[modo]} · ${MATERIAIS[peca.material].nomeCurto} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · vareta Ø ${n1(peca.varetaMm)} mm`)),
         h('div', { class: 'p15-processos navegacao-de-partida' }, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
       h('div', { class: 'p15-grade' }, area,
         h('aside', { class: 'p15-painel' },
-          h('div', { class: 'maquina-identificacao' }, 'TIG / CC', h('span', {}, '● FONTE ENERGIZADA')),
+          h('div', { class: 'maquina-identificacao' }, plasma ? 'PLASMA / CC' : 'TIG / CC', h('span', {}, plasma ? '● ARCO PILOTO' : '● FONTE ENERGIZADA')),
           h('div', { class: 'p15-comandos' }, afiar, novaVareta),
           instrumentos,
           h('div', { class: 'p15-avaliacao' }, avaliar, pausar, h('button', { type: 'button', 'aria-label': 'Recomeçar peça', on: { click: recomecar } }, '↺')))))
@@ -277,7 +323,19 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       let n = 0, total = 0
       for (let x = peca.inicioMm + 0.5; x < peca.fimMm; x += 2) { total++; if (trechoTig(peca, modelo, dep, x).fundido) n++ }
       const cob = total ? n / total : 0
-      const itens: [boolean, string][] = [
+      let itens: [boolean, string][]
+      if (plasma) {
+        const m = mp()
+        let pass = 0
+        for (let x = peca.inicioMm + 0.5; x < peca.fimMm; x += 2) if (m.passouEm(x)) pass++
+        const fp = total ? pass / total : 0
+        itens = [
+          [cob >= 0.95, `${n0(cob * 100)}%`],
+          plasma.tecnica === 'keyhole' ? [fp >= 0.95, `${n0(fp * 100)}%`] : [m.aberturasKeyhole === 0 && m.tempoArcoS > 0, m.aberturasKeyhole ? `furou ${m.aberturasKeyhole}×` : 'ok'],
+          [m.arcosDuplos === 0 && m.tempoArcoS > 0, m.bocalGasto ? 'bocal gasto' : `${m.arcosDuplos}×`],
+          [m.furos.length === 0 && m.tempoArcoS > 0, `${m.furos.length}`],
+        ]
+      } else itens = [
         [cob >= 0.95, `${n0(cob * 100)}%`],
         [modelo.toques.length > 0 && modelo.varetaFria === 0, `${modelo.toques.length}${modelo.varetaFria ? ` · ${modelo.varetaFria} na chapa fria` : ''}`],
         [modelo.contaminacoes === 0 && modelo.varetaNoTungstenio === 0 && modelo.tempoArcoS > 0, modelo.contaminado ? 'contaminado' : `${modelo.contaminacoes + modelo.varetaNoTungstenio}×`],
@@ -288,7 +346,9 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
         if (itensObjetivo[i].valor.textContent !== texto) itensObjetivo[i].valor.textContent = texto
       })
     }
-    const mensagens = {
+    const mensagens = plasma ? {
+      pronto: 'Arco piloto aceso · leve o bocal a 3–6 mm e pise', arco: 'Arco transferido', afastado: 'Bocal longe demais · desça a tocha', desligado: 'Pausado',
+    } : {
       pronto: 'Pedal solto · leve o tungstênio a 2–3 mm e pise', arco: 'Arco aberto', afastado: 'Tungstênio longe demais · desça a tocha', desligado: 'Pausado',
     }
     const quadro = (agora: number) => {
@@ -319,36 +379,58 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       } else if (!encerrada) modelo.pedal = 0
       // Leituras.
       const L = modelo.distanciaMm
+      const textoPlasma = (): string | null => {
+        if (!plasma || modelo.estado !== 'arco') return null
+        const m = mp()
+        if (m.bocalGasto) return 'Bocal gasto (arco duplo) · arco aberto e fraco: solte o pedal e troque o bocal'
+        if (m.keyhole && m.keyholeMm > 0.8 * furoQueFechaMm(peca.espessuraMm)) return 'Keyhole crescendo · avance, senão o furo não fecha'
+        if (m.keyhole) return plasma.tecnica === 'keyhole' ? 'Keyhole aberto · avance constante; no fim, solte o pedal devagar' : 'O jato furou a chapa fina · baixe o gás e a corrente'
+        if (modelo.raioPocaMm < 1) return 'Arco aberto · espere a poça'
+        return plasma.tecnica === 'keyhole' ? (m.gasLMin < PLASMA.gasKeyholeMin ? 'Poça sem keyhole · gás de plasma baixo demais' : 'Poça formada · espere o keyhole abrir antes de avançar') : 'Poça formada · avance constante'
+      }
       const texto = encerrada ? 'Tentativa encerrada · inspecione e veja a nota ao lado' : pausado ? 'Pausado'
-        : modelo.contaminado && modelo.estado === 'arco' ? 'Tungstênio contaminado · arco instável: solte o pedal e afie'
+        : textoPlasma() ?? (modelo.contaminado && modelo.estado === 'arco' ? 'Tungstênio contaminado · arco instável: solte o pedal e afie'
         : modelo.estado === 'arco' && modelo.raioPocaMm < 1 ? 'Arco aberto · espere a poça brilhar antes de avançar'
         : modelo.estado === 'arco' && L < TIG.varetaNoTungstenioMm ? 'Arco curto · suba um pouco antes de pôr a vareta'
-        : mensagens[modelo.estado]
+        : mensagens[modelo.estado])
       if (estado.textContent !== texto) estado.textContent = texto
       estado.dataset.arco = String(modelo.estado === 'arco' && !modelo.contaminado)
-      estado.dataset.alerta = String(modelo.contaminado || L <= TIG.contatoMm)
+      estado.dataset.alerta = String(modelo.contaminado || L <= ARCO.contato || (!!plasma && mp().bocalGasto))
       distanciaHud.value = `${n1(Math.max(0, L))} mm`
-      marcador.style.left = `${Math.min(100, Math.max(0, (L / TIG.arcoMaxMm) * 100))}%`
-      const faixa = L <= TIG.contatoMm ? 'encostado na poça' : L < TIG.varetaNoTungstenioMm ? 'curto · a vareta encosta no tungstênio' : L <= 4 ? 'adequado' : L <= TIG.arcoMaxMm ? 'longo · poça larga e rasa' : 'apaga'
+      marcador.style.left = `${Math.min(100, Math.max(0, (L / ARCO.max) * 100))}%`
+      const faixa = plasma
+        ? (L <= ARCO.contato ? 'bocal encostado · arco duplo' : L < ARCO.curto ? 'perto · risco de arco duplo' : L <= ARCO.bom ? 'adequado · a coluna quase não muda' : L <= ARCO.max ? 'longo · arco perde força' : 'apaga')
+        : (L <= ARCO.contato ? 'encostado na poça' : L < ARCO.curto ? 'curto · a vareta encosta no tungstênio' : L <= ARCO.bom ? 'adequado' : L <= ARCO.max ? 'longo · poça larga e rasa' : 'apaga')
       if (medidorTexto.textContent !== faixa) medidorTexto.textContent = faixa
-      medidorTexto.dataset.faixa = L < TIG.varetaNoTungstenioMm ? 'curto' : L <= 4 ? 'adequado' : 'longo'
+      medidorTexto.dataset.faixa = L < ARCO.curto ? 'curto' : L <= ARCO.bom ? 'adequado' : 'longo'
       pedalBarra.value = modelo.pedal
       pedalTexto.value = `${n0(modelo.correnteAtualA)} A`
-      pocaHud.value = modelo.raioPocaMm > 0.3 ? `${n1(2 * modelo.raioPocaMm)} mm` : '—'
+      pocaHud.value = plasma?.tecnica === 'keyhole'
+        ? (mp().keyhole ? `aberto · Ø ${n1(mp().keyholeMm)} mm` : modelo.raioPocaMm > 0.3 ? 'fechado' : '—')
+        : modelo.raioPocaMm > 0.3 ? `${n1(2 * modelo.raioPocaMm)} mm` : '—'
+      if (plasma) gasValor.value = `${n1(mp().gasLMin)} L/min`
       avanco.value = `${n1(modelo.estado === 'arco' ? modelo.velocidadeMmS : 0)} mm/s`
       varetaHud.value = `${n0(modelo.varetaRestanteMm)} mm`
       correnteValor.value = `${n0(modelo.correnteA)} A`
-      const textoRef = `Sugerido para esta peça: ${peca.correnteA.min}–${peca.correnteA.max} A no pedal cheio.` + (modelo.correnteA > peca.correnteA.max + 10 ? ' Acima disso a chapa fina fura.' : modelo.correnteA < peca.correnteA.min - 10 ? ' Abaixo disso a poça demora ou não se forma.' : '')
+      const textoRef = `Sugerido para esta peça: ${peca.correnteA.min}–${peca.correnteA.max} A no pedal cheio${plasma ? `, avanço de ${n1(plasma.avancoMmS.min)}–${n1(plasma.avancoMmS.max)} mm/s` : ''}.`
+        + (plasma && modelo.correnteA > PLASMA.correnteBocalA ? ` Acima de ${PLASMA.correnteBocalA} A o bocal não aguenta (arco duplo).`
+          : modelo.correnteA > peca.correnteA.max + 10 ? (plasma?.tecnica === 'keyhole' ? ' Acima disso o keyhole cresce e pode não fechar.' : ' Acima disso a chapa fina fura.')
+          : modelo.correnteA < peca.correnteA.min - (plasma ? 3 : 10) ? (plasma?.tecnica === 'keyhole' ? ' Abaixo disso o keyhole não abre.' : ' Abaixo disso a poça demora ou não se forma.') : '')
       if (referencia.textContent !== textoRef) referencia.textContent = textoRef
       alturaFaixa.value = String(alturaTocha)
       inclinacao.value = String(modelo.inclinacaoGraus)
-      afiar.hidden = !modelo.contaminado
+      afiar.hidden = plasma ? !mp().bocalGasto : !modelo.contaminado
+      gas.disabled = pausado
       afiar.disabled = modelo.estado === 'arco'
       novaVareta.disabled = modelo.varetaRestanteMm > TIG.varetaInicialMm - 1
       corrente.disabled = modelo.estado === 'arco' || pausado
       avaliar.disabled = encerrada || modelo.tempoArcoS < 0.1 || pausado
       zoomValor.value = `${vista.zoomPercentual()}%`
-      const instrucao = (avisoCaneta ? avisoCaneta + ' ' : '') + (controle === 'mesa'
+      const instrucao = (avisoCaneta ? avisoCaneta + ' ' : '') + (plasma
+        ? (controle === 'mesa'
+          ? 'Caneta: leve o bocal ao INÍCIO (3–6 mm) e pressione para o pedal. ' + (plasma.tecnica === 'keyhole' ? 'Espere o keyhole abrir, avance constante e, no fim, alivie a pressão devagar.' : 'Avance constante, sem parar.') + ' Vareta opcional (clique do mouse).'
+          : 'Leve o mouse ao INÍCIO e segure o botão esquerdo (pedal). ' + (plasma.tecnica === 'keyhole' ? 'Espere o keyhole abrir, avance constante sem parar e, no fim, solte o botão (a corrente desce em rampa e o furo fecha).' : 'Avance constante, sem parar.') + ' Vareta opcional (Espaço).')
+        : controle === 'mesa'
         ? 'Caneta: leve o tungstênio ao INÍCIO e pressione para o pedal. Espere a poça, toque a vareta com o clique do mouse na frente da poça e avance um passo a cada toque.'
         : 'Leve o mouse ao INÍCIO e segure o botão esquerdo (pedal). Espere a poça, toque a vareta com Espaço na frente da poça e avance um passo a cada toque. No fim, um último toque e solte o botão.')
       if (ajuda.textContent !== instrucao) ajuda.textContent = instrucao
@@ -356,12 +438,12 @@ export function telaTreinoTig(app: App, peca: PecaTig, modo: Dificuldade, voltar
       // H94: metal no avesso, raiz afundada e furos aparecem no cordão 3D (a cada meio segundo e ao encerrar).
       if ((agora - analiseMs > 500 && modelo.tempoArcoS > 0 && !encerrada) || (encerrada && analiseMs >= 0)) {
         analiseMs = encerrada ? -1 : agora
-        vista.atualizarDefeitos(analiseVisualTig(peca, modelo, cordao3D.nPosicoes, cordao3D.passoMm))
+        vista.atualizarDefeitos(plasma ? analiseVisualPlasma(plasma, mp(), cordao3D.nPosicoes, cordao3D.passoMm) : analiseVisualTig(peca, modelo, cordao3D.nPosicoes, cordao3D.passoMm))
       }
       vista.desenharTig(modelo, cordao3D, pode ? dt : 0, encerrada)
       pedido = requestAnimationFrame(quadro)
     }
     pedido = requestAnimationFrame(quadro)
     return () => { cancelAnimationFrame(pedido); soltar(); tamanho.disconnect(); ouvintes.forEach((f) => f()); vista.destruir() }
-  }, 'Treino · TIG')
+  }, plasma ? 'Treino · Plasma' : 'Treino · TIG')
 }
