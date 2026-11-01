@@ -17,9 +17,11 @@ import { avaliar, type ResultadoAvaliacao } from '../avaliacao/avaliar';
 /** v2.2 (fábrica): avisado quando o relatório é enviado e a devolutiva abre. */
 export interface PropsLaboratorio {
   aoConcluir?: (r: { casoId: string; avaliacao: ResultadoAvaliacao }) => void;
+  /** v2.2: os ensaios são feitos na bancada 3D; o escritório mostra só o raciocínio. */
+  semEnsaios?: boolean;
 }
 
-export function App({ aoConcluir }: PropsLaboratorio) {
+export function App({ aoConcluir, semEnsaios }: PropsLaboratorio) {
   const [estado, setEstado] = useState<EstadoJogo | null>(() => carregarPartida());
   const ref = useRef(estado);
   ref.current = estado;
@@ -94,7 +96,7 @@ export function App({ aoConcluir }: PropsLaboratorio) {
     ['hipoteses', '2 · Hipóteses'],
     ['ensaios', '3 · Ensaios'],
     ['relatorio', '4 · Relatório'],
-  ];
+  ].filter(([a]) => !(semEnsaios && a === 'ensaios')) as [Aba, string][];
   if (e.concluido) abas.push(['devolutiva', '★ Devolutiva']);
   const irAba = (a: Aba) => jogo.alterar((x) => irPara(x, a));
 

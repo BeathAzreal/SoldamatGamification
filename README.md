@@ -1,6 +1,6 @@
 # Oficina de Soldagem — versões e downloads
 
-## 🆕 Testar agora: Alpha v2.2 — FÁBRICA, menu 3D, plasma e TORNO
+## 🆕 Testar agora: Alpha v2.2 — FÁBRICA, menu 3D, plasma, TORNO e LABORATÓRIO
 
 **[⬇ BAIXAR ALPHA v2.2 (teste) — ZIP](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip)**
 
@@ -14,7 +14,9 @@ O jogo mostra **ALPHA v2.2** no topo. Além da Fábrica, do menu 3D e do plasma 
 - **Medição:** no desbaste a peça sai um pouco maior que o mostrador. Pare o eixo e meça com o micrômetro antes do passe final.
 - **Peças:** OM-01 (eixo de aço), pino esbelto de alumínio, bucha de latão e tarugo livre. A nota de 0 a 1000 vem com defeitos explicados.
 
-> ⚠️ A v2.2 é uma versão de teste, não estável. Hipóteses do torno: H108 em [`v2.2/docs/HIPOTESES.md`](v2.2/docs/HIPOTESES.md).
+**E o Laboratório de Falhas também foi refeito no mesmo estilo** (Fábrica → Laboratório): bancada 3D em que você mesmo faz a inspeção (lanterna e lupa), o corte, o lixamento (#220 → #600 → #1200, girando 90°), o polimento, o ataque, o microscópio (foco na roda do mouse) e a microdureza. Hipóteses, caderno e relatório ficam no escritório.
+
+> ⚠️ A v2.2 é uma versão de teste, não estável. Hipóteses do torno (H108) e do laboratório (H109) em [`v2.2/docs/HIPOTESES.md`](v2.2/docs/HIPOTESES.md).
 
 ## Mais sobre a v2.2: FÁBRICA, menu em 3D e plasma
 

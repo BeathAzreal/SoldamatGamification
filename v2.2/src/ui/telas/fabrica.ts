@@ -24,6 +24,7 @@ import { MISSAO_OS01_EMENDA } from '../../fabrica/missaoOs'
 import { registroDaSoldagem, registroDaUsinagem, registroDoLaboratorio, registroDoTorno } from '../../fabrica/registros'
 import { PECAS_TORNO } from '../../torno/pecas'
 import { telaTorno } from './torno'
+import { escolherLaboratorio } from './laboratorio'
 import { menuOficina } from '../componentes/menuOficina'
 import { pontuarRegistro } from '../../pontuacao/oficial'
 import { EXIGENCIA, type ResultadoPontuacao } from '../../pontuacao/regras'
@@ -169,7 +170,15 @@ function abrirSetor(app: App, setor: SetorId, etapa: Etapa | null): void {
       { nome: 'TORNO CNC (ANTERIOR)', descricao: 'A Usinagem CNC da versão anterior, até ser refeita no mesmo estilo.', abrir: () => telaSetorReact(app, 'usinagem', ordem, null) },
     ], { nome: 'VOLTAR À FÁBRICA', descricao: 'Voltar ao galpão.', abrir: () => telaFabrica(app, 'usinagem') })
   }
-  if (setor === 'laboratorio') return telaSetorReact(app, 'laboratorio', ordem, etapa)
+  if (setor === 'laboratorio') {
+    // Laboratório no estilo da bancada de solda; a conclusão (no escritório) registra a etapa da OS.
+    return escolherLaboratorio(app, () => telaFabrica(app, 'laboratorio'), {
+      aoConcluir: etapa ? (r) => {
+        registrar(app, ordem, etapa, registroDoLaboratorio(r.avaliacao.total, app.ambiente.agora().toISOString()))
+        void avisar(`Registrado na ${ordem.codigo}`, h('p', {}, `Relatório de análise de falha: ${r.avaliacao.total}/100. Volte à fábrica para a próxima etapa.`))
+      } : undefined,
+    })
+  }
   if (setor === 'manufatura') return telaEscolhaManufatura(app)
   if (etapa) return telaSoldagemOs(app, ordem, etapa)
   telaTreino(app)

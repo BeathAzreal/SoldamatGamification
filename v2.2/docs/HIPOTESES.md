@@ -1235,3 +1235,19 @@ Refaz a Usinagem no estilo da bancada de solda: o jogador move a ferramenta e a 
 - **Nota (0–1000):** diâmetro na tolerância 300, comprimento até o ressalto 150, acabamento 200, face e região bruta 100, ferramenta e segurança 150, parâmetros e tempo 100. O Difícil aprova com 20 % em cada item.
 - **Testes:** `tests/torno.test.ts` (OM-01 bem feita aprovada no Difícil; deflexão; Ra pelo avanço; aresta postiça; quebras; sobrecarga; vibração; segurança; independência da taxa de quadros).
 - Números do jogo, com a ordem de grandeza de dados de usinagem (Kienzle, Taylor, Ra teórica). Não são de catálogo de ferramenta nem de máquina.
+
+
+### H109 — Laboratório de Falhas com as mãos (v2.2, Claude)
+
+O Laboratório foi refeito no estilo da bancada de solda: as estações são feitas com as mãos, e as ações viram as escolhas do motor de ensaios do caso (`src/setores/laboratorio/motor`, já testado), que continua decidindo o que aparece. O conteúdo do caso "A junta que falhou" (ficha, verdade, gabarito) não mudou.
+
+- **Inspeção:** a lanterna é arrastada na vista 3D. Elevação abaixo de 25° conta como luz rasante; acima, difusa. Com a lupa, a vista é de detalhe. A limpeza é com solvente e escova macia (suave) ou com escova de aço (agressiva, irreversível). A prévia ao vivo usa o próprio motor (sem custo); fotografar registra.
+- **Corte:** o ponto é marcado na vista de cima e o disco avança enquanto o botão é segurado. Acima de 3 mm/s o disco trava; sem refrigeração, acima de 1,5 mm/s. O corte tem 14 mm.
+- **Lixamento:** arraste na lixa. Cada lixa exige uma distância de passadas (900, 1100 e 1300 mm de arraste para as #220, #600 e #1200). Sem girar a amostra 90° na troca de lixa, rende 55 %. O motor recebe a última lixa de uma sequência sem saltos: pular a #600 conta como "lixa-220", e com polimento o motor acusa arrancamento.
+- **Polimento:** pano com movimento por 8 s (6 µm) e 6 s (1 µm).
+- **Ataque:** com Nital, menos de 2 s não revela, 2 a 12 s revela e mais de 12 s é sobreataque.
+- **Microscópio:** a mesa é posicionada no mapa da seção. O ponto de foco é fixo para cada preparação e aumento, com tolerância de 4, 2 e 0,8 unidades a 10×, 100× e 500×, e a imagem borra fora dele. Só captura em foco. Clicar na imagem capturada marca os achados locais.
+- **Microdureza:** pontos clicados na seção e carga escolhida.
+- **Raciocínio:** hipóteses, interpretação, relatório e devolutiva continuam no "escritório" (a tela de texto do Laboratório anterior, sem a aba de ensaios), com o mesmo estado salvo.
+- **Testes:** `tests/laboratorioManual.test.ts`.
+- Tempos e distâncias são do jogo. Não são procedimento de laboratório.
