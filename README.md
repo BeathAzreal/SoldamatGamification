@@ -1,6 +1,21 @@
 # Oficina de Soldagem — versões e downloads
 
-## Alpha v2.0 disponível para teste
+## 🆕 Testar agora: Alpha v2.2 — FÁBRICA e menu em 3D
+
+**[⬇ BAIXAR ALPHA v2.2 (teste) — ZIP](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip)**
+
+1. Baixe o ZIP. Se o GitHub abrir a página do arquivo, clique em **Download raw file**.
+2. Extraia a pasta inteira.
+3. Abra **Abrir o jogo.bat** ou **Oficina de Soldagem.html** no Chrome ou Edge. Não precisa instalar nada nem ter internet.
+
+O jogo mostra **ALPHA v2.2** no topo. O que testar:
+
+- **Menu em 3D:** o menu é a fábrica à noite e cada opção é um lugar do galpão. Use as setas ou passe o mouse na lista para virar a câmera, e Enter ou clique no lugar para entrar.
+- **FÁBRICA:** galpão 3D com Usinagem, Soldagem, Manufatura Aditiva e Laboratório. A **OS-01** passa pelo laboratório (análise da falha), pela usinagem (pino) e pela soldagem (emenda em SAE 1045). A qualidade libera no fim e gera o relatório em PDF.
+
+> ⚠️ A v2.2 é uma versão de teste, não estável. Detalhes mais abaixo e em [`v2.2/docs/FABRICA.md`](v2.2/docs/FABRICA.md).
+
+## Alpha v2.0 (estável)
 
 **[BAIXAR ALPHA v2.0 — jogo pronto em ZIP](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip)**
 
@@ -40,6 +55,24 @@ O jogo mostra **ALPHA v2.0** no topo. Novidades:
 - Continua tudo da v1.9: TIG com mesa digitalizadora + mouse, Fácil/Difícil e
   eletrodo sem assistência.
 
+## Alpha v2.2 — FÁBRICA: prática industrial (teste, não estável)
+
+> ⚠️ **A v2.2 não é estável e serve apenas para testar funções novas.** Para jogar, use a Alpha v2.0 acima.
+
+**[Baixar Alpha v2.2 (teste) — ZIP](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip)**
+
+A Oficina de Soldagem, a **Usinagem** (torno CNC) e o **Laboratório de Falhas** agora são **um jogo só**. No menu, **FÁBRICA** abre um galpão 3D com os setores de Usinagem, Soldagem, Manufatura Aditiva e Laboratório, ligados por **ordens de serviço**, como numa indústria. A **OS-01 — Braço tensor da peneira vibratória** passa por três setores:
+
+1. **Laboratório:** investigar por que o braço quebrou (fadiga a partir de uma trinca no pé da solda) e enviar o relatório.
+2. **Usinagem:** tornear o pino de articulação dentro da tolerância e da rugosidade pedidas.
+3. **Soldagem:** soldar a emenda do braço novo em aço SAE 1045, aplicando o que o laboratório mostrou.
+
+O **menu também virou 3D** (primeiro teste da nova interface): cada opção é um lugar da fábrica, e a lista fica por cima.
+
+No fim, a **qualidade** faz três perguntas, libera a OS e gera um relatório para imprimir ou salvar em PDF para o professor. Os setores também abrem em acesso livre. Como funciona, sugestão de aula e como criar novas OS: [`v2.2/docs/FABRICA.md`](v2.2/docs/FABRICA.md).
+
+O ZIP da v2.2 traz o jogo offline e o atalho do x1 online. O servidor local de reserva continua no pacote da v2.1/v2.0 (mesmo protocolo).
+
 ## Alpha v2.1 — versão de teste (não estável)
 
 > ⚠️ **A v2.1 não é estável e serve apenas para testar funções novas.** Para jogar, use a Alpha v2.0 acima.
@@ -66,6 +99,7 @@ abre ao tocar a peça com **S** e a vareta queima: continue descendo com toques 
 
 | Versão | O que tem de novo | Download |
 |---|---|---|
+| Alpha v2.2 | **Teste, não estável.** **FÁBRICA**: usinagem, soldagem e laboratório de falhas num jogo só, com ordens de serviço num galpão 3D | [ZIP da v2.2 (teste)](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip) |
 | Alpha v2.1 | **Teste, não estável.** Modo experimental **Manufatura Aditiva**: robô programado em INFORM fabrica uma parede de várias camadas | [ZIP da v2.1 (teste)](v2.1/Oficina-de-Soldagem-Alpha-v2.1.zip) |
 | **Alpha v2.0** | **Mais nova estável.** Máquina MIG/MAG em volts e m/min com curto-circuito, globular e spray; chapa que passa e fura em níveis; tubo com tubo; chapas com características próprias; **brasagem** com maçarico | [ZIP da v2.0](v2.0/Oficina-de-Soldagem-Alpha-v2.0.zip) · [Pacote de rede (X1)](v2.0/Oficina-de-Soldagem-v2.0-Rede.zip) |
 | Alpha v1.9 | **TIG** com mesa digitalizadora + mouse; Fácil só nota e Difícil com mínimo por categoria; eletrodo sem ajuda na altura | [ZIP da v1.9](v1.9/Oficina-de-Soldagem-Alpha-v1.9.zip) · [Pacote de rede (X1)](v1.9/Oficina-de-Soldagem-v1.9-Rede.zip) |
@@ -101,6 +135,7 @@ lugar, a causa e como corrigir; os mesmos defeitos ficam desenhados no metal.
 Cada versão tem sua pasta nesta página (código e ZIP), copiada da branch de
 entrega correspondente, que junta o trabalho do GPT e do Claude por pull request:
 
+- [`v2.2/`](v2.2/): feita a partir da v2.1, com a Usinagem e o Laboratório de Falhas dentro do jogo. **Versão de teste, não estável.**
 - [`v2.1/`](v2.1/) ← [`alpha-v2.1`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v2.1) (`claude/v2.1` e `gpt/v2.1`, a partir da `alpha-v2.0`; PRs #47, #49, #50, #52 e #54). **Versão de teste, não estável.**
 - [`v2.0/`](v2.0/) ← [`claude/v2.0`](https://github.com/BeathAzreal/SoldamatGamification/tree/claude/v2.0) (feita a partir da `alpha-v1.9`; já incorporada à `alpha-v2.0` pelos PRs #32, #36, #37, #39, #40, #42 e #43)
 - [`v1.9/`](v1.9/) ← [`alpha-v1.9`](https://github.com/BeathAzreal/SoldamatGamification/tree/alpha-v1.9) (`claude/v1.9`, com a v1.8 junto)
