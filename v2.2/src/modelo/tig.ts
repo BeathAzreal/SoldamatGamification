@@ -49,7 +49,7 @@ export function pedalDaPressao(pressao: number): number {
 }
 
 export type EstadoTig = 'desligado' | 'pronto' | 'arco' | 'afastado'
-export type EventoTig = 'contaminou' | 'vareta-no-tungstenio' | 'vareta-fria' | 'furo' | 'toque' | 'cratera'
+export type EventoTig = 'contaminou' | 'vareta-no-tungstenio' | 'vareta-fria' | 'furo' | 'toque' | 'cratera' | 'keyhole' | 'arco-duplo'
 
 export interface ToqueVareta {
   xMm: number
@@ -119,7 +119,7 @@ export class ModeloTig {
   /** Espalhamento do calor: arco longo abre e espalha (H92). */
   get sigmaMm(): number { return 0.9 + 0.35 * Math.max(0.5, this.distanciaMm) + (this.contaminado ? 0.8 : 0) }
 
-  private indice(x: number, y: number): number {
+  protected indice(x: number, y: number): number {
     const i = Math.round(x / DX - 0.5), j = Math.round((y - Y0) / DY - 0.5)
     if (i < 0 || i >= NX || j < 0 || j >= NY) return -1
     return j * NX + i
@@ -192,41 +192,58 @@ export class ModeloTig {
     }
   }
 
+  /** Até onde o arco abre e até onde se mantém (mm). O plasma (arco piloto, coluna estreita) alcança mais longe. */
+  protected get aberturaMm(): number { return TIG.aberturaMm }
+  protected get arcoMaxMm(): number { return TIG.arcoMaxMm }
+  /** Distância em que a tocha "encosta" (mm). */
+  protected get contatoMm(): number { return TIG.contatoMm }
+
+  /** Tocha encostando na poça com o arco aberto (uma vez por contato). No TIG, o tungstênio contamina. */
+  protected aoEncostar(eventos?: (e: EventoTig) => void): void {
+    this.contaminado = true
+    this.contaminacoes++
+    eventos?.('contaminou')
+  }
+
+  /** Depois do aquecimento de cada subpasso com arco (o plasma abre e mantém o keyhole aqui). */
+  protected aposAquecer(_dt: number, _eventos?: (e: EventoTig) => void): void {}
+
+  /** O arco acabou de apagar. `cortouDeVez`: pedal solto de uma vez ou tocha afastada. */
+  protected aoApagar(cortouDeVez: boolean, eventos?: (e: EventoTig) => void): void {
+    if (cortouDeVez && this.raioPocaMm > 1.2) {
+      this.crateras.push({ xMm: this.xMm })
+      eventos?.('cratera')
+    }
+  }
+
   private passo(dt: number, depositar?: (x: number, y: number, volume: number) => void, eventos?: (e: EventoTig) => void): void {
     this.tempoMs += dt * 1000
     const arcoAntes = this.estado === 'arco'
     // Distância real: do tungstênio ao topo do metal sob ele.
     const L = this.distanciaMm
-    if (L <= TIG.contatoMm && arcoAntes) {
+    if (L <= this.contatoMm && arcoAntes) {
       // Tungstênio na poça: contamina e o arco fica instável até apontar de novo.
       if (!this.emContato) {
         this.emContato = true
-        if (!this.contaminado) { this.contaminado = true }
-        this.contaminacoes++
-        eventos?.('contaminou')
+        this.aoEncostar(eventos)
       }
     } else this.emContato = false
     if (this.pedal > 0.04) {
-      if (this.estado === 'arco') { if (L > TIG.arcoMaxMm) this.estado = 'afastado' }
-      else if (L <= TIG.aberturaMm) this.estado = 'arco'
+      if (this.estado === 'arco') { if (L > this.arcoMaxMm) this.estado = 'afastado' }
+      else if (L <= this.aberturaMm) this.estado = 'arco'
       else this.estado = 'afastado'
     } else this.estado = 'pronto'
     // Cratera: arco cortado de uma vez com a poça grande (sem diminuir o pedal antes).
     if (this.pedal < this.pedalAnterior) this.quedaPedalS += dt
     else this.quedaPedalS = 0
-    if (arcoAntes && this.estado !== 'arco') {
-      const cortouDeVez = this.pedalAnterior > 0.5 || this.estado === 'afastado'
-      if (cortouDeVez && this.raioPocaMm > 1.2) {
-        this.crateras.push({ xMm: this.xMm })
-        eventos?.('cratera')
-      }
-    }
+    if (arcoAntes && this.estado !== 'arco') this.aoApagar(this.pedalAnterior > 0.5 || this.estado === 'afastado', eventos)
     this.pedalAnterior = this.pedal
     if (this.estado === 'arco') {
       this.tempoArcoS += dt
       const q = this.potenciaW * dt
       this.energiaJ += q
       this.aquecer(q)
+      this.aposAquecer(dt, eventos)
       this.conferirFuro(eventos)
     }
     this.conduzir(dt)
@@ -314,7 +331,7 @@ export class ModeloTig {
   }
 
   /** Furo: calor demais na chapa fina (mais fácil quanto mais fina). */
-  private conferirFuro(eventos?: (e: EventoTig) => void): void {
+  protected conferirFuro(eventos?: (e: EventoTig) => void): void {
     if (this.estado !== 'arco') return
     const k = this.indice(this.xMm, this.yMm), t = this.peca.espessuraMm
     if (k < 0) return

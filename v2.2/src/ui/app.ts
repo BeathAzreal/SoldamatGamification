@@ -15,6 +15,7 @@ import {
   type TentativaRegistro,
   type Torneio,
 } from '../dados/torneio'
+import { esconderCenario, lugarDaTela, mostrarCenario } from './cenario'
 import { h } from './dom'
 
 /*
@@ -179,6 +180,10 @@ export class App {
     document.body.classList.toggle('jogo-imersivo', imersivo)
     const paginaArcade = rota === 'arcade' && !imersivo && !document.body.classList.contains('menu-grafico')
     document.body.classList.toggle('arcade-interno', paginaArcade)
+    // Cenário 3D atrás das telas de menu; telas de jogo com o próprio 3D o escondem.
+    const telaDeMenu = !imersivo && (document.body.classList.contains('menu-grafico') || paginaArcade)
+    if (!telaDeMenu) esconderCenario()
+    else if (!this.raiz.classList.contains('menu-3d')) mostrarCenario(lugarDaTela(nome, rota))
     if (paginaArcade) this.raiz.prepend(h('button', { type: 'button', class: 'arcade-voltar', on: { click: () => this.voltarArcade() } }, '← VOLTAR AO ARCADE'))
     if (imersivo) this.raiz.append(h('button', { type: 'button', class: 'atalho-pause', 'aria-label': 'Menu / voltar', title: 'Pausar e abrir opções para voltar ou continuar', on: { click: () => this.abrirPausa() } }, '← Menu / voltar', h('kbd', {}, 'Esc')))
     if (typeof r === 'function') this.limpeza = r

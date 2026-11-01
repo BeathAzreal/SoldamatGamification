@@ -12,8 +12,11 @@ O ZIP da v2.2 traz só o jogo (um HTML) e o LEIA-ME, sem `.bat` nem atalho para 
 
 O jogo mostra **ALPHA v2.2** no topo. O que testar:
 
-- **Menu em 3D:** o menu é a fábrica à noite e cada opção é um lugar do galpão. Use as setas ou passe o mouse na lista para virar a câmera, e Enter ou clique no lugar para entrar.
+- **Menu em 3D:** o menu é a fábrica à noite e cada opção é um lugar do galpão. Use as setas ou passe o mouse na lista para virar a câmera, e Enter ou clique no lugar para entrar. O mesmo cenário fica atrás das outras telas de menu (Arcade, Treino, Recordes, Configurações, Manufatura): a câmera para diante do lugar de cada uma.
 - **FÁBRICA:** galpão 3D com Usinagem, Soldagem, Manufatura Aditiva e Laboratório. A **OS-01** passa pelo laboratório (análise da falha), pela usinagem (pino) e pela soldagem (emenda em SAE 1045). A qualidade libera no fim e gera o relatório em PDF.
+
+- **Soldagem a plasma (Treino → PLASMA):** keyhole que atravessa a chapa numa passada (inox 4 mm e aço 5 mm, sem chanfro) e microplasma para chapa de 1 mm. Gás de plasma, bocal, arco duplo e rampa de descida no fim.
+- **Treino só com a bancada livre** (sandbox) por processo.
 
 > ⚠️ A v2.2 é uma versão de teste, não estável. Detalhes mais abaixo e em [`v2.2/docs/FABRICA.md`](v2.2/docs/FABRICA.md).
 

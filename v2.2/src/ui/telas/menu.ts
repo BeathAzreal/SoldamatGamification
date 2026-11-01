@@ -8,9 +8,9 @@ import { telaFabrica } from './fabrica'
 import { telaRecordes } from './recordes'
 import { painelTorneio } from './torneio'
 import { telaTreino } from './treino'
-import { criarMenu3D, type LugarMenu } from '../../render/menu3d'
+import type { LugarMenu } from '../../render/menu3d'
+import { ligarCliques, mostrarCenario } from '../cenario'
 import '../../menu-grafico.css'
-import '../../menu3d.css'
 
 /** `lugar`: onde a opção fica no menu 3D (render/menu3d.ts). */
 const MODOS: { titulo: string; descricao: string; lugar: LugarMenu; abrir: (app: App) => void }[] = [
@@ -21,6 +21,9 @@ const MODOS: { titulo: string; descricao: string; lugar: LugarMenu; abrir: (app:
   { titulo: 'RECORDES', lugar: 'recordes', descricao: 'Reveja as marcas que você deixou na oficina.', abrir: (app: App) => telaRecordes(app) },
   { titulo: 'CONFIGURAÇÕES', lugar: 'config', descricao: 'Som, dispositivo, controles e qualidade visual.', abrir: telaConfiguracoes },
 ]
+
+/** Opção escolhida por último: ao voltar ao menu, a câmera recua olhando para ela. */
+let ultimoModo = 0
 
 export function telaMenu(app: App): void {
   app.ir(() => {
@@ -47,13 +50,16 @@ export function telaMenu(app: App): void {
     }
     let ativo = true
     // Menu 3D: cada opção é um lugar da fábrica; sem WebGL, fica o menu ilustrado.
-    const vista = criarMenu3D({
+    // O cenário 3D é o mesmo das outras telas: aqui a câmera volta ao centro do galpão.
+    const vista = mostrarCenario(MODOS[ultimoModo].lugar, 0)
+    ligarCliques({
       aoEscolher: (lugar) => abrir(MODOS.findIndex((m) => m.lugar === lugar)),
       aoPassar: (lugar) => { const i = MODOS.findIndex((m) => m.lugar === lugar); if (i >= 0) selecionar(i) },
     })
-    if (vista) { app.raiz.classList.add('menu-3d'); app.raiz.prepend(vista.canvas) }
+    if (vista) app.raiz.classList.add('menu-3d')
     const abrir = (i: number) => {
       if (saindo || i < 0) return
+      ultimoModo = i
       saindo = true; som()
       app.raiz.classList.add('menu-saindo')
       botoes[i].classList.add('confirmado')
@@ -70,7 +76,7 @@ export function telaMenu(app: App): void {
       selecionado = (i + MODOS.length) % MODOS.length
       botoes.forEach((b, n) => { b.classList.toggle('selecionado', n === selecionado); b.tabIndex = n === selecionado ? 0 : -1 })
       descricao.textContent = MODOS[selecionado].descricao
-      vista?.focar(MODOS[selecionado].lugar)
+      vista?.focar(MODOS[selecionado].lugar, 0)
       if (foco) botoes[selecionado].focus({ preventScroll: true })
     }
     const teclas = (e: KeyboardEvent) => {
@@ -102,10 +108,10 @@ export function telaMenu(app: App): void {
         torneio ? h('button', { class: 'grafico-retomar', type: 'button', on: { click: () => painelTorneio(app, torneio.id) } }, `↗ Retomar ${torneio.config.nome}${vez ? ' · rodada em andamento' : ''}`) : null),
       h('footer', { class: 'grafico-rodape' }, h('span', {}, 'JOGO DIDÁTICO'), h('span', {}, vista ? '↑ ↓ ESCOLHER    ENTER CONFIRMAR    /    MOUSE: CLIQUE NO LUGAR    /    CONTROLE: A' : '↑ ↓ ESCOLHER    ENTER CONFIRMAR    /    CONTROLE: A')),
     )
-    selecionar(0)
+    selecionar(ultimoModo)
     frame = requestAnimationFrame(controle)
     return () => {
-      ativo = false; vista?.destruir(); app.raiz.classList.remove('menu-3d')
+      ativo = false; ligarCliques({}); app.raiz.classList.remove('menu-3d')
       window.removeEventListener('keydown', teclas); clearTimeout(timer); cancelAnimationFrame(frame)
       document.body.classList.remove('menu-grafico'); app.raiz.classList.remove('menu-saindo')
       void audio?.close()
