@@ -16,10 +16,16 @@ export type LugarMenu = 'fabrica' | 'arcade' | 'treino' | 'manufatura' | 'record
 
 export interface VistaMenu {
   canvas: HTMLCanvasElement
-  /** Vira a câmera para o lugar e acende a luz dele. */
-  focar(lugar: LugarMenu): void
+  /**
+   * Vira a câmera para o lugar e acende a luz dele. `avanco` (m) anda a
+   * câmera na direção do lugar: 0 no menu, PERTO nas telas daquele lugar.
+   */
+  focar(lugar: LugarMenu, avanco?: number): void
   /** Aproxima a câmera do lugar; resolve quando chega (na hora, com movimento reduzido). */
   entrar(lugar: LugarMenu): Promise<void>
+  /** Para de desenhar (tela de jogo com o próprio 3D por cima). */
+  pausar(): void
+  retomar(): void
   destruir(): void
 }
 
@@ -27,6 +33,8 @@ interface Desenho { grupo: THREE.Group; animar: (t: number) => void }
 
 const RAIO = 7.5
 const ALTURA_OLHO = 1.75
+/** Onde a câmera para nas telas de um lugar (Arcade, Recordes...): perto, com o lugar à direita. */
+export const PERTO = 2.6
 
 /** Portão do galpão com o quadro de ordens de serviço ao lado. */
 function portaoFabrica(): Desenho {
@@ -152,10 +160,11 @@ function estanteRecordes(): Desenho {
   const g = new THREE.Group()
   const madeira = pintado('#5b3b25')
   // Fundo e laterais finos: os troféus ficam à vista nas prateleiras.
-  g.add(caixa(2.2, 2.2, 0.05, pintado('#2a2421'), 0, 0, -0.5))
-  for (const x of [-1.08, 1.08]) g.add(caixa(0.05, 2.2, 0.5, madeira, x, 0, -0.27))
-  for (const y of [0, 0.55, 1.15, 1.75, 2.18]) g.add(caixa(2.1, 0.05, 0.5, madeira, 0, y, -0.27))
-  const ouro = metal('#e5b53b', 0.25, 1), prata = metal('#c9cdd1', 0.25, 1), bronze = metal('#b0703a', 0.3, 1)
+  g.add(caixa(2.2, 2.45, 0.05, pintado('#2a2421'), 0, 0, -0.5))
+  for (const x of [-1.08, 1.08]) g.add(caixa(0.05, 2.45, 0.5, madeira, x, 0, -0.27))
+  for (const y of [0, 0.55, 1.15, 1.75, 2.42]) g.add(caixa(2.1, 0.05, 0.5, madeira, 0, y, -0.27))
+  // Metal sem mapa de ambiente fica preto: brilho moderado para as luzes da cena acenderem.
+  const ouro = metal('#f0c040', 0.35, 0.45), prata = metal('#d8dde2', 0.35, 0.45), bronze = metal('#c27a40', 0.4, 0.45)
   const trofeus: THREE.Group[] = []
   ;[[-0.6, 1.2, ouro], [0, 1.2, prata], [0.6, 1.2, bronze], [-0.4, 0.6, prata], [0.4, 0.6, ouro], [0, 1.8, ouro]].forEach(([x, y, m]) => {
     const tr = new THREE.Group()
@@ -164,7 +173,7 @@ function estanteRecordes(): Desenho {
     const haste = cilindro(0.025, 0.14, m as THREE.Material, 10)
     haste.position.y = 0.15
     tr.add(haste)
-    const taca = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.04, 0.18, 16, 1, true), m as THREE.Material)
+    const taca = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.04, 0.18, 16), m as THREE.Material)
     taca.position.y = 0.31
     tr.add(taca)
     tr.position.set(x as number, (y as number), -0.22)
@@ -220,7 +229,11 @@ function anguloDe(i: number, n: number): number {
   return (i - (n - 1) / 2) * abertura
 }
 
-export function criarMenu3D(op: { aoEscolher: (lugar: LugarMenu) => void; aoPassar?: (lugar: LugarMenu) => void }): VistaMenu | null {
+/**
+ * `op` é lido a cada clique: quem usa o cenário pode trocar `aoEscolher` e
+ * `aoPassar` (o menu liga; as outras telas desligam e o 3D vira só cenário).
+ */
+export function criarMenu3D(op: { aoEscolher?: (lugar: LugarMenu) => void; aoPassar?: (lugar: LugarMenu) => void }): VistaMenu | null {
   if (!webglDisponivel()) return null
   let renderizador: THREE.WebGLRenderer
   try {
@@ -321,12 +334,12 @@ export function criarMenu3D(op: { aoEscolher: (lugar: LugarMenu) => void; aoPass
   }
   let sobre: LugarMenu | null = null
   const mover = (e: PointerEvent) => {
-    const l = lugarEm(e)
+    const l = op.aoEscolher ? lugarEm(e) : null
     canvas.style.cursor = l ? 'pointer' : 'default'
     if (l && l !== sobre) op.aoPassar?.(l)
     sobre = l
   }
-  const clicar = (e: PointerEvent) => { const l = lugarEm(e); if (l) op.aoEscolher(l) }
+  const clicar = (e: PointerEvent) => { if (!op.aoEscolher) return; const l = lugarEm(e); if (l) op.aoEscolher(l) }
   canvas.addEventListener('pointermove', mover)
   canvas.addEventListener('click', clicar)
 
@@ -372,7 +385,7 @@ export function criarMenu3D(op: { aoEscolher: (lugar: LugarMenu) => void; aoPass
       x.luz.intensity += (alvo - x.luz.intensity) * (reduzido ? 1 : 1 - Math.exp(-dt * 6))
       ;(x.lampada.material as THREE.MeshBasicMaterial).color.set(id === focado ? '#fff0c8' : '#7a6a50')
       // Só a placa do lugar escolhido aparece: as outras não brigam com o título.
-      x.placa.visible = id === focado
+      x.placa.visible = id === focado && avancoAlvo < 1
       x.placa.scale.setScalar(0.95)
       if (!reduzido) x.animar(t)
     }
@@ -387,8 +400,10 @@ export function criarMenu3D(op: { aoEscolher: (lugar: LugarMenu) => void; aoPass
 
   return {
     canvas,
-    focar(lugar) {
+    focar(lugar, distancia = 0) {
       focado = lugar
+      avancoAlvo = distancia
+      aoChegar = null
     },
     entrar(lugar) {
       focado = lugar
@@ -399,6 +414,16 @@ export function criarMenu3D(op: { aoEscolher: (lugar: LugarMenu) => void; aoPass
         // Garantia: se a aba ficar em segundo plano, não prende a navegação.
         setTimeout(() => { if (aoChegar === resolver) { aoChegar = null; resolver() } }, 900)
       })
+    },
+    pausar() {
+      cancelAnimationFrame(quadro)
+      quadro = 0
+    },
+    retomar() {
+      if (quadro) return
+      anterior = performance.now()
+      ajustar()
+      quadro = requestAnimationFrame(passo)
     },
     destruir() {
       cancelAnimationFrame(quadro)
