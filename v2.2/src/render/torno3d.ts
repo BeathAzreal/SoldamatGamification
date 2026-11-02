@@ -159,6 +159,8 @@ export function criarTorno3D(m0: ModeloTorno): VistaTorno | null {
   controles.enableZoom = false
   // Botão esquerdo é a mão na manivela: a câmera fica no do meio (girar) e no direito (arrastar).
   controles.mouseButtons = { LEFT: -1 as unknown as THREE.MOUSE, MIDDLE: THREE.MOUSE.ROTATE, RIGHT: THREE.MOUSE.PAN }
+  // Toque: um dedo é a mão (ferramenta, lanterna); dois dedos aproximam e arrastam a câmera.
+  controles.touches = { ONE: -1 as unknown as THREE.TOUCH, TWO: THREE.TOUCH.DOLLY_PAN }
 
   cena.add(new THREE.HemisphereLight('#dfe8f0', '#2b2a28', 1.1))
   const sol = new THREE.DirectionalLight('#ffffff', 1.4)

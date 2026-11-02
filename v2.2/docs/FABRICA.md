@@ -101,7 +101,7 @@ navegador (`usinagem:v1` e `laboratorio-de-falhas:v1`). O da fábrica fica em
   gera o caso do laboratório.
 - O 3D do galpão é ilustrativo, com máquinas simplificadas.
 - A Manufatura Aditiva aparece no galpão, mas ainda não tem etapa em OS.
-- Os setores em React foram pensados para telas de computador (≥ 1280 px).
+- O escritório do laboratório (React) e a Manufatura Aditiva foram pensados para telas de computador (≥ 1280 px). As bancadas 3D funcionam no celular com a barra de toque (`src/ui/toque.ts`).
 
 ## Próximos passos possíveis
 

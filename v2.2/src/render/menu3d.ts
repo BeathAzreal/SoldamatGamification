@@ -89,9 +89,21 @@ function fliperama(): Desenho {
   const outro = new THREE.Group()
   outro.add(caixa(0.9, 1.9, 0.75, corpo))
   for (const x of [-0.47, 0.47]) outro.add(caixa(0.04, 1.95, 0.8, pintado('#2563a8'), x))
+  const painel2 = caixa(0.9, 0.08, 0.4, pintado('#2a2d3a'), 0, 0.95, 0.45)
+  painel2.rotation.x = 0.25
+  outro.add(painel2)
+  for (const x of [-0.2, 0.05, 0.2]) {
+    const b = cilindro(0.04, 0.05, new THREE.MeshBasicMaterial({ color: x < 0 ? '#e12629' : '#57c48a' }), 12)
+    b.position.set(x, 1.02, 0.45)
+    outro.add(b)
+  }
   const tela2 = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.55), new THREE.MeshBasicMaterial({ color: '#e12629' }))
   tela2.position.set(0, 1.42, 0.38)
+  tela2.rotation.x = -0.12
   outro.add(tela2)
+  const letreiro2 = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.18), new THREE.MeshBasicMaterial({ color: '#3ec1ff' }))
+  letreiro2.position.set(0, 1.8, 0.38)
+  outro.add(letreiro2)
   outro.position.set(1.15, 0, -0.2)
   outro.rotation.y = -0.25
   g.add(outro)
@@ -149,8 +161,9 @@ function bancadaTreino(): Desenho {
 function celulaManufatura(): Desenho {
   const r = robo()
   const t = torno()
-  t.grupo.position.set(0.4, 0, -2.2)
-  t.grupo.scale.setScalar(0.8)
+  // Torno ao fundo, atrás da mesa do robô, sem encostar nela.
+  t.grupo.position.set(0.9, 0, -2.4)
+  t.grupo.scale.setScalar(0.75)
   r.grupo.add(t.grupo)
   return { grupo: r.grupo, animar: (s) => { r.animar(s); t.animar(s) } }
 }
@@ -191,25 +204,27 @@ function estanteRecordes(): Desenho {
 /** Armário de ferramentas e quadro elétrico (configurações). */
 function armarioConfig(): Desenho {
   const g = new THREE.Group()
-  g.add(caixa(1.4, 1.1, 0.6, pintado('#b3261e')))
+  // Parede da oficina: o painel de ferramentas e o quadro elétrico ficam presos nela.
+  g.add(caixa(3.0, 2.6, 0.08, pintado('#2b3238'), 0.3, 0, -0.45))
+  g.add(caixa(1.4, 1.1, 0.6, pintado('#b3261e'), 0, 0, -0.1))
   for (let i = 0; i < 4; i++) {
-    g.add(caixa(1.3, 0.02, 0.02, pintado('#7a1a14'), 0, 0.22 + i * 0.24, 0.31))
-    g.add(caixa(0.3, 0.04, 0.04, metal('#c9cdd1'), 0, 0.14 + i * 0.24, 0.33))
+    g.add(caixa(1.3, 0.02, 0.02, pintado('#7a1a14'), 0, 0.22 + i * 0.24, 0.21))
+    g.add(caixa(0.3, 0.04, 0.04, metal('#c9cdd1'), 0, 0.14 + i * 0.24, 0.23))
   }
-  g.add(caixa(1.6, 1.2, 0.05, pintado('#3c454e'), 0, 1.3, -0.3))
+  g.add(caixa(1.6, 1.2, 0.05, pintado('#3c454e'), 0, 1.3, -0.385))
   const ferramentas = metal('#9aa3aa', 0.4, 0.9)
-  for (let i = 0; i < 6; i++) g.add(caixa(0.05, 0.45 + (i % 3) * 0.1, 0.03, ferramentas, -0.6 + i * 0.24, 1.55, -0.26))
-  const quadro = caixa(0.6, 0.8, 0.2, pintado('#d4d8dc'), 1.25, 1.0, -0.2)
+  for (let i = 0; i < 6; i++) g.add(caixa(0.05, 0.45 + (i % 3) * 0.1, 0.03, ferramentas, -0.6 + i * 0.24, 1.55, -0.345))
+  const quadro = caixa(0.6, 0.8, 0.2, pintado('#d4d8dc'), 1.25, 1.0, -0.31)
   g.add(quadro)
   const leds: THREE.Mesh[] = []
   for (let i = 0; i < 3; i++) {
     const led = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), new THREE.MeshBasicMaterial({ color: ['#57c48a', '#ffd23f', '#e12629'][i] }))
-    led.position.set(1.1 + i * 0.15, 1.65, -0.09)
+    led.position.set(1.1 + i * 0.15, 1.65, -0.2)
     g.add(led)
     leds.push(led)
   }
   const engrenagem = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.05, 6, 12), metal('#c9cdd1', 0.3, 0.9))
-  engrenagem.position.set(1.25, 1.35, -0.08)
+  engrenagem.position.set(1.25, 1.35, -0.19)
   g.add(engrenagem)
   return { grupo: g, animar: (t) => { engrenagem.rotation.z = t * 1.2; leds.forEach((l, i) => (l.visible = Math.sin(t * 3 + i * 2) > -0.6)) } }
 }

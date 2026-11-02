@@ -16,6 +16,16 @@ O jogo mostra **ALPHA v2.2** no topo. Além da Fábrica, do menu 3D e do plasma 
 
 **E o Laboratório de Falhas também foi refeito no mesmo estilo** (Fábrica → Laboratório): bancada 3D em que você mesmo faz a inspeção (lanterna e lupa), o corte, o lixamento (#220 → #600 → #1200, girando 90°), o polimento, o ataque, o microscópio (foco na roda do mouse) e a microdureza. Hipóteses, caderno e relatório ficam no escritório.
 
+**Celular e tablet (novo na v2.2):** passe o HTML para o celular (cabo, Drive ou WhatsApp como documento) e abra no **Chrome**. Jogue **na horizontal**. No celular a barra lateral some e as bancadas ganham uma barra de botões embaixo:
+
+- **O dedo é o mouse:** arraste para soldar, levar a ferramenta do torno ou mover a lanterna.
+- **🎥 Câmera** e **⟳ Peça:** com o modo ligado, o dedo gira a câmera ou a peça. Toque de novo para voltar a soldar. **−/+** afastam e aproximam.
+- **☰** abre o painel da máquina como gaveta (ajustes, medidas, instrumentos).
+- **Teclas na tela:** cada bancada mostra os botões que usa (vareta do TIG e do plasma, descer o eletrodo, manivelas e avanços do torno, girar a amostra na lixa, Encerrar). Segure o botão para segurar a tecla. **⚡ Rápido** é o Shift das manivelas.
+- Para testar o layout do celular no computador, abra o HTML com `?toque=1` no fim do endereço.
+
+Num celular pequeno o 3D pode ficar lento: feche outros apps. A Manufatura Aditiva e o escritório do laboratório foram feitos para tela grande e ficam apertados no celular.
+
 > ⚠️ A v2.2 é uma versão de teste, não estável. Hipóteses do torno (H108) e do laboratório (H109) em [`v2.2/docs/HIPOTESES.md`](v2.2/docs/HIPOTESES.md).
 
 ## Mais sobre a v2.2: FÁBRICA, menu em 3D e plasma

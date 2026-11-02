@@ -29,6 +29,16 @@ Hipóteses em `docs/HIPOTESES.md` (H108).
 
 Todo o resto é a v2.1: Manufatura Aditiva, MIG/MAG, TIG, eletrodo, brasagem, História, Desafios, Versus e o x1 online, com o mesmo protocolo de rede.
 
+**Celular e tablet (novo na v2.2):** passe o HTML para o celular (cabo, Drive ou WhatsApp como documento) e abra no **Chrome**. Jogue **na horizontal**. No celular a barra lateral some e as bancadas ganham uma barra de botões embaixo:
+
+- **O dedo é o mouse:** arraste para soldar, levar a ferramenta do torno ou mover a lanterna.
+- **🎥 Câmera** e **⟳ Peça:** com o modo ligado, o dedo gira a câmera ou a peça. Toque de novo para voltar a soldar. **−/+** afastam e aproximam.
+- **☰** abre o painel da máquina como gaveta (ajustes, medidas, instrumentos).
+- **Teclas na tela:** cada bancada mostra os botões que usa (vareta do TIG e do plasma, descer o eletrodo, manivelas e avanços do torno, girar a amostra na lixa, Encerrar). Segure o botão para segurar a tecla. **⚡ Rápido** é o Shift das manivelas.
+- Para testar o layout do celular no computador, abra o HTML com `?toque=1` no fim do endereço.
+
+Num celular pequeno o 3D pode ficar lento: feche outros apps. A Manufatura Aditiva e o escritório do laboratório foram feitos para tela grande e ficam apertados no celular.
+
 ## Baixar e jogar
 
 **[Baixar a v2.2 (teste) — ZIP](Oficina-de-Soldagem-Alpha-v2.2.zip)**

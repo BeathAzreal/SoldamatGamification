@@ -189,41 +189,77 @@ export function laboratorio(): { grupo: THREE.Group; animar: (t: number) => void
 }
 
 /** Robô de 6 eixos ilustrativo (como o da Manufatura Aditiva), com a parede de camadas na mesa. */
+/**
+ * Robô de 6 eixos ilustrativo (como o da Manufatura Aditiva) depositando uma parede na mesa.
+ * Cadeia encaixada: pedestal → base giratória → ombro → braço → cotovelo → antebraço → punho → tocha.
+ * Os ângulos saem de uma cinemática inversa de 2 elos: a ponta da tocha segue o topo da parede,
+ * então o braço nunca atravessa a mesa nem a peça.
+ */
 export function robo(): { grupo: THREE.Group; animar: (t: number) => void } {
   const g = new THREE.Group()
-  const azul = pintado('#2563a8')
-  g.add(caixa(1.6, 0.8, 1.0, metal('#4c5660', 0.8, 0.5), 0.8, 0, 0))
-  const parede = caixa(0.9, 0.18, 0.06, metal('#8d969e', 0.5, 0.7), 0.8, 0.8, 0)
-  g.add(parede)
-  const base = cilindro(0.3, 0.3, azul)
-  base.position.set(-0.6, 0.15, 0)
-  g.add(base)
+  const azul = pintado('#2563a8'), junta = metal('#2b2f33', 0.5, 0.6), cinzaMesa = metal('#4c5660', 0.8, 0.5)
+  // Mesa (x 0,1 a 1,7) e a parede depositada em cima dela.
+  const MESA = { x0: 0.1, x1: 1.7, alto: 0.8 }
+  g.add(caixa(MESA.x1 - MESA.x0, MESA.alto, 1.0, cinzaMesa, (MESA.x0 + MESA.x1) / 2, 0, 0))
+  const PAREDE = { x0: 0.45, x1: 1.35, alto: 0.18 }
+  g.add(caixa(PAREDE.x1 - PAREDE.x0, PAREDE.alto, 0.06, metal('#8d969e', 0.5, 0.7), (PAREDE.x0 + PAREDE.x1) / 2, MESA.alto, 0))
+  // Pedestal e base giratória (encostados um no outro, sem vão).
+  const BASE_X = -0.5, PEDESTAL = 0.35, GIRATORIA = 0.12
+  const pedestal = cilindro(0.24, PEDESTAL, azul)
+  pedestal.position.set(BASE_X, PEDESTAL / 2, 0)
+  g.add(pedestal)
   const giro = new THREE.Group()
-  giro.position.set(-0.6, 0.3, 0)
+  giro.position.set(BASE_X, PEDESTAL, 0)
   g.add(giro)
+  const giratoria = cilindro(0.21, GIRATORIA, junta)
+  giratoria.position.y = GIRATORIA / 2
+  giro.add(giratoria)
+  // Ombro: junta no topo da base giratória.
+  const L1 = 1.0, L2 = 1.05, TOCHA = 0.3
   const ombro = new THREE.Group()
-  ombro.position.y = 0.25
+  ombro.position.y = GIRATORIA + 0.1
   giro.add(ombro)
-  ombro.add(caixa(0.18, 0.9, 0.18, azul))
+  const juntaEixo = (r: number) => { const j = cilindro(r, 0.24, junta, 20); j.rotation.x = Math.PI / 2; return j }
+  ombro.add(juntaEixo(0.12))
+  ombro.add(caixa(0.16, L1, 0.16, azul)) // braço: da junta para cima (+y local)
   const cotovelo = new THREE.Group()
-  cotovelo.position.y = 0.9
+  cotovelo.position.y = L1
   ombro.add(cotovelo)
-  const braco = caixa(0.14, 0.8, 0.14, azul)
-  braco.rotation.z = -Math.PI / 2
-  braco.position.set(0.4, 0, 0)
-  cotovelo.add(braco)
-  const tocha = cilindro(0.03, 0.3, metal('#c9cdd1', 0.3, 0.9), 10)
-  tocha.position.set(0.8, -0.15, 0)
-  cotovelo.add(tocha)
+  cotovelo.add(juntaEixo(0.1))
+  const antebraco = new THREE.Mesh(new THREE.BoxGeometry(L2, 0.13, 0.13), azul) // antebraço: para +x local
+  antebraco.position.x = L2 / 2
+  cotovelo.add(antebraco)
+  const punho = new THREE.Group()
+  punho.position.x = L2
+  cotovelo.add(punho)
+  punho.add(juntaEixo(0.07))
+  const tocha = cilindro(0.035, TOCHA, metal('#c9cdd1', 0.3, 0.9), 12)
+  tocha.position.y = -TOCHA / 2 // a tocha aponta para baixo a partir do punho
+  punho.add(tocha)
   const brilho = new THREE.PointLight('#ffb36b', 0, 3, 2)
-  brilho.position.set(0.8, -0.32, 0)
-  cotovelo.add(brilho)
+  brilho.position.y = -TOCHA - 0.02
+  punho.add(brilho)
+  const arco = new THREE.Mesh(new THREE.SphereGeometry(0.025, 10, 8), new THREE.MeshBasicMaterial({ color: '#fff2c0' }))
+  arco.position.y = -TOCHA - 0.01
+  punho.add(arco)
+  // Ombro no espaço da célula (plano XY do grupo).
+  const ombroY = PEDESTAL + GIRATORIA + 0.1
   return {
     grupo: g,
     animar: (t) => {
-      giro.rotation.y = Math.sin(t * 0.5) * 0.35
-      ombro.rotation.z = -0.55 + Math.sin(t * 0.5) * 0.06
-      cotovelo.rotation.z = -0.5 + Math.cos(t * 0.5) * 0.08
+      // A ponta da tocha anda sobre o topo da parede, de um lado ao outro (2 mm acima).
+      const xt = (PAREDE.x0 + PAREDE.x1) / 2 + ((PAREDE.x1 - PAREDE.x0) / 2 - 0.05) * Math.sin(t * 0.5)
+      const wx = xt - BASE_X, wy = MESA.alto + PAREDE.alto + 0.02 + TOCHA - ombroY // punho relativo ao ombro
+      const d = Math.min(L1 + L2 - 1e-3, Math.hypot(wx, wy))
+      const phi = Math.atan2(wy, wx)
+      const beta = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))))
+      const a1 = phi + beta // cotovelo para cima
+      const ex = L1 * Math.cos(a1), ey = L1 * Math.sin(a1)
+      const a2 = Math.atan2(wy - ey, wx - ex)
+      ombro.rotation.z = a1 - Math.PI / 2 // o braço é modelado em +y
+      cotovelo.rotation.z = a2 - ombro.rotation.z // o antebraço é modelado em +x
+      punho.rotation.z = -a2 // tocha sempre na vertical
+      giro.rotation.y = 0
       brilho.intensity = 2.5 + Math.random() * 1.5
     },
   }
