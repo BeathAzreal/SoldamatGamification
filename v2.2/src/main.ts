@@ -1,5 +1,6 @@
 import { telaRede } from './ui/rede/tela'
 import { instalarPause } from './ui/componentes/pause'
+import { instalarToque } from './ui/toque'
 import './estilo.css'
 import './estilo-app.css'
 import './estilo-v14.css'
@@ -27,6 +28,7 @@ import { somArco } from './ui/som'
  */
 const app = new App()
 instalarPause(app)
+instalarToque()
 app.voltarArcade = () => telaCentralArcade(app)
 const rotas: Record<string, (app: App) => void> = {
   inicio: telaMenu, fabrica: (app) => telaFabrica(app), historia: telaHistoria, arcade: telaCentralArcade, treino: telaTreino,

@@ -51,7 +51,8 @@ export class FontePonteiro implements FonteEntrada {
    */
   private aceita(e: PointerEvent): boolean {
     this.ultimoEvento = `${e.type} · ${e.pointerType || '?'} · botões ${e.buttons} · pressão ${e.pressure.toFixed(2)}`
-    return this.dispositivo === 'caneta' ? true : (e.pointerType === 'mouse' || e.pointerType === 'pen')
+    // Toque (celular e tablet) funciona como o mouse: o dedo encostado é o botão esquerdo.
+    return this.dispositivo === 'caneta' ? true : (e.pointerType === 'mouse' || e.pointerType === 'pen' || e.pointerType === 'touch')
   }
 
   /** Último ponto da tela (relativo ao alvo), para reamostrar quando a peça gira. */

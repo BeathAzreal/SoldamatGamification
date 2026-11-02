@@ -66,6 +66,8 @@ export function criarLaboratorio3D(): VistaLaboratorio | null {
   const controles = new OrbitControls(camera, canvas)
   controles.enableDamping = true
   controles.mouseButtons = { LEFT: -1 as unknown as THREE.MOUSE, MIDDLE: THREE.MOUSE.ROTATE, RIGHT: THREE.MOUSE.PAN }
+  // Toque: um dedo é a mão (ferramenta, lanterna); dois dedos aproximam e arrastam a câmera.
+  controles.touches = { ONE: -1 as unknown as THREE.TOUCH, TWO: THREE.TOUCH.DOLLY_PAN }
 
   // Sala clara de laboratório.
   cena.add(new THREE.HemisphereLight('#ffffff', '#9aa3aa', 0.9))
