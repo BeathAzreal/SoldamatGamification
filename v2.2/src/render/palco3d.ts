@@ -15,6 +15,7 @@ import { CONSUMO, novoMapaConsumo, preencherMapaConsumo, type MapaConsumo } from
 import { INFO_JUNTA } from '../modelo/juntas'
 import { curvarArvore, poseNoTubo, uniformesCurva, type CurvaTubo } from './curvaTubo'
 import { criarOficinaTreino } from './oficinaTreino'
+import { corAgua, criarFundoMar, densidadeAgua } from './fundoMar'
 import { criarSerralheria } from './serralheria'
 
 /*
@@ -64,6 +65,8 @@ export interface OpcoesPalco {
   mapaSombra?: number
   pixelRatioMax?: number
   antialias?: boolean
+  /** H110: solda subaquática: fundo do mar no lugar da oficina, água escura e turva. */
+  subaquatico?: { turbidez: number; estrutura: 'cais' | 'casco' | 'plataforma' }
 }
 
 /** Testa se o navegador consegue criar um contexto WebGL. */
@@ -302,6 +305,8 @@ export class Palco3D {
   /** Gotas, respingos, faixas de borda e oxidação (H50–H57). */
   private readonly defeitos3d: Defeitos3D
   /** Chapas que dobram no empeno (topo e V): pivô na borda da junta e sentido do giro. */
+  /** H110: cenário do mar (as algas balançam com o tempo). */
+  private fundoMar: THREE.Group | null = null
   private readonly pivosEmpeno: { pivo: THREE.Group; sinal: number }[] = []
   largura = 0
   altura = 0
@@ -340,7 +345,8 @@ export class Palco3D {
     cena.environment = this.ambiente
     cena.environmentIntensity = 0.7
 
-    cena.add(new THREE.AmbientLight(0xffffff, 0.35))
+    const luzAmbiente = new THREE.AmbientLight(0xffffff, 0.35)
+    cena.add(luzAmbiente)
     // Luz de frente (do lado de quem solda): a face da junta nunca fica no escuro, mesmo de cabeça para baixo.
     const frontal = new THREE.DirectionalLight(0xffffff, 0.7)
     frontal.position.set(30, 200, 120)
@@ -356,6 +362,20 @@ export class Palco3D {
     sol.shadow.camera.updateProjectionMatrix()
     this.ambienteGrupo.add(sol)
     this.sol = sol
+    // H110: no fundo do mar quase nada chega da superfície; quem ilumina é a lanterna (bancada15.ts).
+    const mar = op.subaquatico
+    if (mar) {
+      const agua = corAgua(mar.turbidez)
+      cena.background = agua
+      cena.fog = new THREE.FogExp2(agua, densidadeAgua(mar.turbidez))
+      cena.environmentIntensity = 0.03
+      luzAmbiente.color.set('#4f8fa0')
+      luzAmbiente.intensity = 0.02
+      frontal.intensity = 0
+      sol.color.set('#5fb3c4')
+      sol.intensity = 0.12 * (1 - 0.6 * mar.turbidez)
+      sol.position.set(-60, 500, 40)
+    }
 
     // Pivô do giro: o mesmo de vista.ts (centro da chapa ou da junta circular).
     const pivo = op.geometria.centro ?? { x: PECA.comprimentoMm / 2, y: 0 }
@@ -405,8 +425,13 @@ export class Palco3D {
       } else this.relevo.add(m)
     })
     // Sala da oficina (H47): piso, paredes e teto dão a referência de "para baixo" quando a peça tomba.
-    this.montarSala()
-    if (op.oficinaTreino) this.ambienteGrupo.add(criarOficinaTreino(SALA.piso, { processo: op.processo }))
+    if (op.subaquatico) {
+      this.fundoMar = criarFundoMar(SALA.piso, { estrutura: op.subaquatico.estrutura })
+      this.ambienteGrupo.add(this.fundoMar)
+    } else this.montarSala()
+    if (op.subaquatico) {
+      // Sem oficina: a peça fica presa à estrutura no fundo do mar.
+    } else if (op.oficinaTreino) this.ambienteGrupo.add(criarOficinaTreino(SALA.piso, { processo: op.processo }))
     else if (op.serralheria) {
       const oficina = criarSerralheria(SALA.piso)
       this.ambienteGrupo.add(oficina.grupo)
@@ -858,6 +883,7 @@ export class Palco3D {
 
   desenhar(camera: THREE.Camera): void {
     for (const r of this.rigidos) this.posicionarRigido(r)
+    if (this.fundoMar) (this.fundoMar.userData.tempo as { value: number }).value = performance.now() / 1000
     if (this.largura > 0) this.renderer.render(this.cena, camera)
   }
 

@@ -123,3 +123,12 @@
 .p15-botao-defeitos:not([data-graves="0"]){border-color:#f08a7c;color:#f6c2b8}
 .p15-defeitos li{border-left:3px solid #d0a96a;padding-left:8px}
 .p15-defeitos li[data-grave=true]{border-left-color:#f08a7c}
+/* H110: solda subaquática (chave da corrente e laudo da solda molhada). */
+.p15-chave[data-estado=ligada]{color:#ffd166;font-weight:700}
+.p15-chave[data-estado=desligada]{color:#9fe0c4}
+.p15-chave[data-estado=ligando],.p15-chave[data-estado=desligando]{color:#9cc6f0}
+.laudo-sub{border:1px solid #2f6f7c;background:#0c2a31;border-radius:6px;padding:8px 10px;margin:6px 0;display:grid;gap:4px}
+.laudo-sub ul{margin:0;padding-left:18px;display:grid;gap:2px}
+.laudo-sub li[data-ok=false]{color:#f0a090}
+.laudo-sub li[data-ok=true]{color:#a8e6cf}
+.laudo-sub small{opacity:.85}

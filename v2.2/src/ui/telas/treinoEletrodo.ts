@@ -19,6 +19,8 @@ import { RegistroPasse } from '../../modelo/registroPasse'
 import { analisarEletrodo, LIMITES } from '../../modelo/analiseEletrodo'
 import { inspecionarDefeitos } from '../../pontuacao/defeitosEletrodo'
 import { aporteAlvoKJmm, limitesPecaEletrodo, materialEletrodo, type PecaEletrodo } from '../../missoes/pecasEletrodo'
+import { ChaveSeguranca, SUBAQUATICA, fatorCorrente, laudoSubaquatico, pressaoBar, type LaudoSubaquatico } from '../../modelo/subaquatica'
+import { correnteFonteSugerida } from '../../missoes/pecasSubaquatica'
 
 /** Quadro muito longo (aba travada, depurador) não vira um salto de vários segundos de arco. */
 const DT_MAX = 0.25
@@ -63,13 +65,20 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
     let modal = false, foco = true
     let encerrada = false, ocultarEscoria = false
     let painelResultado: HTMLElement | null = null
-    let gesto: 'camera' | 'ferramenta' | null = null
+    let gesto: 'camera' | 'ferramenta' | 'lanterna' | null = null
     let ultimaTela = { x: 0, y: 0 }
     let inicioGiro = { x: 0, y: 0 }
     let giroNaTela: ReturnType<NonNullable<ReturnType<typeof criarBancada15>>['iniciarGiro']> | null = null
     let seguraSobe = 0, seguraDesce = 0
     const teclas = new Set<string>()
-    const vista = criarBancada15(peca, { material: materialEletrodo(peca) })
+    // H110: solda subaquática molhada (mesma bancada; o mar, a chave e a lanterna mudam).
+    const sub = peca.subaquatica ?? null
+    const fator = sub ? fatorCorrente(sub.profundidadeM) : 1
+    /** Corrente que chega ao arco: na água a fonte precisa de mais (fator da profundidade). */
+    const noArco = (fonteA: number) => fonteA / fator
+    let chave = new ChaveSeguranca()
+    let mirando = false, choqueMs = -Infinity
+    const vista = criarBancada15(peca, { material: materialEletrodo(peca), subaquatico: sub ? { turbidez: sub.turbidez, estrutura: sub.estrutura } : undefined })
     if (!vista) return app.raiz.append(h('p', {}, 'WebGL indisponível: abra o treino no Chrome ou Edge com aceleração gráfica.'))
     const canvas = vista.canvas
     const soltar = () => { ponteiro = false; teclas.clear(); modelo.soltar() }
@@ -85,16 +94,27 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
     const barra = h('progress', { max: VARETA15.inicialMm, value: VARETA15.inicialMm, 'aria-label': 'Comprimento restante da vareta' })
     const avanco = h('output')
     const fonteHud = h('output')
+    const chaveHud = h('output', { class: 'p15-chave' })
     const hud = h('div', { class: 'p15-hud' }, estado,
       h('div', { class: 'p15-hud-arco' }, h('div', { class: 'p15-hud-linha' }, h('span', { class: 'p15-rotulo' }, 'Comprimento do arco'), distanciaHud), medidor, medidorTexto),
       h('div', { class: 'p15-hud-grade' },
         h('div', { class: 'p15-hud-item p15-consumo' }, h('span', { class: 'p15-rotulo' }, 'Vareta'), restante, barra),
         h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Avanço'), avanco),
-        h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Fonte'), fonteHud)))
+        h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, 'Fonte'), fonteHud),
+        sub ? h('div', { class: 'p15-hud-item' }, h('span', { class: 'p15-rotulo' }, `Chave · ${sub.profundidadeM} m`), chaveHud) : null))
 
     // Painel lateral.
     const ajuda = h('p', { class: 'p15-ajuda' })
-    const trocar = h('button', { type: 'button', on: { click: () => { modelo.soltar(); modelo.trocarVareta(); canvas.focus() } } }, 'Nova vareta')
+    const trocar = h('button', { type: 'button', on: { click: () => {
+      modelo.soltar()
+      // H110: trocar a vareta com a corrente ligada é choque (o ajudante precisa desligar antes).
+      if (sub && chave.trocarVareta() === 'choque') { choqueMs = performance.now(); navigator.vibrate?.(300) }
+      modelo.trocarVareta(); canvas.focus()
+    } } }, 'Nova vareta')
+    const botaoChave = h('button', { type: 'button', class: 'p15-chave-botao', on: { click: () => { chave.pedir(); canvas.focus() } } }, 'Pedir corrente (C)')
+    const botaoLanterna = h('button', { type: 'button', 'aria-pressed': 'true', on: { click: () => {
+      vista.ligarLanterna(!vista.lanternaLigada); botaoLanterna.setAttribute('aria-pressed', String(vista.lanternaLigada)); canvas.focus()
+    } } }, '🔦 Lanterna')
     const desgrudar = h('button', { type: 'button', class: 'p15-alerta', on: { click: () => { modelo.soltar(); modelo.desgrudar(); canvas.focus() } } }, 'Desgrudar eletrodo')
     let direcaoGolpe: 'lateral' | 'diagonal' | 'cima' = 'lateral'
     const botoesFerramenta = new Map<FerramentaBancada15, HTMLButtonElement>()
@@ -109,18 +129,20 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
     }
     const ferramentas = h('div', { class: 'p15-ferramentas', role: 'group', 'aria-label': 'Ferramenta na mão' }, [...botoesFerramenta.values()])
     const correnteValor = h('output')
-    const corrente = h('input', { type: 'range', min: 40, max: 180, step: 5, value: 90, 'aria-label': 'Corrente do eletrodo (A)' })
-    corrente.addEventListener('input', () => { modelo.soltar(); modelo.regular(Number(corrente.value)) })
+    const corrente = h('input', { type: 'range', min: 40, max: sub ? 240 : 180, step: 5, value: 90, 'aria-label': sub ? 'Corrente na fonte (A)' : 'Corrente do eletrodo (A)' })
+    corrente.addEventListener('input', () => { modelo.soltar(); modelo.regular(noArco(Number(corrente.value))) })
     const diametro = h('select', { 'aria-label': 'Diâmetro do eletrodo' }, [2.5, 3.2].map(d => h('option', { value: d }, `${n1(d)} mm`)))
     diametro.addEventListener('change', () => { modelo.soltar(); modelo.regular(modelo.correnteA, Number(diametro.value)); canvas.focus() })
     // H91 (v1.9): sem ajuda na altura. A vareta queima e quem desce o alicate é o jogador (S).
     const aplicarAjuda = () => { modelo.assistencia = 0; modelo.compensar = false }
     const referencia = h('small', { class: 'p15-dica' })
     const fisica = h('fieldset', { class: 'p15-fonte' }, h('legend', {}, 'Fonte e consumível'),
-      h('label', {}, h('span', { class: 'p15-linha' }, 'Corrente', correnteValor), corrente),
+      h('label', {}, h('span', { class: 'p15-linha' }, sub ? 'Corrente na fonte' : 'Corrente', correnteValor), corrente),
       h('label', { class: 'p15-linha' }, 'Eletrodo didático', diametro),
       referencia,
-      h('small', { class: 'p15-dica' }, 'A vareta queima e o arco cresce: dê toques em S para descer enquanto avança com o mouse.'))
+      h('small', { class: 'p15-dica' }, sub
+        ? `Na água: eletrodo impermeabilizado, CC com o eletrodo negativo. A água rouba calor do arco: a fonte precisa de ${Math.round((fator - 1) * 100)} % a mais. Mantenha o arco bem curto, quase arrastando: arco longo deixa a bolha de vapor sem proteção e enche o cordão de poro.`
+        : 'A vareta queima e o arco cresce: dê toques em S para descer enquanto avança com o mouse.'))
     const faixa = h('input', { type: 'range', min: 0, max: 35, step: 0.1, value: 10, 'aria-label': 'Distância da ponta à peça' })
     const altura = h('label', {}, h('span', { class: 'p15-linha' }, 'Altura manual', h('small', {}, 'W / S ou roda')), faixa)
     const orientacoes = [
@@ -174,8 +196,10 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       modelo.superficie = y => cordao.altura(modelo.xMm,y)
       modelo.abrirAoTocar = true
       aplicarAjuda()
-      modelo.regular(Number(corrente.value), Number(diametro.value))
+      modelo.regular(noArco(Number(corrente.value)), Number(diametro.value))
       modelo.posicionar(peca.inicioMm, 0)
+      chave = new ChaveSeguranca()
+      vista.apontarLanterna(peca.inicioMm, 0)
       modelo.definirDistancia(10)
       posicao = { x: peca.inicioMm, y: 0 }
       selecionarFerramenta('soldar')
@@ -199,10 +223,20 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       vista.atualizarDefeitos(analise.defeitos)
       const inspecao = inspecionarDefeitos(peca, cordao, registro, analise)
       const r = avaliarEletrodo(peca,cordao,modelo,regras.nivel,{ preenchimentoCheio: regras.preenchimentoCheio, escoriaMax: regras.escoriaMax, descontoDefeitos: descontoDefeitos(modo, inspecao.defeitos) })
-      const resultado = resultadoEletrodo(r, inspecao, NOME_DIFICULDADE[modo], aprovacaoEletrodo(r, modo), {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta},corte:()=>abrirCorteEletrodo(cordao,peca,inspecao.defeitos.find(d=>d.tipo==='falta-de-fusao-entre-passes')?.inicioMm)})
+      // H110: na água, a dureza da ZTA e os choques descontam e entram na aprovação do Difícil.
+      const laudo = sub ? laudoSubaquatico({ profundidadeM: sub.profundidadeM, carbono: sub.carbono, ce: sub.ce, aporteKJmm: inspecao.aporteMedioKJmm, passes: inspecao.passes, choques: chave.choques }) : null
+      if (laudo) r.nota = Math.max(0, r.nota - laudo.desconto)
+      const aprov = aprovacaoEletrodo(r, modo)
+      if (laudo && aprov.exigencia !== null && !laudo.aprovado) {
+        aprov.aprovada = false
+        if (laudo.choques) aprov.abaixo.push('segurança (choque na troca da vareta)')
+        if (laudo.durezaHV > SUBAQUATICA.durezaLimiteHV) aprov.abaixo.push(`dureza da ZTA acima de ${SUBAQUATICA.durezaLimiteHV} HV`)
+      }
+      const resultado = resultadoEletrodo(r, inspecao, NOME_DIFICULDADE[modo], aprov, {nova:recomecar,pecas:voltar,camada:oculta=>{ocultarEscoria=oculta},corte:()=>abrirCorteEletrodo(cordao,peca,inspecao.defeitos.find(d=>d.tipo==='falta-de-fusao-entre-passes')?.inicioMm)})
       const painel = conteudo.querySelector<HTMLElement>('.p15-painel')!
       painel.hidden = true
       painelResultado = resultado.painel
+      if (laudo) painelResultado.querySelector('.selo')?.after(laudoSub(laudo))
       painel.parentElement!.append(painelResultado)
       resultado.focar()
     }
@@ -220,16 +254,19 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       h('header', { class: 'p15-cabecalho' },
         h('div', {},
           h('h2', { class: 'tela-titulo', tabindex: '-1' }, peca.titulo),
-          h('p', {}, `Eletrodo revestido · modo ${NOME_DIFICULDADE[modo]} · ${MATERIAIS[materialEletrodo(peca)].nomeCurto} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · ${peca.aplicacao}`)),
+          h('p', {}, sub
+            ? `Solda subaquática molhada · ${sub.local} · ${sub.profundidadeM} m (${n1(pressaoBar(sub.profundidadeM))} bar) · modo ${NOME_DIFICULDADE[modo]} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm`
+            : `Eletrodo revestido · modo ${NOME_DIFICULDADE[modo]} · ${MATERIAIS[materialEletrodo(peca)].nomeCurto} · ${INFO_JUNTA[peca.junta].nome} · ${n1(peca.espessuraMm)} mm · ${peca.aplicacao}`)),
         h('div', { class: 'p15-processos navegacao-de-partida' }, controles, h('button', { type: 'button', on: { click: () => voltar() } }, 'Outras peças'))),
       h('div', { class: 'p15-grade' }, area,
         h('aside', { class: 'p15-painel' },
-          h('div', { class: 'maquina-identificacao' }, 'SMAW / CC', h('span', {}, '● FONTE ENERGIZADA')),
-          ferramentas, h('div', { class: 'p15-comandos' }, desgrudar, trocar),
+          h('div', { class: 'maquina-identificacao' }, sub ? 'SMAW MOLHADA / CC−' : 'SMAW / CC', h('span', {}, sub ? '● CHAVE NA SUPERFÍCIE' : '● FONTE ENERGIZADA')),
+          ferramentas, h('div', { class: 'p15-comandos' }, ...(sub ? [botaoChave, botaoLanterna] : []), desgrudar, trocar),
           instrumentos,
           avaliacao)))
     app.raiz.append(conteudo)
-    corrente.value = String(Math.round((peca.correnteA.min + peca.correnteA.max) / 10) * 5)
+    const sugerida = correnteFonteSugerida(peca)
+    corrente.value = String(Math.round((sugerida.min + sugerida.max) / 10) * 5)
     diametro.value = String(peca.diametroMm)
     recomecar()
 
@@ -241,6 +278,11 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       modelo.naPeca = !!p?.naPeca
       if (p) { posicao = p; modelo.xMm = p.x; modelo.yMm = p.y }
     }
+    /** H110: com F segurado, o mouse aponta a lanterna (a mão do eletrodo fica parada). */
+    const mirarLanterna = (e: PointerEvent) => {
+      const p = vista.pontoNaTela(e.clientX, e.clientY)
+      if (p) vista.apontarLanterna(Math.max(-60, Math.min(210, p.x)), Math.max(-90, Math.min(90, p.y)))
+    }
     ouvir(canvas, 'pointerdown', (ev) => {
       const e = ev as PointerEvent
       if (pausado || modal) return
@@ -251,7 +293,8 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
         gesto = 'ferramenta'
         inicioGiro = { ...ultimaTela }
         giroNaTela = vista.iniciarGiro(modelo)
-      } else if (!encerrada) { atualizarPosicao(e); ponteiro = true }
+      } else if (sub && mirando) { mirarLanterna(e); gesto = 'lanterna' }
+      else if (!encerrada) { atualizarPosicao(e); ponteiro = true }
     })
     ouvir(canvas, 'pointermove', ev => {
       const e = ev as PointerEvent
@@ -261,6 +304,8 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       else if (gesto === 'ferramenta' && giroNaTela) {
         const o = giroNaTela(e.clientX - inicioGiro.x, e.clientY - inicioGiro.y, cfg.sensibilidade)
         modelo.orientar(o.azimute, o.inclinacao, modelo.rolamentoGraus)
+      } else if (gesto === 'lanterna' || (sub && mirando)) {
+        mirarLanterna(e)
       } else if (!encerrada) {
         // O eletrodo segue o ponteiro sobre a peça: mover a mão é avançar o cordão.
         atualizarPosicao(e)
@@ -291,11 +336,13 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
         if (!pausado && modelo.estado !== 'arco') vista.aproximar(e.key === '-' || e.code === 'NumpadSubtract' ? 150 : -150)
         return
       }
+      if (sub && e.code === 'KeyF') { e.preventDefault(); if (!mirando) { mirando = true; ponteiro = false } return }
+      if (sub && e.code === 'KeyC' && !e.repeat) { e.preventDefault(); if (!pausado && !encerrada) chave.pedir(); return }
       if (!Object.values(cfg.teclas).includes(e.code)) return
       e.preventDefault()
       if (!pausado && !encerrada) teclas.add(e.code)
     })
-    ouvir(window, 'keyup', ev => { teclas.delete((ev as KeyboardEvent).code) })
+    ouvir(window, 'keyup', ev => { if ((ev as KeyboardEvent).code === 'KeyF') { mirando = false; if (gesto === 'lanterna') gesto = null }; teclas.delete((ev as KeyboardEvent).code) })
     ouvir(window, 'blur', () => { foco = false; soltar() })
     ouvir(window, 'focus', () => { foco = true })
     ouvir(document, 'visibilitychange', () => { soltar(); anterior = performance.now() })
@@ -372,7 +419,8 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
         else if (cfg.analogico === 'ferramenta') modelo.orientar(modelo.azimuteGraus + eixo(2) * dt * 60, modelo.inclinacaoGraus + eixo(3) * dt * 60, modelo.rolamentoGraus + (Number(g.buttons[5]?.pressed ?? false) - Number(g.buttons[4]?.pressed ?? false)) * dt * 60)
       }
       // Sem botão: o porta-eletrodo fica energizado enquanto o eletrodo está na mão (H72).
-      modelo.pressionado = pode && ferramentaAtual === 'soldar'
+      if (pode) chave.avancar(dt)
+      modelo.pressionado = pode && ferramentaAtual === 'soldar' && (!sub || chave.ligada) && !mirando
       if (!modelo.pressionado) modelo.soltar()
       // Rampa de altura (H72): toque curto move poucos décimos; segurar acelera até a velocidade configurada.
       const sobe = ativo('afastar') || alturaControle > 0, desce = ativo('aproximar') || alturaControle < 0
@@ -412,17 +460,23 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       const texto = encerrada ? 'Tentativa encerrada · inspecione e veja a nota ao lado' : pausado || modal ? 'Pausado · porta-eletrodo desenergizado'
         : ferramentaAtual === 'martelo' ? (quente > 0.5 ? 'Martelinho · escória ainda quente, espere esfriar' : 'Martelinho · clique para quebrar escória fria')
         : ferramentaAtual === 'escova' ? 'Escova · arraste com o botão esquerdo'
+        : sub && agora - choqueMs < 2500 ? 'CHOQUE! Trocou a vareta com a corrente ligada · peça DESLIGA (C) antes de trocar'
+        : sub && mirando ? 'Lanterna · arraste para apontar a luz (solte F ou toque em 🔦 para voltar ao eletrodo)'
+        : sub && chave.estado === 'ligando' ? 'Pedido: “LIGA!” · aguardando o ajudante na superfície'
+        : sub && chave.estado === 'desligando' ? 'Pedido: “DESLIGA!” · aguardando o ajudante'
+        : sub && !chave.ligada && modelo.estado !== 'fim' ? 'Corrente desligada · peça a corrente com C para abrir o arco'
         : modelo.esticado ? 'Arco esticado · desça já ou ele apaga'
         : modelo.estado === 'pronto' && modelo.pontaQuente ? 'Arco apagou · ponta quente: desça para reacender'
         : mensagens[modelo.estado]
       const faixaArco = modelo.faixaArco
       const instrucao = ferramentaAtual === 'martelo' ? 'Clique na crosta fria: um golpe por clique. O martelinho solta a escória e deixa resíduos para a escova.'
         : ferramentaAtual === 'escova' ? 'Segure o botão esquerdo e arraste sobre os resíduos soltos. Crosta intacta precisa primeiro do martelinho.'
+        : sub ? `No escuro, segure F e arraste para apontar a lanterna. Peça a corrente com C (o ajudante liga a chave), leve a ponta ao INÍCIO e desça com ${nomeTecla(cfg.teclas.aproximar)} até tocar. Arco bem curto. Antes de trocar a vareta, peça para desligar (C).`
         : `Mova o mouse para levar a ponta ao INÍCIO. Desça com ${nomeTecla(cfg.teclas.aproximar)} até tocar: o arco abre sozinho. Toques curtos em ${nomeTecla(cfg.teclas.aproximar)} mantêm o arco enquanto a vareta queima.`
       if (ajuda.textContent !== instrucao) ajuda.textContent = instrucao
       if (estado.textContent !== texto) estado.textContent = texto
       estado.dataset.arco = String(modelo.estado === 'arco' && !modelo.esticado)
-      estado.dataset.alerta = String(modelo.estado === 'grudado' || modelo.estado === 'fim' || modelo.esticado)
+      estado.dataset.alerta = String(modelo.estado === 'grudado' || modelo.estado === 'fim' || modelo.esticado || (!!sub && agora - choqueMs < 2500))
       desenharMedidor()
       distanciaHud.value = `${n1(modelo.distanciaMm)} mm`
       const textoMedidor = modelo.esticado ? 'arco esticado · apaga em instantes' : faixaArco ? TEXTO_FAIXA[faixaArco] : `abre ao tocar; sustenta até ${n1(modelo.arcoMaxMm)} mm`
@@ -432,13 +486,22 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       // Calor do arco agora (H82): potência que entra na peça ÷ velocidade de avanço, comparado com o da peça.
       const calorAgora = modelo.estado === 'arco' && modelo.velocidadeMmS > 0.3 ? RENDIMENTO15.termico * modelo.correnteA * modelo.tensaoV / modelo.velocidadeMmS / 1000 : 0
       avanco.dataset.faixa = !calorAgora ? '' : calorAgora < LIMITES.fusaoFracaAbaixo * alvo ? 'frio' : calorAgora > LIMITES.fusaoExcessoAcima * alvo ? 'quente' : 'bom'
-      fonteHud.value = `${n0(modelo.correnteA)} A · Ø ${n1(modelo.diametroMm)}`
+      fonteHud.value = sub ? `${corrente.value} A → ${n0(modelo.correnteA)} no arco` : `${n0(modelo.correnteA)} A · Ø ${n1(modelo.diametroMm)}`
+      if (sub) {
+        const textoChave = { desligada: 'DESLIGADA', ligando: 'ligando…', ligada: 'LIGADA', desligando: 'desligando…' }[chave.estado]
+        if (chaveHud.value !== textoChave) chaveHud.value = textoChave
+        chaveHud.dataset.estado = chave.estado
+        botaoChave.textContent = chave.ligada ? 'Pedir: DESLIGA (C)' : 'Pedir: LIGA (C)'
+        botaoChave.classList.toggle('primario', !chave.ligada && modelo.estado !== 'fim')
+        trocar.classList.toggle('p15-alerta', chave.ligada)
+      }
       const chaveTeclas = JSON.stringify(cfg.teclas)
       if (chaveTeclas !== teclasChave) {
         teclasChave = chaveTeclas
         const t = cfg.teclas
         teclasVista.replaceChildren(...([
           ['mouse', 'leva a ponta'], [`${nomeTecla(t.aproximar)}/${nomeTecla(t.afastar)}`, 'acompanha/afasta'],
+          ...(sub ? [['F + mouse', 'lanterna'], ['C', 'chave']] as const : []),
           ['meio', 'câmera'], ['direito', 'orienta'], [`${nomeTecla(t.inclMenos)}/${nomeTecla(t.inclMais)}`, 'inclina'],
           [`${nomeTecla(t.azMenos)}/${nomeTecla(t.azMais)}`, 'direção'], [`${nomeTecla(t.rolMenos)}/${nomeTecla(t.rolMais)}`, 'punho'],
         ] as const).map(([k, o]) => h('span', {}, h('kbd', {}, k), o)))
@@ -446,9 +509,9 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
       faixa.value = String(modelo.distanciaMm)
       faixa.disabled = pausado || modal || modelo.grudado || ferramentaAtual !== 'soldar'
       corrente.disabled = diametro.disabled = modelo.estado === 'arco' || pausado || modal
-      correnteValor.value = `${n0(modelo.correnteA)} A`
+      correnteValor.value = `${sub ? corrente.value : n0(modelo.correnteA)} A`
       const relativa = modelo.correnteRelativa
-      const faixaPeca = `Sugerido para esta peça: ${peca.correnteA.min}–${peca.correnteA.max} A com Ø ${n1(peca.diametroMm)} mm.`
+      const faixaPeca = sub ? `Sugerido na fonte: ${sugerida.min}–${sugerida.max} A com Ø ${n1(peca.diametroMm)} mm (no arco chegam ${peca.correnteA.min}–${peca.correnteA.max} A).` : `Sugerido para esta peça: ${peca.correnteA.min}–${peca.correnteA.max} A com Ø ${n1(peca.diametroMm)} mm.`
       const textoRef = (relativa < 0.55 ? 'Corrente baixa demais: o arco não se sustenta. ' : relativa < 0.65 ? 'Corrente baixa: gruda com facilidade. ' : relativa > 1.45 ? 'Corrente alta: a vareta queima depressa. ' : '') + faixaPeca
       if (referencia.textContent !== textoRef) referencia.textContent = textoRef
       const leitura = (nome: string, v: string) => { const el = valoresLeitura.get(nome)!; if (el.textContent !== v) el.textContent = v }
@@ -486,5 +549,20 @@ export function telaTreinoEletrodo(app: App, peca: PecaEletrodo, modo: Dificulda
     }
     pedido = requestAnimationFrame(quadro)
     return () => { cancelAnimationFrame(pedido); soltar(); tamanho.disconnect(); ouvintes.forEach(f => f()); vista.destruir() }
-  }, 'Treino · eletrodo revestido')
+  }, peca.subaquatica ? 'Treino · solda subaquática' : 'Treino · eletrodo revestido')
+}
+
+/** H110: laudo da solda molhada no painel do resultado. */
+function laudoSub(l: LaudoSubaquatico): HTMLElement {
+  const n1v = (v: number) => v.toFixed(1).replace('.', ',')
+  const risco = { baixo: 'baixo', medio: 'médio', alto: 'alto' }[l.risco]
+  return h('section', { class: 'laudo-sub', 'aria-label': 'Laudo da solda molhada' },
+    h('strong', {}, `Solda molhada · ${l.profundidadeM} m · ${n1v(l.pressaoBar)} bar`),
+    h('ul', {},
+      h('li', { 'data-ok': String(l.durezaHV <= SUBAQUATICA.durezaLimiteHV) }, `Dureza máx. da ZTA: ${l.durezaHV} HV (limite ${SUBAQUATICA.durezaLimiteHV}; a mesma solda no ar daria ${l.durezaArHV} HV)`),
+      h('li', {}, `Resfriamento 800→500 °C: ${n1v(l.t85S)} s na água (no ar, ${n1v(l.t85ArS)} s)`),
+      h('li', { 'data-ok': String(l.risco !== 'alto') }, `Risco de trinca por hidrogênio: ${risco}`),
+      h('li', { 'data-ok': String(l.choques === 0) }, l.choques ? `Choques: ${l.choques} (trocou a vareta com a corrente ligada)` : 'Segurança: nenhuma troca com a corrente ligada')),
+    l.desconto ? h('small', {}, `Descontos da água: choques −${l.descontoChoques} · dureza −${l.descontoDureza}`) : null,
+    h('small', {}, 'Modelo didático: a água tempera a ZTA. Andar mais devagar e um segundo passe por cima (revenimento) baixam a dureza.'))
 }

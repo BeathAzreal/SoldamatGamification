@@ -1251,3 +1251,17 @@ O Laboratório foi refeito no estilo da bancada de solda: as estações são fei
 - **Raciocínio:** hipóteses, interpretação, relatório e devolutiva continuam no "escritório" (a tela de texto do Laboratório anterior, sem a aba de ensaios), com o mesmo estado salvo.
 - **Testes:** `tests/laboratorioManual.test.ts`.
 - Tempos e distâncias são do jogo. Não são procedimento de laboratório.
+
+### H110 — Solda subaquática molhada (v2.2, Claude)
+
+Treino → SUBAQUÁTICA. Eletrodo revestido na água (solda molhada), na mesma bancada do eletrodo, com o fundo do mar no lugar da oficina.
+
+- **Escuro:** quase nada chega da superfície. A lanterna do capacete é a luz principal: segure F e arraste para apontar (no celular, 🔦 Mirar luz). A água turva (névoa) esconde o que está longe. O arco ilumina só em volta da poça.
+- **Chave da corrente:** o mergulhador pede "liga" ou "desliga" (C) e o ajudante na superfície confirma em cerca de 0,9 s. Sem corrente o arco não abre. Trocar a vareta com a corrente ligada é choque: −150 pontos por choque e reprovação no Difícil.
+- **Corrente:** a água rouba calor do arco. A fonte precisa de 1,15 + 0,005 × profundidade (m) vezes a corrente que chega ao arco (17 % a mais a 4 m, 24 % a 18 m).
+- **Poro:** soma ao poro do eletrodo 0,04 + 0,006 × profundidade + 0,35 × (arco − 1 diâmetro)/0,6, limitado a 0…1. O arco tem de ser bem curto, quase arrastando.
+- **Dureza da ZTA:** t8/5 no ar = 10 s por kJ/mm de aporte; na água, 22 % disso (um pouco menos ainda com a profundidade). Dureza = martensita (884 C + 294) misturada com 180 HV pela fração 1 − e^(−t8/5/τ), τ = 2 + 12 (CE − 0,25). Um segundo passe por cima tira 40 HV (revenimento). Limite do jogo: 350 HV; acima, desconta 4 pontos por HV (até 200) e reprova no Difícil.
+- **Risco de trinca por hidrogênio:** pela dureza mais 1,5 HV por metro de profundidade (baixo < 300, médio ≤ 360, alto acima).
+- **Peças:** cais a 4 m (cordões sobre chapa), casco de balsa a 8 m (remendo sobreposto) e perna de plataforma a 18 m (filete em T, aço com CE 0,44: pede mais calor ou revenimento).
+- **Testes:** `tests/subaquatica.test.ts`.
+- Números didáticos, calibrados para o jogo. Não substituem procedimento qualificado de solda molhada (por exemplo, AWS D3.6M) nem treinamento de mergulho.

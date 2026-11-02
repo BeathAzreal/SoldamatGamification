@@ -5,6 +5,7 @@ import { limitesPecaEletrodo } from '../missoes/pecasEletrodo'
 import { criarDetalhesIndustriais15 } from './pecaIndustrial15'
 import * as THREE from 'three'
 import { Palco3D } from './palco3d'
+import { criarMar } from './mar15'
 import { curvarPonto, desdobrarPonto } from './curvaTubo'
 import { geometriaDa } from '../modelo/junta'
 import { CONTEXTO_PADRAO, type ContextoProcesso } from '../modelo/processo'
@@ -38,7 +39,7 @@ function texturaBrilho(): THREE.CanvasTexture {
 }
 
 /** Vista do protótipo: porta-eletrodo e vareta em escala de mm, câmera independente. */
-export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade'; tubo?: { diametroMm: number } }, op: { tig?: boolean; material?: ContextoProcesso['material'] } = {}) {
+export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; aberturaMm: number; inicioMm: number; fimMm: number; larguraMm?: number; conjunto?: 'grade'; tubo?: { diametroMm: number } }, op: { tig?: boolean; material?: ContextoProcesso['material']; subaquatico?: { turbidez: number; estrutura: 'cais' | 'casco' | 'plataforma' } } = {}) {
   // A peça chega na posição plana (rolagem 0): no filete, o canto fica voltado para cima.
   // H103: a emenda de tubos curva o desenho; o modelo do eletrodo e do TIG continua na junta desenrolada.
   const contexto = peca ? { ...CONTEXTO_PADRAO, junta: peca.junta, espessuraMm: peca.espessuraMm, aberturaMm: peca.aberturaMm, ...(op.material ? { material: op.material } : {}), ...(peca.tubo ? { tubo: peca.tubo, posicaoInicial: { rolagemGraus: 0, giroGraus: GIRO_INICIAL_TUBO_GRAUS } } : {}) } : CONTEXTO_PADRAO
@@ -46,6 +47,7 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
   const palco = Palco3D.criar({
     larguraPecaMm: peca?.larguraMm, processo: op.tig ? 'mig' : 'eletrodo', contexto, geometria: geometriaDa('reta'), oficinaTreino: true, sombras: true, pixelRatioMax: 1.5,
     missao: peca ? { inicioMm: peca.inicioMm, fimMm: peca.fimMm } : undefined, regua: !!peca && !peca.larguraMm,
+    subaquatico: op.subaquatico,
   })
   if (!palco) return null
   const canvas = palco.elemento
@@ -227,6 +229,8 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
     particulasEscoria.push({ malha, velocidade: new THREE.Vector3(), vida: 0 })
   }
   let calorPonta = 0
+  // H110: no mar, a lanterna do mergulhador, as bolhas do arco e a neve marinha.
+  const mar = op.subaquatico ? criarMar(palco, camera, textura, op.subaquatico.turbidez) : null
 
   // ------------------------------------------------------------ brasagem (H105)
   // Maçarico oxiacetilênico: corpo de latão, pescoço e bico de cobre; a chama sai do bico para baixo.
@@ -304,6 +308,11 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
 
   return {
     canvas, enquadrar, superficie,
+    /** H110: aponta a lanterna para um ponto da peça (mm, como o ponteiro). */
+    apontarLanterna(x: number, y: number) { mar?.apontar(x - 75, superficie(y), y) },
+    /** H110: liga ou desliga a lanterna. */
+    ligarLanterna(ligada: boolean) { mar?.ligar(ligada) },
+    get lanternaLigada() { return mar?.ligada ?? false },
     /** H103: a peça é uma emenda de tubos (o giro do tubo vale). */
     tubo: !!palco.curva,
     /** H103: gira o tubo no próprio eixo (radianos). */
@@ -431,6 +440,15 @@ export function criarBancada15(peca?: { junta: TipoJunta; espessuraMm: number; a
       poca.scale.set(raioPoca, 0.6, raioPoca)
       luz.position.set(p.x - 75, base + 6, p.y)
       luz.intensity = ligado ? 700 * tremor : 0
+      if (mar) {
+        // Na água o arco fica verde-azulado e a luz se espalha num halo maior, mas não vai longe.
+        ;(halo.material as THREE.MeshBasicMaterial).color.set('#9fffe6')
+        halo.scale.multiplyScalar(1.8)
+        luz.color.set('#bff7ff')
+        luz.distance = 260
+        luz.intensity = ligado ? 1100 * tremor : 0
+        mar.atualizar(dt, ligado && !inspecionando, p.x - 75, base, p.y, agoraMs)
+      }
       // Respingos: base pequena, muito mais com arco longo (H69).
       if (ligado && m.processo === 'eletrodo') acumulado += dt * (4 + 70 * instavel)
       while (acumulado >= 1) {
