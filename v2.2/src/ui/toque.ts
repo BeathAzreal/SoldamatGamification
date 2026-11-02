@@ -129,14 +129,14 @@ export function instalarToque(): void {
   const atualizar = () => {
     const texto = (contexto?.textContent ?? '').toLocaleLowerCase('pt-BR')
     const temCanvas = !!app?.querySelector('canvas') && !document.body.classList.contains('menu-grafico')
-    const bancada = !!app?.querySelector('.p15')
+    const bancada = !!app?.querySelector('.p15, .execucao')
     const chave = `${texto}|${temCanvas}|${bancada}`
     if (chave === ultimo) return
     ultimo = chave
     const lista = temCanvas ? teclasDaTela(texto, app) : []
     // A barra só aparece nas bancadas (painel em gaveta, câmera) ou onde há teclas a apertar.
     barra.hidden = !(bancada || lista.length > 0)
-    botaoPainel.hidden = !app?.querySelector('.p15-painel')
+    botaoPainel.hidden = !app?.querySelector('.p15-painel, .execucao .painel')
     aviso.hidden = !temCanvas
     montarTeclas(lista)
     document.body.classList.remove('toque-painel-aberto')
