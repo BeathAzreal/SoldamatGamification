@@ -1,6 +1,6 @@
 # Oficina de Soldagem — versões e downloads
 
-## 🆕 Testar agora: Alpha v2.2 — FÁBRICA, menu 3D, plasma, TORNO e LABORATÓRIO
+## 🆕 Testar agora: Alpha v2.2 — FÁBRICA, menu 3D, plasma, SUBAQUÁTICA, TORNO e LABORATÓRIO
 
 **[⬇ BAIXAR ALPHA v2.2 (teste) — ZIP](v2.2/Oficina-de-Soldagem-Alpha-v2.2.zip)**
 
@@ -42,6 +42,7 @@ O jogo mostra **ALPHA v2.2** no topo. O que testar:
 - **FÁBRICA:** galpão 3D com Usinagem, Soldagem, Manufatura Aditiva e Laboratório. A **OS-01** passa pelo laboratório (análise da falha), pela usinagem (pino) e pela soldagem (emenda em SAE 1045). A qualidade libera no fim e gera o relatório em PDF.
 
 - **Soldagem a plasma (Treino → PLASMA):** keyhole que atravessa a chapa numa passada (inox 4 mm e aço 5 mm, sem chanfro) e microplasma para chapa de 1 mm. Gás de plasma, bocal, arco duplo e rampa de descida no fim.
+- **Solda subaquática (Treino → SUBAQUÁTICA):** eletrodo revestido no fundo do mar, no escuro. Só a sua lanterna ilumina a peça: segure **F** e arraste para apontar (no celular, **🔦 Mirar luz**). A corrente é ligada pelo ajudante na superfície (**C** pede liga/desliga), e trocar a vareta com a corrente ligada dá choque. A água pede mais corrente, arco bem curto (senão vira poro) e endurece a ZTA: o laudo do resultado mostra a dureza. Três mergulhos: cais (4 m), casco de balsa (8 m) e plataforma (18 m).
 - **Treino só com a bancada livre** (sandbox) por processo.
 
 > ⚠️ A v2.2 é uma versão de teste, não estável. Detalhes mais abaixo e em [`v2.2/docs/FABRICA.md`](v2.2/docs/FABRICA.md).

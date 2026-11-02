@@ -22,6 +22,8 @@ interface TeclaVirtual {
   /** Segurar = tecla segurada (vareta, manivela); senão, um toque. */
   segurar?: boolean
   titulo?: string
+  /** Alternar = um toque segura a tecla, outro toque solta (mira da lanterna). */
+  alternar?: boolean
 }
 
 const T = (rotulo: string, code: string, key: string, segurar = false, titulo?: string): TeclaVirtual => ({ rotulo, code, key, segurar, titulo })
@@ -37,6 +39,7 @@ export function teclasDaTela(contexto: string, conteudo: Element | null): TeclaV
   ]
   if (/plasma|tig/.test(contexto)) return [T('Vareta', 'Space', ' ', true, 'Mergulhar a vareta (Espaço)'), T('▲ tocha', 'KeyW', 'w', true), T('▼ tocha', 'KeyS', 's', true), T('I', 'KeyI', 'i', true, 'Inclinar'), T('K', 'KeyK', 'k', true, 'Inclinar'), ENTER]
   if (/brasagem/.test(contexto)) return [T('Vareta', 'Space', ' ', true, 'Encostar a vareta (Espaço)'), T('▲', 'KeyW', 'w', true), T('▼', 'KeyS', 's', true), T('◀', 'KeyA', 'a', true), T('▶', 'KeyD', 'd', true), ENTER]
+  if (/subaqu/.test(contexto)) return [{ ...T('🔦 Mirar luz', 'KeyF', 'f', false, 'Toque para apontar a lanterna com o dedo; toque de novo para voltar ao eletrodo'), alternar: true }, T('C chave', 'KeyC', 'c', false, 'Pedir para ligar ou desligar a corrente'), T('▼ descer', 'KeyS', 's', true, 'Descer a vareta (S)'), T('▲ subir', 'KeyW', 'w', true, 'Subir (W)'), T('I', 'KeyI', 'i', true), T('K', 'KeyK', 'k', true), ENTER]
   if (/eletrodo/.test(contexto)) return [T('▼ descer', 'KeyS', 's', true, 'Descer a vareta (S)'), T('▲ subir', 'KeyW', 'w', true, 'Subir (W)'), T('I', 'KeyI', 'i', true), T('K', 'KeyK', 'k', true), ENTER]
   if (/laborat/.test(contexto)) return [T('R girar 90°', 'KeyR', 'r', false, 'Girar a amostra na lixa')]
   // MIG/MAG: só durante a solda (na preparação, Enter e P não servem).
@@ -94,6 +97,11 @@ export function instalarToque(): void {
       const b = h('button', { type: 'button', class: 'toque-tecla', title: t.titulo ?? t.rotulo }, t.rotulo)
       b.addEventListener('pointerdown', (e) => {
         e.preventDefault()
+        if (t.alternar) {
+          const ativa = b.classList.toggle('apertada')
+          enviar(ativa ? 'keydown' : 'keyup', t, false)
+          return
+        }
         try { b.setPointerCapture(e.pointerId) } catch { /* já solto */ }
         enviar('keydown', t, rapido && /Key[WASD]/.test(t.code))
         if (t.segurar) segurando.set(e.pointerId, t)
@@ -101,6 +109,7 @@ export function instalarToque(): void {
         b.classList.add('apertada')
       })
       const soltar = (e: PointerEvent) => {
+        if (t.alternar) return
         const s = segurando.get(e.pointerId)
         if (s) { enviar('keyup', s, false); segurando.delete(e.pointerId) }
         b.classList.remove('apertada')

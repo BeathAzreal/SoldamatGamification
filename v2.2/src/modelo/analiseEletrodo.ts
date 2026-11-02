@@ -1,3 +1,4 @@
+import { poroAgua } from './subaquatica'
 /**
  * Análise do cordão do eletrodo (H82–H84): mede o depósito (depositoEletrodo.ts)
  * e calcula fusão pelo calor de cada passe, mordedura, sobreposição, poros,
@@ -141,7 +142,7 @@ export function analisarEletrodo(peca: PecaEletrodo, dep: DepositoEletrodo, reg:
     a.sobreposicaoMenos[i] = o
     a.sobreposicaoMais[i] = o
     // Porosidade (H84): arco longo tira a proteção do revestimento; partida a frio; zinco da chapa (H104).
-    const poro = lim01(0.7 * lim01((arco - LIMITES.arcoPorosoAcima) / 0.6) + 0.3 * lim01(instab - 0.3) + partida[i] + poroChapa)
+    const poro = lim01(0.7 * lim01((arco - LIMITES.arcoPorosoAcima) / 0.6) + 0.3 * lim01(instab - 0.3) + partida[i] + poroChapa + (peca.subaquatica ? poroAgua(peca.subaquatica.profundidadeM, arco) : 0))
     a.porosidade[i] = poro
     const meia = s.larguraMm / 2
     if (poro > 0.25 && sorteioFixo(i, 160) < 0.45 * poro * passo * 2) {

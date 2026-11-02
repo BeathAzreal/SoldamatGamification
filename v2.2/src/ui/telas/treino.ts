@@ -18,6 +18,7 @@ import { PECAS_TIG, pecaTigEm } from '../../missoes/pecasTig'
 import { resumoMaterial } from '../componentes/material'
 import { telaTreinoPlasma, telaTreinoTig } from './treinoTig'
 import { PECAS_PLASMA } from '../../missoes/pecasPlasma'
+import { PECAS_SUBAQUATICA } from '../../missoes/pecasSubaquatica'
 import { PECAS_TORNO, type PecaTorno } from '../../torno/pecas'
 import { MATERIAIS_TORNO, type MaterialTornoId } from '../../torno/materiais'
 import { telaTorno } from './torno'
@@ -35,6 +36,7 @@ export function telaTreino(app: App): void {
     { nome: 'ELETRODO', descricao: 'Escolha a peça e pratique o controle da distância e o consumo da vareta.', abrir: () => escolherPecaEletrodo(app) },
     { nome: 'TIG', descricao: 'Tocha numa mão e vareta na outra: pedal, poça e toques de vareta. Mesa digitalizadora + mouse ou só mouse.', abrir: () => escolherPecaTig(app) },
     { nome: 'PLASMA', descricao: 'Arco apertado por um bocal: keyhole que atravessa a chapa numa passada, sem chanfro, e microplasma para chapa muito fina.', abrir: () => escolherPecaPlasma(app) },
+    { nome: 'SUBAQUÁTICA', descricao: 'Solda molhada no fundo do mar com eletrodo revestido: só a sua lanterna ilumina a peça, a corrente é ligada pela superfície e a água tempera a solda.', abrir: () => escolherPecaSubaquatica(app) },
     { nome: 'TORNO', descricao: 'Torno convencional em 3D: faceie, desbaste e dê o acabamento com as manivelas, meça com micrômetro e veja o cavaco de cada material.', abrir: () => escolherPecaTorno(app, () => telaTreino(app)) },
     { nome: 'BRASAGEM', descricao: 'Maçarico, fluxo e vareta: aqueça a junta sobreposta e deixe a liga correr para dentro da folga, sem fundir a peça.', abrir: () => escolherPecaBrasagem(app) },
   ], { nome: 'VOLTAR AO MENU', descricao: 'Voltar ao início da oficina.', abrir: () => telaMenu(app) })
@@ -106,6 +108,15 @@ function escolherPecaPlasma(app: App): void {
     nome: p.titulo,
     descricao: `${p.aplicacao} · ${p.correnteA.min}–${p.correnteA.max} A · gás ${n1(p.gasLMin.min)}–${n1(p.gasLMin.max)} L/min.`,
     abrir: () => escolherModo(app, 'PLASMA', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoPlasma(app, p, d, () => escolherPecaPlasma(app)), () => escolherPecaPlasma(app)),
+  })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo.', abrir: () => telaTreino(app) })
+}
+
+/** H110: solda subaquática molhada (eletrodo revestido no mar). */
+function escolherPecaSubaquatica(app: App): void {
+  menuOficina(app, 'SUBAQUÁTICA', 'TREINO / SOLDA MOLHADA / ESCOLHA O MERGULHO', PECAS_SUBAQUATICA.map(p => ({
+    nome: p.titulo,
+    descricao: `${p.aplicacao} · ${p.subaquatica!.profundidadeM} m · ${INFO_JUNTA[p.junta].nome} · ${n1(p.espessuraMm)} mm. ${p.porque}`,
+    abrir: () => escolherModo(app, 'SUBAQUÁTICA', 'TREINO / ' + p.titulo.toUpperCase(), (d) => telaTreinoEletrodo(app, p, d, () => escolherPecaSubaquatica(app)), () => escolherPecaSubaquatica(app)),
   })), { nome: 'VOLTAR AO TREINO', descricao: 'Escolher outro processo.', abrir: () => telaTreino(app) })
 }
 

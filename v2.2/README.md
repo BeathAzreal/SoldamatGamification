@@ -25,6 +25,8 @@ Hipóteses em `docs/HIPOTESES.md` (H108).
 
 **Soldagem a plasma (Treino → PLASMA):** na mesma bancada do TIG, o arco sai apertado por um bocal de cobre. Na peça **keyhole** (inox 4 mm ou aço 5 mm, topo reto, sem chanfro), o jato fura a chapa e a poça fecha atrás: uma passada solda a espessura toda. Pouco gás só funde por cima; gás demais corta; parar a tocha ou cortar o arco de vez no fim deixa furo (solte o pedal devagar: rampa de descida). Bocal encostado ou corrente alta demais dá arco duplo e gasta o bocal. O **microplasma** solda inox de 1 mm com pouca corrente e pouco gás. Hipóteses em `docs/HIPOTESES.md` (H107).
 
+- **Solda subaquática (Treino → SUBAQUÁTICA):** eletrodo revestido no fundo do mar, no escuro. Só a sua lanterna ilumina a peça: segure **F** e arraste para apontar (no celular, **🔦 Mirar luz**). A corrente é ligada pelo ajudante na superfície (**C** pede liga/desliga), e trocar a vareta com a corrente ligada dá choque. A água pede mais corrente, arco bem curto (senão vira poro) e endurece a ZTA: o laudo do resultado mostra a dureza. Três mergulhos: cais (4 m), casco de balsa (8 m) e plataforma (18 m).
+
 **Treino vira sandbox:** só a bancada livre por processo (MIG/MAG, eletrodo, TIG, plasma e brasagem). As missões ficam na História e as ordens de serviço, na Fábrica.
 
 Todo o resto é a v2.1: Manufatura Aditiva, MIG/MAG, TIG, eletrodo, brasagem, História, Desafios, Versus e o x1 online, com o mesmo protocolo de rede.

@@ -33,6 +33,18 @@ export interface PecaEletrodo {
   inicioMm: number
   fimMm: number
   objetivo: string
+  /** H110: solda subaquática molhada (o local no mar, a água e o aço da estrutura). */
+  subaquatica?: {
+    profundidadeM: number
+    /** Turbidez da água (0 = limpa, 1 = muito turva): a lanterna alcança menos. */
+    turbidez: number
+    /** Carbono e carbono equivalente do aço da estrutura (dureza da ZTA). */
+    carbono: number
+    ce: number
+    local: string
+    /** Estrutura do cenário onde a peça está presa. */
+    estrutura: 'cais' | 'casco' | 'plataforma'
+  }
 }
 
 /** Tensão do arco com o comprimento igual ao diâmetro da alma (mesma regra de acionamento15.ts). */
